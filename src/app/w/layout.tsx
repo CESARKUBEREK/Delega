@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Suspense } from "react"
 import { signOut } from "@/app/(auth)/actions"
 import { requireUser } from "@/lib/auth"
+import { PendingInviteNotice } from "./pending-invite-notice"
 
 export default function WorkspacesLayout({ children }: LayoutProps<"/w">) {
   return (
@@ -16,7 +17,10 @@ export default function WorkspacesLayout({ children }: LayoutProps<"/w">) {
           </Suspense>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <PendingInviteNotice />
+        {children}
+      </main>
     </div>
   )
 }
