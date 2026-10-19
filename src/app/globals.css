@@ -1,0 +1,94 @@
+@import "tailwindcss";
+@import "@fontsource-variable/archivo/wdth.css";
+
+/* Delega · tokens
+   Papel vegetal frío, tinta azul oscura, trazo azul para acciones. */
+:root {
+  --paper: #edf0ec;
+  --sheet: #f8faf7;
+  --grid: #d6ddd7;
+  --ink: #1b2a38;
+  --graphite: #56636f;
+  --stroke: #2d5bd0;
+  --stroke-ink: #ffffff;
+  --rule: #b9c3bd;
+  --alert: #b42318;
+  --alert-bg: #fbeceb;
+  --ok: #1f6b45;
+  --ok-bg: #e6f2eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #121a22;
+    --sheet: #18222c;
+    --grid: #22303c;
+    --ink: #e4e9e5;
+    --graphite: #9aa6b0;
+    --stroke: #7ea2ff;
+    --stroke-ink: #0d1520;
+    --rule: #34434f;
+    --alert: #ff8a80;
+    --alert-bg: #3a1d1c;
+    --ok: #7fd3a6;
+    --ok-bg: #173126;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-sheet: var(--sheet);
+  --color-grid: var(--grid);
+  --color-ink: var(--ink);
+  --color-graphite: var(--graphite);
+  --color-stroke: var(--stroke);
+  --color-stroke-ink: var(--stroke-ink);
+  --color-rule: var(--rule);
+  --color-alert: var(--alert);
+  --color-alert-bg: var(--alert-bg);
+  --color-ok: var(--ok);
+  --color-ok-bg: var(--ok-bg);
+  --font-sans: "Archivo Variable", system-ui, sans-serif;
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-color: var(--paper);
+  /* Retícula de papel de plano cada 40 px. */
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: -1px -1px;
+  min-height: 100dvh;
+}
+
+/* Rotulado técnico: títulos en ancho expandido. */
+.rotulo {
+  font-stretch: 125%;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+:focus-visible {
+  outline: 2px solid var(--stroke);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
