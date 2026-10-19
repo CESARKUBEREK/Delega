@@ -10,7 +10,7 @@ Las migraciones viven en `supabase/migrations/` y se versionan por marca de tiem
 
 | Migración | Contenido |
 |---|---|
-| `20261019150000_core_auth_workspaces.sql` | Perfiles, espacios (personal u organización), membresías con rol, invitaciones, auditoría, RLS y trigger de alta |
+| `20261019150533_core_auth_workspaces.sql` | Perfiles, espacios (personal u organización), membresías con rol, invitaciones, auditoría, RLS y trigger de alta |
 
 ### Modelo de seguridad
 
