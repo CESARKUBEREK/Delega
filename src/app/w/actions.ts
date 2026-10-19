@@ -1,5 +1,6 @@
 "use server"
 
+import { refresh } from "next/cache"
 import { redirect } from "next/navigation"
 import { siteUrl } from "@/lib/site-url"
 import { createClient } from "@/lib/supabase/server"
@@ -61,6 +62,7 @@ export async function createInvitation(_prev: WorkspaceFormState, formData: Form
   // El token va en el fragmento (#): el navegador no lo envía al servidor ni
   // queda en registros. Mientras no exista el envío por correo, se copia a mano.
   const origin = await siteUrl()
+  refresh()
   return { inviteLink: `${origin}/invite#${data[0].token}`, inviteEmail: email }
 }
 
@@ -79,4 +81,79 @@ export async function acceptInvitation(token: string): Promise<{ workspaceId?: s
     }
   }
   return { workspaceId: data }
+}
+
+// ---------------------------------------------------------------------------
+// Gestión de la organización. La RLS decide quién puede: estas acciones solo
+// validan la entrada y traducen el resultado. Si la base de datos no afecta a
+// ninguna fila, es que la persona no tenía permiso.
+// ---------------------------------------------------------------------------
+
+export type ManageState = { error?: string; message?: string }
+
+export async function revokeInvitation(formData: FormData): Promise<void> {
+  const invitationId = String(formData.get("invitationId") ?? "")
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(invitationId) || !UUID_RE.test(workspaceId)) return
+
+  const supabase = await sessionClient()
+  await supabase
+    .from("invitations")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("id", invitationId)
+    .eq("workspace_id", workspaceId)
+    .is("accepted_at", null)
+  refresh()
+}
+
+export async function renameWorkspace(_prev: ManageState, formData: FormData): Promise<ManageState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const name = String(formData.get("name") ?? "").trim()
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  if (name.length < 1 || name.length > 120) return { error: "Ponle un nombre de 1 a 120 caracteres." }
+
+  const supabase = await sessionClient()
+  const { data, error } = await supabase.from("workspaces").update({ name }).eq("id", workspaceId).select("id")
+  if (error || !data?.length) return { error: "Solo un administrador puede cambiar el nombre." }
+  refresh()
+  return { message: "Nombre guardado." }
+}
+
+export async function deleteWorkspace(_prev: ManageState, formData: FormData): Promise<ManageState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const confirmName = String(formData.get("confirmName") ?? "").trim()
+  const expected = String(formData.get("expectedName") ?? "").trim()
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  if (!confirmName || confirmName !== expected) {
+    return { error: "Escribe el nombre exacto de la organización para confirmar." }
+  }
+
+  const supabase = await sessionClient()
+  const { data, error } = await supabase
+    .from("workspaces")
+    .delete()
+    .eq("id", workspaceId)
+    .eq("kind", "organization")
+    .select("id")
+  if (error || !data?.length) return { error: "Solo el propietario puede borrar la organización." }
+  redirect("/w")
+}
+
+export async function leaveWorkspace(_prev: ManageState, formData: FormData): Promise<ManageState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+
+  const supabase = await sessionClient()
+  const { data: claims } = await supabase.auth.getClaims()
+  const { data, error } = await supabase
+    .from("memberships")
+    .delete()
+    .eq("workspace_id", workspaceId)
+    .eq("user_id", claims!.claims!.sub)
+    .select("user_id")
+  if (error?.code === "42501") {
+    return { error: "Eres el único propietario. Nombra antes a otro propietario o borra la organización." }
+  }
+  if (error || !data?.length) return { error: "No se pudo salir de la organización." }
+  redirect("/w")
 }
