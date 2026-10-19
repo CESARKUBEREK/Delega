@@ -3,11 +3,12 @@ import { OPENAI_MODELS } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime } from "../format"
+import { GoogleSheetsCard } from "./google-card"
 import { ConnectKeyForm, DisconnectForm, ModelForm } from "./openai-forms"
 
 export const metadata = { title: "Integraciones" }
 
-export default function IntegrationsPage({ params }: PageProps<"/w/[workspaceId]/integraciones">) {
+export default function IntegrationsPage({ params, searchParams }: PageProps<"/w/[workspaceId]/integraciones">) {
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -17,14 +18,19 @@ export default function IntegrationsPage({ params }: PageProps<"/w/[workspaceId]
         </p>
       </div>
       <Suspense fallback={<div className="h-64 border border-rule bg-sheet" aria-busy="true" />}>
-        <Integrations params={params} />
+        <Integrations params={params} searchParams={searchParams} />
       </Suspense>
     </div>
   )
 }
 
-async function Integrations({ params }: { params: PageProps<"/w/[workspaceId]/integraciones">["params"] }) {
+async function Integrations({
+  params,
+  searchParams,
+}: Pick<PageProps<"/w/[workspaceId]/integraciones">, "params" | "searchParams">) {
   const { workspaceId } = await params
+  const sp = await searchParams
+  const notice = sp.google === "conectado" ? "connected" : typeof sp.google_error === "string" ? sp.google_error : null
   const { isAdmin } = await getWorkspace(workspaceId, `/w/${workspaceId}/integraciones`)
   const supabase = await createClient()
   const { data: connection } = await supabase
@@ -36,7 +42,7 @@ async function Integrations({ params }: { params: PageProps<"/w/[workspaceId]/in
   const modelLabel = OPENAI_MODELS.find((m) => m.id === connection?.model)?.label ?? connection?.model
 
   return (
-    <div className="grid gap-6 xl:grid-cols-2">
+    <div className="grid items-start gap-6 xl:grid-cols-2">
       <section className="border border-ink bg-sheet">
         <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
           <div>
@@ -79,18 +85,7 @@ async function Integrations({ params }: { params: PageProps<"/w/[workspaceId]/in
         </div>
       </section>
 
-      <section className="border border-rule bg-sheet">
-        <div className="flex items-start justify-between gap-4 border-b border-rule px-5 py-4">
-          <div>
-            <h2 className="rotulo text-lg">Planillas</h2>
-            <p className="text-sm text-graphite">Google Sheets y Excel en OneDrive, para leer y escribir datos de tus flujos.</p>
-          </div>
-          <span className="shrink-0 border border-rule px-2 py-0.5 text-xs text-graphite">Próximamente</span>
-        </div>
-        <p className="px-5 py-5 text-sm text-graphite">
-          Mientras tanto, el asistente ya prepara planes que usan planillas; podrás conectarlas cuando esté lista la ejecución.
-        </p>
-      </section>
+      <GoogleSheetsCard workspaceId={workspaceId} isAdmin={isAdmin} notice={notice} />
     </div>
   )
 }
