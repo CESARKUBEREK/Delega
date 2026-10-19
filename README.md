@@ -2,7 +2,53 @@
 
 Plataforma de automatización con IA, en español, para profesionales y pequeños despachos. El usuario describe una tarea, la IA propone un flujo y el usuario lo aprueba antes de ejecutarlo.
 
-**Stack:** Supabase (Auth, Postgres con RLS, Edge Functions, Vault) y frontend en Vercel.
+**Stack:** Supabase (Auth, Postgres con RLS, Edge Functions, Vault) y frontend en Next.js 16 sobre Vercel.
+
+## Frontend
+
+```bash
+cp .env.example .env.local   # rellena la clave publicable
+npm install
+npm run dev                  # http://localhost:3000
+```
+
+- **Sesión:** se guarda en cookies con `@supabase/ssr`, no en `localStorage`. La refresca `src/proxy.ts`, que también protege `/w/*`.
+- **Identidad en el servidor:** se valida siempre con `getClaims()`. Nunca se confía en `getSession()` para autorizar.
+- **Clave en el navegador:** el frontend solo usa la clave publicable. Las claves secretas y las de IA no pasan nunca por aquí.
+- **Cabeceras de seguridad:** CSP, HSTS, `frame-ancestors 'none'` y otras, definidas en `next.config.ts`.
+- **Tipografía:** Archivo, autoalojada mediante `@fontsource-variable`, sin peticiones a Google Fonts.
+
+| Ruta | Para qué |
+|---|---|
+| `/login`, `/signup` | Entrar o crear cuenta, con correo o con Google |
+| `/forgot-password`, `/reset-password` | Recuperar el acceso |
+| `/auth/callback` | Retorno de OAuth (PKCE) |
+| `/auth/confirm` | Enlaces de los correos de Supabase (`token_hash`) |
+| `/w` | Tus espacios y crear una organización |
+| `/w/[id]` | Un espacio: miembros e invitaciones |
+| `/invite#token` | Aceptar una invitación. El token va en el fragmento para que no llegue al servidor |
+
+### Configuración pendiente en Supabase (panel → Authentication)
+
+1. **URL Configuration**
+   - Site URL: la URL de producción.
+   - Redirect URLs: `http://localhost:3000/**` y la URL de producción con `/**`. No añadas comodines abiertos de `*.vercel.app`.
+2. **Email Templates:** cambia el enlace de cada plantilla para que use `token_hash` (así funciona aunque se abra en otro dispositivo).
+   - *Confirm signup:* `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/w`
+   - *Reset password:* `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery`
+   - *Change email:* `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change`
+3. **Providers → Email:**
+   - Confirm email: activado.
+   - Longitud mínima de contraseña: 10.
+   - Protección contra contraseñas filtradas: activada, si tu plan la incluye.
+4. **Antes de producción:**
+   - SMTP propio, porque el de serie tiene límites muy bajos.
+   - Proveedor Azure (Microsoft).
+   - CAPTCHA (Turnstile) en registro, acceso y recuperación.
+
+### Variables en Vercel
+
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` y `NEXT_PUBLIC_SITE_URL`. Son valores públicos; ninguna variable secreta hace falta en Vercel en esta fase.
 
 ## Base de datos
 
