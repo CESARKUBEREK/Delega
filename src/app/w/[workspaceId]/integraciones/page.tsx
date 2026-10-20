@@ -5,6 +5,7 @@ import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime } from "../format"
 import { GoogleSheetsCard } from "./google-card"
 import { ConnectKeyForm, DisconnectForm, ModelForm } from "./openai-forms"
+import { WhatsAppCard } from "./whatsapp-card"
 
 export const metadata = { title: "Integraciones" }
 
@@ -86,6 +87,7 @@ async function Integrations({
       </section>
 
       <GoogleSheetsCard workspaceId={workspaceId} isAdmin={isAdmin} notice={notice} />
+      <WhatsAppCard workspaceId={workspaceId} isAdmin={isAdmin} />
     </div>
   )
 }

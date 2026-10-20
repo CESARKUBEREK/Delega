@@ -105,6 +105,41 @@ export type Database = {
           },
         ]
       }
+      contacts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          phone: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          phone: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          phone?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
@@ -142,6 +177,7 @@ export type Database = {
       }
       flow_runs: {
         Row: {
+          trigger: Json
           error: string | null
           file_ids: string[]
           finished_at: string | null
@@ -165,6 +201,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          trigger?: Json
           error?: string | null
           file_ids?: string[]
           finished_at?: string | null
@@ -188,6 +225,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          trigger?: Json
           error?: string | null
           file_ids?: string[]
           finished_at?: string | null
@@ -229,6 +267,7 @@ export type Database = {
       }
       flows: {
         Row: {
+          settings: Json
           created_at: string
           created_by: string | null
           definition: Json
@@ -242,6 +281,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          settings?: Json
           created_at?: string
           created_by?: string | null
           definition: Json
@@ -255,6 +295,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          settings?: Json
           created_at?: string
           created_by?: string | null
           definition?: Json
@@ -330,6 +371,7 @@ export type Database = {
       }
       integrations: {
         Row: {
+          config: Json
           account_email: string | null
           created_at: string
           created_by: string | null
@@ -342,6 +384,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          config?: Json
           account_email?: string | null
           created_at?: string
           created_by?: string | null
@@ -354,6 +397,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          config?: Json
           account_email?: string | null
           created_at?: string
           created_by?: string | null
@@ -667,6 +711,59 @@ export type Database = {
           },
         ]
       }
+      whatsapp_messages: {
+        Row: {
+          body: string
+          contact_name: string | null
+          created_at: string
+          direction: string
+          id: number
+          integration_id: string | null
+          message_type: string
+          phone: string
+          run_id: string | null
+          status: string | null
+          wa_message_id: string | null
+          workspace_id: string
+        }
+        Insert: {
+          body?: string
+          contact_name?: string | null
+          created_at?: string
+          direction: string
+          id?: never
+          integration_id?: string | null
+          message_type?: string
+          phone: string
+          run_id?: string | null
+          status?: string | null
+          wa_message_id?: string | null
+          workspace_id: string
+        }
+        Update: {
+          body?: string
+          contact_name?: string | null
+          created_at?: string
+          direction?: string
+          id?: never
+          integration_id?: string | null
+          message_type?: string
+          phone?: string
+          run_id?: string | null
+          status?: string | null
+          wa_message_id?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspaces: {
         Row: {
           created_at: string
@@ -764,6 +861,20 @@ export type Database = {
           p_workspace_id: string
         }
         Returns: string
+      }
+      integration_secret_by_id: {
+        Args: { p_integration_id: string }
+        Returns: {
+          config: Json
+          provider: string
+          secret: string
+          status: string
+          workspace_id: string
+        }[]
+      }
+      integration_set_config: {
+        Args: { p_config: Json; p_provider: string; p_workspace_id: string }
+        Returns: undefined
       }
       integration_secret: {
         Args: { p_provider: string; p_workspace_id: string }

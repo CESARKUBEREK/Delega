@@ -6,7 +6,7 @@ import type { Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { formatDateTime, formatNumber } from "../../format"
-import { ApprovalCard, RunControls, type Pending } from "./run-live"
+import { ApprovalCard, type Cell, RunControls, type Pending } from "./run-live"
 
 export const metadata = { title: "Ejecución" }
 // Cada tramo del agente puede tardar hasta ~90 s.
@@ -34,13 +34,35 @@ const EVENT_MARK: Record<string, string> = {
 function asPending(value: Json | null): Pending | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null
   const v = value as Record<string, unknown>
-  if (typeof v.range !== "string" || !Array.isArray(v.values)) return null
-  return {
-    tool: v.tool === "update_range" ? "update_range" : "append_rows",
-    fileName: typeof v.file_name === "string" ? v.file_name : "",
-    range: v.range,
-    values: v.values as Pending["values"],
-    before: Array.isArray(v.before) ? (v.before as Pending["values"]) : null,
+  const t = (x: unknown) => (typeof x === "string" ? x : "")
+  switch (v.tool) {
+    case "append_rows":
+    case "update_range":
+      if (!Array.isArray(v.values)) return null
+      return {
+        tool: v.tool,
+        fileName: t(v.file_name),
+        range: t(v.range),
+        values: v.values as Cell[][],
+        before: Array.isArray(v.before) ? (v.before as Cell[][]) : null,
+      }
+    case "append_to_document":
+      return { tool: "append_to_document", fileName: t(v.file_name), text: t(v.text) }
+    case "create_document":
+      return { tool: "create_document", title: t(v.title), text: t(v.text) }
+    case "send_whatsapp":
+      return { tool: "send_whatsapp", to: t(v.to_label), phone: t(v.phone), text: t(v.text) }
+    case "send_whatsapp_template":
+      return {
+        tool: "send_whatsapp_template",
+        to: t(v.to_label),
+        phone: t(v.phone),
+        template: t(v.template),
+        language: t(v.language),
+        parameters: Array.isArray(v.parameters) ? v.parameters.map(t) : [],
+      }
+    default:
+      return null
   }
 }
 
@@ -53,7 +75,7 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
   const [{ data: run }, { data: events }] = await Promise.all([
     supabase
       .from("flow_runs")
-      .select("id, flow_id, flow_name, status, pending_action, summary, error, tool_calls, input_tokens, output_tokens, started_at, finished_at, note")
+      .select("id, flow_id, flow_name, status, pending_action, summary, error, tool_calls, input_tokens, output_tokens, started_at, finished_at, note, trigger")
       .eq("id", runId)
       .eq("workspace_id", workspaceId)
       .maybeSingle(),
@@ -116,6 +138,11 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
       </section>
 
       {run.note ? <p className="text-sm text-graphite">Indicaciones: {run.note}</p> : null}
+      {(run.trigger as { type?: string; text?: string } | null)?.type === "whatsapp_message" ? (
+        <p className="border-l-2 border-rule pl-3 text-sm text-graphite">
+          Mensaje que la lanzó: «{String((run.trigger as { text?: string }).text ?? "").slice(0, 500)}»
+        </p>
+      ) : null}
     </div>
   )
 }

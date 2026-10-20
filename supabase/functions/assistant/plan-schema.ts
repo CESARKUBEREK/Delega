@@ -2,7 +2,7 @@
 // asistente (que lo genera) y el editor (que lo muestra y, más adelante,
 // lo editará y ejecutará). Es JSON Schema estricto para Structured Outputs.
 
-const CONNECTION_KINDS = ["spreadsheet", "email", "calendar", "database", "documents"]
+const CONNECTION_KINDS = ["spreadsheet", "documents", "whatsapp", "email", "calendar", "database"]
 const STEP_KINDS = ["read", "transform", "compare", "generate", "write", "notify", "condition"]
 
 const planObject = {
@@ -17,8 +17,8 @@ const planObject = {
       additionalProperties: false,
       required: ["type", "description"],
       properties: {
-        type: { type: "string", enum: ["manual", "schedule"] },
-        description: { type: "string", description: "Cuándo se ejecuta, en palabras (p. ej. 'el día 1 de cada mes')." },
+        type: { type: "string", enum: ["manual", "schedule", "whatsapp_message"] },
+        description: { type: "string", description: "Cuándo se ejecuta, en palabras (p. ej. 'el día 1 de cada mes' o 'cuando llegue un WhatsApp')." },
       },
     },
     connections: {
@@ -80,7 +80,7 @@ export type PlanStep = {
 export type Plan = {
   name: string
   summary: string
-  trigger: { type: "manual" | "schedule"; description: string }
+  trigger: { type: "manual" | "schedule" | "whatsapp_message"; description: string }
   connections: { kind: string; purpose: string }[]
   steps: PlanStep[]
   open_questions: string[]
@@ -104,7 +104,7 @@ export function sanitizePlan(plan: Plan | null): (Plan & { version: 1 }) | null 
     name: cut(plan.name, 120) || "Flujo sin nombre",
     summary: cut(plan.summary, 600),
     trigger: {
-      type: plan.trigger?.type === "schedule" ? "schedule" : "manual",
+      type: plan.trigger?.type === "schedule" || plan.trigger?.type === "whatsapp_message" ? plan.trigger.type : "manual",
       description: cut(plan.trigger?.description, 200),
     },
     connections: (plan.connections ?? []).slice(0, 10).map((c) => ({

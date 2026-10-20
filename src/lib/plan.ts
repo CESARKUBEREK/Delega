@@ -17,7 +17,7 @@ export type FlowPlan = {
   version: 1
   name: string
   summary: string
-  trigger: { type: "manual" | "schedule"; description: string }
+  trigger: { type: "manual" | "schedule" | "whatsapp_message"; description: string }
   connections: { kind: string; purpose: string }[]
   steps: PlanStep[]
   open_questions: string[]
@@ -36,7 +36,10 @@ export function asPlan(value: Json | null | undefined): FlowPlan | null {
     version: 1,
     name: str(p.name) || "Flujo sin nombre",
     summary: str(p.summary),
-    trigger: { type: trigger.type === "schedule" ? "schedule" : "manual", description: str(trigger.description) },
+    trigger: {
+      type: trigger.type === "schedule" || trigger.type === "whatsapp_message" ? trigger.type : "manual",
+      description: str(trigger.description),
+    },
     connections: arr(p.connections).map((c) => ({ kind: str(obj(c).kind), purpose: str(obj(c).purpose) })),
     steps: arr(p.steps).map((s, i) => {
       const o = obj(s)
@@ -68,12 +71,19 @@ export const CONNECTION_LABEL: Record<string, string> = {
   email: "Correo",
   calendar: "Calendario",
   database: "Base de datos",
-  documents: "Documentos",
+  documents: "Documento",
+  whatsapp: "WhatsApp",
   none: "",
 }
 
-// Solo las planillas estarán disponibles en esta versión.
-export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet"])
+// Conexiones que ya funcionan en esta versión.
+export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet", "documents", "whatsapp"])
+
+export const TRIGGER_LABEL: Record<string, string> = {
+  manual: "Manual",
+  schedule: "Programado (aún no automático)",
+  whatsapp_message: "Al recibir un WhatsApp",
+}
 
 export const FLOW_STATUS_LABEL: Record<string, string> = {
   draft: "Borrador",

@@ -21,7 +21,7 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
   const supabase = await createClient()
   const base = `/w/${workspaceId}`
 
-  const [{ data: connection }, { count: flowCount }, { data: conversations }] = await Promise.all([
+  const [{ data: connection }, { count: flowCount }, { data: conversations }, { count: waiting }] = await Promise.all([
     supabase.from("ai_connections").select("model, key_hint, status").eq("workspace_id", workspaceId).eq("provider", "openai").maybeSingle(),
     supabase.from("flows").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
     supabase
@@ -30,12 +30,26 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
       .eq("workspace_id", workspaceId)
       .order("updated_at", { ascending: false })
       .limit(5),
+    supabase
+      .from("flow_runs")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", workspaceId)
+      .eq("status", "awaiting_approval"),
   ])
   const modelLabel = OPENAI_MODELS.find((m) => m.id === connection?.model)?.label ?? connection?.model
 
   return (
     <div className="flex flex-col gap-6">
       <h1 className="rotulo text-2xl">Inicio</h1>
+
+      {waiting ? (
+        <Link
+          href={`${base}/historial`}
+          className="border-2 border-stroke bg-sheet px-5 py-3 font-medium text-ink hover:bg-paper"
+        >
+          {waiting === 1 ? "1 ejecución espera tu aprobación" : `${waiting} ejecuciones esperan tu aprobación`} →
+        </Link>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <section className="border border-ink bg-sheet p-5">
@@ -72,7 +86,7 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
         <section className="border border-ink bg-sheet p-5">
           <h2 className="text-sm font-medium text-graphite">Automatizaciones</h2>
           <p className="rotulo mt-2 text-lg text-ink">
-            {flowCount ?? 0} {flowCount === 1 ? "borrador" : "borradores"}
+            {flowCount ?? 0} {flowCount === 1 ? "automatización" : "automatizaciones"}
           </p>
           <p className="mt-1 text-sm text-graphite">Describe una tarea al asistente y guarda el plan que te proponga.</p>
           <Link href={`${base}/asistente`} className="mt-4 inline-block text-sm text-stroke underline underline-offset-4">

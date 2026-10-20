@@ -3,6 +3,7 @@
 import { refresh } from "next/cache"
 import { redirect } from "next/navigation"
 import { callEdgeFunction } from "@/lib/edge-functions"
+import { createClient } from "@/lib/supabase/server"
 import { UUID_RE } from "@/lib/workspace"
 
 // Acciones de Google Sheets y de ejecución. Los permisos los comprueban las
@@ -104,4 +105,110 @@ export async function decideRun(runId: string, approve: boolean): Promise<RunSte
 
 export async function cancelRun(runId: string): Promise<RunStep> {
   return runAction({ action: "cancel", run_id: runId })
+}
+
+// ---------------------------------------------------------------------------
+// WhatsApp
+// ---------------------------------------------------------------------------
+
+export type WhatsAppState = { error?: string; message?: string; webhookUrl?: string; verifyToken?: string }
+
+export async function saveWhatsApp(_prev: WhatsAppState, formData: FormData): Promise<WhatsAppState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  const result = await callEdgeFunction<{ display_phone_number: string | null; webhook_url: string; verify_token: string }>(
+    "whatsapp-connection",
+    {
+      action: "save",
+      workspace_id: workspaceId,
+      phone_number_id: String(formData.get("phoneNumberId") ?? ""),
+      access_token: String(formData.get("accessToken") ?? ""),
+      app_secret: String(formData.get("appSecret") ?? ""),
+    },
+    30_000,
+  )
+  if (result.error) return { error: result.error.message }
+  refresh()
+  return {
+    message: `Número ${result.data.display_phone_number ?? ""} conectado. Ahora configura el webhook en Meta con estos datos.`,
+    webhookUrl: result.data.webhook_url,
+    verifyToken: result.data.verify_token,
+  }
+}
+
+export async function whatsappWebhookInfo(workspaceId: string): Promise<WhatsAppState> {
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  const result = await callEdgeFunction<{ webhook_url: string; verify_token: string }>(
+    "whatsapp-connection",
+    { action: "webhook_info", workspace_id: workspaceId },
+    20_000,
+  )
+  if (result.error) return { error: result.error.message }
+  return { webhookUrl: result.data.webhook_url, verifyToken: result.data.verify_token }
+}
+
+export async function disconnectWhatsApp(_prev: ActionResult | null, formData: FormData): Promise<ActionResult | null> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const result = await callEdgeFunction("whatsapp-connection", { action: "disconnect", workspace_id: workspaceId }, 20_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  refresh()
+  return { ok: true }
+}
+
+// Contactos autorizados: la RLS solo deja a admins y owners.
+export type ContactState = { error?: string; message?: string }
+
+export async function addContact(_prev: ContactState, formData: FormData): Promise<ContactState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const name = String(formData.get("name") ?? "").trim()
+  const phone = String(formData.get("phone") ?? "").replace(/[\s().-]/g, "")
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  if (!name || name.length > 120) return { error: "Escribe un nombre." }
+  if (!/^\+[1-9][0-9]{6,14}$/.test(phone)) return { error: "Escribe el número con prefijo internacional, p. ej. +34600111222." }
+
+  const supabase = await createClient()
+  const { data: claims } = await supabase.auth.getClaims()
+  const userId = claims?.claims?.sub
+  if (!userId) redirect("/login")
+  const { error } = await supabase.from("contacts").insert({ workspace_id: workspaceId, name, phone, created_by: userId })
+  if (error) {
+    return { error: error.code === "23505" ? "Ese número ya está en la lista." : "Solo un administrador puede añadir contactos." }
+  }
+  refresh()
+  return { message: `${name} añadido.` }
+}
+
+export async function removeContact(formData: FormData): Promise<void> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const contactId = String(formData.get("contactId") ?? "")
+  if (!UUID_RE.test(workspaceId) || !UUID_RE.test(contactId)) return
+  const supabase = await createClient()
+  await supabase.from("contacts").delete().eq("id", contactId).eq("workspace_id", workspaceId)
+  refresh()
+}
+
+// ---------------------------------------------------------------------------
+// Activar un flujo con disparador automático
+// ---------------------------------------------------------------------------
+export async function setFlowActive(input: {
+  workspaceId: string
+  flowId: string
+  active: boolean
+  fileIds: string[]
+}): Promise<ActionResult> {
+  if (!UUID_RE.test(input.workspaceId) || !UUID_RE.test(input.flowId)) return { ok: false, error: "Datos no válidos." }
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("flows")
+    .update({
+      status: input.active ? "active" : "paused",
+      settings: { file_ids: input.fileIds.filter((id) => UUID_RE.test(id)).slice(0, 5) },
+    })
+    .eq("id", input.flowId)
+    .eq("workspace_id", input.workspaceId)
+    .select("id")
+  if (error || !data?.length) return { ok: false, error: "Solo quien creó el flujo o un administrador puede activarlo." }
+  refresh()
+  return { ok: true }
 }

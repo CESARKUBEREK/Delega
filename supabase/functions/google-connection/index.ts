@@ -1,5 +1,5 @@
 // google-connection: conecta la cuenta de Google de un espacio con el permiso
-// drive.file (solo las planillas que el usuario elige con el selector).
+// drive.file (solo las planillas y documentos que el usuario elige con el selector).
 // Acciones: start, callback, picker_token, add_files, remove_file, disconnect.
 // Solo owners y admins. El refresh token se guarda cifrado en Vault.
 import { authenticate, fail, isUuid, json, membershipRole, type AuthContext } from "../_shared/core.ts"
@@ -16,6 +16,7 @@ import {
   redirectUri,
   revokeToken,
   sha256Hex,
+  DOCUMENT_MIME,
   SPREADSHEET_MIME,
 } from "../_shared/google.ts"
 
@@ -152,7 +153,7 @@ Deno.serve(async (req) => {
     const ids = [...new Set(files.map((f) => (f && typeof f === "object" ? (f as { id?: unknown }).id : null)))]
       .filter((id): id is string => typeof id === "string" && /^[A-Za-z0-9_-]{10,200}$/.test(id))
       .slice(0, 20)
-    if (!ids.length) return fail(400, "bad_request", "No se eligió ninguna planilla.")
+    if (!ids.length) return fail(400, "bad_request", "No se eligió ningún archivo.")
 
     const secret = await refreshTokenFor(ctx, ws)
     if (!secret) return fail(409, "no_connection", "Primero conecta tu cuenta de Google.")
@@ -161,7 +162,7 @@ Deno.serve(async (req) => {
       .select("id", { count: "exact", head: true })
       .eq("workspace_id", ws)
     if ((count ?? 0) + ids.length > MAX_FILES_PER_WORKSPACE) {
-      return fail(400, "too_many", `Un espacio puede tener como máximo ${MAX_FILES_PER_WORKSPACE} planillas.`)
+      return fail(400, "too_many", `Un espacio puede tener como máximo ${MAX_FILES_PER_WORKSPACE} archivos.`)
     }
 
     let token: string
@@ -176,7 +177,7 @@ Deno.serve(async (req) => {
     for (const id of ids) {
       try {
         const file = await driveFile(token, id)
-        if (file.mimeType !== SPREADSHEET_MIME) {
+        if (file.mimeType !== SPREADSHEET_MIME && file.mimeType !== DOCUMENT_MIME) {
           skipped.push(file.name)
           continue
         }
