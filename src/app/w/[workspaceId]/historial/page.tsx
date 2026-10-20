@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { OPENAI_MODELS } from "@/lib/plan"
+import { OPENAI_MODELS, RUN_STATUS_LABEL } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime, formatNumber } from "../format"
@@ -13,8 +13,7 @@ export default function HistoryPage({ params }: PageProps<"/w/[workspaceId]/hist
       <div>
         <h1 className="rotulo text-2xl">Historial</h1>
         <p className="mt-1 max-w-prose text-graphite">
-          Conversaciones con el asistente y consumo de IA de este espacio. Las ejecuciones de automatizaciones aparecerán aquí cuando
-          estén disponibles.
+          Ejecuciones de automatizaciones, conversaciones con el asistente y consumo de IA de este espacio.
         </p>
       </div>
       <Suspense fallback={<div className="h-64 border border-rule bg-sheet" aria-busy="true" />}>
@@ -33,7 +32,7 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
   monthStart.setUTCDate(1)
   monthStart.setUTCHours(0, 0, 0, 0)
 
-  const [{ data: conversations }, { data: usage }] = await Promise.all([
+  const [{ data: conversations }, { data: usage }, { data: runs }] = await Promise.all([
     supabase
       .from("conversations")
       .select("id, title, created_at, updated_at")
@@ -46,6 +45,12 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
       .eq("workspace_id", workspaceId)
       .gte("created_at", monthStart.toISOString())
       .limit(5000),
+    supabase
+      .from("flow_runs")
+      .select("id, flow_name, status, started_at")
+      .eq("workspace_id", workspaceId)
+      .order("started_at", { ascending: false })
+      .limit(50),
   ])
 
   const byModel = new Map<string, { requests: number; input: number; output: number }>()
@@ -60,6 +65,31 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
 
   return (
     <div className="flex flex-col gap-6">
+      <section className="border border-ink bg-sheet">
+        <h2 className="border-b border-ink px-5 py-3 font-semibold">Ejecuciones {isAdmin ? "del espacio" : "tuyas"}</h2>
+        {runs && runs.length > 0 ? (
+          <ul className="divide-y divide-rule">
+            {runs.map((r) => (
+              <li key={r.id}>
+                <Link href={`${base}/ejecuciones/${r.id}`} className="flex items-center justify-between gap-4 px-5 py-3 hover:bg-paper">
+                  <span className="min-w-0">
+                    <span className="block truncate text-ink">{r.flow_name}</span>
+                    <span className="text-xs text-graphite">{formatDateTime(r.started_at)}</span>
+                  </span>
+                  <span
+                    className={`shrink-0 text-sm ${r.status === "failed" ? "text-alert" : r.status === "awaiting_approval" ? "font-medium text-stroke" : "text-graphite"}`}
+                  >
+                    {RUN_STATUS_LABEL[r.status] ?? r.status}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="px-5 py-4 text-sm text-graphite">Aún no se ha ejecutado ninguna automatización.</p>
+        )}
+      </section>
+
       <section className="border border-ink bg-sheet">
         <h2 className="border-b border-ink px-5 py-3 font-semibold">
           Consumo de este mes {isAdmin ? "(todo el espacio)" : "(tuyo)"}

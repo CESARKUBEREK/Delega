@@ -5,14 +5,16 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
 const supabaseWs = supabaseUrl.replace(/^https:/, "wss:")
 
 // CSP sin nonces (permite el prerenderizado). Solo se conecta con el propio
-// sitio y con Supabase; ningún script de terceros.
+// sitio y con Supabase. El único script de terceros es el selector de
+// archivos de Google (apis.google.com), que se abre en un iframe de docs.google.com.
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://apis.google.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' blob: data: https://lh3.googleusercontent.com",
+  "img-src 'self' blob: data: https://lh3.googleusercontent.com https://*.gstatic.com",
   "font-src 'self'",
   `connect-src 'self' ${supabaseUrl} ${supabaseWs}`.trim(),
+  "frame-src https://docs.google.com https://drive.google.com https://accounts.google.com",
   "object-src 'none'",
   "base-uri 'self'",
   // Los formularios de OAuth redirigen a Supabase y de ahí a Google/Microsoft.

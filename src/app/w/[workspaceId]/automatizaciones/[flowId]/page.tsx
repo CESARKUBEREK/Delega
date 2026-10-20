@@ -2,11 +2,12 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { PlanView } from "@/components/plan-view"
-import { asPlan, FLOW_STATUS_LABEL } from "@/lib/plan"
+import { asPlan, FLOW_STATUS_LABEL, RUN_STATUS_LABEL } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { deleteFlow } from "../../ai-actions"
 import { formatDateTime } from "../../format"
+import { RunPanel } from "./run-panel"
 
 export const metadata = { title: "Automatización" }
 
@@ -32,6 +33,18 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
     .maybeSingle()
   if (!flow) notFound()
 
+  const [{ data: files }, { data: ai }, { data: runs }] = await Promise.all([
+    supabase.from("integration_files").select("id, name").eq("workspace_id", workspaceId).order("name"),
+    supabase.from("ai_connections").select("status").eq("workspace_id", workspaceId).eq("provider", "openai").maybeSingle(),
+    supabase
+      .from("flow_runs")
+      .select("id, status, started_at")
+      .eq("workspace_id", workspaceId)
+      .eq("flow_id", flow.id)
+      .order("started_at", { ascending: false })
+      .limit(10),
+  ])
+
   const plan = asPlan(flow.definition)
   const canDelete = isAdmin || flow.created_by === user.id
   const base = `/w/${workspaceId}`
@@ -52,16 +65,40 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
 
       {plan ? <PlanView plan={plan} /> : <p className="text-graphite">Este flujo no tiene un plan legible.</p>}
 
-      <div className="border-l-2 border-rule pl-4 text-sm text-graphite">
-        <p>
-          Esta automatización todavía no se puede ejecutar. Cuando estén listas las planillas y la ejecución, podrás
-          probarla paso a paso y aprobar cada paso marcado como «Requiere tu aprobación».
-        </p>
-        <p className="mt-2">
-          Para cambiar el plan, pídeselo al asistente
-          {flow.source_message_id ? " en la conversación original" : ""} y guarda la nueva versión.
-        </p>
-      </div>
+      <section className="border border-ink bg-sheet">
+        <h2 className="border-b border-ink px-5 py-3 font-semibold">Ejecutar</h2>
+        <div className="px-5 py-4">
+          <RunPanel
+            workspaceId={workspaceId}
+            flowId={flow.id}
+            files={files ?? []}
+            aiReady={ai?.status === "active"}
+            needsSheets={Boolean(plan?.connections.some((c) => c.kind === "spreadsheet"))}
+            isAdmin={isAdmin}
+          />
+        </div>
+      </section>
+
+      {runs && runs.length > 0 ? (
+        <section className="border border-ink bg-sheet">
+          <h2 className="border-b border-ink px-5 py-3 font-semibold">Ejecuciones de esta automatización</h2>
+          <ul className="divide-y divide-rule">
+            {runs.map((r) => (
+              <li key={r.id}>
+                <Link href={`${base}/ejecuciones/${r.id}`} className="flex items-center justify-between gap-4 px-5 py-3 hover:bg-paper">
+                  <span className="text-ink">{formatDateTime(r.started_at)}</span>
+                  <span className="text-sm text-graphite">{RUN_STATUS_LABEL[r.status] ?? r.status}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <p className="text-sm text-graphite">
+        Para cambiar el plan, pídeselo al asistente
+        {flow.source_message_id ? " en la conversación original" : ""} y guarda la nueva versión.
+      </p>
 
       {canDelete ? (
         <form action={deleteFlow} className="border-t border-rule pt-4">

@@ -86,3 +86,11 @@ export const OPENAI_MODELS = [
   { id: "gpt-6-astra", label: "GPT-6 Astra", hint: "El más capaz, más caro." },
   { id: "gpt-6-luna", label: "GPT-6 Luna", hint: "El más económico." },
 ] as const
+
+export const RUN_STATUS_LABEL: Record<string, string> = {
+  running: "En curso",
+  awaiting_approval: "Esperando tu aprobación",
+  succeeded: "Terminada",
+  failed: "Con error",
+  cancelled: "Cancelada",
+}

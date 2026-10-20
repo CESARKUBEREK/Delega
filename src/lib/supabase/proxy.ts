@@ -4,7 +4,7 @@ import type { Database } from "./database.types"
 import { supabasePublishableKey, supabaseUrl } from "./env"
 
 // Rutas que exigen sesión y rutas que solo tienen sentido sin ella.
-const PROTECTED_PREFIXES = ["/w", "/reset-password"]
+const PROTECTED_PREFIXES = ["/w", "/reset-password", "/integraciones"]
 const GUEST_ONLY = ["/login", "/signup", "/forgot-password"]
 
 function matches(pathname: string, prefixes: string[]) {
