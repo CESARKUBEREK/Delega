@@ -6,7 +6,10 @@ export const GOOGLE_SCOPES = ["openid", "email", "https://www.googleapis.com/aut
 export const SPREADSHEET_MIME = "application/vnd.google-apps.spreadsheet"
 
 export class GoogleError extends Error {
-  constructor(public code: "invalid_grant" | "not_found" | "forbidden" | "bad_request" | "unavailable", message: string) {
+  constructor(
+    public code: "invalid_grant" | "invalid_client" | "not_found" | "forbidden" | "bad_request" | "unavailable",
+    message: string,
+  ) {
     super(message)
   }
 }
@@ -92,10 +95,15 @@ async function tokenRequest(body: Record<string, string>): Promise<TokenResponse
   } catch {
     throw new GoogleError("unavailable", "No se pudo contactar con Google.")
   }
-  const data = (await res.json().catch(() => ({}))) as TokenResponse
+  const data = (await res.json().catch(() => ({}))) as TokenResponse & { error_description?: string }
   if (!res.ok || !data.access_token) {
+    // Solo se registra el código de error de Google, nunca tokens.
+    console.error("google_token_error", data.error ?? res.status)
     if (data.error === "invalid_grant") throw new GoogleError("invalid_grant", "Google ha revocado el acceso.")
-    throw new GoogleError("bad_request", "Google rechazó la autorización.")
+    if (data.error === "invalid_client" || data.error === "unauthorized_client") {
+      throw new GoogleError("invalid_client", "Google no reconoce el ID o el secreto del cliente OAuth configurados en el servidor.")
+    }
+    throw new GoogleError("bad_request", `Google rechazó la autorización (${String(data.error ?? res.status).slice(0, 60)}).`)
   }
   return data
 }

@@ -11,6 +11,10 @@ const MESSAGES: Record<string, string> = {
   no_refresh_token: "Google no devolvió un permiso duradero. Vuelve a intentarlo.",
   forbidden: "Solo un administrador del espacio puede conectar Google.",
   not_configured: "La conexión con Google aún no está configurada en el servidor.",
+  google_invalid_client:
+    "Google no reconoce el ID o el secreto del cliente OAuth configurados en el servidor (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).",
+  google_bad_request: "Google rechazó el canje de la autorización. Vuelve a intentarlo desde Integraciones.",
+  google_unavailable: "Google no respondió a tiempo. Vuelve a intentarlo.",
 }
 
 export default function GoogleResultPage({ searchParams }: PageProps<"/integraciones/google">) {
@@ -29,6 +33,7 @@ async function Message({ searchParams }: Pick<PageProps<"/integraciones/google">
   return (
     <p role="alert" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
       {MESSAGES[code] ?? "No se pudo completar la conexión con Google. Inténtalo de nuevo desde Integraciones."}
+      <span className="mt-1 block text-xs opacity-80">Código: {code.slice(0, 40)}</span>
     </p>
   )
 }
