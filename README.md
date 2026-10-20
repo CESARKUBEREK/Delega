@@ -28,8 +28,10 @@ npm run dev                  # http://localhost:3000
 | `/w/[id]` | Panel del espacio: estado de la IA, borradores y conversaciones recientes |
 | `/w/[id]/asistente` | Chat que convierte una petición en un plan de flujo revisable (`?c=` abre una conversación) |
 | `/w/[id]/automatizaciones` | Planes guardados como borrador y su detalle |
-| `/w/[id]/integraciones` | Conectar la clave de OpenAI del espacio (BYOK) y elegir modelo |
-| `/w/[id]/historial` | Conversaciones y consumo de tokens del mes |
+| `/w/[id]/integraciones` | Clave de OpenAI (BYOK) y modelo; cuenta de Google y planillas elegidas |
+| `/w/[id]/historial` | Ejecuciones, conversaciones y consumo de tokens del mes |
+| `/w/[id]/ejecuciones/[run]` | Avance de una ejecución, aprobación de escrituras y bitácora |
+| `/integraciones/google/callback` | Vuelta del consentimiento de Google (el canje lo hace la Edge Function) |
 | `/w/[id]/configuracion` | Miembros, invitaciones, nombre, salir o borrar |
 | `/invite#token` | Aceptar una invitación. El token va en el fragmento para que no llegue al servidor |
 
@@ -63,6 +65,7 @@ Las migraciones viven en `supabase/migrations/` y se versionan por marca de tiem
 |---|---|
 | `20261019150533_core_auth_workspaces.sql` | Perfiles, espacios (personal u organización), membresías con rol, invitaciones, auditoría, RLS y trigger de alta |
 | `20261019210000_ai_assistant.sql` | Conexiones de IA (clave en Vault), conversaciones, mensajes, flujos y consumo |
+| `20261020090000_sheets_runs.sql` | Integración con Google (refresh token en Vault), planillas elegidas, ejecuciones y bitácora; índices pendientes |
 
 ### Modelo de seguridad
 
@@ -138,4 +141,14 @@ El asistente devuelve `{ reply, plan }`, donde `plan` es `null` o un objeto con 
 - `connection`: `spreadsheet`, `email`, `calendar`, `database`, `documents` o `none`.
 - Los pasos `write` y `notify` llevan siempre `requires_approval: true`, aunque el modelo diga lo contrario.
 
-En esta fase nada se ejecuta: el plan se revisa y se guarda como borrador.
+## Planillas y ejecución
+
+- **Acceso a Google:** permiso `drive.file` (no sensible). Delega solo abre las planillas que un administrador elige con el selector de Google. El refresh token se guarda cifrado en Vault; al navegador solo llega un token de una hora para abrir el selector.
+- **Ejecución:** la Edge Function `run-flow` sigue el plan con un agente (Responses API, `store: false`) y cinco herramientas: `list_sheets`, `read_range`, `append_rows`, `update_range` y `finish`. Leer no requiere permiso; **cada escritura se pausa** (`awaiting_approval`) y el usuario ve las filas exactas antes de aprobar. Se escribe en modo `RAW`, así que nada se interpreta como fórmula.
+- **Por tramos:** cada petición avanza como mucho 90 s; el panel pide `continue` hasta terminar. Un *lease* en `flow_runs` impide avanzar la misma ejecución dos veces a la vez. Límites: 40 acciones, 3.000 celdas por lectura y 5.000 por escritura.
+- **Configuración:** secretos `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en las Edge Functions; en Vercel, `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY` (restringida a la Picker API y al dominio) y `NEXT_PUBLIC_GOOGLE_APP_ID` (número del proyecto). URI de redirección: `https://delega-five.vercel.app/integraciones/google/callback`.
+
+```bash
+supabase functions deploy google-connection
+supabase functions deploy run-flow
+```

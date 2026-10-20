@@ -140,6 +140,93 @@ export type Database = {
           },
         ]
       }
+      flow_runs: {
+        Row: {
+          error: string | null
+          file_ids: string[]
+          finished_at: string | null
+          flow_id: string | null
+          flow_name: string
+          id: string
+          input_tokens: number
+          lease_until: string | null
+          model: string | null
+          note: string
+          output_tokens: number
+          pending_action: Json | null
+          plan: Json
+          started_at: string
+          started_by: string | null
+          state: Json
+          status: string
+          summary: string | null
+          tool_calls: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          error?: string | null
+          file_ids?: string[]
+          finished_at?: string | null
+          flow_id?: string | null
+          flow_name: string
+          id?: string
+          input_tokens?: number
+          lease_until?: string | null
+          model?: string | null
+          note?: string
+          output_tokens?: number
+          pending_action?: Json | null
+          plan: Json
+          started_at?: string
+          started_by?: string | null
+          state?: Json
+          status?: string
+          summary?: string | null
+          tool_calls?: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          error?: string | null
+          file_ids?: string[]
+          finished_at?: string | null
+          flow_id?: string | null
+          flow_name?: string
+          id?: string
+          input_tokens?: number
+          lease_until?: string | null
+          model?: string | null
+          note?: string
+          output_tokens?: number
+          pending_action?: Json | null
+          plan?: Json
+          started_at?: string
+          started_by?: string | null
+          state?: Json
+          status?: string
+          summary?: string | null
+          tool_calls?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_runs_flow_id_workspace_id_fkey"
+            columns: ["flow_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "flows"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "flow_runs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flows: {
         Row: {
           created_at: string
@@ -190,6 +277,97 @@ export type Database = {
           },
           {
             foreignKeyName: "flows_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_files: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          id: string
+          integration_id: string
+          mime_type: string | null
+          name: string
+          provider_file_id: string
+          url: string | null
+          workspace_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          integration_id: string
+          mime_type?: string | null
+          name: string
+          provider_file_id: string
+          url?: string | null
+          workspace_id: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          integration_id?: string
+          mime_type?: string | null
+          name?: string
+          provider_file_id?: string
+          url?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_files_integration_id_workspace_id_fkey"
+            columns: ["integration_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "integrations"
+            referencedColumns: ["id", "workspace_id"]
+          },
+        ]
+      }
+      integrations: {
+        Row: {
+          account_email: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          provider: string
+          scopes: string
+          status: string
+          updated_at: string
+          vault_secret_id: string
+          workspace_id: string
+        }
+        Insert: {
+          account_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          provider: string
+          scopes?: string
+          status?: string
+          updated_at?: string
+          vault_secret_id: string
+          workspace_id: string
+        }
+        Update: {
+          account_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          provider?: string
+          scopes?: string
+          status?: string
+          updated_at?: string
+          vault_secret_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integrations_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -329,6 +507,50 @@ export type Database = {
           },
         ]
       }
+      oauth_states: {
+        Row: {
+          code_verifier: string
+          created_at: string
+          expires_at: string
+          id: string
+          provider: string
+          redirect_uri: string
+          state_hash: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          code_verifier: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          provider: string
+          redirect_uri: string
+          state_hash: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          code_verifier?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          provider?: string
+          redirect_uri?: string
+          state_hash?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_states_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -355,6 +577,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      run_events: {
+        Row: {
+          created_at: string
+          detail: Json | null
+          id: number
+          kind: string
+          run_id: string
+          title: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json | null
+          id?: never
+          kind: string
+          run_id: string
+          title: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: Json | null
+          id?: never
+          kind?: string
+          run_id?: string
+          title?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "run_events_run_id_workspace_id_fkey"
+            columns: ["run_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "flow_runs"
+            referencedColumns: ["id", "workspace_id"]
+          },
+        ]
       }
       usage_events: {
         Row: {
@@ -486,6 +746,34 @@ export type Database = {
         }[]
       }
       create_organization: { Args: { p_name: string }; Returns: string }
+      integration_delete: {
+        Args: { p_actor: string; p_provider: string; p_workspace_id: string }
+        Returns: boolean
+      }
+      integration_mark_invalid: {
+        Args: { p_provider: string; p_workspace_id: string }
+        Returns: undefined
+      }
+      integration_save: {
+        Args: {
+          p_account_email: string
+          p_actor: string
+          p_provider: string
+          p_refresh_token: string
+          p_scopes: string
+          p_workspace_id: string
+        }
+        Returns: string
+      }
+      integration_secret: {
+        Args: { p_provider: string; p_workspace_id: string }
+        Returns: {
+          account_email: string
+          integration_id: string
+          refresh_token: string
+          status: string
+        }[]
+      }
     }
     Enums: {
       membership_status: "active" | "suspended"

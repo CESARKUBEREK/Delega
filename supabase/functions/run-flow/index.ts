@@ -594,8 +594,9 @@ async function handle(req: Request): Promise<Response> {
     claimed.state.items.push({ type: "function_call_output", call_id: pending.call_id, output })
     claimed.status = "running"
     claimed.pending_action = null
-    await save(ctx, claimed, { status: "running", pending_action: null })
-    return json({ run_id: claimed.id, status: await advance(ctx, claimed) })
+    // El panel retoma la ejecución con "continue".
+    await save(ctx, claimed, { status: "running", pending_action: null, lease_until: null })
+    return json({ run_id: claimed.id, status: "running" })
   }
 
   if (action === "cancel") {

@@ -18,11 +18,15 @@ function env(name: string): string {
 }
 
 export function googleConfigured(): boolean {
-  return Boolean(Deno.env.get("GOOGLE_CLIENT_ID") && Deno.env.get("GOOGLE_CLIENT_SECRET") && Deno.env.get("DELEGA_SITE_URL"))
+  return Boolean(Deno.env.get("GOOGLE_CLIENT_ID") && Deno.env.get("GOOGLE_CLIENT_SECRET"))
 }
 
+// Dirección pública de la app. Debe coincidir con la URI de redirección
+// registrada en el cliente OAuth de Google.
+const SITE_URL = (Deno.env.get("DELEGA_SITE_URL") ?? "https://delega-five.vercel.app").replace(/\/+$/, "")
+
 export function redirectUri(): string {
-  return `${env("DELEGA_SITE_URL").replace(/\/+$/, "")}/integraciones/google/callback`
+  return `${SITE_URL}/integraciones/google/callback`
 }
 
 // ---------------------------------------------------------------------------
