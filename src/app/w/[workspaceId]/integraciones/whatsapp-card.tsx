@@ -1,23 +1,27 @@
 import { createClient } from "@/lib/supabase/server"
 import { removeContact } from "../run-actions"
-import { formatDateTime } from "../format"
+import Link from "next/link"
 import { AddContactForm, ConnectWhatsAppForm, DisconnectWhatsAppForm, WebhookInfo } from "./whatsapp-client"
+import { EmbeddedSignupButton } from "./whatsapp-embedded"
+import { RetrySyncButton, WhatsAppSettingsForm } from "./whatsapp-settings"
+
+const DEFAULT_CATEGORIES = ["Cliente", "Proveedor", "Obra o proyecto", "Administración", "Personal", "Publicidad", "Otros"]
 
 export async function WhatsAppCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
   const supabase = await createClient()
-  const [{ data: integration }, { data: contacts }, { data: messages }] = await Promise.all([
+  const [{ data: integration }, { data: contacts }] = await Promise.all([
     supabase.from("integrations").select("account_email, status, config").eq("workspace_id", workspaceId).eq("provider", "whatsapp").maybeSingle(),
     supabase.from("contacts").select("id, name, phone").eq("workspace_id", workspaceId).order("name"),
-    isAdmin
-      ? supabase
-          .from("whatsapp_messages")
-          .select("id, direction, phone, contact_name, body, status, created_at")
-          .eq("workspace_id", workspaceId)
-          .order("created_at", { ascending: false })
-          .limit(8)
-      : Promise.resolve({ data: [] as { id: number; direction: string; phone: string; contact_name: string | null; body: string; status: string | null; created_at: string }[] }),
   ])
-  const config = (integration?.config ?? {}) as { verified_name?: string | null }
+  const config = (integration?.config ?? {}) as {
+    verified_name?: string | null
+    mode?: string
+    coexistence?: boolean
+    categories?: string[]
+    retention_days?: number | null
+  }
+  const metaAppId = process.env.NEXT_PUBLIC_META_APP_ID
+  const metaConfigId = process.env.NEXT_PUBLIC_META_CONFIG_ID
 
   return (
     <section className="border border-ink bg-sheet">
@@ -28,8 +32,10 @@ export async function WhatsAppCard({ workspaceId, isAdmin }: { workspaceId: stri
             Avisos a contactos autorizados y flujos que arrancan cuando alguien escribe. Con tu cuenta de WhatsApp Business (Meta).
           </p>
         </div>
-        {integration ? (
-          <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">Conectado</span>
+        {integration?.status === "active" ? (
+          <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">{config.coexistence ? "Conectado · coexistencia" : "Conectado"}</span>
+        ) : integration ? (
+          <span className="shrink-0 border border-alert px-2 py-0.5 text-xs text-alert">Desvinculado</span>
         ) : (
           <span className="shrink-0 border border-rule px-2 py-0.5 text-xs text-graphite">Sin conectar</span>
         )}
@@ -45,9 +51,46 @@ export async function WhatsAppCard({ workspaceId, isAdmin }: { workspaceId: stri
 
         {isAdmin ? (
           integration ? (
-            <WebhookInfo workspaceId={workspaceId} />
+            <>
+              {integration.status !== "active" ? (
+                <p className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+                  El número se desvinculó de Delega desde WhatsApp o Meta. Desconéctalo aquí y vuelve a conectarlo.
+                </p>
+              ) : null}
+              <p className="text-sm">
+                <Link href={`/w/${workspaceId}/bandeja`} className="text-stroke underline underline-offset-4">
+                  Abrir la bandeja clasificada
+                </Link>
+              </p>
+              {config.mode === "manual" ? <WebhookInfo workspaceId={workspaceId} /> : null}
+              {config.coexistence ? <RetrySyncButton workspaceId={workspaceId} /> : null}
+              <details className="text-sm">
+                <summary className="cursor-pointer text-ink">Ajustes de clasificación y conservación</summary>
+                <div className="mt-3">
+                  <WhatsAppSettingsForm
+                    workspaceId={workspaceId}
+                    categories={config.categories?.length ? config.categories : DEFAULT_CATEGORIES}
+                    retentionDays={config.retention_days ?? null}
+                  />
+                </div>
+              </details>
+            </>
           ) : (
-            <ConnectWhatsAppForm workspaceId={workspaceId} />
+            <>
+              {metaAppId && metaConfigId ? (
+                <EmbeddedSignupButton workspaceId={workspaceId} appId={metaAppId} configId={metaConfigId} />
+              ) : (
+                <p className="text-sm text-graphite">
+                  La conexión en un clic con WhatsApp Business estará disponible cuando Meta apruebe la app de Delega.
+                </p>
+              )}
+              <details className="text-sm">
+                <summary className="cursor-pointer text-ink">Conexión manual con una app de Meta propia</summary>
+                <div className="mt-3">
+                  <ConnectWhatsAppForm workspaceId={workspaceId} />
+                </div>
+              </details>
+            </>
           )
         ) : (
           <p className="text-sm text-graphite">Solo un administrador puede conectar WhatsApp.</p>
@@ -82,26 +125,6 @@ export async function WhatsAppCard({ workspaceId, isAdmin }: { workspaceId: stri
           )}
           {isAdmin ? <AddContactForm workspaceId={workspaceId} /> : null}
         </div>
-
-        {isAdmin && messages && messages.length > 0 ? (
-          <div>
-            <h3 className="text-sm font-semibold text-ink">Últimos mensajes</h3>
-            <ul className="mt-2 divide-y divide-rule border border-rule">
-              {messages.map((m) => (
-                <li key={m.id} className="px-3 py-2 text-sm">
-                  <p className="flex justify-between gap-3 text-xs text-graphite">
-                    <span>
-                      {m.direction === "in" ? "Recibido de" : "Enviado a"} {m.contact_name ?? `+${m.phone.replace(/^\+/, "")}`}
-                      {m.status && m.direction === "out" ? ` · ${m.status}` : ""}
-                    </span>
-                    <span>{formatDateTime(m.created_at)}</span>
-                  </p>
-                  <p className="mt-0.5 line-clamp-2 text-ink">{m.body || "(sin texto)"}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
 
         {isAdmin && integration ? <DisconnectWhatsAppForm workspaceId={workspaceId} /> : null}
       </div>

@@ -6,15 +6,16 @@ const supabaseWs = supabaseUrl.replace(/^https:/, "wss:")
 
 // CSP sin nonces (permite el prerenderizado). Solo se conecta con el propio
 // sitio y con Supabase. El único script de terceros es el selector de
-// archivos de Google (apis.google.com), que se abre en un iframe de docs.google.com.
+// archivos de Google (apis.google.com), que se abre en un iframe de docs.google.com,
+// y el SDK de Meta para el alta de WhatsApp Business (connect.facebook.net).
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' https://apis.google.com${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://apis.google.com https://connect.facebook.net${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' blob: data: https://lh3.googleusercontent.com https://*.gstatic.com",
+  "img-src 'self' blob: data: https://lh3.googleusercontent.com https://*.gstatic.com https://www.facebook.com",
   "font-src 'self'",
-  `connect-src 'self' ${supabaseUrl} ${supabaseWs}`.trim(),
-  "frame-src https://docs.google.com https://drive.google.com https://accounts.google.com",
+  `connect-src 'self' ${supabaseUrl} ${supabaseWs} https://graph.facebook.com https://www.facebook.com https://connect.facebook.net`.trim(),
+  "frame-src https://docs.google.com https://drive.google.com https://accounts.google.com https://www.facebook.com https://web.facebook.com",
   "object-src 'none'",
   "base-uri 'self'",
   // Los formularios de OAuth redirigen a Supabase y de ahí a Google/Microsoft.
@@ -32,7 +33,8 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
-  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  // El alta de Meta se abre en una ventana emergente que habla con esta página.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
 ]
 
 const nextConfig: NextConfig = {

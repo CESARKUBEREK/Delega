@@ -565,17 +565,19 @@ export async function executePending(admin: Admin, run: RunRow, pending: Pending
         ? await sendText(token, config.phone_number_id, pending.phone, pending.text)
         : await sendTemplate(token, config.phone_number_id, pending.phone, pending.template, pending.language, pending.parameters)
       const { data: integ } = await admin.from("integrations").select("id").eq("workspace_id", run.workspace_id).eq("provider", "whatsapp").maybeSingle()
-      await admin.from("whatsapp_messages").insert({
-        workspace_id: run.workspace_id,
-        integration_id: integ?.id ?? null,
-        direction: "out",
-        phone: pending.phone,
-        contact_name: pending.to_label.slice(0, 200),
-        body: pending.tool === "send_whatsapp" ? pending.text : `[plantilla ${pending.template}] ${pending.parameters.join(" · ")}`.slice(0, 4096),
-        message_type: pending.tool === "send_whatsapp" ? "text" : "template",
-        wa_message_id: id,
-        status: "sent",
-        run_id: run.id,
+      await admin.rpc("whatsapp_record_message", {
+        p_workspace_id: run.workspace_id,
+        p_integration_id: integ?.id ?? null,
+        p_counterpart: pending.phone,
+        p_contact_name: pending.to_label.slice(0, 200),
+        p_direction: "out",
+        p_source: "api",
+        p_body: pending.tool === "send_whatsapp" ? pending.text : `[plantilla ${pending.template}] ${pending.parameters.join(" · ")}`,
+        p_type: pending.tool === "send_whatsapp" ? "text" : "template",
+        p_wa_message_id: id,
+        p_sent_at: new Date().toISOString(),
+        p_status: "sent",
+        p_run_id: run.id,
       })
       await addEvent(admin, run, "approved", `Aprobado: WhatsApp enviado a ${pending.to_label}`, { tool: pending.tool, decided_by: decidedBy })
       return JSON.stringify({ ok: true, message_id: id })

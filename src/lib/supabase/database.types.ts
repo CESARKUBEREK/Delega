@@ -713,6 +713,9 @@ export type Database = {
       }
       whatsapp_messages: {
         Row: {
+          sent_at: string
+          source: string
+          thread_id: string | null
           body: string
           contact_name: string | null
           created_at: string
@@ -727,6 +730,9 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          sent_at?: string
+          source?: string
+          thread_id?: string | null
           body?: string
           contact_name?: string | null
           created_at?: string
@@ -741,6 +747,9 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          sent_at?: string
+          source?: string
+          thread_id?: string | null
           body?: string
           contact_name?: string | null
           created_at?: string
@@ -763,6 +772,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_threads: {
+        Row: {
+          archived: boolean
+          category: string | null
+          classified_at: string | null
+          classified_count: number
+          client: string | null
+          contact_name: string | null
+          created_at: string
+          id: string
+          integration_id: string | null
+          last_message_at: string | null
+          manually_edited: boolean
+          message_count: number
+          needs_reply: boolean | null
+          phone: string
+          project: string | null
+          summary: string | null
+          updated_at: string
+          urgency: string | null
+          workspace_id: string
+        }
+        Insert: {
+          archived?: boolean
+          category?: string | null
+          classified_at?: string | null
+          classified_count?: number
+          client?: string | null
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          integration_id?: string | null
+          last_message_at?: string | null
+          manually_edited?: boolean
+          message_count?: number
+          needs_reply?: boolean | null
+          phone: string
+          project?: string | null
+          summary?: string | null
+          updated_at?: string
+          urgency?: string | null
+          workspace_id: string
+        }
+        Update: {
+          archived?: boolean
+          category?: string | null
+          classified_at?: string | null
+          classified_count?: number
+          client?: string | null
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          integration_id?: string | null
+          last_message_at?: string | null
+          manually_edited?: boolean
+          message_count?: number
+          needs_reply?: boolean | null
+          phone?: string
+          project?: string | null
+          summary?: string | null
+          updated_at?: string
+          urgency?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
       }
       workspaces: {
         Row: {

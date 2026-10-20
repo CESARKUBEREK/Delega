@@ -212,3 +212,111 @@ export async function setFlowActive(input: {
   refresh()
   return { ok: true }
 }
+
+// ---------------------------------------------------------------------------
+// WhatsApp Business con Embedded Signup (coexistencia) y bandeja clasificada
+// ---------------------------------------------------------------------------
+
+export async function connectWhatsAppEmbedded(input: {
+  workspaceId: string
+  code: string
+  wabaId: string
+  phoneNumberId: string | null
+  coexistence: boolean
+}): Promise<{ ok: true; display: string | null; syncRequested: boolean } | { ok: false; error: string }> {
+  if (!UUID_RE.test(input.workspaceId)) return { ok: false, error: "Espacio no válido." }
+  if (!input.code || input.code.length > 2000 || !/^[0-9]{5,30}$/.test(input.wabaId)) {
+    return { ok: false, error: "Meta no devolvió los datos del alta." }
+  }
+  const result = await callEdgeFunction<{ display_phone_number: string | null; sync_requested: boolean }>(
+    "whatsapp-connection",
+    {
+      action: "embedded",
+      workspace_id: input.workspaceId,
+      code: input.code,
+      waba_id: input.wabaId,
+      phone_number_id: input.phoneNumberId && /^[0-9]{5,30}$/.test(input.phoneNumberId) ? input.phoneNumberId : null,
+      coexistence: input.coexistence,
+    },
+    60_000,
+  )
+  if (result.error) return { ok: false, error: result.error.message }
+  refresh()
+  return { ok: true, display: result.data.display_phone_number, syncRequested: result.data.sync_requested }
+}
+
+export async function retryWhatsAppSync(workspaceId: string): Promise<ActionResult> {
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const result = await callEdgeFunction("whatsapp-connection", { action: "retry_sync", workspace_id: workspaceId }, 30_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  return { ok: true }
+}
+
+export type SettingsState = { error?: string; message?: string }
+
+export async function saveWhatsAppSettings(_prev: SettingsState, formData: FormData): Promise<SettingsState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  const categories = String(formData.get("categories") ?? "")
+    .split(/[\n,]/)
+    .map((c) => c.trim())
+    .filter(Boolean)
+    .slice(0, 15)
+  const days = Number(formData.get("retentionDays"))
+  const result = await callEdgeFunction(
+    "whatsapp-connection",
+    {
+      action: "settings",
+      workspace_id: workspaceId,
+      categories,
+      retention_days: Number.isFinite(days) && days >= 1 ? Math.trunc(days) : null,
+    },
+    30_000,
+  )
+  if (result.error) return { error: result.error.message }
+  refresh()
+  return { message: "Ajustes guardados." }
+}
+
+export async function classifyThreads(
+  workspaceId: string,
+  threadId?: string,
+): Promise<{ ok: true; classified: number; remaining: number } | { ok: false; error: string }> {
+  if (!UUID_RE.test(workspaceId) || (threadId && !UUID_RE.test(threadId))) return { ok: false, error: "Datos no válidos." }
+  const result = await callEdgeFunction<{ classified: number; remaining: number }>(
+    "whatsapp-classify",
+    { workspace_id: workspaceId, thread_id: threadId ?? null },
+  )
+  if (result.error) return { ok: false, error: result.error.message }
+  refresh()
+  return { ok: true, classified: result.data.classified, remaining: result.data.remaining }
+}
+
+export async function updateThread(_prev: SettingsState, formData: FormData): Promise<SettingsState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const threadId = String(formData.get("threadId") ?? "")
+  if (!UUID_RE.test(workspaceId) || !UUID_RE.test(threadId)) return { error: "Datos no válidos." }
+  const text = (k: string, n: number) => {
+    const v = String(formData.get(k) ?? "").trim()
+    return v ? v.slice(0, n) : null
+  }
+  const urgency = String(formData.get("urgency") ?? "")
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("whatsapp_threads")
+    .update({
+      category: text("category", 60),
+      client: text("client", 120),
+      project: text("project", 120),
+      urgency: ["alta", "media", "baja"].includes(urgency) ? urgency : null,
+      needs_reply: formData.get("needsReply") === "on",
+      archived: formData.get("archived") === "on",
+      manually_edited: true,
+    })
+    .eq("id", threadId)
+    .eq("workspace_id", workspaceId)
+    .select("id")
+  if (error || !data?.length) return { error: "Solo un administrador puede corregir la clasificación." }
+  refresh()
+  return { message: "Clasificación guardada. La IA ya no cambiará estos campos." }
+}

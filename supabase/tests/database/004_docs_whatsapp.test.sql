@@ -4,7 +4,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(16);
+select plan(23);
 
 insert into auth.users (id, email, email_confirmed_at) values
   ('00000000-0000-0000-0000-0000000000a1', 'a@test.dev', now()),
@@ -104,7 +104,32 @@ select throws_ok($$ insert into public.whatsapp_messages (workspace_id, directio
 select pg_temp.logout();
 
 -- ---------------------------------------------------------------------------
--- 4. Borrar el espacio borra el secreto
+-- 4. Conversaciones y clasificación
+-- ---------------------------------------------------------------------------
+select pg_temp.as_service();
+select isnt(public.whatsapp_record_message((select v::uuid from t_ctx where k = 'org'), (select v::uuid from t_ctx where k = 'wa'),
+  '34600111222', 'Obra Norte', 'in', 'history', '¿Cuándo llega el hormigón?', 'text', 'wamid.h1', now() - interval '2 days'),
+  null, 'registra un mensaje del histórico');
+select is(public.whatsapp_record_message((select v::uuid from t_ctx where k = 'org'), (select v::uuid from t_ctx where k = 'wa'),
+  '34600111222', 'Obra Norte', 'in', 'history', 'repetido', 'text', 'wamid.h1', now()),
+  null, 'un mensaje repetido no se cuenta dos veces');
+select public.whatsapp_record_message((select v::uuid from t_ctx where k = 'org'), (select v::uuid from t_ctx where k = 'wa'),
+  '34600111222', '', 'out', 'echo', 'Mañana a las 8', 'text', 'wamid.e1', now() - interval '1 day');
+select is((select message_count from public.whatsapp_threads where phone = '34600111222'), 2, 'la conversación cuenta sus mensajes');
+select is((select contact_name from public.whatsapp_threads where phone = '34600111222'), 'Obra Norte', 'un eco sin nombre no borra el nombre');
+select is(public.whatsapp_purge((select v::uuid from t_ctx where k = 'org'), 1), 1, 'la conservación borra lo antiguo');
+select pg_temp.logout();
+
+select pg_temp.login('00000000-0000-0000-0000-0000000000a1');
+select isnt_empty($$ update public.whatsapp_threads set category = 'Obra', manually_edited = true returning id $$,
+                  'el owner corrige la clasificación');
+select pg_temp.logout();
+select pg_temp.login('00000000-0000-0000-0000-0000000000b1');
+select is_empty($$ select 1 from public.whatsapp_threads $$, 'un member no ve las conversaciones');
+select pg_temp.logout();
+
+-- ---------------------------------------------------------------------------
+-- 5. Borrar el espacio borra el secreto
 -- ---------------------------------------------------------------------------
 delete from public.workspaces where id = (select v::uuid from t_ctx where k = 'org');
 select is((select count(*)::int from vault.secrets where name like 'integration:%'), 0, 'no quedan credenciales huérfanas');

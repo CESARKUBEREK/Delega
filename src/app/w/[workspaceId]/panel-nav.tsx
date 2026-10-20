@@ -6,6 +6,7 @@ import { useParams, usePathname } from "next/navigation"
 const SECTIONS = [
   { slug: "", label: "Inicio" },
   { slug: "asistente", label: "Asistente" },
+  { slug: "bandeja", label: "Bandeja" },
   { slug: "automatizaciones", label: "Automatizaciones" },
   { slug: "integraciones", label: "Integraciones" },
   { slug: "historial", label: "Historial" },
