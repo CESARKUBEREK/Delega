@@ -55,15 +55,14 @@ export async function pkceChallenge(verifier: string): Promise<string> {
   return base64url(digest)
 }
 
-export function authorizationUrl(state: string, challenge: string): string {
+export function authorizationUrl(state: string, challenge: string, scopes: string[] = GOOGLE_SCOPES): string {
   const params = new URLSearchParams({
     client_id: env("GOOGLE_CLIENT_ID"),
     redirect_uri: redirectUri(),
     response_type: "code",
-    scope: GOOGLE_SCOPES.join(" "),
+    scope: scopes.join(" "),
     access_type: "offline",
     prompt: "consent",
-    include_granted_scopes: "true",
     state,
     code_challenge: challenge,
     code_challenge_method: "S256",

@@ -1,5 +1,7 @@
-// google-connection: conecta la cuenta de Google de un espacio con el permiso
-// drive.file (solo las planillas y documentos que el usuario elige con el selector).
+// google-connection: conecta cuentas de Google a un espacio.
+//   * product "drive" (provider "google"): permiso drive.file, solo las planillas
+//     y documentos que el usuario elige con el selector.
+//   * product "gmail" (provider "gmail"): leer el correo y enviar respuestas.
 // Acciones: start, callback, picker_token, add_files, remove_file, disconnect.
 // Solo owners y admins. El refresh token se guarda cifrado en Vault.
 import { authenticate, fail, isUuid, json, membershipRole, type AuthContext } from "../_shared/core.ts"
@@ -10,6 +12,7 @@ import {
   emailFromIdToken,
   exchangeCode,
   GoogleError,
+  GOOGLE_SCOPES,
   googleConfigured,
   pkceChallenge,
   randomToken,
@@ -19,6 +22,7 @@ import {
   DOCUMENT_MIME,
   SPREADSHEET_MIME,
 } from "../_shared/google.ts"
+import { GMAIL_SCOPES } from "../_shared/gmail.ts"
 
 const MAX_FILES_PER_WORKSPACE = 50
 
@@ -60,6 +64,7 @@ Deno.serve(async (req) => {
   if (action === "start") {
     const ws = await requireAdmin(ctx, body?.workspace_id)
     if (ws instanceof Response) return ws
+    const provider = body?.product === "gmail" ? "gmail" : "google"
 
     const state = randomToken(32)
     const verifier = randomToken(48)
@@ -68,12 +73,13 @@ Deno.serve(async (req) => {
       state_hash: await sha256Hex(state),
       workspace_id: ws,
       user_id: ctx.userId,
-      provider: "google",
+      provider,
       code_verifier: verifier,
       redirect_uri: redirectUri(),
     })
     if (error) return fail(500, "db_error", "No se pudo iniciar la conexión.")
-    return json({ url: authorizationUrl(state, await pkceChallenge(verifier)) })
+    const scopes = provider === "gmail" ? GMAIL_SCOPES : GOOGLE_SCOPES
+    return json({ url: authorizationUrl(state, await pkceChallenge(verifier), scopes) })
   }
 
   // ---------------------------------------------------------------------------
@@ -89,7 +95,7 @@ Deno.serve(async (req) => {
       .from("oauth_states")
       .delete()
       .eq("state_hash", await sha256Hex(state))
-      .select("workspace_id, user_id, code_verifier, expires_at")
+      .select("workspace_id, user_id, code_verifier, expires_at, provider")
     const row = rows?.[0]
     if (!row || row.user_id !== ctx.userId || new Date(row.expires_at) < new Date()) {
       return fail(400, "invalid_state", "La conexión caducó o no se inició desde esta sesión. Vuelve a intentarlo.")
@@ -103,25 +109,42 @@ Deno.serve(async (req) => {
     } catch (e) {
       return googleFail(e)
     }
+    const provider = row.provider === "gmail" ? "gmail" : "google"
     const granted = (tokens.scope ?? "").split(" ")
-    if (!granted.includes("https://www.googleapis.com/auth/drive.file")) {
+    const required = provider === "gmail"
+      ? ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send"]
+      : ["https://www.googleapis.com/auth/drive.file"]
+    if (!required.every((r) => granted.includes(r))) {
       if (tokens.refresh_token) await revokeToken(tokens.refresh_token)
-      return fail(400, "scope_denied", "Hace falta permitir el acceso a las planillas que elijas. Vuelve a conectar y marca esa casilla.")
+      return fail(400, provider === "gmail" ? "gmail_scope_denied" : "scope_denied", provider === "gmail"
+        ? "Hace falta permitir leer y enviar correo. Vuelve a conectar y marca las dos casillas."
+        : "Hace falta permitir el acceso a las planillas que elijas. Vuelve a conectar y marca esa casilla.")
     }
     if (!tokens.refresh_token) {
       return fail(400, "no_refresh_token", "Google no devolvió un permiso duradero. Vuelve a conectar.")
     }
 
+    const email = emailFromIdToken(tokens.id_token)
     const { error } = await ctx.admin.rpc("integration_save", {
       p_workspace_id: ws,
-      p_provider: "google",
+      p_provider: provider,
       p_refresh_token: tokens.refresh_token,
-      p_account_email: emailFromIdToken(tokens.id_token),
+      p_account_email: email,
       p_scopes: granted.join(" "),
       p_actor: ctx.userId,
     })
     if (error) return fail(500, "save_failed", "No se pudo guardar la conexión.")
-    return json({ ok: true, workspace_id: ws })
+    if (provider === "gmail") {
+      // Conserva categorías y conservación si ya existían; la sincronización empieza de cero.
+      const { data: prev } = await ctx.admin.from("integrations").select("config").eq("workspace_id", ws).eq("provider", "gmail").maybeSingle()
+      const config = (prev?.config ?? {}) as Record<string, unknown>
+      await ctx.admin.rpc("integration_set_config", {
+        p_workspace_id: ws,
+        p_provider: "gmail",
+        p_config: { ...config, email, history_id: null },
+      })
+    }
+    return json({ ok: true, workspace_id: ws, provider })
   }
 
   const ws = await requireAdmin(ctx, body?.workspace_id)
@@ -211,9 +234,11 @@ Deno.serve(async (req) => {
   // 5. Desconectar: revoca en Google y borra la conexión y el secreto.
   // ---------------------------------------------------------------------------
   if (action === "disconnect") {
-    const secret = await refreshTokenFor(ctx, ws)
+    const provider = body?.product === "gmail" ? "gmail" : "google"
+    const { data } = await ctx.admin.rpc("integration_secret", { p_workspace_id: ws, p_provider: provider })
+    const secret = data?.[0] as { refresh_token: string } | undefined
     if (secret) await revokeToken(secret.refresh_token)
-    const { error } = await ctx.admin.rpc("integration_delete", { p_workspace_id: ws, p_provider: "google", p_actor: ctx.userId })
+    const { error } = await ctx.admin.rpc("integration_delete", { p_workspace_id: ws, p_provider: provider, p_actor: ctx.userId })
     if (error) return fail(500, "delete_failed", "No se pudo desconectar Google.")
     return json({ ok: true })
   }
