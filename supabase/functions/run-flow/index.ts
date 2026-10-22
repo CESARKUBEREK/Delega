@@ -5,7 +5,8 @@
 // termina, queda en "running" y el panel pide "continue". Un lease en la fila
 // impide que dos peticiones avancen la misma ejecución a la vez.
 import { authenticate, fail, isUuid, json, membershipRole, type AuthContext } from "../_shared/core.ts"
-import { addEvent, advance, claim, createRun, executePending, RunError, type RunRow, save } from "../_shared/agent.ts"
+import { addEvent, addToolResult, advance, claim, createRun, executePending, RunError, type RunRow, save } from "../_shared/agent.ts"
+import { defaultConnection } from "../_shared/llm.ts"
 
 async function canManage(ctx: AuthContext, run: RunRow): Promise<boolean> {
   if (run.started_by === ctx.userId) return true
@@ -50,9 +51,8 @@ async function handle(req: Request): Promise<Response> {
       .maybeSingle()
     if (!flow) return fail(404, "not_found", "No se encontró la automatización.")
 
-    const { data: secretRows } = await ctx.admin.rpc("ai_connection_secret", { p_workspace_id: workspaceId, p_provider: "openai" })
-    const ai = secretRows?.[0] as { model: string; status: string } | undefined
-    if (!ai || ai.status !== "active") return fail(409, "no_connection", "Conecta una clave de OpenAI en Integraciones.")
+    const found = await defaultConnection(ctx.admin, workspaceId)
+    if ("error" in found) return fail(409, found.code, found.error)
 
     const since = new Date(Date.now() - 10 * 60_000).toISOString()
     const { count } = await ctx.admin
@@ -67,7 +67,8 @@ async function handle(req: Request): Promise<Response> {
       flow,
       fileIds,
       note,
-      model: ai.model,
+      provider: found.conn.provider,
+      model: found.conn.model,
       startedBy: ctx.userId,
       trigger: { type: "manual" },
     })
@@ -103,7 +104,7 @@ async function handle(req: Request): Promise<Response> {
       await addEvent(ctx.admin, claimed, "rejected", "Rechazado por el usuario", { tool: pending.tool, decided_by: ctx.userId })
     }
 
-    claimed.state.items.push({ type: "function_call_output", call_id: pending.call_id, output })
+    addToolResult(claimed, pending.call_id, output)
     claimed.status = "running"
     claimed.pending_action = null
     // El panel retoma la ejecución con "continue".

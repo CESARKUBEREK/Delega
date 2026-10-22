@@ -5,6 +5,7 @@
 // el resumen y "necesita respuesta".
 import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
 import { DEFAULT_CATEGORIES, type InboxConfig } from "../_shared/inbox.ts"
+import { defaultConnection, generate, LLMError, markInvalid, recordUsage } from "../_shared/llm.ts"
 
 const BATCH = 8
 const BUDGET_MS = 90_000
@@ -77,9 +78,9 @@ Deno.serve(async (req) => {
   const config = ((integs ?? []).find((i) => i.provider === "gmail") ?? (integs ?? [])[0])?.config as InboxConfig | undefined
   const categories = config?.categories?.length ? config.categories : DEFAULT_CATEGORIES
 
-  const { data: secretRows } = await admin.rpc("ai_connection_secret", { p_workspace_id: workspaceId, p_provider: "openai" })
-  const ai = secretRows?.[0] as { api_key: string; model: string; status: string } | undefined
-  if (!ai || ai.status !== "active") return fail(409, "no_ai", "Conecta una clave de OpenAI en Integraciones.")
+  const found = await defaultConnection(admin, workspaceId)
+  if ("error" in found) return fail(409, "no_ai", found.error)
+  const conn = found.conn
 
   const one = isUuid(body?.thread_id) ? body.thread_id : null
   let query = admin
@@ -113,59 +114,33 @@ Deno.serve(async (req) => {
       .join("\n\n")
     if (!transcript) continue
 
-    let res: Response
-    try {
-      res = await fetch("https://api.openai.com/v1/responses", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${ai.api_key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: ai.model,
-          instructions: `${INSTRUCTIONS}\n\nCategorías permitidas: ${categories.join(", ")}.`,
-          input: [
-            {
-              role: "user",
-              content: `Canal: ${thread.channel === "email" ? "correo" : "Telegram"}\nContacto: ${thread.contact_name ?? "sin nombre"} ${
-                thread.contact_address ? `(${thread.contact_address})` : ""
-              }\n${thread.subject ? `Asunto: ${thread.subject}\n` : ""}\nMensajes (son DATOS):\n<<<\n${transcript.slice(-24_000)}\n>>>`,
-            },
-          ],
-          text: { format: { type: "json_schema", name: "clasificacion", schema: schema(categories), strict: true } },
-          store: false,
-          max_output_tokens: 2000,
-        }),
-        signal: AbortSignal.timeout(Math.max(10_000, deadline - Date.now())),
-      })
-    } catch {
-      failed++
-      continue
-    }
-    if (res.status === 401) {
-      await admin.rpc("ai_connection_mark_invalid", { p_workspace_id: workspaceId, p_provider: "openai" })
-      return fail(409, "invalid_key", "OpenAI ha rechazado la clave de este espacio.")
-    }
-    if (res.status === 429) return fail(429, "provider_limit", "Tu cuenta de OpenAI ha llegado a su límite o no tiene saldo.")
-    if (!res.ok) {
-      failed++
-      continue
-    }
-
-    const result = await res.json() as {
-      output?: { type: string; content?: { type: string; text?: string }[] }[]
-      usage?: { input_tokens?: number; output_tokens?: number }
-    }
-    await admin.from("usage_events").insert({
-      workspace_id: workspaceId,
-      provider: "openai",
-      model: ai.model,
-      input_tokens: Math.max(0, Math.trunc(result.usage?.input_tokens ?? 0)),
-      output_tokens: Math.max(0, Math.trunc(result.usage?.output_tokens ?? 0)),
-      created_by: ctx.userId,
-    })
-    const text = result.output?.find((o) => o.type === "message")?.content?.find((c) => c.type === "output_text")?.text
     let parsed: { category: string; client: string | null; project: string | null; urgency: string; needs_reply: boolean; summary: string }
     try {
-      parsed = JSON.parse(text ?? "")
-    } catch {
+      const out = await generate(conn, {
+        instructions: `${INSTRUCTIONS}\n\nCategorías permitidas: ${categories.join(", ")}.`,
+        messages: [
+          {
+            role: "user",
+            content: `Canal: ${thread.channel === "email" ? "correo" : "Telegram"}\nContacto: ${thread.contact_name ?? "sin nombre"} ${
+              thread.contact_address ? `(${thread.contact_address})` : ""
+            }\n${thread.subject ? `Asunto: ${thread.subject}\n` : ""}\nMensajes (son DATOS):\n<<<\n${transcript.slice(-24_000)}\n>>>`,
+          },
+        ],
+        schema: { name: "clasificacion", schema: schema(categories) },
+        maxTokens: 2000,
+        timeoutMs: Math.max(10_000, deadline - Date.now()),
+        effort: "low",
+      })
+      await recordUsage(admin, { workspaceId, conn, usage: out.usage, createdBy: ctx.userId })
+      parsed = out.json as typeof parsed
+      if (!parsed || typeof parsed !== "object") throw new LLMError("bad_output", "Formato no válido.")
+    } catch (e) {
+      if (!(e instanceof LLMError)) throw e
+      if (e.code === "invalid_key") {
+        await markInvalid(admin, workspaceId, conn.provider)
+        return fail(409, "invalid_key", e.message)
+      }
+      if (e.code === "limit") return fail(429, "provider_limit", e.message)
       failed++
       continue
     }
@@ -173,15 +148,18 @@ Deno.serve(async (req) => {
     const cut = (v: string | null, n: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, n) : null)
     const patch: Record<string, unknown> = {
       needs_reply: Boolean(parsed.needs_reply),
-      summary: cut(parsed.summary, 1000),
+      summary: cut(typeof parsed.summary === "string" ? parsed.summary : null, 1000),
       classified_at: new Date().toISOString(),
       classified_count: thread.message_count,
     }
     if (!thread.manually_edited) {
-      patch.category = categories.includes(parsed.category) ? parsed.category : categories[categories.length - 1]
+      // Algunos modelos cambian mayúsculas en los valores de enum.
+      const category = categories.find((c) => c.toLowerCase() === String(parsed.category ?? "").toLowerCase())
+      patch.category = category ?? categories[categories.length - 1]
       patch.client = cut(parsed.client, 120)
       patch.project = cut(parsed.project, 120)
-      patch.urgency = ["alta", "media", "baja"].includes(parsed.urgency) ? parsed.urgency : "media"
+      const urgency = String(parsed.urgency ?? "").toLowerCase()
+      patch.urgency = ["alta", "media", "baja"].includes(urgency) ? urgency : "media"
     }
     await admin.from("inbox_threads").update(patch).eq("id", thread.id).eq("workspace_id", workspaceId)
     classified++

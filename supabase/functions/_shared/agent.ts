@@ -43,6 +43,20 @@ import {
   search as crmSearch,
   updateRecord,
 } from "./hubspot.ts"
+import {
+  agentStep,
+  type Conn,
+  connectionFor,
+  isProvider,
+  isToolResult,
+  LLMError,
+  markInvalid,
+  type Provider,
+  pushToolResult,
+  recordUsage,
+  type Step,
+  type ToolDef,
+} from "./llm.ts"
 
 export const SLICE_MS = 90_000
 const LEASE_SECONDS = 140
@@ -69,6 +83,7 @@ export type RunRow = {
   file_ids: string[]
   note: string
   model: string | null
+  provider: string
   state: { items: unknown[] }
   pending_action: PendingAction | null
   tool_calls: number
@@ -197,7 +212,7 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
 // ---------------------------------------------------------------------------
 const CELL = { type: ["string", "number", "boolean", "null"] }
 
-function fn(name: string, description: string, properties: Record<string, unknown>) {
+function fn(name: string, description: string, properties: Record<string, unknown>): ToolDef {
   return {
     type: "function",
     name,
@@ -208,7 +223,7 @@ function fn(name: string, description: string, properties: Record<string, unknow
 }
 
 function toolDefs(r: Resources) {
-  const tools: unknown[] = []
+  const tools: ToolDef[] = []
   const sheets = r.files.filter((f) => f.kind === "sheet").map((f) => f.alias)
   const docs = r.files.filter((f) => f.kind === "doc").map((f) => f.alias)
   const range = { type: "string", description: "Rango A1 con el nombre de la hoja, p. ej. 'Ventas!A1:F200' o 'Ventas'." }
@@ -397,7 +412,13 @@ export async function addEvent(admin: Admin, run: RunRow, kind: string, title: s
 // Guarda el progreso. Nunca pisa una ejecución que el usuario ya canceló.
 export async function save(admin: Admin, run: RunRow, patch: Record<string, unknown>) {
   const [first, ...rest] = run.state.items
-  const items = rest.length >= MAX_STATE_ITEMS ? [first, ...rest.slice(-(MAX_STATE_ITEMS - 1))] : run.state.items
+  let items = run.state.items
+  if (rest.length >= MAX_STATE_ITEMS) {
+    // Se recorta por el principio sin dejar un resultado de herramienta huérfano.
+    const tail = rest.slice(-(MAX_STATE_ITEMS - 1))
+    while (tail.length && isToolResult(tail[0])) tail.shift()
+    items = [first, ...tail]
+  }
   const { error } = await admin
     .from("flow_runs")
     .update({ state: { items }, tool_calls: run.tool_calls, input_tokens: run.input_tokens, output_tokens: run.output_tokens, ...patch })
@@ -671,9 +692,10 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
   const byAlias = new Map(res.files.map((f) => [f.alias, f]))
   const recipients = new Map(res.recipients.map((x) => [x.alias, x]))
 
-  const { data: secretRows } = await admin.rpc("ai_connection_secret", { p_workspace_id: run.workspace_id, p_provider: "openai" })
-  const ai = secretRows?.[0] as { api_key: string; model: string; status: string } | undefined
-  if (!ai || ai.status !== "active") return finishRun(admin, run, "failed", "La clave de OpenAI de este espacio no está activa.")
+  const provider: Provider = isProvider(run.provider) ? run.provider : "openai"
+  const found = await connectionFor(admin, run.workspace_id, provider)
+  if ("error" in found) return finishRun(admin, run, "failed", found.error)
+  const conn: Conn = { ...found.conn, model: run.model ?? found.conn.model }
 
   let token: string | null
   try {
@@ -684,7 +706,6 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
   }
   if (!token) res.googleActive = false
 
-  const model = run.model ?? ai.model
   const tools = toolDefs(res)
   let calToken: string | null = null
   const calendar = async () => (calToken ??= (await calendarToken(admin, run.workspace_id)).token)
@@ -694,64 +715,38 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       return finishRun(admin, run, "failed", `Se alcanzó el límite de ${MAX_TOOL_CALLS} acciones sin terminar.`)
     }
 
-    let response: Response
+    let step: Step
     try {
-      response = await fetch("https://api.openai.com/v1/responses", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${ai.api_key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model,
-          instructions: INSTRUCTIONS,
-          input: run.state.items,
-          tools,
-          parallel_tool_calls: false,
-          store: false,
-          max_output_tokens: 8000,
-        }),
-        signal: AbortSignal.timeout(Math.max(10_000, deadline - Date.now() + 20_000)),
+      step = await agentStep(conn, {
+        instructions: INSTRUCTIONS,
+        items: run.state.items,
+        tools,
+        maxTokens: 8000,
+        timeoutMs: Math.max(10_000, deadline - Date.now() + 20_000),
       })
-    } catch {
-      await save(admin, run, { lease_until: null })
-      return "running"
+    } catch (e) {
+      if (!(e instanceof LLMError)) throw e
+      // Si el proveedor tarda, se reintenta en el siguiente tramo.
+      if (e.code === "timeout") {
+        await save(admin, run, { lease_until: null })
+        return "running"
+      }
+      if (e.code === "invalid_key") await markInvalid(admin, run.workspace_id, provider)
+      return finishRun(admin, run, "failed", e.message)
     }
 
-    if (response.status === 401) {
-      await admin.rpc("ai_connection_mark_invalid", { p_workspace_id: run.workspace_id, p_provider: "openai" })
-      return finishRun(admin, run, "failed", "OpenAI ha rechazado la clave de este espacio.")
-    }
-    if (response.status === 429) return finishRun(admin, run, "failed", "Tu cuenta de OpenAI ha llegado a su límite o no tiene saldo.")
-    if (!response.ok) return finishRun(admin, run, "failed", "OpenAI no pudo procesar la petición.")
+    run.input_tokens += step.usage.input
+    run.output_tokens += step.usage.output
+    await recordUsage(admin, { workspaceId: run.workspace_id, conn, usage: step.usage, createdBy: run.started_by })
 
-    const result = await response.json() as {
-      output?: { type: string; call_id?: string; name?: string; arguments?: string; content?: { type: string; text?: string }[] }[]
-      usage?: { input_tokens?: number; output_tokens?: number }
-    }
-    const inTok = Math.max(0, Math.trunc(result.usage?.input_tokens ?? 0))
-    const outTok = Math.max(0, Math.trunc(result.usage?.output_tokens ?? 0))
-    run.input_tokens += inTok
-    run.output_tokens += outTok
-    await admin.from("usage_events").insert({
-      workspace_id: run.workspace_id,
-      provider: "openai",
-      model,
-      input_tokens: inTok,
-      output_tokens: outTok,
-      created_by: run.started_by,
-    })
-
-    const output = result.output ?? []
-    run.state.items.push(...output)
-    const call = output.find((o) => o.type === "function_call")
-
+    const call = step.calls[0]
     if (!call) {
-      const text = output
-        .filter((o) => o.type === "message")
-        .flatMap((o) => o.content ?? [])
-        .filter((c) => c.type === "output_text")
-        .map((c) => c.text ?? "")
-        .join("\n")
-        .trim()
-      return finishRun(admin, run, "succeeded", text || "La ejecución terminó sin resumen.")
+      if (step.incomplete) return finishRun(admin, run, "failed", "La respuesta del modelo quedó incompleta.")
+      return finishRun(admin, run, "succeeded", step.text || "La ejecución terminó sin resumen.")
+    }
+    // Una acción cada vez: el resto de llamadas del mismo turno se devuelven sin ejecutar.
+    for (const extra of step.calls.slice(1)) {
+      pushToolResult(provider, run.state.items, extra.id, JSON.stringify({ error: "No ejecutado: haz una sola acción cada vez y repite esta después." }))
     }
 
     run.tool_calls += 1
@@ -762,10 +757,10 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       args = {}
     }
     const file = typeof args.file === "string" ? byAlias.get(args.file) : undefined
-    const respond = (out: unknown) => run.state.items.push({ type: "function_call_output", call_id: call.call_id, output: clipJson(out) })
+    const respond = (out: unknown) => pushToolResult(provider, run.state.items, call.id, clipJson(out))
 
     if (call.name === "finish") {
-      run.state.items.push({ type: "function_call_output", call_id: call.call_id, output: "ok" })
+      pushToolResult(provider, run.state.items, call.id, "ok")
       return finishRun(admin, run, "succeeded", str(args.summary, 8000) || "Ejecución terminada.")
     }
 
@@ -814,17 +809,17 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
             before = null
           }
         }
-        pending = { call_id: call.call_id!, tool: call.name, file: file.alias, file_name: file.name, range, values, before }
+        pending = { call_id: call.id, tool: call.name, file: file.alias, file_name: file.name, range, values, before }
       } else invalid = `Escritura no válida: revisa la planilla, el rango y que no pase de ${MAX_WRITE_CELLS} celdas.`
     } else if (call.name === "append_to_document") {
       const text = str(args.text, 20_000)
       if (token && file?.kind === "doc" && text.trim()) {
-        pending = { call_id: call.call_id!, tool: "append_to_document", file: file.alias, file_name: file.name, text }
+        pending = { call_id: call.id, tool: "append_to_document", file: file.alias, file_name: file.name, text }
       } else invalid = "Falta el documento o el texto."
     } else if (call.name === "create_document") {
       const title = str(args.title, 200).trim()
       const text = str(args.text, 50_000)
-      if (token && title) pending = { call_id: call.call_id!, tool: "create_document", title, text }
+      if (token && title) pending = { call_id: call.id, tool: "create_document", title, text }
       else invalid = "Falta el título del documento o la conexión con Google."
     } else if (call.name === "send_email") {
       const to = typeof args.to === "string" ? recipients.get(args.to) : undefined
@@ -832,20 +827,20 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       const body = str(args.body, 20_000)
       if (!res.gmailActive || to?.channel !== "email") invalid = "Ese contacto no está autorizado o Gmail no está conectado."
       else if (!subject || !body.trim()) invalid = "Faltan el asunto o el cuerpo del correo."
-      else pending = { call_id: call.call_id!, tool: "send_email", to_label: to.label, address: to.address, subject, body }
+      else pending = { call_id: call.id, tool: "send_email", to_label: to.label, address: to.address, subject, body }
     } else if (call.name === "send_telegram") {
       const to = typeof args.to === "string" ? recipients.get(args.to) : undefined
       const text = str(args.text, 4096)
       if (!res.telegram || to?.channel !== "telegram") invalid = "Ese chat no está autorizado o Telegram no está conectado."
       else if (!text.trim()) invalid = "Falta el texto del mensaje."
-      else pending = { call_id: call.call_id!, tool: "send_telegram", to_label: to.label, chat_id: to.address, text }
+      else pending = { call_id: call.id, tool: "send_telegram", to_label: to.label, chat_id: to.address, text }
     } else if (call.name === "save_file") {
       const folder = file?.kind === "folder" ? file : undefined
       const fileName = str(args.name, 200).replace(/[\\/]/g, "-").trim()
       const format = args.format === "texto" || args.format === "csv" ? args.format : "documento"
       const text = str(args.text, 100_000)
       if (!token || !folder || !fileName) invalid = "Falta la carpeta, el nombre o la conexión con Google."
-      else pending = { call_id: call.call_id!, tool: "save_file", folder: folder.alias, folder_name: folder.name, name: fileName, format, text }
+      else pending = { call_id: call.id, tool: "save_file", folder: folder.alias, folder_name: folder.name, name: fileName, format, text }
     } else if (call.name === "create_event" || call.name === "update_event") {
       try {
         if (!res.calendarActive) throw new RunError("Google Calendar no está conectado.")
@@ -860,7 +855,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
           const aliases = Array.isArray(args.attendees) ? args.attendees.filter((a): a is string => typeof a === "string") : []
           const attendees = res.contacts.filter((c) => aliases.includes(c.alias)).map((c) => ({ label: c.label, email: c.email }))
           pending = {
-            call_id: call.call_id!,
+            call_id: call.id,
             tool: "create_event",
             event: { title, start, end, all_day: allDay, description: nstr(args.description, 4000), location: nstr(args.location, 300) },
             attendees,
@@ -879,7 +874,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
           const before = await getEvent(await calendar(), eventId)
           changes.all_day = before.all_day
           pending = {
-            call_id: call.call_id!,
+            call_id: call.id,
             tool: "update_event",
             event_id: eventId,
             title_before: before.title,
@@ -898,7 +893,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
         if (call.name === "crm_create") {
           const properties = normalizeProps(args.properties)
           if (!properties) throw new RunError("Propiedades no válidas.")
-          pending = { call_id: call.call_id!, tool: "crm_create", object, properties }
+          pending = { call_id: call.id, tool: "crm_create", object, properties }
         } else {
           const id = typeof args.id === "string" && CRM_ID_RE.test(args.id) ? args.id : null
           if (!id) throw new RunError("Id no válido.")
@@ -909,17 +904,17 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
           if (call.name === "crm_update") {
             const before: Record<string, string | null> = {}
             for (const k of Object.keys(properties!)) before[k] = record.properties[k] ?? null
-            pending = { call_id: call.call_id!, tool: "crm_update", object, id, label, properties: properties!, before }
+            pending = { call_id: call.id, tool: "crm_update", object, id, label, properties: properties!, before }
           } else if (call.name === "crm_note") {
             const text = str(args.text, 20_000)
             if (!text.trim()) throw new RunError("Falta el texto de la nota.")
-            pending = { call_id: call.call_id!, tool: "crm_note", object, id, label, text }
+            pending = { call_id: call.id, tool: "crm_note", object, id, label, text }
           } else if (call.name === "crm_task") {
             const subject = nstr(args.subject, 300)
             const due = nstr(args.due_date, 40)
             if (!subject) throw new RunError("Falta el asunto de la tarea.")
             if (due && !DATE_RE.test(due)) throw new RunError("Fecha de vencimiento no válida.")
-            pending = { call_id: call.call_id!, tool: "crm_task", object, id, label, subject, text: str(args.text, 20_000), due_date: due }
+            pending = { call_id: call.id, tool: "crm_task", object, id, label, subject, text: str(args.text, 20_000), due_date: due }
           } else throw new RunError("Herramienta desconocida.")
         }
       } catch (e) {
@@ -942,6 +937,11 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
 
   await save(admin, run, { lease_until: null })
   return "running"
+}
+
+// Respuesta a la acción que esperaba aprobación, en el formato del proveedor de la ejecución.
+export function addToolResult(run: RunRow, callId: string, output: string) {
+  pushToolResult(isProvider(run.provider) ? run.provider : "openai", run.state.items, callId, output)
 }
 
 // ---------------------------------------------------------------------------
@@ -1109,6 +1109,7 @@ export async function createRun(
     flow: { id: string; name: string; definition: unknown }
     fileIds: string[]
     note: string
+    provider: Provider
     model: string
     startedBy: string | null
     trigger: RunTrigger
@@ -1155,6 +1156,7 @@ export async function createRun(
       plan: input.flow.definition,
       file_ids: valid,
       note: input.note,
+      provider: input.provider,
       model: input.model,
       state: { items: [{ role: "user", content: parts.filter(Boolean).join("\n\n") }] },
       started_by: input.startedBy,

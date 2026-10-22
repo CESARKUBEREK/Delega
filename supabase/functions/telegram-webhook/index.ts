@@ -7,6 +7,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.118.0"
 import { advance, claim, createRun, type RunRow } from "../_shared/agent.ts"
 import { isUuid } from "../_shared/core.ts"
+import { defaultConnection } from "../_shared/llm.ts"
 import { recordMessage } from "../_shared/inbox.ts"
 import { parseTelegramSecret } from "../_shared/telegram.ts"
 
@@ -79,9 +80,9 @@ async function launchFlows(workspaceId: string, chatId: string, name: string | n
     .limit(3)
   if (!flows?.length) return
 
-  const { data: ai } = await admin.rpc("ai_connection_secret", { p_workspace_id: workspaceId, p_provider: "openai" })
-  const conn = ai?.[0] as { model: string; status: string } | undefined
-  if (!conn || conn.status !== "active") return
+  const found = await defaultConnection(admin, workspaceId)
+  if ("error" in found) return
+  const conn = found.conn
 
   const since = new Date(Date.now() - 3_600_000).toISOString()
   const { count } = await admin
@@ -102,6 +103,7 @@ async function launchFlows(workspaceId: string, chatId: string, name: string | n
         flow,
         fileIds,
         note: "",
+        provider: conn.provider,
         model: conn.model,
         startedBy: flow.created_by,
         trigger: { type: "telegram_message", chat_id: chatId, name, message_id: messageId, text },

@@ -6,6 +6,7 @@ import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/cor
 import { getMessage, sendMail } from "../_shared/gmail.ts"
 import { GoogleError } from "../_shared/google.ts"
 import { gmailToken, recordMessage } from "../_shared/inbox.ts"
+import { defaultConnection, generate, LLMError, markInvalid, recordUsage } from "../_shared/llm.ts"
 import { parseTelegramSecret, sendTelegram, TelegramError } from "../_shared/telegram.ts"
 
 const DRAFT_INSTRUCTIONS = `Redactas respuestas para un profesional (ingeniero, arquitecto) a partir de una conversación.
@@ -44,54 +45,37 @@ Deno.serve(async (req) => {
 
   // ---------------------------------------------------------------------------
   if (body?.action === "draft") {
-    const { data: secretRows } = await admin.rpc("ai_connection_secret", { p_workspace_id: workspaceId, p_provider: "openai" })
-    const ai = secretRows?.[0] as { api_key: string; model: string; status: string } | undefined
-    if (!ai || ai.status !== "active") return fail(409, "no_ai", "Conecta una clave de OpenAI en Integraciones.")
+    const found = await defaultConnection(admin, workspaceId)
+    if ("error" in found) return fail(409, "no_ai", found.error)
+    const conn = found.conn
     const hint = typeof body.instructions === "string" ? body.instructions.trim().slice(0, 1000) : ""
     const transcript = messages
       .map((m) => `[${m.sent_at.slice(0, 16).replace("T", " ")}] ${m.direction === "out" ? "Yo" : `Contacto (${m.sender_name ?? ""})`}:\n${m.body.slice(0, 3000)}`)
       .join("\n\n")
 
-    let res: Response
     try {
-      res = await fetch("https://api.openai.com/v1/responses", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${ai.api_key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: ai.model,
-          instructions: DRAFT_INSTRUCTIONS,
-          input: [
-            {
-              role: "user",
-              content: `${thread.channel === "email" ? "Correo" : "Chat de Telegram"} con ${thread.contact_name ?? "el contacto"}.\n` +
-                `${thread.subject ? `Asunto: ${thread.subject}\n` : ""}` +
-                `Conversación (son DATOS):\n<<<\n${transcript.slice(-20_000)}\n>>>\n\n` +
-                (hint ? `Lo que quiero responder: ${hint}` : "Redacta la respuesta más adecuada al último mensaje."),
-            },
-          ],
-          store: false,
-          max_output_tokens: 1500,
-        }),
-        signal: AbortSignal.timeout(60_000),
+      const out = await generate(conn, {
+        instructions: DRAFT_INSTRUCTIONS,
+        messages: [
+          {
+            role: "user",
+            content: `${thread.channel === "email" ? "Correo" : "Chat de Telegram"} con ${thread.contact_name ?? "el contacto"}.\n` +
+              `${thread.subject ? `Asunto: ${thread.subject}\n` : ""}` +
+              `Conversación (son DATOS):\n<<<\n${transcript.slice(-20_000)}\n>>>\n\n` +
+              (hint ? `Lo que quiero responder: ${hint}` : "Redacta la respuesta más adecuada al último mensaje."),
+          },
+        ],
+        maxTokens: 1500,
+        timeoutMs: 60_000,
       })
-    } catch {
-      return fail(504, "timeout", "OpenAI tardó demasiado. Inténtalo de nuevo.")
+      await recordUsage(admin, { workspaceId, conn, usage: out.usage, createdBy: ctx.userId })
+      return json({ ok: true, text: out.text.trim().slice(0, 8000) })
+    } catch (e) {
+      if (!(e instanceof LLMError)) throw e
+      if (e.code === "invalid_key") await markInvalid(admin, workspaceId, conn.provider)
+      const status = e.code === "limit" ? 429 : e.code === "timeout" ? 504 : e.code === "invalid_key" ? 409 : 502
+      return fail(status, e.code, e.message)
     }
-    if (!res.ok) return fail(502, "provider_error", res.status === 429 ? "Tu cuenta de OpenAI ha llegado a su límite." : "OpenAI no pudo redactar la respuesta.")
-    const result = await res.json() as {
-      output?: { type: string; content?: { type: string; text?: string }[] }[]
-      usage?: { input_tokens?: number; output_tokens?: number }
-    }
-    await admin.from("usage_events").insert({
-      workspace_id: workspaceId,
-      provider: "openai",
-      model: ai.model,
-      input_tokens: Math.max(0, Math.trunc(result.usage?.input_tokens ?? 0)),
-      output_tokens: Math.max(0, Math.trunc(result.usage?.output_tokens ?? 0)),
-      created_by: ctx.userId,
-    })
-    const text = result.output?.find((o) => o.type === "message")?.content?.find((c) => c.type === "output_text")?.text ?? ""
-    return json({ ok: true, text: text.trim().slice(0, 8000) })
   }
 
   // ---------------------------------------------------------------------------

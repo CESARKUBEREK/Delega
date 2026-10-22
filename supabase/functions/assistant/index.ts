@@ -1,9 +1,9 @@
 // assistant: convierte una petición en lenguaje natural en un plan de flujo.
-// No ejecuta nada. Usa la clave BYOK del espacio (descifrada solo aquí),
-// guarda la conversación, el plan y el consumo, y pide a OpenAI que no
-// conserve los datos (store: false).
+// No ejecuta nada. Usa el proveedor de IA por defecto del espacio (clave BYOK
+// descifrada solo aquí) y guarda la conversación, el plan y el consumo.
 import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
 import { type Plan, RESPONSE_SCHEMA, sanitizePlan } from "./plan-schema.ts"
+import { defaultConnection, generate, LLMError, markInvalid, type Message, recordUsage } from "../_shared/llm.ts"
 
 const MAX_MESSAGE = 4000
 const MAX_PER_MINUTE = 8
@@ -79,16 +79,10 @@ Deno.serve(async (req) => {
     return fail(429, "rate_limited", "Has enviado muchos mensajes seguidos. Espera un minuto.")
   }
 
-  // Clave del espacio (descifrada solo en memoria, durante esta petición).
-  const { data: secretRows } = await ctx.admin.rpc("ai_connection_secret", {
-    p_workspace_id: workspaceId,
-    p_provider: "openai",
-  })
-  const secret = secretRows?.[0] as { api_key: string; model: string; status: string } | undefined
-  if (!secret) return fail(409, "no_connection", "Conecta una clave de OpenAI en Integraciones para usar el asistente.")
-  if (secret.status !== "active") {
-    return fail(409, "invalid_key", "La clave de OpenAI de este espacio dejó de funcionar. Actualízala en Integraciones.")
-  }
+  // Proveedor por defecto del espacio (la clave se descifra solo en memoria).
+  const found = await defaultConnection(ctx.admin, workspaceId)
+  if ("error" in found) return fail(409, found.code, found.error)
+  const conn = found.conn
 
   if (!conversationId) {
     const { data, error } = await ctx.admin
@@ -118,7 +112,7 @@ Deno.serve(async (req) => {
   })
   if (userMsgError) return fail(500, "db_error", "No se pudo guardar el mensaje.")
 
-  const input = [
+  const input: Message[] = [
     ...history.map((m) => ({
       role: m.role,
       content: m.plan ? `${m.content}\n\nPlan propuesto (JSON):\n${JSON.stringify(m.plan)}` : m.content,
@@ -126,60 +120,29 @@ Deno.serve(async (req) => {
     { role: "user", content: message },
   ]
 
-  let response: Response
-  try {
-    response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${secret.api_key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: secret.model,
-        instructions: INSTRUCTIONS,
-        input,
-        text: { format: { type: "json_schema", name: "delega_plan", schema: RESPONSE_SCHEMA, strict: true } },
-        store: false,
-        max_output_tokens: 6000,
-      }),
-      signal: AbortSignal.timeout(110_000),
-    })
-  } catch {
-    return fail(504, "provider_timeout", "OpenAI tardó demasiado en responder. Inténtalo de nuevo.")
-  }
-
-  if (response.status === 401) {
-    await ctx.admin.rpc("ai_connection_mark_invalid", { p_workspace_id: workspaceId, p_provider: "openai" })
-    return fail(409, "invalid_key", "OpenAI ha rechazado la clave de este espacio. Actualízala en Integraciones.")
-  }
-  if (response.status === 429) {
-    return fail(429, "provider_limit", "Tu cuenta de OpenAI ha llegado a su límite o no tiene saldo. Revísalo en OpenAI.")
-  }
-  if (!response.ok) {
-    return fail(502, "provider_error", "OpenAI no pudo procesar la petición. Inténtalo en unos minutos.")
-  }
-
-  const result = await response.json() as {
-    status?: string
-    output?: { type: string; content?: { type: string; text?: string; refusal?: string }[] }[]
-    usage?: { input_tokens?: number; output_tokens?: number }
-  }
-  if (result.status === "incomplete") {
-    return fail(502, "incomplete", "La respuesta quedó incompleta. Prueba con una petición más concreta.")
-  }
-
-  const content = result.output?.find((o) => o.type === "message")?.content ?? []
-  const refusal = content.find((c) => c.type === "refusal")?.refusal
-  const text = content.find((c) => c.type === "output_text")?.text
-
   let reply = "No he podido preparar un plan con esa petición."
   let plan: ReturnType<typeof sanitizePlan> = null
-  if (refusal) {
-    reply = "No puedo ayudar con esa petición."
-  } else if (text) {
-    try {
-      const parsed = JSON.parse(text) as { reply: string; plan: Plan | null }
-      reply = String(parsed.reply ?? "").slice(0, 4000) || reply
-      plan = sanitizePlan(parsed.plan)
-    } catch {
-      return fail(502, "bad_output", "La respuesta de OpenAI no tenía el formato esperado. Inténtalo de nuevo.")
+  let usage = { input: 0, output: 0 }
+  try {
+    const out = await generate(conn, {
+      instructions: INSTRUCTIONS,
+      messages: input,
+      schema: { name: "orkesta_plan", schema: RESPONSE_SCHEMA },
+      maxTokens: 6000,
+      timeoutMs: 110_000,
+    })
+    usage = out.usage
+    const parsed = out.json as { reply?: unknown; plan?: Plan | null } | null
+    reply = String(parsed?.reply ?? "").slice(0, 4000) || reply
+    plan = sanitizePlan(parsed?.plan ?? null)
+  } catch (e) {
+    if (!(e instanceof LLMError)) throw e
+    if (e.code === "invalid_key") await markInvalid(ctx.admin, workspaceId, conn.provider)
+    if (e.code === "refusal") {
+      reply = e.message
+    } else {
+      const status = e.code === "limit" ? 429 : e.code === "timeout" ? 504 : e.code === "invalid_key" ? 409 : 502
+      return fail(status, e.code, e.message)
     }
   }
 
@@ -191,20 +154,12 @@ Deno.serve(async (req) => {
       role: "assistant",
       content: reply,
       plan,
-      model: secret.model,
+      model: conn.model,
     })
     .select("id")
     .single()
 
-  await ctx.admin.from("usage_events").insert({
-    workspace_id: workspaceId,
-    provider: "openai",
-    model: secret.model,
-    input_tokens: Math.max(0, Math.trunc(result.usage?.input_tokens ?? 0)),
-    output_tokens: Math.max(0, Math.trunc(result.usage?.output_tokens ?? 0)),
-    conversation_id: conversationId,
-    created_by: ctx.userId,
-  })
+  await recordUsage(ctx.admin, { workspaceId, conn, usage, createdBy: ctx.userId, conversationId: conversationId as string })
   await ctx.admin.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId)
 
   return json({ conversation_id: conversationId, message_id: saved?.id ?? null, reply, plan })

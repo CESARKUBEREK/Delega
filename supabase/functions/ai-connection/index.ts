@@ -1,9 +1,12 @@
-// ai-connection: conecta, cambia de modelo o desconecta la clave de OpenAI
-// de un espacio (BYOK). Solo owners y admins. La clave se valida contra
-// OpenAI y se guarda cifrada en Vault; nunca se devuelve ni se registra.
-import { authenticate, DEFAULT_MODEL, fail, isUuid, json, membershipRole, OPENAI_MODELS } from "../_shared/core.ts"
-
-const KEY_RE = /^sk-[A-Za-z0-9_-]{20,300}$/
+// ai-connection: gestiona las claves de IA de un espacio (BYOK) para OpenAI,
+// Anthropic, DeepSeek y Kimi. Solo owners y admins.
+//   save         valida la clave con el proveedor y la guarda cifrada en Vault.
+//   set_model    cambia el modelo de un proveedor.
+//   set_default  elige el proveedor que usa el espacio.
+//   delete       desconecta un proveedor.
+// La clave nunca se devuelve ni se registra.
+import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
+import { isProvider, LLMError, PROVIDERS, validateKey } from "../_shared/llm.ts"
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return fail(405, "method_not_allowed", "Método no permitido.")
@@ -21,40 +24,35 @@ Deno.serve(async (req) => {
     return fail(403, "forbidden", "Solo un administrador puede gestionar las claves de este espacio.")
   }
 
-  const model = typeof body?.model === "string" && (OPENAI_MODELS as readonly string[]).includes(body.model)
-    ? body.model
-    : DEFAULT_MODEL
+  // Antes solo había OpenAI: sin proveedor se entiende OpenAI.
+  const provider = body?.provider === undefined ? "openai" : body.provider
+  if (!isProvider(provider)) return fail(400, "bad_request", "Proveedor no válido.")
+  const info = PROVIDERS[provider]
+  const model = typeof body?.model === "string" && info.models.includes(body.model) ? body.model : info.models[0]
 
   if (action === "save") {
     const apiKey = typeof body?.api_key === "string" ? body.api_key.trim() : ""
-    if (!KEY_RE.test(apiKey)) {
-      return fail(400, "invalid_format", "La clave no tiene el formato de una clave de OpenAI (empieza por sk-).")
+    if (!info.keyRe.test(apiKey)) {
+      return fail(400, "invalid_format", `La clave no tiene el formato de una clave de ${info.label} (${info.keyHint}).`)
     }
-
-    // Validación con una llamada sin coste: listar modelos.
-    let check: Response
     try {
-      check = await fetch("https://api.openai.com/v1/models", {
-        headers: { Authorization: `Bearer ${apiKey}` },
-        signal: AbortSignal.timeout(15000),
-      })
-    } catch {
-      return fail(502, "provider_unreachable", "No se pudo contactar con OpenAI. Inténtalo de nuevo.")
+      await validateKey(provider, apiKey)
+    } catch (e) {
+      const msg = e instanceof LLMError ? e.message : `No se pudo comprobar la clave con ${info.label}.`
+      return fail(e instanceof LLMError && e.code === "invalid_key" ? 400 : 502, "invalid_key", msg)
     }
-    if (check.status === 401) return fail(400, "invalid_key", "OpenAI ha rechazado la clave. Revisa que esté copiada entera y activa.")
-    if (check.status === 403) return fail(400, "forbidden_key", "La clave no tiene permiso para usar la API. Revisa sus permisos en OpenAI.")
-    if (!check.ok) return fail(502, "provider_error", "OpenAI no respondió correctamente. Inténtalo en unos minutos.")
-    await check.body?.cancel()
 
     const { data, error } = await ctx.admin.rpc("ai_connection_save", {
       p_workspace_id: workspaceId,
-      p_provider: "openai",
+      p_provider: provider,
       p_api_key: apiKey,
       p_model: model,
       p_actor: ctx.userId,
     })
     if (error || !data?.[0]) return fail(500, "save_failed", "No se pudo guardar la clave.")
-    return json({ ok: true, key_hint: data[0].key_hint, model: data[0].model })
+    // La primera conexión del espacio pasa a ser la de por defecto.
+    const { data: current } = await ctx.admin.rpc("ai_connection_ensure_default", { p_workspace_id: workspaceId })
+    return json({ ok: true, key_hint: data[0].key_hint, model: data[0].model, is_default: current === provider })
   }
 
   if (action === "set_model") {
@@ -62,20 +60,33 @@ Deno.serve(async (req) => {
       .from("ai_connections")
       .update({ model })
       .eq("workspace_id", workspaceId)
-      .eq("provider", "openai")
+      .eq("provider", provider)
       .select("model")
-    if (error || !data?.length) return fail(404, "no_connection", "Primero conecta una clave de OpenAI.")
+    if (error || !data?.length) return fail(404, "no_connection", `Primero conecta una clave de ${info.label}.`)
     return json({ ok: true, model })
+  }
+
+  if (action === "set_default") {
+    const { data, error } = await ctx.admin.rpc("ai_connection_set_default", {
+      p_workspace_id: workspaceId,
+      p_provider: provider,
+      p_actor: ctx.userId,
+    })
+    if (error) return fail(500, "save_failed", "No se pudo cambiar el proveedor.")
+    if (!data) return fail(404, "no_connection", `Primero conecta una clave de ${info.label}.`)
+    return json({ ok: true })
   }
 
   if (action === "delete") {
     const { error } = await ctx.admin.rpc("ai_connection_delete", {
       p_workspace_id: workspaceId,
-      p_provider: "openai",
+      p_provider: provider,
       p_actor: ctx.userId,
     })
     if (error) return fail(500, "delete_failed", "No se pudo desconectar la clave.")
-    return json({ ok: true })
+    // Si era el de por defecto, otro proveedor conectado ocupa su lugar.
+    const { data: next } = await ctx.admin.rpc("ai_connection_ensure_default", { p_workspace_id: workspaceId })
+    return json({ ok: true, default_provider: typeof next === "string" ? next : null })
   }
 
   return fail(400, "bad_request", "Acción no válida.")
