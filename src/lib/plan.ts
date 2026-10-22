@@ -73,11 +73,37 @@ export const CONNECTION_LABEL: Record<string, string> = {
   database: "Base de datos",
   documents: "Documento",
   telegram: "Telegram",
+  drive: "Drive",
+  crm: "HubSpot",
   none: "",
 }
 
 // Conexiones que ya funcionan en esta versión.
-export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet", "documents", "email", "telegram"])
+export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet", "documents", "drive", "email", "telegram", "calendar", "crm"])
+
+// Tipo legible de un archivo elegido en Drive.
+export function fileKindLabel(mime: string | null): string {
+  switch (mime) {
+    case "application/vnd.google-apps.spreadsheet":
+      return "Planilla"
+    case "application/vnd.google-apps.document":
+      return "Documento"
+    case "application/vnd.google-apps.folder":
+      return "Carpeta"
+    case "application/vnd.google-apps.presentation":
+      return "Presentación"
+    case "application/pdf":
+      return "PDF"
+    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+    case "application/msword":
+      return "Word"
+    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+    case "application/vnd.ms-excel":
+      return "Excel"
+    default:
+      return "Archivo"
+  }
+}
 
 export const TRIGGER_LABEL: Record<string, string> = {
   manual: "Manual",

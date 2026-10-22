@@ -66,6 +66,7 @@ Las migraciones viven en `supabase/migrations/` y se versionan por marca de tiem
 | `20261019150533_core_auth_workspaces.sql` | Perfiles, espacios (personal u organización), membresías con rol, invitaciones, auditoría, RLS y trigger de alta |
 | `20261019210000_ai_assistant.sql` | Conexiones de IA (clave en Vault), conversaciones, mensajes, flujos y consumo |
 | `20261020150000_docs_inbox.sql` | Gmail y Telegram (integraciones con configuración), contactos autorizados por correo, bandeja (conversaciones clasificadas y mensajes), disparadores y ajustes de flujos |
+| `20261023090000_calendar_hubspot.sql` | Proveedores `calendar` (OAuth de Google) y `hubspot` (clave en Vault) |
 | `20261020090000_sheets_runs.sql` | Integración con Google (refresh token en Vault), planillas elegidas, ejecuciones y bitácora; índices pendientes |
 
 ### Modelo de seguridad
@@ -152,6 +153,17 @@ El asistente devuelve `{ reply, plan }`, donde `plan` es `null` o un objeto con 
 ```bash
 supabase functions deploy google-connection
 supabase functions deploy run-flow
+```
+
+## Google Drive, Calendar y HubSpot
+
+- **Drive:** mismo permiso `drive.file`. El selector admite cualquier archivo y carpetas. El agente lee PDF, Word, Excel y PowerPoint convirtiendo una copia temporal a formato de Google (se borra al terminar), lista las carpetas elegidas (`list_folder`, solo lo que Drive deja ver con `drive.file`), lee archivos de esas carpetas comprobando que pertenecen a ellas y guarda archivos nuevos (`save_file`: documento, .txt o .csv) con aprobación.
+- **Calendar:** conexión aparte (provider `calendar`) con `calendar.events` + `calendar.calendarlist.readonly` (sensibles, no restringidos). `list_events` lee el calendario principal (máx. 60 días); `create_event` y `update_event` requieren aprobación; los invitados solo pueden ser contactos autorizados.
+- **HubSpot:** clave de servicio (Desarrollo → Claves → Claves de servicio) o token de app privada, validado con `account-info` y guardado en Vault (`hubspot-connection`). Lecturas: `crm_search`, `crm_get`, `crm_pipelines`. Con aprobación: `crm_create`, `crm_update` (incluye mover etapa con `dealstage`), `crm_note`, `crm_task`.
+
+```bash
+supabase functions deploy hubspot-connection google-connection run-flow assistant
+supabase functions deploy telegram-webhook --no-verify-jwt
 ```
 
 ## Google Docs, Gmail, Telegram y bandeja

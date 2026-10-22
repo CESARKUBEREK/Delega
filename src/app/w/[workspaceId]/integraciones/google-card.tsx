@@ -1,9 +1,10 @@
+import { fileKindLabel } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { connectGoogle, removeSheet } from "../run-actions"
 import { DisconnectGoogleForm, PickSheetsButton } from "./google-client"
 
 const NOTICES: Record<string, string> = {
-  connected: "Cuenta de Google conectada. Ahora elige las planillas y documentos que Delega puede usar.",
+  connected: "Google Drive conectado. Ahora elige los archivos y carpetas que Delega puede usar.",
   not_configured: "La conexión con Google aún no está configurada en el servidor.",
   forbidden: "Solo un administrador puede conectar Google.",
 }
@@ -28,8 +29,11 @@ export async function GoogleSheetsCard({
     <section className="border border-ink bg-sheet">
       <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
         <div>
-          <h2 className="rotulo text-lg">Google Sheets y Docs</h2>
-          <p className="text-sm text-graphite">Planillas y documentos que tus automatizaciones pueden leer y, con tu aprobación, modificar. También pueden crear documentos nuevos.</p>
+          <h2 className="rotulo text-lg">Google Drive, Sheets y Docs</h2>
+          <p className="text-sm text-graphite">
+            Planillas, documentos, PDF, Word, Excel y carpetas que tus automatizaciones pueden leer y, con tu aprobación,
+            modificar. También pueden crear documentos y guardar archivos en las carpetas elegidas.
+          </p>
         </div>
         {integration?.status === "active" ? (
           <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">Conectado</span>
@@ -54,12 +58,12 @@ export async function GoogleSheetsCard({
           <p className="text-sm text-graphite">
             Cuenta <span className="font-medium text-ink">{integration.account_email ?? "de Google"}</span>.{" "}
             {integration.status === "active"
-              ? "Delega solo puede abrir los archivos que elijas aquí y los documentos que cree."
+              ? "Delega solo puede abrir los archivos y carpetas que elijas aquí y lo que cree. En una carpeta ve los archivos que Google le permita; si falta alguno, elígelo también."
               : "Google retiró el acceso: vuelve a conectar la cuenta."}
           </p>
         ) : (
           <p className="text-sm text-graphite">
-            Conecta una cuenta de Google y elige qué planillas y documentos puede usar Delega. No tendrá acceso al resto de tu Drive.
+            Conecta una cuenta de Google y elige qué archivos y carpetas puede usar Delega. No tendrá acceso al resto de tu Drive.
           </p>
         )}
 
@@ -75,7 +79,7 @@ export async function GoogleSheetsCard({
                   <span className="truncate text-ink">{f.name}</span>
                 )}
                 <span className="ml-auto shrink-0 text-xs text-graphite">
-                  {f.mime_type === "application/vnd.google-apps.document" ? "Documento" : "Planilla"}
+                  {fileKindLabel(f.mime_type)}
                 </span>
                 {isAdmin ? (
                   <form action={removeSheet}>
@@ -109,14 +113,14 @@ export async function GoogleSheetsCard({
               <form action={connectGoogle}>
                 <input type="hidden" name="workspaceId" value={workspaceId} />
                 <button type="submit" className="h-11 bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90">
-                  {integration ? "Volver a conectar Google" : "Conectar Google"}
+                  {integration ? "Volver a conectar Google Drive" : "Conectar Google Drive"}
                 </button>
               </form>
             )}
             {integration ? <DisconnectGoogleForm workspaceId={workspaceId} /> : null}
           </div>
         ) : (
-          <p className="text-sm text-graphite">Solo un administrador del espacio puede conectar Google o elegir archivos.</p>
+          <p className="text-sm text-graphite">Solo un administrador del espacio puede conectar Google Drive o elegir archivos.</p>
         )}
       </div>
     </section>

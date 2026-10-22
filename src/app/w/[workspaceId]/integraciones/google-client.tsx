@@ -18,9 +18,11 @@ type PickerBuilder = {
   setCallback(cb: (data: PickerData) => void): PickerBuilder
   build(): { setVisible(v: boolean): void }
 }
+type DocsView = { setIncludeFolders(v: boolean): DocsView; setSelectFolderEnabled(v: boolean): DocsView; setParent(id: string): DocsView }
 type GooglePicker = {
   PickerBuilder: new () => PickerBuilder
-  ViewId: { SPREADSHEETS: unknown; DOCUMENTS: unknown }
+  DocsView: new (viewId?: unknown) => DocsView
+  ViewId: { SPREADSHEETS: unknown; DOCUMENTS: unknown; DOCS: unknown; FOLDERS: unknown }
   Feature: { MULTISELECT_ENABLED: unknown }
   Action: { PICKED: string; CANCEL: string }
 }
@@ -64,6 +66,8 @@ export function PickSheetsButton({ workspaceId, apiKey, appId }: { workspaceId: 
         return
       }
       new picker.PickerBuilder()
+        .addView(new picker.DocsView(picker.ViewId.DOCS).setIncludeFolders(true).setSelectFolderEnabled(true))
+        .addView(new picker.DocsView(picker.ViewId.FOLDERS).setSelectFolderEnabled(true))
         .addView(picker.ViewId.SPREADSHEETS)
         .addView(picker.ViewId.DOCUMENTS)
         .enableFeature(picker.Feature.MULTISELECT_ENABLED)
@@ -71,7 +75,7 @@ export function PickSheetsButton({ workspaceId, apiKey, appId }: { workspaceId: 
         .setDeveloperKey(apiKey)
         .setAppId(appId)
         .setLocale("es")
-        .setTitle("Elige las planillas y documentos que Delega puede usar")
+        .setTitle("Elige los archivos y carpetas que Delega puede usar")
         .setCallback(async (data) => {
           if (data.action === picker.Action.CANCEL) {
             setBusy(false)
@@ -84,7 +88,7 @@ export function PickSheetsButton({ workspaceId, apiKey, appId }: { workspaceId: 
             const added = result.added?.length ?? 0
             const skipped = result.skipped?.length ?? 0
             setMessage({
-              message: `${added} archivo(s) añadido(s).${skipped ? ` ${skipped} no eran planillas ni documentos de Google y se omitieron.` : ""}`,
+              message: `${added} elemento(s) añadido(s).${skipped ? ` ${skipped} se omitieron (formularios, dibujos u otros tipos que Delega no sabe leer).` : ""}`,
             })
           }
           setBusy(false)
@@ -106,7 +110,7 @@ export function PickSheetsButton({ workspaceId, apiKey, appId }: { workspaceId: 
         disabled={busy}
         className="h-11 w-fit bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90 disabled:cursor-wait disabled:opacity-70"
       >
-        {busy ? "Abriendo selector…" : "Elegir planillas o documentos"}
+        {busy ? "Abriendo selector…" : "Elegir archivos o carpetas"}
       </button>
     </div>
   )
@@ -119,13 +123,13 @@ export function DisconnectGoogleForm({ workspaceId }: { workspaceId: string }) {
       action={action}
       className="flex flex-col gap-2 border-t border-rule pt-4"
       onSubmit={(e) => {
-        if (!window.confirm("¿Desconectar Google? Delega pierde el acceso y se olvidan las planillas elegidas.")) e.preventDefault()
+        if (!window.confirm("¿Desconectar Google Drive? Delega pierde el acceso y se olvidan los archivos y carpetas elegidos.")) e.preventDefault()
       }}
     >
       <input type="hidden" name="workspaceId" value={workspaceId} />
       {state && !state.ok ? <FormMessage error={state.error} /> : null}
       <button type="submit" disabled={pending} className="w-fit text-sm text-alert underline underline-offset-4 disabled:opacity-60">
-        {pending ? "Desconectando…" : "Desconectar Google"}
+        {pending ? "Desconectando…" : "Desconectar Google Drive"}
       </button>
     </form>
   )

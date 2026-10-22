@@ -7,7 +7,10 @@ import {
   type ActionResult,
   type ContactState,
   disconnectGoogle,
+  disconnectHubSpot,
   disconnectTelegram,
+  type HubSpotState,
+  saveHubSpot,
   saveTelegram,
   type TelegramState,
 } from "../run-actions"
@@ -80,22 +83,58 @@ export function AddContactForm({ workspaceId }: { workspaceId: string }) {
   )
 }
 
-export function DisconnectInboxForm({ workspaceId, kind }: { workspaceId: string; kind: "gmail" | "telegram" }) {
+export function HubSpotForm({ workspaceId, replacing }: { workspaceId: string; replacing: boolean }) {
+  const formRef = useRef<HTMLFormElement>(null)
+  const [state, action] = useActionState<HubSpotState, FormData>(async (prev, fd) => {
+    const result = await saveHubSpot(prev, fd)
+    // La clave no se queda en el formulario.
+    formRef.current?.reset()
+    return result
+  }, {})
+  return (
+    <form ref={formRef} action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="workspaceId" value={workspaceId} />
+      <Input
+        id="hs-token"
+        name="token"
+        type="password"
+        label={replacing ? "Nueva clave de HubSpot" : "Clave de HubSpot"}
+        autoComplete="off"
+        spellCheck={false}
+        required
+        hint="Clave de servicio o token de app privada. Delega la guarda cifrada y no vuelve a mostrarla."
+      />
+      <FormMessage error={state.error} message={state.message} />
+      <div className="sm:max-w-56">
+        <SubmitButton pendingLabel="Comprobando con HubSpot…">{replacing ? "Cambiar clave" : "Conectar HubSpot"}</SubmitButton>
+      </div>
+    </form>
+  )
+}
+
+const DISCONNECT: Record<string, { label: string; confirm: string }> = {
+  gmail: { label: "Gmail", confirm: "¿Desconectar Gmail? Delega pierde el acceso; las conversaciones ya guardadas siguen en la bandeja." },
+  telegram: { label: "el bot de Telegram", confirm: "¿Desconectar el bot de Telegram? Dejarán de llegar mensajes a la bandeja." },
+  calendar: { label: "Google Calendar", confirm: "¿Desconectar Google Calendar? Las automatizaciones dejarán de ver y crear eventos." },
+  hubspot: { label: "HubSpot", confirm: "¿Desconectar HubSpot? Delega borra la clave; revócala también en HubSpot si ya no la usas." },
+}
+
+export function DisconnectInboxForm({ workspaceId, kind }: { workspaceId: string; kind: "gmail" | "telegram" | "calendar" | "hubspot" }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(
-    kind === "gmail" ? disconnectGoogle : disconnectTelegram,
+    kind === "gmail" || kind === "calendar" ? disconnectGoogle : kind === "hubspot" ? disconnectHubSpot : disconnectTelegram,
     null,
   )
-  const label = kind === "gmail" ? "Gmail" : "el bot de Telegram"
+  const { label, confirm } = DISCONNECT[kind]
   return (
     <form
       action={action}
       className="flex flex-col gap-2 border-t border-rule pt-4"
       onSubmit={(e) => {
-        if (!window.confirm(`¿Desconectar ${label}? Delega pierde el acceso; las conversaciones ya guardadas siguen en la bandeja.`)) e.preventDefault()
+        if (!window.confirm(confirm)) e.preventDefault()
       }}
     >
       <input type="hidden" name="workspaceId" value={workspaceId} />
-      {kind === "gmail" ? <input type="hidden" name="product" value="gmail" /> : null}
+      {kind === "gmail" || kind === "calendar" ? <input type="hidden" name="product" value={kind} /> : null}
       {state && !state.ok ? <FormMessage error={state.error} /> : null}
       <button type="submit" disabled={pending} className="w-fit text-sm text-alert underline underline-offset-4 disabled:opacity-60">
         {pending ? "Desconectando…" : `Desconectar ${label}`}
