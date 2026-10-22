@@ -33,7 +33,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
     .maybeSingle()
   if (!flow) notFound()
 
-  const [{ data: rawFiles }, { data: ai }, { data: runs }, { data: wa }] = await Promise.all([
+  const [{ data: rawFiles }, { data: ai }, { data: runs }, { data: tg }] = await Promise.all([
     supabase.from("integration_files").select("id, name, mime_type").eq("workspace_id", workspaceId).order("name"),
     supabase.from("ai_connections").select("status").eq("workspace_id", workspaceId).eq("provider", "openai").maybeSingle(),
     supabase
@@ -43,7 +43,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
       .eq("flow_id", flow.id)
       .order("started_at", { ascending: false })
       .limit(10),
-    supabase.from("integrations").select("status").eq("workspace_id", workspaceId).eq("provider", "whatsapp").maybeSingle(),
+    supabase.from("integrations").select("status").eq("workspace_id", workspaceId).eq("provider", "telegram").maybeSingle(),
   ])
   const files = (rawFiles ?? []).map((f) => ({
     id: f.id,
@@ -53,7 +53,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
 
   const plan = asPlan(flow.definition)
   const canDelete = isAdmin || flow.created_by === user.id
-  const autoTrigger = plan?.trigger.type === "whatsapp_message"
+  const autoTrigger = plan?.trigger.type === "telegram_message"
   const savedFileIds = Array.isArray((flow.settings as { file_ids?: unknown } | null)?.file_ids)
     ? ((flow.settings as { file_ids: unknown[] }).file_ids.filter((x) => typeof x === "string") as string[])
     : []
@@ -85,7 +85,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
               status={flow.status}
               files={files}
               savedFileIds={savedFileIds}
-              whatsappReady={wa?.status === "active"}
+              telegramReady={tg?.status === "active"}
               canEdit={canDelete}
             />
           </div>

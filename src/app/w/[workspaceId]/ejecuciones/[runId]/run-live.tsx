@@ -9,8 +9,8 @@ export type Pending =
   | { tool: "append_rows" | "update_range"; fileName: string; range: string; values: Cell[][]; before: Cell[][] | null }
   | { tool: "append_to_document"; fileName: string; text: string }
   | { tool: "create_document"; title: string; text: string }
-  | { tool: "send_whatsapp"; to: string; phone: string; text: string }
-  | { tool: "send_whatsapp_template"; to: string; phone: string; template: string; language: string; parameters: string[] }
+  | { tool: "send_email"; to: string; address: string; subject: string; text: string }
+  | { tool: "send_telegram"; to: string; text: string }
 
 function describe(p: Pending): string {
   switch (p.tool) {
@@ -22,10 +22,10 @@ function describe(p: Pending): string {
       return `Añadir este texto al final de «${p.fileName}».`
     case "create_document":
       return `Crear el documento «${p.title}» en tu Google Drive.`
-    case "send_whatsapp":
-      return `Enviar este WhatsApp a ${p.to} (+${p.phone}).`
-    case "send_whatsapp_template":
-      return `Enviar la plantilla «${p.template}» (${p.language}) por WhatsApp a ${p.to} (+${p.phone}).`
+    case "send_email":
+      return `Enviar este correo a ${p.to} (${p.address}) con el asunto «${p.subject}».`
+    case "send_telegram":
+      return `Enviar este mensaje por Telegram a ${p.to}.`
   }
 }
 
@@ -158,10 +158,11 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
             <Table rows={pending.values} caption={pending.tool === "append_rows" ? "Filas nuevas" : "Quedará así"} />
             <p className="text-xs text-graphite">Se escribe el texto tal cual: nada se interpreta como fórmula.</p>
           </>
-        ) : pending.tool === "send_whatsapp_template" ? (
-          <TextPreview text={pending.parameters.map((p, i) => `{{${i + 1}}} = ${p}`).join("\n")} caption="Valores de la plantilla" />
         ) : (
-          <TextPreview text={"text" in pending ? pending.text : ""} caption={pending.tool === "send_whatsapp" ? "Mensaje" : "Texto"} />
+          <TextPreview
+            text={"text" in pending ? pending.text : ""}
+            caption={pending.tool === "send_email" ? "Correo" : pending.tool === "send_telegram" ? "Mensaje" : "Texto"}
+          />
         )}
         {error ? (
           <p role="alert" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
@@ -177,7 +178,7 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
           >
             {busy && decision === "approve"
               ? "Aplicando…"
-              : pending.tool.startsWith("send_whatsapp")
+              : pending.tool.startsWith("send_")
                 ? "Aprobar y enviar"
                 : pending.tool === "create_document"
                   ? "Aprobar y crear"

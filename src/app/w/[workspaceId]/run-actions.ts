@@ -6,7 +6,7 @@ import { callEdgeFunction } from "@/lib/edge-functions"
 import { createClient } from "@/lib/supabase/server"
 import { UUID_RE } from "@/lib/workspace"
 
-// Acciones de Google Sheets y de ejecución. Los permisos los comprueban las
+// Acciones de Google, Telegram, bandeja y ejecución. Los permisos los comprueban las
 // Edge Functions; aquí solo se valida la forma de la entrada.
 
 export type ActionResult = { ok: true } | { ok: false; error: string }
@@ -14,7 +14,8 @@ export type ActionResult = { ok: true } | { ok: false; error: string }
 export async function connectGoogle(formData: FormData): Promise<void> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
   if (!UUID_RE.test(workspaceId)) return
-  const result = await callEdgeFunction<{ url: string }>("google-connection", { action: "start", workspace_id: workspaceId }, 20_000)
+  const product = formData.get("product") === "gmail" ? "gmail" : "drive"
+  const result = await callEdgeFunction<{ url: string }>("google-connection", { action: "start", workspace_id: workspaceId, product }, 20_000)
   if (result.error) redirect(`/w/${workspaceId}/integraciones?google_error=${encodeURIComponent(result.error.code)}`)
   // Solo se sigue una URL de consentimiento de Google.
   if (!result.data.url.startsWith("https://accounts.google.com/")) return
@@ -56,7 +57,8 @@ export async function removeSheet(formData: FormData): Promise<void> {
 export async function disconnectGoogle(_prev: ActionResult | null, formData: FormData): Promise<ActionResult | null> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
   if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
-  const result = await callEdgeFunction("google-connection", { action: "disconnect", workspace_id: workspaceId }, 20_000)
+  const product = formData.get("product") === "gmail" ? "gmail" : "google"
+  const result = await callEdgeFunction("google-connection", { action: "disconnect", workspace_id: workspaceId, product }, 20_000)
   if (result.error) return { ok: false, error: result.error.message }
   refresh()
   return { ok: true }
@@ -108,72 +110,52 @@ export async function cancelRun(runId: string): Promise<RunStep> {
 }
 
 // ---------------------------------------------------------------------------
-// WhatsApp
+// Telegram
 // ---------------------------------------------------------------------------
+export type TelegramState = { error?: string; message?: string }
 
-export type WhatsAppState = { error?: string; message?: string; webhookUrl?: string; verifyToken?: string }
-
-export async function saveWhatsApp(_prev: WhatsAppState, formData: FormData): Promise<WhatsAppState> {
+export async function saveTelegram(_prev: TelegramState, formData: FormData): Promise<TelegramState> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
+  const token = String(formData.get("botToken") ?? "").trim()
   if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
-  const result = await callEdgeFunction<{ display_phone_number: string | null; webhook_url: string; verify_token: string }>(
-    "whatsapp-connection",
-    {
-      action: "save",
-      workspace_id: workspaceId,
-      phone_number_id: String(formData.get("phoneNumberId") ?? ""),
-      access_token: String(formData.get("accessToken") ?? ""),
-      app_secret: String(formData.get("appSecret") ?? ""),
-    },
+  if (!/^[0-9]{5,15}:[A-Za-z0-9_-]{30,60}$/.test(token)) return { error: "El token no tiene el formato de @BotFather (números:letras)." }
+  const result = await callEdgeFunction<{ bot_username: string | null }>(
+    "telegram-connection",
+    { action: "save", workspace_id: workspaceId, bot_token: token },
     30_000,
   )
   if (result.error) return { error: result.error.message }
   refresh()
-  return {
-    message: `Número ${result.data.display_phone_number ?? ""} conectado. Ahora configura el webhook en Meta con estos datos.`,
-    webhookUrl: result.data.webhook_url,
-    verifyToken: result.data.verify_token,
-  }
+  return { message: `Bot ${result.data.bot_username ? `@${result.data.bot_username} ` : ""}conectado.` }
 }
 
-export async function whatsappWebhookInfo(workspaceId: string): Promise<WhatsAppState> {
-  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
-  const result = await callEdgeFunction<{ webhook_url: string; verify_token: string }>(
-    "whatsapp-connection",
-    { action: "webhook_info", workspace_id: workspaceId },
-    20_000,
-  )
-  if (result.error) return { error: result.error.message }
-  return { webhookUrl: result.data.webhook_url, verifyToken: result.data.verify_token }
-}
-
-export async function disconnectWhatsApp(_prev: ActionResult | null, formData: FormData): Promise<ActionResult | null> {
+export async function disconnectTelegram(_prev: ActionResult | null, formData: FormData): Promise<ActionResult | null> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
   if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
-  const result = await callEdgeFunction("whatsapp-connection", { action: "disconnect", workspace_id: workspaceId }, 20_000)
+  const result = await callEdgeFunction("telegram-connection", { action: "disconnect", workspace_id: workspaceId }, 20_000)
   if (result.error) return { ok: false, error: result.error.message }
   refresh()
   return { ok: true }
 }
 
-// Contactos autorizados: la RLS solo deja a admins y owners.
+// Contactos autorizados para correo: la RLS solo deja a admins y owners.
 export type ContactState = { error?: string; message?: string }
 
 export async function addContact(_prev: ContactState, formData: FormData): Promise<ContactState> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
   const name = String(formData.get("name") ?? "").trim()
-  const phone = String(formData.get("phone") ?? "").replace(/[\s().-]/g, "")
+  const email = String(formData.get("email") ?? "").trim().toLowerCase()
   if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
   if (!name || name.length > 120) return { error: "Escribe un nombre." }
-  if (!/^\+[1-9][0-9]{6,14}$/.test(phone)) return { error: "Escribe el número con prefijo internacional, p. ej. +34600111222." }
+  if (!/^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/.test(email) || email.length > 320) return { error: "Escribe un correo válido." }
 
   const supabase = await createClient()
   const { data: claims } = await supabase.auth.getClaims()
   const userId = claims?.claims?.sub
   if (!userId) redirect("/login")
-  const { error } = await supabase.from("contacts").insert({ workspace_id: workspaceId, name, phone, created_by: userId })
+  const { error } = await supabase.from("contacts").insert({ workspace_id: workspaceId, name, email, created_by: userId })
   if (error) {
-    return { error: error.code === "23505" ? "Ese número ya está en la lista." : "Solo un administrador puede añadir contactos." }
+    return { error: error.code === "23505" ? "Ese correo ya está en la lista." : "Solo un administrador puede añadir contactos." }
   }
   refresh()
   return { message: `${name} añadido.` }
@@ -214,47 +196,19 @@ export async function setFlowActive(input: {
 }
 
 // ---------------------------------------------------------------------------
-// WhatsApp Business con Embedded Signup (coexistencia) y bandeja clasificada
+// Bandeja (correo y Telegram)
 // ---------------------------------------------------------------------------
-
-export async function connectWhatsAppEmbedded(input: {
-  workspaceId: string
-  code: string
-  wabaId: string
-  phoneNumberId: string | null
-  coexistence: boolean
-}): Promise<{ ok: true; display: string | null; syncRequested: boolean } | { ok: false; error: string }> {
-  if (!UUID_RE.test(input.workspaceId)) return { ok: false, error: "Espacio no válido." }
-  if (!input.code || input.code.length > 2000 || !/^[0-9]{5,30}$/.test(input.wabaId)) {
-    return { ok: false, error: "Meta no devolvió los datos del alta." }
-  }
-  const result = await callEdgeFunction<{ display_phone_number: string | null; sync_requested: boolean }>(
-    "whatsapp-connection",
-    {
-      action: "embedded",
-      workspace_id: input.workspaceId,
-      code: input.code,
-      waba_id: input.wabaId,
-      phone_number_id: input.phoneNumberId && /^[0-9]{5,30}$/.test(input.phoneNumberId) ? input.phoneNumberId : null,
-      coexistence: input.coexistence,
-    },
-    60_000,
-  )
-  if (result.error) return { ok: false, error: result.error.message }
-  refresh()
-  return { ok: true, display: result.data.display_phone_number, syncRequested: result.data.sync_requested }
-}
-
-export async function retryWhatsAppSync(workspaceId: string): Promise<ActionResult> {
-  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
-  const result = await callEdgeFunction("whatsapp-connection", { action: "retry_sync", workspace_id: workspaceId }, 30_000)
-  if (result.error) return { ok: false, error: result.error.message }
-  return { ok: true }
-}
-
 export type SettingsState = { error?: string; message?: string }
 
-export async function saveWhatsAppSettings(_prev: SettingsState, formData: FormData): Promise<SettingsState> {
+export async function syncInbox(workspaceId: string): Promise<{ ok: true; added: number; more: boolean } | { ok: false; error: string }> {
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const result = await callEdgeFunction<{ added: number; more: boolean }>("inbox-sync", { workspace_id: workspaceId }, 110_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  refresh()
+  return { ok: true, added: result.data.added, more: result.data.more }
+}
+
+export async function saveInboxSettings(_prev: SettingsState, formData: FormData): Promise<SettingsState> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
   if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
   const categories = String(formData.get("categories") ?? "")
@@ -264,7 +218,7 @@ export async function saveWhatsAppSettings(_prev: SettingsState, formData: FormD
     .slice(0, 15)
   const days = Number(formData.get("retentionDays"))
   const result = await callEdgeFunction(
-    "whatsapp-connection",
+    "inbox-classify",
     {
       action: "settings",
       workspace_id: workspaceId,
@@ -284,12 +238,37 @@ export async function classifyThreads(
 ): Promise<{ ok: true; classified: number; remaining: number } | { ok: false; error: string }> {
   if (!UUID_RE.test(workspaceId) || (threadId && !UUID_RE.test(threadId))) return { ok: false, error: "Datos no válidos." }
   const result = await callEdgeFunction<{ classified: number; remaining: number }>(
-    "whatsapp-classify",
+    "inbox-classify",
     { workspace_id: workspaceId, thread_id: threadId ?? null },
+    110_000,
   )
   if (result.error) return { ok: false, error: result.error.message }
   refresh()
   return { ok: true, classified: result.data.classified, remaining: result.data.remaining }
+}
+
+export async function draftReply(
+  workspaceId: string,
+  threadId: string,
+  instructions: string,
+): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
+  if (!UUID_RE.test(workspaceId) || !UUID_RE.test(threadId)) return { ok: false, error: "Datos no válidos." }
+  const result = await callEdgeFunction<{ text: string }>(
+    "inbox-reply",
+    { action: "draft", workspace_id: workspaceId, thread_id: threadId, instructions: instructions.slice(0, 1000) },
+    80_000,
+  )
+  if (result.error) return { ok: false, error: result.error.message }
+  return { ok: true, text: result.data.text }
+}
+
+export async function sendReply(workspaceId: string, threadId: string, text: string): Promise<ActionResult> {
+  if (!UUID_RE.test(workspaceId) || !UUID_RE.test(threadId)) return { ok: false, error: "Datos no válidos." }
+  if (!text.trim()) return { ok: false, error: "Escribe la respuesta." }
+  const result = await callEdgeFunction("inbox-reply", { action: "send", workspace_id: workspaceId, thread_id: threadId, text: text.slice(0, 8000) }, 60_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  refresh()
+  return { ok: true }
 }
 
 export async function updateThread(_prev: SettingsState, formData: FormData): Promise<SettingsState> {
@@ -303,7 +282,7 @@ export async function updateThread(_prev: SettingsState, formData: FormData): Pr
   const urgency = String(formData.get("urgency") ?? "")
   const supabase = await createClient()
   const { data, error } = await supabase
-    .from("whatsapp_threads")
+    .from("inbox_threads")
     .update({
       category: text("category", 60),
       client: text("client", 120),

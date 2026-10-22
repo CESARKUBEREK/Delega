@@ -50,17 +50,10 @@ function asPending(value: Json | null): Pending | null {
       return { tool: "append_to_document", fileName: t(v.file_name), text: t(v.text) }
     case "create_document":
       return { tool: "create_document", title: t(v.title), text: t(v.text) }
-    case "send_whatsapp":
-      return { tool: "send_whatsapp", to: t(v.to_label), phone: t(v.phone), text: t(v.text) }
-    case "send_whatsapp_template":
-      return {
-        tool: "send_whatsapp_template",
-        to: t(v.to_label),
-        phone: t(v.phone),
-        template: t(v.template),
-        language: t(v.language),
-        parameters: Array.isArray(v.parameters) ? v.parameters.map(t) : [],
-      }
+    case "send_email":
+      return { tool: "send_email", to: t(v.to_label), address: t(v.address), subject: t(v.subject), text: t(v.body) }
+    case "send_telegram":
+      return { tool: "send_telegram", to: t(v.to_label), text: t(v.text) }
     default:
       return null
   }
@@ -138,9 +131,9 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
       </section>
 
       {run.note ? <p className="text-sm text-graphite">Indicaciones: {run.note}</p> : null}
-      {(run.trigger as { type?: string; text?: string } | null)?.type === "whatsapp_message" ? (
+      {(run.trigger as { type?: string; text?: string } | null)?.type === "telegram_message" ? (
         <p className="border-l-2 border-rule pl-3 text-sm text-graphite">
-          Mensaje que la lanzó: «{String((run.trigger as { text?: string }).text ?? "").slice(0, 500)}»
+          Mensaje de Telegram que la lanzó: «{String((run.trigger as { text?: string }).text ?? "").slice(0, 500)}»
         </p>
       ) : null}
     </div>

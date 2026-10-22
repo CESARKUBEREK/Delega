@@ -118,7 +118,7 @@ export function RunPanel({
   )
 }
 
-// Flujos con disparador automático (un WhatsApp entrante): se activan o pausan
+// Flujos con disparador automático (un mensaje al bot de Telegram): se activan o pausan
 // y se eligen los archivos que usará cada ejecución automática.
 export function ActivationPanel({
   workspaceId,
@@ -126,7 +126,7 @@ export function ActivationPanel({
   status,
   files,
   savedFileIds,
-  whatsappReady,
+  telegramReady,
   canEdit,
 }: {
   workspaceId: string
@@ -134,7 +134,7 @@ export function ActivationPanel({
   status: string
   files: { id: string; name: string; kind: string }[]
   savedFileIds: string[]
-  whatsappReady: boolean
+  telegramReady: boolean
   canEdit: boolean
 }) {
   const router = useRouter()
@@ -152,10 +152,10 @@ export function ActivationPanel({
     })
   }
 
-  if (!whatsappReady) {
+  if (!telegramReady) {
     return (
       <p className="text-sm text-graphite">
-        Este flujo arranca al recibir un WhatsApp. Primero conecta WhatsApp en{" "}
+        Este flujo arranca al recibir un mensaje en Telegram. Primero conecta tu bot en{" "}
         <Link href={`/w/${workspaceId}/integraciones`} className="text-stroke underline underline-offset-4">
           Integraciones
         </Link>
@@ -168,7 +168,7 @@ export function ActivationPanel({
     <div className="flex flex-col gap-4">
       <p className="text-sm text-graphite">
         {active
-          ? "Activo: cada WhatsApp que llegue al número del espacio lanzará una ejecución. Lo que quiera escribir o enviar esperará tu aprobación en Historial."
+          ? "Activo: cada mensaje que reciba el bot del espacio lanzará una ejecución (máximo 30 por hora). Lo que quiera escribir o enviar esperará tu aprobación en Historial."
           : "Pausado: los mensajes que lleguen se registran, pero no lanzan este flujo."}
       </p>
       {files.length > 0 ? (

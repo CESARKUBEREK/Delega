@@ -1,7 +1,6 @@
 // telegram-connection: conecta un bot de Telegram a un espacio. Solo owners y admins.
 //   save        valida el token con getMe, lo guarda en Vault y registra el
 //               webhook de Delega con un secreto propio.
-//   settings    categorías y días de conservación de la bandeja (si no hay Gmail).
 //   disconnect  quita el webhook en Telegram y borra la conexión.
 import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
 import { randomToken } from "../_shared/google.ts"

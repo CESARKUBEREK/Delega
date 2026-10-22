@@ -115,7 +115,7 @@ async function launchFlows(workspaceId: string, chatId: string, name: string | n
   }
 }
 
-async function process(workspaceId: string, integrationId: string, update: Update) {
+async function handleUpdate(workspaceId: string, integrationId: string, update: Update) {
   const m = update.message ?? update.edited_message
   if (!m?.chat?.id || !m.message_id || m.from?.is_bot) return
   const chatId = String(m.chat.id)
@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
   }
 
   // Telegram espera una respuesta rápida: el trabajo sigue en segundo plano.
-  const work = process(row.workspace_id, integrationId, update).catch((e) =>
+  const work = handleUpdate(row.workspace_id, integrationId, update).catch((e) =>
     console.error("telegram-webhook", e instanceof Error ? e.name : "error")
   )
   if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(work)

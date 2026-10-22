@@ -17,7 +17,7 @@ export type FlowPlan = {
   version: 1
   name: string
   summary: string
-  trigger: { type: "manual" | "schedule" | "whatsapp_message"; description: string }
+  trigger: { type: "manual" | "schedule" | "telegram_message"; description: string }
   connections: { kind: string; purpose: string }[]
   steps: PlanStep[]
   open_questions: string[]
@@ -37,7 +37,7 @@ export function asPlan(value: Json | null | undefined): FlowPlan | null {
     name: str(p.name) || "Flujo sin nombre",
     summary: str(p.summary),
     trigger: {
-      type: trigger.type === "schedule" || trigger.type === "whatsapp_message" ? trigger.type : "manual",
+      type: trigger.type === "schedule" || trigger.type === "telegram_message" ? trigger.type : "manual",
       description: str(trigger.description),
     },
     connections: arr(p.connections).map((c) => ({ kind: str(obj(c).kind), purpose: str(obj(c).purpose) })),
@@ -72,17 +72,17 @@ export const CONNECTION_LABEL: Record<string, string> = {
   calendar: "Calendario",
   database: "Base de datos",
   documents: "Documento",
-  whatsapp: "WhatsApp",
+  telegram: "Telegram",
   none: "",
 }
 
 // Conexiones que ya funcionan en esta versión.
-export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet", "documents", "whatsapp"])
+export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet", "documents", "email", "telegram"])
 
 export const TRIGGER_LABEL: Record<string, string> = {
   manual: "Manual",
   schedule: "Programado (aún no automático)",
-  whatsapp_message: "Al recibir un WhatsApp",
+  telegram_message: "Al recibir un mensaje en Telegram",
 }
 
 export const FLOW_STATUS_LABEL: Record<string, string> = {

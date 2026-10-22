@@ -54,6 +54,26 @@ Deno.serve(async (req) => {
 
   // Las categorías se guardan en la integración de Gmail o, si no hay, en la de Telegram.
   const { data: integs } = await admin.from("integrations").select("provider, config").eq("workspace_id", workspaceId).in("provider", ["gmail", "telegram"])
+
+  // Ajustes de la bandeja: se guardan en todas las integraciones de la bandeja.
+  if (body?.action === "settings") {
+    if (!integs?.length) return fail(409, "no_inbox", "Conecta Gmail o Telegram primero.")
+    const categories = Array.isArray(body.categories)
+      ? [...new Set(body.categories.filter((c): c is string => typeof c === "string").map((c) => c.trim().slice(0, 60)).filter(Boolean))].slice(0, 15)
+      : []
+    if (categories.length < 2) return fail(400, "bad_categories", "Escribe al menos dos categorías.")
+    const days = typeof body.retention_days === "number" && body.retention_days >= 1 ? Math.min(3650, Math.trunc(body.retention_days)) : null
+    for (const i of integs) {
+      await admin.rpc("integration_set_config", {
+        p_workspace_id: workspaceId,
+        p_provider: i.provider,
+        p_config: { ...(i.config ?? {}), categories, retention_days: days },
+      })
+    }
+    if (days) await admin.rpc("inbox_purge", { p_workspace_id: workspaceId, p_days: days })
+    return json({ ok: true })
+  }
+
   const config = ((integs ?? []).find((i) => i.provider === "gmail") ?? (integs ?? [])[0])?.config as InboxConfig | undefined
   const categories = config?.categories?.length ? config.categories : DEFAULT_CATEGORIES
 

@@ -111,7 +111,7 @@ export type Database = {
           created_by: string | null
           id: string
           name: string
-          phone: string
+          email: string
           workspace_id: string
         }
         Insert: {
@@ -119,7 +119,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           name: string
-          phone: string
+          email: string
           workspace_id: string
         }
         Update: {
@@ -127,7 +127,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           name?: string
-          phone?: string
+          email?: string
           workspace_id?: string
         }
         Relationships: [
@@ -324,6 +324,135 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      inbox_messages: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          direction: string
+          external_id: string
+          id: number
+          integration_id: string | null
+          recipients: string | null
+          run_id: string | null
+          sender_address: string | null
+          sender_name: string | null
+          sent_at: string
+          subject: string | null
+          thread_id: string
+          workspace_id: string
+        }
+        Insert: {
+          body?: string
+          channel: string
+          created_at?: string
+          direction: string
+          external_id: string
+          id?: never
+          integration_id?: string | null
+          recipients?: string | null
+          run_id?: string | null
+          sender_address?: string | null
+          sender_name?: string | null
+          sent_at?: string
+          subject?: string | null
+          thread_id: string
+          workspace_id: string
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          direction?: string
+          external_id?: string
+          id?: never
+          integration_id?: string | null
+          recipients?: string | null
+          run_id?: string | null
+          sender_address?: string | null
+          sender_name?: string | null
+          sent_at?: string
+          subject?: string | null
+          thread_id?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      inbox_threads: {
+        Row: {
+          archived: boolean
+          category: string | null
+          channel: string
+          classified_at: string | null
+          classified_count: number
+          client: string | null
+          contact_address: string | null
+          contact_name: string | null
+          created_at: string
+          external_id: string
+          id: string
+          integration_id: string | null
+          last_message_at: string | null
+          manually_edited: boolean
+          message_count: number
+          needs_reply: boolean | null
+          project: string | null
+          subject: string | null
+          summary: string | null
+          updated_at: string
+          urgency: string | null
+          workspace_id: string
+        }
+        Insert: {
+          archived?: boolean
+          category?: string | null
+          channel: string
+          classified_at?: string | null
+          classified_count?: number
+          client?: string | null
+          contact_address?: string | null
+          contact_name?: string | null
+          created_at?: string
+          external_id: string
+          id?: string
+          integration_id?: string | null
+          last_message_at?: string | null
+          manually_edited?: boolean
+          message_count?: number
+          needs_reply?: boolean | null
+          project?: string | null
+          subject?: string | null
+          summary?: string | null
+          updated_at?: string
+          urgency?: string | null
+          workspace_id: string
+        }
+        Update: {
+          archived?: boolean
+          category?: string | null
+          channel?: string
+          classified_at?: string | null
+          classified_count?: number
+          client?: string | null
+          contact_address?: string | null
+          contact_name?: string | null
+          created_at?: string
+          external_id?: string
+          id?: string
+          integration_id?: string | null
+          last_message_at?: string | null
+          manually_edited?: boolean
+          message_count?: number
+          needs_reply?: boolean | null
+          project?: string | null
+          subject?: string | null
+          summary?: string | null
+          updated_at?: string
+          urgency?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
       }
       integration_files: {
         Row: {
@@ -710,134 +839,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      whatsapp_messages: {
-        Row: {
-          sent_at: string
-          source: string
-          thread_id: string | null
-          body: string
-          contact_name: string | null
-          created_at: string
-          direction: string
-          id: number
-          integration_id: string | null
-          message_type: string
-          phone: string
-          run_id: string | null
-          status: string | null
-          wa_message_id: string | null
-          workspace_id: string
-        }
-        Insert: {
-          sent_at?: string
-          source?: string
-          thread_id?: string | null
-          body?: string
-          contact_name?: string | null
-          created_at?: string
-          direction: string
-          id?: never
-          integration_id?: string | null
-          message_type?: string
-          phone: string
-          run_id?: string | null
-          status?: string | null
-          wa_message_id?: string | null
-          workspace_id: string
-        }
-        Update: {
-          sent_at?: string
-          source?: string
-          thread_id?: string | null
-          body?: string
-          contact_name?: string | null
-          created_at?: string
-          direction?: string
-          id?: never
-          integration_id?: string | null
-          message_type?: string
-          phone?: string
-          run_id?: string | null
-          status?: string | null
-          wa_message_id?: string | null
-          workspace_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "whatsapp_messages_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      whatsapp_threads: {
-        Row: {
-          archived: boolean
-          category: string | null
-          classified_at: string | null
-          classified_count: number
-          client: string | null
-          contact_name: string | null
-          created_at: string
-          id: string
-          integration_id: string | null
-          last_message_at: string | null
-          manually_edited: boolean
-          message_count: number
-          needs_reply: boolean | null
-          phone: string
-          project: string | null
-          summary: string | null
-          updated_at: string
-          urgency: string | null
-          workspace_id: string
-        }
-        Insert: {
-          archived?: boolean
-          category?: string | null
-          classified_at?: string | null
-          classified_count?: number
-          client?: string | null
-          contact_name?: string | null
-          created_at?: string
-          id?: string
-          integration_id?: string | null
-          last_message_at?: string | null
-          manually_edited?: boolean
-          message_count?: number
-          needs_reply?: boolean | null
-          phone: string
-          project?: string | null
-          summary?: string | null
-          updated_at?: string
-          urgency?: string | null
-          workspace_id: string
-        }
-        Update: {
-          archived?: boolean
-          category?: string | null
-          classified_at?: string | null
-          classified_count?: number
-          client?: string | null
-          contact_name?: string | null
-          created_at?: string
-          id?: string
-          integration_id?: string | null
-          last_message_at?: string | null
-          manually_edited?: boolean
-          message_count?: number
-          needs_reply?: boolean | null
-          phone?: string
-          project?: string | null
-          summary?: string | null
-          updated_at?: string
-          urgency?: string | null
-          workspace_id?: string
-        }
-        Relationships: []
       }
       workspaces: {
         Row: {

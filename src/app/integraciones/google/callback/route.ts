@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
     return back(`/integraciones/google?e=${params.get("error") === "access_denied" ? "denied" : "invalid"}`)
   }
 
-  const result = await callEdgeFunction<{ workspace_id: string }>("google-connection", { action: "callback", code, state }, 30_000)
+  const result = await callEdgeFunction<{ workspace_id: string; provider?: string }>("google-connection", { action: "callback", code, state }, 30_000)
   if (result.error) return back(`/integraciones/google?e=${encodeURIComponent(result.error.code)}`)
-  return back(`/w/${result.data.workspace_id}/integraciones?google=conectado`)
+  const flag = result.data.provider === "gmail" ? "gmail=conectado" : "google=conectado"
+  return back(`/w/${result.data.workspace_id}/integraciones?${flag}`)
 }
