@@ -117,11 +117,108 @@ export const FLOW_STATUS_LABEL: Record<string, string> = {
   paused: "En pausa",
 }
 
-export const OPENAI_MODELS = [
-  { id: "gpt-6.1-sol", label: "GPT-6.1 Sol", hint: "Equilibrado. Recomendado." },
-  { id: "gpt-6-astra", label: "GPT-6 Astra", hint: "El más capaz, más caro." },
-  { id: "gpt-6-luna", label: "GPT-6 Luna", hint: "El más económico." },
-] as const
+// Proveedores de IA (BYOK). El servidor tiene la misma lista en _shared/llm.ts.
+export const LLM_PROVIDER_IDS = ["openai", "anthropic", "deepseek", "kimi"] as const
+export type LlmProvider = (typeof LLM_PROVIDER_IDS)[number]
+
+export type LlmModel = { id: string; label: string; hint: string }
+export type LlmProviderInfo = {
+  label: string
+  description: string
+  keyPrefix: string
+  placeholder: string
+  keysUrl: string
+  keysSteps: string[]
+  privacy: string
+  models: LlmModel[]
+}
+
+export const LLM_PROVIDERS: Record<LlmProvider, LlmProviderInfo> = {
+  openai: {
+    label: "OpenAI",
+    description: "Modelos GPT con tu propia clave.",
+    keyPrefix: "sk-",
+    placeholder: "sk-…",
+    keysUrl: "https://platform.openai.com/api-keys",
+    keysSteps: [
+      "Entra en platform.openai.com con tu cuenta y abre «API keys».",
+      "Crea una clave nueva para Orkesta y cópiala. Tu cuenta necesita saldo o un método de pago.",
+    ],
+    privacy: "Orkesta pide a OpenAI que no conserve las conversaciones (store: false).",
+    models: [
+      { id: "gpt-6.1-sol", label: "GPT-6.1 Sol", hint: "Equilibrado. Recomendado." },
+      { id: "gpt-6-astra", label: "GPT-6 Astra", hint: "El más capaz, más caro." },
+      { id: "gpt-6-luna", label: "GPT-6 Luna", hint: "El más económico." },
+    ],
+  },
+  anthropic: {
+    label: "Anthropic",
+    description: "Modelos Claude con tu propia clave.",
+    keyPrefix: "sk-ant-",
+    placeholder: "sk-ant-…",
+    keysUrl: "https://platform.claude.com/settings/keys",
+    keysSteps: [
+      "Entra en platform.claude.com con tu cuenta y abre «API keys».",
+      "Crea una clave para Orkesta y cópiala. Tu cuenta necesita créditos o un método de pago.",
+    ],
+    privacy: "Los textos que procesa Orkesta se envían a Anthropic; consulta su política de datos de la API.",
+    models: [
+      { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5", hint: "Equilibrado. Recomendado." },
+      { id: "claude-opus-5-5", label: "Claude Opus 5.5", hint: "El más capaz, más caro." },
+      { id: "claude-haiku-5-5", label: "Claude Haiku 5.5", hint: "El más rápido y económico." },
+    ],
+  },
+  deepseek: {
+    label: "DeepSeek",
+    description: "Modelos DeepSeek con tu propia clave.",
+    keyPrefix: "sk-",
+    placeholder: "sk-…",
+    keysUrl: "https://platform.deepseek.com/api_keys",
+    keysSteps: [
+      "Entra en platform.deepseek.com con tu cuenta y abre «API keys».",
+      "Crea una clave para Orkesta y cópiala. La cuenta funciona con saldo prepago: recárgala antes.",
+    ],
+    privacy: "Los textos que procesa Orkesta se envían a los servidores de DeepSeek; revisa su política de datos antes de usarlo con información de clientes.",
+    models: [
+      { id: "deepseek-flash", label: "DeepSeek Flash", hint: "Rápido y muy económico. Recomendado." },
+      { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro", hint: "Más capaz, unas tres veces más caro." },
+    ],
+  },
+  kimi: {
+    label: "Kimi",
+    description: "Modelos Kimi de Moonshot AI con tu propia clave.",
+    keyPrefix: "sk-",
+    placeholder: "sk-…",
+    keysUrl: "https://platform.kimi.ai",
+    keysSteps: [
+      "Entra en platform.kimi.ai (la plataforma internacional) y abre «API Keys».",
+      "Crea una clave para Orkesta y cópiala. Las claves de la plataforma china (moonshot.cn) no sirven aquí.",
+    ],
+    privacy: "Los textos que procesa Orkesta se envían a los servidores de Moonshot AI; revisa su política de datos antes de usarlo con información de clientes.",
+    models: [
+      { id: "kimi-k3", label: "Kimi K3", hint: "El más capaz. Recomendado." },
+      { id: "kimi-k2.6", label: "Kimi K2.6", hint: "Generación anterior." },
+    ],
+  },
+}
+
+export function isLlmProvider(value: unknown): value is LlmProvider {
+  return typeof value === "string" && (LLM_PROVIDER_IDS as readonly string[]).includes(value)
+}
+
+// Nombre legible de un modelo de cualquier proveedor.
+export function modelLabel(model: string | null | undefined): string {
+  if (!model) return ""
+  for (const p of LLM_PROVIDER_IDS) {
+    const m = LLM_PROVIDERS[p].models.find((x) => x.id === model)
+    if (m) return m.label
+  }
+  return model
+}
+
+export function providerLabel(provider: string | null | undefined): string {
+  return isLlmProvider(provider) ? LLM_PROVIDERS[provider].label : (provider ?? "")
+}
 
 export const RUN_STATUS_LABEL: Record<string, string> = {
   running: "En curso",

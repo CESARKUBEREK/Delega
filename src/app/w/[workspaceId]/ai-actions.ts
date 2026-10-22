@@ -3,52 +3,77 @@
 import { refresh } from "next/cache"
 import { redirect } from "next/navigation"
 import { callEdgeFunction } from "@/lib/edge-functions"
-import { asPlan, OPENAI_MODELS, type FlowPlan } from "@/lib/plan"
+import { asPlan, type FlowPlan, isLlmProvider, LLM_PROVIDERS, type LlmProvider } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { UUID_RE } from "@/lib/workspace"
 
-// La clave de OpenAI nunca se guarda ni se registra en Next.js: se reenvía
-// tal cual a la Edge Function, que la valida y la cifra en Vault.
+// Las claves de IA nunca se guardan ni se registran en Next.js: se reenvían
+// tal cual a la Edge Function, que las valida y las cifra en Vault.
 
 export type AiKeyState = { error?: string; message?: string }
 
-const MODEL_IDS = new Set<string>(OPENAI_MODELS.map((m) => m.id))
+function readProvider(formData: FormData): LlmProvider | null {
+  const provider = formData.get("provider")
+  return isLlmProvider(provider) ? provider : null
+}
+
+function validModel(provider: LlmProvider, model: string): boolean {
+  return LLM_PROVIDERS[provider].models.some((m) => m.id === model)
+}
 
 export async function saveAiKey(_prev: AiKeyState, formData: FormData): Promise<AiKeyState> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
+  const provider = readProvider(formData)
   const apiKey = String(formData.get("apiKey") ?? "").trim()
   const model = String(formData.get("model") ?? "")
-  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
-  if (!apiKey.startsWith("sk-")) return { error: "Pega una clave de OpenAI: empieza por sk-." }
-  if (!MODEL_IDS.has(model)) return { error: "Elige un modelo." }
+  if (!UUID_RE.test(workspaceId) || !provider) return { error: "Espacio o proveedor no válido." }
+  const info = LLM_PROVIDERS[provider]
+  if (!apiKey.startsWith(info.keyPrefix)) return { error: `Pega una clave de ${info.label}: empieza por ${info.keyPrefix}` }
+  if (!validModel(provider, model)) return { error: "Elige un modelo." }
 
-  const result = await callEdgeFunction<{ key_hint: string }>("ai-connection", {
+  const result = await callEdgeFunction<{ key_hint: string; is_default: boolean }>("ai-connection", {
     workspace_id: workspaceId,
+    provider,
     action: "save",
     api_key: apiKey,
     model,
   }, 30_000)
   if (result.error) return { error: result.error.message }
   refresh()
-  return { message: `Clave conectada (${result.data.key_hint}).` }
+  return {
+    message: `Clave de ${info.label} conectada (${result.data.key_hint}).${result.data.is_default ? " Es el proveedor que usa este espacio." : ""}`,
+  }
 }
 
 export async function setAiModel(_prev: AiKeyState, formData: FormData): Promise<AiKeyState> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
+  const provider = readProvider(formData)
   const model = String(formData.get("model") ?? "")
-  if (!UUID_RE.test(workspaceId) || !MODEL_IDS.has(model)) return { error: "Elige un modelo." }
+  if (!UUID_RE.test(workspaceId) || !provider || !validModel(provider, model)) return { error: "Elige un modelo." }
 
-  const result = await callEdgeFunction("ai-connection", { workspace_id: workspaceId, action: "set_model", model }, 20_000)
+  const result = await callEdgeFunction("ai-connection", { workspace_id: workspaceId, provider, action: "set_model", model }, 20_000)
   if (result.error) return { error: result.error.message }
   refresh()
   return { message: "Modelo guardado." }
 }
 
+export async function setDefaultAi(_prev: AiKeyState, formData: FormData): Promise<AiKeyState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const provider = readProvider(formData)
+  if (!UUID_RE.test(workspaceId) || !provider) return { error: "Proveedor no válido." }
+
+  const result = await callEdgeFunction("ai-connection", { workspace_id: workspaceId, provider, action: "set_default" }, 20_000)
+  if (result.error) return { error: result.error.message }
+  refresh()
+  return { message: `Ahora este espacio usa ${LLM_PROVIDERS[provider].label}.` }
+}
+
 export async function disconnectAi(_prev: AiKeyState, formData: FormData): Promise<AiKeyState> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
-  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  const provider = readProvider(formData)
+  if (!UUID_RE.test(workspaceId) || !provider) return { error: "Espacio o proveedor no válido." }
 
-  const result = await callEdgeFunction("ai-connection", { workspace_id: workspaceId, action: "delete" }, 20_000)
+  const result = await callEdgeFunction("ai-connection", { workspace_id: workspaceId, provider, action: "delete" }, 20_000)
   if (result.error) return { error: result.error.message }
   refresh()
   return { message: "Clave desconectada y borrada." }

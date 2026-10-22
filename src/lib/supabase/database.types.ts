@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          is_default: boolean
           key_hint: string
           last_validated_at: string
           model: string
@@ -32,6 +33,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_default?: boolean
           key_hint: string
           last_validated_at?: string
           model: string
@@ -45,6 +47,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_default?: boolean
           key_hint?: string
           last_validated_at?: string
           model?: string
@@ -191,6 +194,7 @@ export type Database = {
           output_tokens: number
           pending_action: Json | null
           plan: Json
+          provider: string
           started_at: string
           started_by: string | null
           state: Json
@@ -215,6 +219,7 @@ export type Database = {
           output_tokens?: number
           pending_action?: Json | null
           plan: Json
+          provider?: string
           started_at?: string
           started_by?: string | null
           state?: Json
@@ -239,6 +244,7 @@ export type Database = {
           output_tokens?: number
           pending_action?: Json | null
           plan?: Json
+          provider?: string
           started_at?: string
           started_by?: string | null
           state?: Json

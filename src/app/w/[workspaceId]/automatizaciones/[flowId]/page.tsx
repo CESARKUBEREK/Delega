@@ -33,9 +33,9 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
     .maybeSingle()
   if (!flow) notFound()
 
-  const [{ data: rawFiles }, { data: ai }, { data: runs }, { data: tg }] = await Promise.all([
+  const [{ data: rawFiles }, { data: aiRows }, { data: runs }, { data: tg }] = await Promise.all([
     supabase.from("integration_files").select("id, name, mime_type").eq("workspace_id", workspaceId).order("name"),
-    supabase.from("ai_connections").select("status").eq("workspace_id", workspaceId).eq("provider", "openai").maybeSingle(),
+    supabase.from("ai_connections").select("status, is_default").eq("workspace_id", workspaceId),
     supabase
       .from("flow_runs")
       .select("id, status, started_at")
@@ -99,7 +99,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
             workspaceId={workspaceId}
             flowId={flow.id}
             files={files}
-            aiReady={ai?.status === "active"}
+            aiReady={(aiRows?.find((c) => c.is_default) ?? aiRows?.[0])?.status === "active"}
             needsFiles={Boolean(plan?.connections.some((c) => c.kind === "spreadsheet" || c.kind === "documents" || c.kind === "drive"))}
             isAdmin={isAdmin}
           />

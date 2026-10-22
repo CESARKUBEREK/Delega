@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { OPENAI_MODELS, RUN_STATUS_LABEL } from "@/lib/plan"
+import { modelLabel, providerLabel, RUN_STATUS_LABEL } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime, formatNumber } from "../format"
@@ -41,7 +41,7 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
       .limit(100),
     supabase
       .from("usage_events")
-      .select("model, input_tokens, output_tokens")
+      .select("provider, model, input_tokens, output_tokens")
       .eq("workspace_id", workspaceId)
       .gte("created_at", monthStart.toISOString())
       .limit(5000),
@@ -53,9 +53,9 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
       .limit(50),
   ])
 
-  const byModel = new Map<string, { requests: number; input: number; output: number }>()
+  const byModel = new Map<string, { provider: string; requests: number; input: number; output: number }>()
   for (const u of usage ?? []) {
-    const row = byModel.get(u.model) ?? { requests: 0, input: 0, output: 0 }
+    const row = byModel.get(u.model) ?? { provider: u.provider, requests: 0, input: 0, output: 0 }
     row.requests += 1
     row.input += u.input_tokens
     row.output += u.output_tokens
@@ -108,7 +108,9 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
               <tbody className="divide-y divide-rule">
                 {[...byModel].map(([model, r]) => (
                   <tr key={model}>
-                    <td className="px-5 py-2 text-ink">{OPENAI_MODELS.find((m) => m.id === model)?.label ?? model}</td>
+                    <td className="px-5 py-2 text-ink">
+                      {modelLabel(model)} <span className="text-xs text-graphite">· {providerLabel(r.provider)}</span>
+                    </td>
                     <td className="px-5 py-2 text-right tabular-nums">{formatNumber(r.requests)}</td>
                     <td className="px-5 py-2 text-right tabular-nums">{formatNumber(r.input)}</td>
                     <td className="px-5 py-2 text-right tabular-nums">{formatNumber(r.output)}</td>
@@ -116,7 +118,7 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
                 ))}
               </tbody>
             </table>
-            <p className="px-5 py-3 text-xs text-graphite">El importe lo factura OpenAI en tu cuenta según su tarifa.</p>
+            <p className="px-5 py-3 text-xs text-graphite">El importe lo factura cada proveedor (OpenAI, Anthropic, DeepSeek o Kimi) en tu cuenta según su tarifa.</p>
           </div>
         ) : (
           <p className="px-5 py-4 text-sm text-graphite">Sin consumo este mes.</p>

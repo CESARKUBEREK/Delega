@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { OPENAI_MODELS } from "@/lib/plan"
+import { modelLabel, providerLabel } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime } from "./format"
@@ -21,8 +21,8 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
   const supabase = await createClient()
   const base = `/w/${workspaceId}`
 
-  const [{ data: connection }, { count: flowCount }, { data: conversations }, { count: waiting }] = await Promise.all([
-    supabase.from("ai_connections").select("model, key_hint, status").eq("workspace_id", workspaceId).eq("provider", "openai").maybeSingle(),
+  const [{ data: connections }, { count: flowCount }, { data: conversations }, { count: waiting }] = await Promise.all([
+    supabase.from("ai_connections").select("provider, model, key_hint, status, is_default").eq("workspace_id", workspaceId),
     supabase.from("flows").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
     supabase
       .from("conversations")
@@ -36,7 +36,8 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
       .eq("workspace_id", workspaceId)
       .eq("status", "awaiting_approval"),
   ])
-  const modelLabel = OPENAI_MODELS.find((m) => m.id === connection?.model)?.label ?? connection?.model
+  // El proveedor que usa el espacio (o, si no hay ninguno marcado, el primero conectado).
+  const connection = connections?.find((c) => c.is_default) ?? connections?.[0]
 
   return (
     <div className="flex flex-col gap-6">
@@ -56,14 +57,14 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
           <h2 className="text-sm font-medium text-graphite">Inteligencia artificial</h2>
           {connection?.status === "active" ? (
             <>
-              <p className="rotulo mt-2 text-lg text-ok">OpenAI conectado</p>
+              <p className="rotulo mt-2 text-lg text-ok">{providerLabel(connection.provider)} conectado</p>
               <p className="mt-1 text-sm text-graphite">
-                {modelLabel}, clave {connection.key_hint}
+                {modelLabel(connection.model)}, clave {connection.key_hint}
               </p>
             </>
           ) : connection ? (
             <>
-              <p className="rotulo mt-2 text-lg text-alert">La clave dejó de funcionar</p>
+              <p className="rotulo mt-2 text-lg text-alert">La clave de {providerLabel(connection.provider)} dejó de funcionar</p>
               <p className="mt-1 text-sm text-graphite">
                 {isAdmin ? "Actualízala en Integraciones." : "Pide a un administrador que la actualice."}
               </p>
@@ -73,8 +74,8 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
               <p className="rotulo mt-2 text-lg text-ink">Sin conectar</p>
               <p className="mt-1 text-sm text-graphite">
                 {isAdmin
-                  ? "Conecta tu clave de OpenAI para usar el asistente."
-                  : "Un administrador tiene que conectar una clave de OpenAI."}
+                  ? "Conecta una clave de OpenAI, Anthropic, DeepSeek o Kimi para usar el asistente."
+                  : "Un administrador tiene que conectar una clave de IA."}
               </p>
             </>
           )}

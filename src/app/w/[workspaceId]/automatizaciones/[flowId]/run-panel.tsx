@@ -30,7 +30,7 @@ export function RunPanel({
   if (!aiReady) {
     return (
       <p className="text-sm text-graphite">
-        Para ejecutar hace falta una clave de OpenAI activa.{" "}
+        Para ejecutar hace falta una clave de IA activa (OpenAI, Anthropic, DeepSeek o Kimi).{" "}
         <Link href={`${base}/integraciones`} className="text-link underline underline-offset-4">
           Ir a Integraciones
         </Link>

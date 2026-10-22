@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { asPlan } from "@/lib/plan"
+import { asPlan, providerLabel } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { formatDateTime } from "../format"
@@ -30,8 +30,8 @@ async function Assistant({
   const { isAdmin } = await getWorkspace(workspaceId, `${base}/asistente`)
   const supabase = await createClient()
 
-  const [{ data: connection }, { data: conversations }, { data: rows }] = await Promise.all([
-    supabase.from("ai_connections").select("status").eq("workspace_id", workspaceId).eq("provider", "openai").maybeSingle(),
+  const [{ data: connections }, { data: conversations }, { data: rows }] = await Promise.all([
+    supabase.from("ai_connections").select("provider, status, is_default").eq("workspace_id", workspaceId),
     supabase
       .from("conversations")
       .select("id, title, updated_at")
@@ -61,6 +61,8 @@ async function Assistant({
       }))
     : []
 
+  const connection = connections?.find((c) => c.is_default) ?? connections?.[0]
+
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_15rem]">
       <section className="min-w-0">
@@ -75,7 +77,9 @@ async function Assistant({
 
         {connection?.status !== "active" ? (
           <div className="mb-4 border-l-2 border-alert bg-alert-bg px-4 py-3 text-sm text-alert" role="status">
-            {connection ? "La clave de OpenAI de este espacio dejó de funcionar. " : "Este espacio aún no tiene una clave de OpenAI. "}
+            {connection
+              ? `La clave de ${providerLabel(connection.provider)} de este espacio dejó de funcionar. `
+              : "Este espacio aún no tiene una clave de IA (OpenAI, Anthropic, DeepSeek o Kimi). "}
             {isAdmin ? (
               <Link href={`${base}/integraciones`} className="underline underline-offset-4">
                 Conéctala en Integraciones
