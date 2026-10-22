@@ -1,4 +1,4 @@
-import { AVAILABLE_CONNECTIONS, CONNECTION_LABEL, STEP_LABEL, type FlowPlan } from "@/lib/plan"
+import { AVAILABLE_CONNECTIONS, CONNECTION_LABEL, STEP_LABEL, TRIGGER_LABEL, type FlowPlan } from "@/lib/plan"
 
 // Plan de un flujo como hoja de pasos numerados. Solo muestra: no ejecuta.
 export function PlanView({ plan, compact = false }: { plan: FlowPlan; compact?: boolean }) {
@@ -8,7 +8,7 @@ export function PlanView({ plan, compact = false }: { plan: FlowPlan; compact?: 
         <p className="rotulo text-base text-ink">{plan.name}</p>
         {plan.summary ? <p className="mt-1 text-sm text-graphite">{plan.summary}</p> : null}
         <p className="mt-2 text-xs text-graphite">
-          {plan.trigger.type === "schedule" ? "Programado" : "Manual"}
+          {TRIGGER_LABEL[plan.trigger.type] ?? "Manual"}
           {plan.trigger.description ? `: ${plan.trigger.description}` : ""}
         </p>
       </div>

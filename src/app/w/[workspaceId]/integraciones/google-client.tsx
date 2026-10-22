@@ -20,7 +20,7 @@ type PickerBuilder = {
 }
 type GooglePicker = {
   PickerBuilder: new () => PickerBuilder
-  ViewId: { SPREADSHEETS: unknown }
+  ViewId: { SPREADSHEETS: unknown; DOCUMENTS: unknown }
   Feature: { MULTISELECT_ENABLED: unknown }
   Action: { PICKED: string; CANCEL: string }
 }
@@ -65,12 +65,13 @@ export function PickSheetsButton({ workspaceId, apiKey, appId }: { workspaceId: 
       }
       new picker.PickerBuilder()
         .addView(picker.ViewId.SPREADSHEETS)
+        .addView(picker.ViewId.DOCUMENTS)
         .enableFeature(picker.Feature.MULTISELECT_ENABLED)
         .setOAuthToken(tokenResult.token)
         .setDeveloperKey(apiKey)
         .setAppId(appId)
         .setLocale("es")
-        .setTitle("Elige las planillas que Delega puede usar")
+        .setTitle("Elige las planillas y documentos que Delega puede usar")
         .setCallback(async (data) => {
           if (data.action === picker.Action.CANCEL) {
             setBusy(false)
@@ -83,7 +84,7 @@ export function PickSheetsButton({ workspaceId, apiKey, appId }: { workspaceId: 
             const added = result.added?.length ?? 0
             const skipped = result.skipped?.length ?? 0
             setMessage({
-              message: `${added} planilla(s) añadida(s).${skipped ? ` ${skipped} archivo(s) no eran planillas de Google y se omitieron.` : ""}`,
+              message: `${added} archivo(s) añadido(s).${skipped ? ` ${skipped} no eran planillas ni documentos de Google y se omitieron.` : ""}`,
             })
           }
           setBusy(false)
@@ -105,7 +106,7 @@ export function PickSheetsButton({ workspaceId, apiKey, appId }: { workspaceId: 
         disabled={busy}
         className="h-11 w-fit bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90 disabled:cursor-wait disabled:opacity-70"
       >
-        {busy ? "Abriendo selector…" : "Elegir planillas"}
+        {busy ? "Abriendo selector…" : "Elegir planillas o documentos"}
       </button>
     </div>
   )

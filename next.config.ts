@@ -32,7 +32,8 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
-  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  // El selector de Google abre ventanas emergentes que hablan con esta página.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
 ]
 
 const nextConfig: NextConfig = {

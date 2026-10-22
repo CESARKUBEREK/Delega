@@ -55,15 +55,14 @@ export async function pkceChallenge(verifier: string): Promise<string> {
   return base64url(digest)
 }
 
-export function authorizationUrl(state: string, challenge: string): string {
+export function authorizationUrl(state: string, challenge: string, scopes: string[] = GOOGLE_SCOPES): string {
   const params = new URLSearchParams({
     client_id: env("GOOGLE_CLIENT_ID"),
     redirect_uri: redirectUri(),
     response_type: "code",
-    scope: GOOGLE_SCOPES.join(" "),
+    scope: scopes.join(" "),
     access_type: "offline",
     prompt: "consent",
-    include_granted_scopes: "true",
     state,
     code_challenge: challenge,
     code_challenge_method: "S256",
@@ -217,4 +216,59 @@ export async function updateRange(token: string, fileId: string, range: string, 
     { method: "PUT", body: JSON.stringify({ values }) },
   )
   return { updatedRange: data.updatedRange ?? range, updatedRows: data.updatedRows ?? 0, updatedCells: data.updatedCells ?? 0 }
+}
+
+// ---------------------------------------------------------------------------
+// Google Docs
+// ---------------------------------------------------------------------------
+export const DOCUMENT_MIME = "application/vnd.google-apps.document"
+const DOCS = "https://docs.googleapis.com/v1/documents"
+
+type DocElement = {
+  paragraph?: { elements?: { textRun?: { content?: string } }[] }
+  table?: { tableRows?: { tableCells?: { content?: DocElement[] }[] }[] }
+}
+
+function docText(content: DocElement[] | undefined, out: string[]) {
+  for (const el of content ?? []) {
+    if (el.paragraph) out.push((el.paragraph.elements ?? []).map((e) => e.textRun?.content ?? "").join(""))
+    if (el.table) {
+      for (const row of el.table.tableRows ?? []) {
+        const cells = (row.tableCells ?? []).map((c) => {
+          const inner: string[] = []
+          docText(c.content, inner)
+          return inner.join(" ").replace(/\s+/g, " ").trim()
+        })
+        out.push(`| ${cells.join(" | ")} |\n`)
+      }
+    }
+  }
+}
+
+export async function readDocument(token: string, docId: string): Promise<{ title: string; text: string }> {
+  const data = await googleFetch<{ title?: string; body?: { content?: DocElement[] } }>(
+    token,
+    `${DOCS}/${encodeURIComponent(docId)}?fields=title,body.content`,
+  )
+  const out: string[] = []
+  docText(data.body?.content, out)
+  return { title: data.title ?? "", text: out.join("") }
+}
+
+export async function appendToDocument(token: string, docId: string, text: string): Promise<void> {
+  await googleFetch(token, `${DOCS}/${encodeURIComponent(docId)}:batchUpdate`, {
+    method: "POST",
+    body: JSON.stringify({ requests: [{ insertText: { endOfSegmentLocation: {}, text: `\n${text}` } }] }),
+  })
+}
+
+export async function createDocument(token: string, title: string, text: string): Promise<{ id: string; url: string }> {
+  const doc = await googleFetch<{ documentId: string }>(token, DOCS, { method: "POST", body: JSON.stringify({ title }) })
+  if (text) {
+    await googleFetch(token, `${DOCS}/${encodeURIComponent(doc.documentId)}:batchUpdate`, {
+      method: "POST",
+      body: JSON.stringify({ requests: [{ insertText: { endOfSegmentLocation: {}, text } }] }),
+    })
+  }
+  return { id: doc.documentId, url: `https://docs.google.com/document/d/${doc.documentId}/edit` }
 }

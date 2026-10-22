@@ -105,6 +105,41 @@ export type Database = {
           },
         ]
       }
+      contacts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          email: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          email: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          email?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
@@ -142,6 +177,7 @@ export type Database = {
       }
       flow_runs: {
         Row: {
+          trigger: Json
           error: string | null
           file_ids: string[]
           finished_at: string | null
@@ -165,6 +201,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          trigger?: Json
           error?: string | null
           file_ids?: string[]
           finished_at?: string | null
@@ -188,6 +225,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          trigger?: Json
           error?: string | null
           file_ids?: string[]
           finished_at?: string | null
@@ -229,6 +267,7 @@ export type Database = {
       }
       flows: {
         Row: {
+          settings: Json
           created_at: string
           created_by: string | null
           definition: Json
@@ -242,6 +281,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          settings?: Json
           created_at?: string
           created_by?: string | null
           definition: Json
@@ -255,6 +295,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          settings?: Json
           created_at?: string
           created_by?: string | null
           definition?: Json
@@ -283,6 +324,135 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      inbox_messages: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          direction: string
+          external_id: string
+          id: number
+          integration_id: string | null
+          recipients: string | null
+          run_id: string | null
+          sender_address: string | null
+          sender_name: string | null
+          sent_at: string
+          subject: string | null
+          thread_id: string
+          workspace_id: string
+        }
+        Insert: {
+          body?: string
+          channel: string
+          created_at?: string
+          direction: string
+          external_id: string
+          id?: never
+          integration_id?: string | null
+          recipients?: string | null
+          run_id?: string | null
+          sender_address?: string | null
+          sender_name?: string | null
+          sent_at?: string
+          subject?: string | null
+          thread_id: string
+          workspace_id: string
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          direction?: string
+          external_id?: string
+          id?: never
+          integration_id?: string | null
+          recipients?: string | null
+          run_id?: string | null
+          sender_address?: string | null
+          sender_name?: string | null
+          sent_at?: string
+          subject?: string | null
+          thread_id?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      inbox_threads: {
+        Row: {
+          archived: boolean
+          category: string | null
+          channel: string
+          classified_at: string | null
+          classified_count: number
+          client: string | null
+          contact_address: string | null
+          contact_name: string | null
+          created_at: string
+          external_id: string
+          id: string
+          integration_id: string | null
+          last_message_at: string | null
+          manually_edited: boolean
+          message_count: number
+          needs_reply: boolean | null
+          project: string | null
+          subject: string | null
+          summary: string | null
+          updated_at: string
+          urgency: string | null
+          workspace_id: string
+        }
+        Insert: {
+          archived?: boolean
+          category?: string | null
+          channel: string
+          classified_at?: string | null
+          classified_count?: number
+          client?: string | null
+          contact_address?: string | null
+          contact_name?: string | null
+          created_at?: string
+          external_id: string
+          id?: string
+          integration_id?: string | null
+          last_message_at?: string | null
+          manually_edited?: boolean
+          message_count?: number
+          needs_reply?: boolean | null
+          project?: string | null
+          subject?: string | null
+          summary?: string | null
+          updated_at?: string
+          urgency?: string | null
+          workspace_id: string
+        }
+        Update: {
+          archived?: boolean
+          category?: string | null
+          channel?: string
+          classified_at?: string | null
+          classified_count?: number
+          client?: string | null
+          contact_address?: string | null
+          contact_name?: string | null
+          created_at?: string
+          external_id?: string
+          id?: string
+          integration_id?: string | null
+          last_message_at?: string | null
+          manually_edited?: boolean
+          message_count?: number
+          needs_reply?: boolean | null
+          project?: string | null
+          subject?: string | null
+          summary?: string | null
+          updated_at?: string
+          urgency?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
       }
       integration_files: {
         Row: {
@@ -330,6 +500,7 @@ export type Database = {
       }
       integrations: {
         Row: {
+          config: Json
           account_email: string | null
           created_at: string
           created_by: string | null
@@ -342,6 +513,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          config?: Json
           account_email?: string | null
           created_at?: string
           created_by?: string | null
@@ -354,6 +526,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          config?: Json
           account_email?: string | null
           created_at?: string
           created_by?: string | null
@@ -764,6 +937,20 @@ export type Database = {
           p_workspace_id: string
         }
         Returns: string
+      }
+      integration_secret_by_id: {
+        Args: { p_integration_id: string }
+        Returns: {
+          config: Json
+          provider: string
+          secret: string
+          status: string
+          workspace_id: string
+        }[]
+      }
+      integration_set_config: {
+        Args: { p_config: Json; p_provider: string; p_workspace_id: string }
+        Returns: undefined
       }
       integration_secret: {
         Args: { p_provider: string; p_workspace_id: string }

@@ -65,6 +65,7 @@ Las migraciones viven en `supabase/migrations/` y se versionan por marca de tiem
 |---|---|
 | `20261019150533_core_auth_workspaces.sql` | Perfiles, espacios (personal u organización), membresías con rol, invitaciones, auditoría, RLS y trigger de alta |
 | `20261019210000_ai_assistant.sql` | Conexiones de IA (clave en Vault), conversaciones, mensajes, flujos y consumo |
+| `20261020150000_docs_inbox.sql` | Gmail y Telegram (integraciones con configuración), contactos autorizados por correo, bandeja (conversaciones clasificadas y mensajes), disparadores y ajustes de flujos |
 | `20261020090000_sheets_runs.sql` | Integración con Google (refresh token en Vault), planillas elegidas, ejecuciones y bitácora; índices pendientes |
 
 ### Modelo de seguridad
@@ -151,4 +152,17 @@ El asistente devuelve `{ reply, plan }`, donde `plan` es `null` o un objeto con 
 ```bash
 supabase functions deploy google-connection
 supabase functions deploy run-flow
+```
+
+## Google Docs, Gmail, Telegram y bandeja
+
+- **Docs:** con el mismo permiso `drive.file`, el selector admite documentos. El agente puede `read_document`, `append_to_document` y `create_document` (los documentos creados se registran como archivos del espacio). Escrituras siempre con aprobación.
+- **Gmail:** conexión aparte (provider `gmail`) con `gmail.readonly` y `gmail.send` (alcances restringidos de Google: mientras la app esté en pruebas, el acceso caduca cada 7 días). `inbox-sync` importa los últimos 30 días y después usa el historial de Gmail, por tandas. Delega no borra ni archiva nada del buzón.
+- **Telegram:** bot propio creado con @BotFather. `telegram-connection` valida el token con `getMe`, lo guarda en Vault y registra el webhook `…/telegram-webhook?c=<integración>` con un `secret_token` aleatorio. `telegram-webhook` se despliega **sin** `verify_jwt` y comprueba `X-Telegram-Bot-Api-Secret-Token`. Los mensajes nuevos lanzan los flujos activos con disparador `telegram_message` (máx. 30 por hora y espacio).
+- **Bandeja:** `/w/[id]/bandeja`, correo y Telegram juntos. `inbox-classify` propone categoría (lista configurable), cliente, proyecto, urgencia, si necesita respuesta y un resumen; las correcciones manuales no las pisa la IA. `inbox-reply` redacta con IA (`draft`) y envía lo que la persona revisa (`send`, en el mismo hilo de Gmail o el mismo chat). Solo admins y owners. Conservación configurable en días.
+- **Envíos del agente:** `send_email` solo a contactos autorizados; `send_telegram` solo a quien escribió al bot. Siempre con aprobación.
+
+```bash
+supabase functions deploy inbox-sync inbox-classify inbox-reply telegram-connection
+supabase functions deploy telegram-webhook --no-verify-jwt
 ```

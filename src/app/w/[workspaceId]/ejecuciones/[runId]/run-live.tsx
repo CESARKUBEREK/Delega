@@ -4,13 +4,40 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { cancelRun, continueRun, decideRun } from "../../run-actions"
 
-type Cell = string | number | boolean | null
-export type Pending = {
-  tool: "append_rows" | "update_range"
-  fileName: string
-  range: string
-  values: Cell[][]
-  before: Cell[][] | null
+export type Cell = string | number | boolean | null
+export type Pending =
+  | { tool: "append_rows" | "update_range"; fileName: string; range: string; values: Cell[][]; before: Cell[][] | null }
+  | { tool: "append_to_document"; fileName: string; text: string }
+  | { tool: "create_document"; title: string; text: string }
+  | { tool: "send_email"; to: string; address: string; subject: string; text: string }
+  | { tool: "send_telegram"; to: string; text: string }
+
+function describe(p: Pending): string {
+  switch (p.tool) {
+    case "append_rows":
+      return `Añadir ${p.values.length} fila(s) al final de ${p.range} en «${p.fileName}».`
+    case "update_range":
+      return `Sobrescribir ${p.range} en «${p.fileName}».`
+    case "append_to_document":
+      return `Añadir este texto al final de «${p.fileName}».`
+    case "create_document":
+      return `Crear el documento «${p.title}» en tu Google Drive.`
+    case "send_email":
+      return `Enviar este correo a ${p.to} (${p.address}) con el asunto «${p.subject}».`
+    case "send_telegram":
+      return `Enviar este mensaje por Telegram a ${p.to}.`
+  }
+}
+
+function TextPreview({ text, caption }: { text: string; caption: string }) {
+  return (
+    <div>
+      <p className="mb-1 text-xs font-medium text-graphite">{caption}</p>
+      <div className="max-h-80 overflow-y-auto border border-rule bg-paper px-3 py-2 text-sm whitespace-pre-wrap text-ink">
+        {text || "(vacío)"}
+      </div>
+    </div>
+  )
 }
 
 // Mientras la ejecución está "en curso", pide al servidor que avance otro
@@ -122,16 +149,21 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
     <section className="border-2 border-stroke bg-sheet">
       <div className="border-b border-stroke px-5 py-3">
         <h2 className="font-semibold text-ink">Necesita tu aprobación</h2>
-        <p className="text-sm text-graphite">
-          {pending.tool === "append_rows"
-            ? `Añadir ${pending.values.length} fila(s) al final de ${pending.range} en «${pending.fileName}».`
-            : `Sobrescribir ${pending.range} en «${pending.fileName}».`}
-        </p>
+        <p className="text-sm text-graphite">{describe(pending)}</p>
       </div>
       <div className="flex flex-col gap-4 px-5 py-4">
-        {pending.before && pending.before.length > 0 ? <Table rows={pending.before} caption="Ahora" /> : null}
-        <Table rows={pending.values} caption={pending.tool === "append_rows" ? "Filas nuevas" : "Quedará así"} />
-        <p className="text-xs text-graphite">Se escribe el texto tal cual: nada se interpreta como fórmula.</p>
+        {pending.tool === "append_rows" || pending.tool === "update_range" ? (
+          <>
+            {pending.before && pending.before.length > 0 ? <Table rows={pending.before} caption="Ahora" /> : null}
+            <Table rows={pending.values} caption={pending.tool === "append_rows" ? "Filas nuevas" : "Quedará así"} />
+            <p className="text-xs text-graphite">Se escribe el texto tal cual: nada se interpreta como fórmula.</p>
+          </>
+        ) : (
+          <TextPreview
+            text={"text" in pending ? pending.text : ""}
+            caption={pending.tool === "send_email" ? "Correo" : pending.tool === "send_telegram" ? "Mensaje" : "Texto"}
+          />
+        )}
         {error ? (
           <p role="alert" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
             {error}
@@ -144,7 +176,13 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
             onClick={() => decide(true)}
             className="h-11 bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90 disabled:opacity-60"
           >
-            {busy && decision === "approve" ? "Escribiendo…" : "Aprobar y escribir"}
+            {busy && decision === "approve"
+              ? "Aplicando…"
+              : pending.tool.startsWith("send_")
+                ? "Aprobar y enviar"
+                : pending.tool === "create_document"
+                  ? "Aprobar y crear"
+                  : "Aprobar y escribir"}
           </button>
           <button
             type="button"

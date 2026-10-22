@@ -3,21 +3,21 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
-import { startRun } from "../../run-actions"
+import { setFlowActive, startRun } from "../../run-actions"
 
 export function RunPanel({
   workspaceId,
   flowId,
   files,
   aiReady,
-  needsSheets,
+  needsFiles,
   isAdmin,
 }: {
   workspaceId: string
   flowId: string
-  files: { id: string; name: string }[]
+  files: { id: string; name: string; kind: string }[]
   aiReady: boolean
-  needsSheets: boolean
+  needsFiles: boolean
   isAdmin: boolean
 }) {
   const router = useRouter()
@@ -57,28 +57,28 @@ export function RunPanel({
   return (
     <div className="flex flex-col gap-4">
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium text-ink">Planillas para esta ejecución (máximo 5)</legend>
+        <legend className="mb-1 text-sm font-medium text-ink">Archivos para esta ejecución (máximo 5)</legend>
         {files.length > 0 ? (
           files.map((f) => (
             <label key={f.id} className="flex items-center gap-2 text-sm text-ink">
               <input type="checkbox" checked={selected.includes(f.id)} onChange={() => toggle(f.id)} />
-              {f.name}
+              {f.name} <span className="text-xs text-graphite">({f.kind})</span>
             </label>
           ))
         ) : (
           <p className="text-sm text-graphite">
-            No hay planillas elegidas en este espacio.{" "}
+            No hay archivos elegidos en este espacio.{" "}
             {isAdmin ? (
               <Link href={`${base}/integraciones`} className="text-stroke underline underline-offset-4">
-                Conecta Google y elige planillas
+                Conecta Google y elige archivos
               </Link>
             ) : (
-              "Pide a un administrador que conecte Google y elija las planillas."
+              "Pide a un administrador que conecte Google y elija los archivos."
             )}
           </p>
         )}
-        {needsSheets && files.length > 0 && selected.length === 0 ? (
-          <p className="text-xs text-graphite">Este plan usa planillas: elige al menos una.</p>
+        {needsFiles && files.length > 0 && selected.length === 0 ? (
+          <p className="text-xs text-graphite">Este plan usa planillas o documentos: elige al menos uno.</p>
         ) : null}
       </fieldset>
 
@@ -107,13 +107,116 @@ export function RunPanel({
         <button
           type="button"
           onClick={run}
-          disabled={pending || (needsSheets && selected.length === 0)}
+          disabled={pending || (needsFiles && files.length > 0 && selected.length === 0)}
           className="h-11 bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pending ? "Iniciando…" : "Ejecutar ahora"}
         </button>
         <span className="text-xs text-graphite">Lee sin preguntar; cada escritura espera tu aprobación.</span>
       </div>
+    </div>
+  )
+}
+
+// Flujos con disparador automático (un mensaje al bot de Telegram): se activan o pausan
+// y se eligen los archivos que usará cada ejecución automática.
+export function ActivationPanel({
+  workspaceId,
+  flowId,
+  status,
+  files,
+  savedFileIds,
+  telegramReady,
+  canEdit,
+}: {
+  workspaceId: string
+  flowId: string
+  status: string
+  files: { id: string; name: string; kind: string }[]
+  savedFileIds: string[]
+  telegramReady: boolean
+  canEdit: boolean
+}) {
+  const router = useRouter()
+  const [selected, setSelected] = useState<string[]>(savedFileIds.filter((id) => files.some((f) => f.id === id)))
+  const [error, setError] = useState<string | null>(null)
+  const [pending, startTransition] = useTransition()
+  const active = status === "active"
+
+  function save(nextActive: boolean) {
+    setError(null)
+    startTransition(async () => {
+      const result = await setFlowActive({ workspaceId, flowId, active: nextActive, fileIds: selected })
+      if (!result.ok) setError(result.error)
+      router.refresh()
+    })
+  }
+
+  if (!telegramReady) {
+    return (
+      <p className="text-sm text-graphite">
+        Este flujo arranca al recibir un mensaje en Telegram. Primero conecta tu bot en{" "}
+        <Link href={`/w/${workspaceId}/integraciones`} className="text-stroke underline underline-offset-4">
+          Integraciones
+        </Link>
+        .
+      </p>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-graphite">
+        {active
+          ? "Activo: cada mensaje que reciba el bot del espacio lanzará una ejecución (máximo 30 por hora). Lo que quiera escribir o enviar esperará tu aprobación en Historial."
+          : "Pausado: los mensajes que lleguen se registran, pero no lanzan este flujo."}
+      </p>
+      {files.length > 0 ? (
+        <fieldset className="flex flex-col gap-2" disabled={!canEdit}>
+          <legend className="mb-1 text-sm font-medium text-ink">Archivos que usará (máximo 5)</legend>
+          {files.map((f) => (
+            <label key={f.id} className="flex items-center gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                checked={selected.includes(f.id)}
+                onChange={() =>
+                  setSelected((s) => (s.includes(f.id) ? s.filter((x) => x !== f.id) : s.length < 5 ? [...s, f.id] : s))
+                }
+              />
+              {f.name} <span className="text-xs text-graphite">({f.kind})</span>
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
+      {error ? (
+        <p role="alert" className="text-sm text-alert">
+          {error}
+        </p>
+      ) : null}
+      {canEdit ? (
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => save(true)}
+            className="h-11 bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90 disabled:opacity-60"
+          >
+            {pending ? "Guardando…" : active ? "Guardar archivos" : "Activar"}
+          </button>
+          {active ? (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => save(false)}
+              className="h-11 border border-ink px-5 text-base font-medium text-ink hover:bg-paper disabled:opacity-60"
+            >
+              Pausar
+            </button>
+          ) : null}
+        </div>
+      ) : (
+        <p className="text-xs text-graphite">Solo quien creó el flujo o un administrador puede activarlo.</p>
+      )}
     </div>
   )
 }
