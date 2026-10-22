@@ -2,7 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { PlanView } from "@/components/plan-view"
-import { asPlan, FLOW_STATUS_LABEL, RUN_STATUS_LABEL } from "@/lib/plan"
+import { asPlan, fileKindLabel, FLOW_STATUS_LABEL, RUN_STATUS_LABEL } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { deleteFlow } from "../../ai-actions"
@@ -48,7 +48,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
   const files = (rawFiles ?? []).map((f) => ({
     id: f.id,
     name: f.name,
-    kind: f.mime_type === "application/vnd.google-apps.document" ? "documento" : "planilla",
+    kind: fileKindLabel(f.mime_type).toLowerCase(),
   }))
 
   const plan = asPlan(flow.definition)
@@ -100,7 +100,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
             flowId={flow.id}
             files={files}
             aiReady={ai?.status === "active"}
-            needsFiles={Boolean(plan?.connections.some((c) => c.kind === "spreadsheet" || c.kind === "documents"))}
+            needsFiles={Boolean(plan?.connections.some((c) => c.kind === "spreadsheet" || c.kind === "documents" || c.kind === "drive"))}
             isAdmin={isAdmin}
           />
         </div>

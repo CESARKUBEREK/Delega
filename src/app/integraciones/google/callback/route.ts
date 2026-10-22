@@ -15,6 +15,6 @@ export async function GET(request: NextRequest) {
 
   const result = await callEdgeFunction<{ workspace_id: string; provider?: string }>("google-connection", { action: "callback", code, state }, 30_000)
   if (result.error) return back(`/integraciones/google?e=${encodeURIComponent(result.error.code)}`)
-  const flag = result.data.provider === "gmail" ? "gmail=conectado" : "google=conectado"
+  const flag = result.data.provider === "gmail" ? "gmail=conectado" : result.data.provider === "calendar" ? "calendar=conectado" : "google=conectado"
   return back(`/w/${result.data.workspace_id}/integraciones?${flag}`)
 }

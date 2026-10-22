@@ -11,6 +11,10 @@ export type Pending =
   | { tool: "create_document"; title: string; text: string }
   | { tool: "send_email"; to: string; address: string; subject: string; text: string }
   | { tool: "send_telegram"; to: string; text: string }
+  // Archivos, eventos y CRM: la página ya prepara la descripción y los campos.
+  | { tool: "generic"; description: string; verb: string; fields: Field[]; text: string | null; textCaption: string }
+
+export type Field = { label: string; value: string; before?: string | null }
 
 function describe(p: Pending): string {
   switch (p.tool) {
@@ -26,7 +30,37 @@ function describe(p: Pending): string {
       return `Enviar este correo a ${p.to} (${p.address}) con el asunto «${p.subject}».`
     case "send_telegram":
       return `Enviar este mensaje por Telegram a ${p.to}.`
+    case "generic":
+      return p.description
   }
+}
+
+function Fields({ fields }: { fields: Field[] }) {
+  const withBefore = fields.some((f) => f.before !== undefined)
+  return (
+    <table className="w-full border border-rule text-left text-sm">
+      {withBefore ? (
+        <thead>
+          <tr className="bg-paper text-xs text-graphite">
+            <th className="border-b border-rule px-2 py-1 font-medium">Campo</th>
+            <th className="border-b border-rule px-2 py-1 font-medium">Ahora</th>
+            <th className="border-b border-rule px-2 py-1 font-medium">Quedará</th>
+          </tr>
+        </thead>
+      ) : null}
+      <tbody>
+        {fields.map((f) => (
+          <tr key={f.label} className="align-top">
+            <th scope="row" className="w-1/3 border-b border-rule px-2 py-1 font-medium text-graphite">
+              {f.label}
+            </th>
+            {withBefore ? <td className="border-b border-rule px-2 py-1 break-words text-graphite">{f.before ?? "—"}</td> : null}
+            <td className="border-b border-rule px-2 py-1 break-words whitespace-pre-wrap text-ink">{f.value || "—"}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
 }
 
 function TextPreview({ text, caption }: { text: string; caption: string }) {
@@ -158,9 +192,14 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
             <Table rows={pending.values} caption={pending.tool === "append_rows" ? "Filas nuevas" : "Quedará así"} />
             <p className="text-xs text-graphite">Se escribe el texto tal cual: nada se interpreta como fórmula.</p>
           </>
+        ) : pending.tool === "generic" ? (
+          <>
+            {pending.fields.length ? <Fields fields={pending.fields} /> : null}
+            {pending.text !== null ? <TextPreview text={pending.text} caption={pending.textCaption} /> : null}
+          </>
         ) : (
           <TextPreview
-            text={"text" in pending ? pending.text : ""}
+            text={"text" in pending && pending.text !== null ? pending.text : ""}
             caption={pending.tool === "send_email" ? "Correo" : pending.tool === "send_telegram" ? "Mensaje" : "Texto"}
           />
         )}
@@ -178,7 +217,9 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
           >
             {busy && decision === "approve"
               ? "Aplicando…"
-              : pending.tool.startsWith("send_")
+              : pending.tool === "generic"
+                ? pending.verb
+                : pending.tool.startsWith("send_")
                 ? "Aprobar y enviar"
                 : pending.tool === "create_document"
                   ? "Aprobar y crear"

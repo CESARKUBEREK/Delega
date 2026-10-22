@@ -54,9 +54,112 @@ function asPending(value: Json | null): Pending | null {
       return { tool: "send_email", to: t(v.to_label), address: t(v.address), subject: t(v.subject), text: t(v.body) }
     case "send_telegram":
       return { tool: "send_telegram", to: t(v.to_label), text: t(v.text) }
+    case "save_file": {
+      const ext = v.format === "documento" ? "documento de Google" : v.format === "csv" ? "CSV" : "texto"
+      return {
+        tool: "generic",
+        description: `Guardar «${t(v.name)}» (${ext}) en la carpeta «${t(v.folder_name)}».`,
+        verb: "Aprobar y guardar",
+        fields: [],
+        text: t(v.text),
+        textCaption: "Contenido",
+      }
+    }
+    case "create_event": {
+      const ev = obj(v.event)
+      const attendees = Array.isArray(v.attendees) ? v.attendees.map((a) => `${t(obj(a).label)} <${t(obj(a).email)}>`).join(", ") : ""
+      return {
+        tool: "generic",
+        description: attendees
+          ? "Crear este evento en tu calendario y enviar la invitación a los invitados."
+          : "Crear este evento en tu calendario.",
+        verb: "Aprobar y crear",
+        fields: [
+          { label: "Título", value: t(ev.title) },
+          { label: ev.all_day ? "Día" : "Inicio", value: when(t(ev.start)) },
+          ...(ev.all_day ? [] : [{ label: "Fin", value: when(t(ev.end)) }]),
+          ...(t(ev.location) ? [{ label: "Lugar", value: t(ev.location) }] : []),
+          ...(attendees ? [{ label: "Invitados", value: attendees }] : []),
+        ],
+        text: t(ev.description) || null,
+        textCaption: "Descripción",
+      }
+    }
+    case "update_event": {
+      const c = obj(v.changes)
+      const fields = [
+        ["title", "Título"],
+        ["start", "Inicio"],
+        ["end", "Fin"],
+        ["location", "Lugar"],
+        ["description", "Descripción"],
+      ]
+        .filter(([k]) => typeof c[k] === "string" && c[k])
+        .map(([k, label]) => ({ label, value: k === "start" || k === "end" ? when(t(c[k])) : t(c[k]) }))
+      return {
+        tool: "generic",
+        description: `Cambiar el evento «${t(v.title_before)}» (${t(v.when_before)}). Se avisará a sus invitados.`,
+        verb: "Aprobar y cambiar",
+        fields,
+        text: null,
+        textCaption: "",
+      }
+    }
+    case "crm_create":
+    case "crm_update": {
+      const props = obj(v.properties)
+      const before = obj(v.before)
+      const label = CRM_LABEL[t(v.object)] ?? "registro"
+      return {
+        tool: "generic",
+        description: v.tool === "crm_create" ? `Crear un ${label} en HubSpot.` : `Actualizar el ${label} «${t(v.label)}» en HubSpot.`,
+        verb: v.tool === "crm_create" ? "Aprobar y crear" : "Aprobar y actualizar",
+        fields: Object.entries(props).map(([k, val]) =>
+          v.tool === "crm_update" ? { label: k, value: t(val), before: typeof before[k] === "string" ? (before[k] as string) : null } : { label: k, value: t(val) }
+        ),
+        text: null,
+        textCaption: "",
+      }
+    }
+    case "crm_note":
+      return {
+        tool: "generic",
+        description: `Añadir esta nota al ${CRM_LABEL[t(v.object)] ?? "registro"} «${t(v.label)}» en HubSpot.`,
+        verb: "Aprobar y añadir",
+        fields: [],
+        text: t(v.text),
+        textCaption: "Nota",
+      }
+    case "crm_task":
+      return {
+        tool: "generic",
+        description: `Crear una tarea para el ${CRM_LABEL[t(v.object)] ?? "registro"} «${t(v.label)}» en HubSpot.`,
+        verb: "Aprobar y crear",
+        fields: [
+          { label: "Asunto", value: t(v.subject) },
+          { label: "Vence", value: t(v.due_date) ? when(t(v.due_date)) : "mañana" },
+        ],
+        text: t(v.text) || null,
+        textCaption: "Detalle",
+      }
     default:
       return null
   }
+}
+
+const CRM_LABEL: Record<string, string> = { contacts: "contacto", companies: "empresa", deals: "negocio" }
+
+function obj(x: unknown): Record<string, unknown> {
+  return x && typeof x === "object" && !Array.isArray(x) ? (x as Record<string, unknown>) : {}
+}
+
+// "2026-11-03T10:00" → "3 nov 2026, 10:00"; "2026-11-03" → "3 nov 2026".
+function when(value: string): string {
+  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/)
+  if (!m) return value
+  const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
+  const date = `${Number(m[3])} ${months[Number(m[2]) - 1]} ${m[1]}`
+  return m[4] ? `${date}, ${m[4]}:${m[5]}` : date
 }
 
 async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones/[runId]">["params"] }) {

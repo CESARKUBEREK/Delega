@@ -14,7 +14,8 @@ export type ActionResult = { ok: true } | { ok: false; error: string }
 export async function connectGoogle(formData: FormData): Promise<void> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
   if (!UUID_RE.test(workspaceId)) return
-  const product = formData.get("product") === "gmail" ? "gmail" : "drive"
+  const p = formData.get("product")
+  const product = p === "gmail" || p === "calendar" ? p : "drive"
   const result = await callEdgeFunction<{ url: string }>("google-connection", { action: "start", workspace_id: workspaceId, product }, 20_000)
   if (result.error) redirect(`/w/${workspaceId}/integraciones?google_error=${encodeURIComponent(result.error.code)}`)
   // Solo se sigue una URL de consentimiento de Google.
@@ -57,7 +58,8 @@ export async function removeSheet(formData: FormData): Promise<void> {
 export async function disconnectGoogle(_prev: ActionResult | null, formData: FormData): Promise<ActionResult | null> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
   if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
-  const product = formData.get("product") === "gmail" ? "gmail" : "google"
+  const p = formData.get("product")
+  const product = p === "gmail" || p === "calendar" ? p : "google"
   const result = await callEdgeFunction("google-connection", { action: "disconnect", workspace_id: workspaceId, product }, 20_000)
   if (result.error) return { ok: false, error: result.error.message }
   refresh()
@@ -133,6 +135,31 @@ export async function disconnectTelegram(_prev: ActionResult | null, formData: F
   const workspaceId = String(formData.get("workspaceId") ?? "")
   if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
   const result = await callEdgeFunction("telegram-connection", { action: "disconnect", workspace_id: workspaceId }, 20_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  refresh()
+  return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
+// HubSpot
+// ---------------------------------------------------------------------------
+export type HubSpotState = { error?: string; message?: string }
+
+export async function saveHubSpot(_prev: HubSpotState, formData: FormData): Promise<HubSpotState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const token = String(formData.get("token") ?? "").trim()
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  if (!/^[A-Za-z0-9_-]{20,300}$/.test(token)) return { error: "La clave no tiene el formato esperado (suele empezar por «pat-»)." }
+  const result = await callEdgeFunction<{ portal_id: number | null }>("hubspot-connection", { action: "save", workspace_id: workspaceId, token }, 30_000)
+  if (result.error) return { error: result.error.message }
+  refresh()
+  return { message: `HubSpot conectado${result.data.portal_id ? ` (cuenta ${result.data.portal_id})` : ""}.` }
+}
+
+export async function disconnectHubSpot(_prev: ActionResult | null, formData: FormData): Promise<ActionResult | null> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const result = await callEdgeFunction("hubspot-connection", { action: "disconnect", workspace_id: workspaceId }, 20_000)
   if (result.error) return { ok: false, error: result.error.message }
   refresh()
   return { ok: true }

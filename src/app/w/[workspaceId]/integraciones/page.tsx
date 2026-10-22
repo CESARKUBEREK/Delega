@@ -6,6 +6,7 @@ import { formatDateTime } from "../format"
 import { GoogleSheetsCard } from "./google-card"
 import { ConnectKeyForm, DisconnectForm, ModelForm } from "./openai-forms"
 import { GmailCard, TelegramCard } from "./inbox-cards"
+import { CalendarCard, HubSpotCard } from "./work-cards"
 
 export const metadata = { title: "Integraciones" }
 
@@ -33,6 +34,7 @@ async function Integrations({
   const sp = await searchParams
   const notice = sp.google === "conectado" ? "connected" : typeof sp.google_error === "string" ? sp.google_error : null
   const gmailNotice = sp.gmail === "conectado" ? "connected" : null
+  const calendarNotice = sp.calendar === "conectado"
   const { isAdmin } = await getWorkspace(workspaceId, `/w/${workspaceId}/integraciones`)
   const supabase = await createClient()
   const { data: connection } = await supabase
@@ -88,6 +90,8 @@ async function Integrations({
       </section>
 
       <GoogleSheetsCard workspaceId={workspaceId} isAdmin={isAdmin} notice={notice} />
+      <CalendarCard workspaceId={workspaceId} isAdmin={isAdmin} notice={calendarNotice} />
+      <HubSpotCard workspaceId={workspaceId} isAdmin={isAdmin} />
       <GmailCard workspaceId={workspaceId} isAdmin={isAdmin} notice={gmailNotice} />
       <TelegramCard workspaceId={workspaceId} isAdmin={isAdmin} />
     </div>
