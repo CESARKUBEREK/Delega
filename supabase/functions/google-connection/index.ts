@@ -24,10 +24,10 @@ import {
   FOLDER_MIME,
   SPREADSHEET_MIME,
 } from "../_shared/google.ts"
-
-const SLIDES = "application/vnd.google-apps.presentation"
 import { GMAIL_SCOPES } from "../_shared/gmail.ts"
 import { CALENDAR_REQUIRED, CALENDAR_SCOPES, primaryTimezone } from "../_shared/calendar.ts"
+
+const SLIDES = "application/vnd.google-apps.presentation"
 
 type Provider = "google" | "gmail" | "calendar"
 const PRODUCTS: Record<Provider, { scopes: string[]; required: string[]; denied: string; deniedMessage: string }> = {
