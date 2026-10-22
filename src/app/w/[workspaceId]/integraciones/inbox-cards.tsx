@@ -26,9 +26,9 @@ export async function GmailCard({ workspaceId, isAdmin, notice }: { workspaceId:
     <section className="border border-ink bg-sheet">
       <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
         <div>
-          <h2 className="rotulo text-lg">Gmail</h2>
+          <h3 className="rotulo text-lg">Gmail</h3>
           <p className="text-sm text-graphite">
-            Delega lee tu correo para ordenarlo en la bandeja y redacta respuestas. Nada se envía sin que lo revises.
+            Orkesta lee tu correo para ordenarlo en la bandeja y redacta respuestas. Nada se envía sin que lo revises.
           </p>
         </div>
         <Badge status={integration?.status} invalidLabel="Acceso retirado" />
@@ -48,14 +48,14 @@ export async function GmailCard({ workspaceId, isAdmin, notice }: { workspaceId:
               ? config.last_sync_at
                 ? `Última lectura: ${formatDateTime(config.last_sync_at)}.`
                 : "Aún no se ha leído el correo."
-              : "Google retiró el acceso (mientras la app de Delega esté en pruebas, ocurre cada 7 días): vuelve a conectar."}{" "}
-            <Link href={`/w/${workspaceId}/bandeja`} className="text-stroke underline underline-offset-4">
+              : "Google retiró el acceso (mientras la app de Orkesta esté en pruebas, ocurre cada 7 días): vuelve a conectar."}{" "}
+            <Link href={`/w/${workspaceId}/bandeja`} className="text-link underline underline-offset-4">
               Abrir la bandeja
             </Link>
           </p>
         ) : (
           <p className="text-sm text-graphite">
-            Conecta tu cuenta de Gmail. Google te pedirá permiso para leer y enviar correo; Delega no borra ni archiva nada en tu buzón.
+            Conecta tu cuenta de Gmail. Google te pedirá permiso para leer y enviar correo; Orkesta no borra ni archiva nada en tu buzón.
           </p>
         )}
 
@@ -74,7 +74,7 @@ export async function GmailCard({ workspaceId, isAdmin, notice }: { workspaceId:
         )}
 
         <div>
-          <h3 className="text-sm font-semibold text-ink">Contactos autorizados</h3>
+          <h4 className="text-sm font-semibold text-ink">Contactos autorizados</h4>
           <p className="mt-1 text-xs text-graphite">
             Las automatizaciones solo pueden enviar correos nuevos a estas personas. Desde la bandeja puedes responder a cualquiera.
           </p>
@@ -123,7 +123,7 @@ export async function TelegramCard({ workspaceId, isAdmin }: { workspaceId: stri
     <section className="border border-ink bg-sheet">
       <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
         <div>
-          <h2 className="rotulo text-lg">Telegram</h2>
+          <h3 className="rotulo text-lg">Telegram</h3>
           <p className="text-sm text-graphite">
             Un bot propio: lo que le escriban llega a la bandeja y puede lanzar automatizaciones. Las respuestas esperan tu aprobación.
           </p>

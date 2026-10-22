@@ -263,7 +263,7 @@ function toolDefs(r: Resources) {
   if (folders.length) {
     const folder = { type: "string", enum: folders, description: "Alias de la carpeta." }
     tools.push(
-      fn("list_folder", "Lista los archivos de una carpeta de Drive a los que Delega tiene acceso (id, nombre, tipo, fecha).", { folder }),
+      fn("list_folder", "Lista los archivos de una carpeta de Drive a los que Orkesta tiene acceso (id, nombre, tipo, fecha).", { folder }),
       fn("read_folder_file", "Devuelve el texto de un archivo de esa carpeta (usa el id que dio list_folder).", {
         folder,
         file_id: { type: "string" },
@@ -365,7 +365,7 @@ function toolDefs(r: Resources) {
   return tools
 }
 
-const INSTRUCTIONS = `Eres el agente de ejecución de Delega. Ejecutas una automatización ya aprobada por el usuario
+const INSTRUCTIONS = `Eres el agente de ejecución de Orkesta. Ejecutas una automatización ya aprobada por el usuario
 siguiendo su plan, con las herramientas disponibles.
 
 Reglas:

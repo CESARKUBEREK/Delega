@@ -9,7 +9,7 @@ export default function AuthErrorPage() {
       title="No se pudo completar el acceso"
       sheetName="Acceso"
       footer={
-        <Link href="/login" className="text-stroke underline underline-offset-4">
+        <Link href="/login" className="text-link underline underline-offset-4">
           Volver a entrar
         </Link>
       }

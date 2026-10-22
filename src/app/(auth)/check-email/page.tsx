@@ -9,7 +9,7 @@ export default function CheckEmailPage() {
       title="Revisa tu correo"
       sheetName="Alta"
       footer={
-        <Link href="/login" className="text-stroke underline underline-offset-4">
+        <Link href="/login" className="text-link underline underline-offset-4">
           Ir a entrar
         </Link>
       }

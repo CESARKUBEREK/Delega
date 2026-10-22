@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { draftReply, sendReply } from "../../run-actions"
 
-const field = "border border-rule bg-sheet px-3 py-2 text-sm text-ink focus:border-stroke focus:outline-none"
+const field = "border border-rule bg-sheet px-3 py-2 text-sm text-ink focus:border-link focus:outline-none"
 
 // Redactar con IA → revisar y editar → enviar. Nada sale sin pulsar «Enviar».
 export function ReplyComposer({ workspaceId, threadId, channel, to }: { workspaceId: string; threadId: string; channel: string; to: string }) {

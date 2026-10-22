@@ -24,7 +24,7 @@ export function LoginForm() {
         <SubmitButton pendingLabel="Entrando…">Entrar</SubmitButton>
       </form>
       <p className="mt-4 text-sm">
-        <Link href="/forgot-password" className="text-stroke underline underline-offset-4">
+        <Link href="/forgot-password" className="text-link underline underline-offset-4">
           He olvidado mi contraseña
         </Link>
       </p>

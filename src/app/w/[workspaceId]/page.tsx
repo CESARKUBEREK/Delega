@@ -78,7 +78,7 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
               </p>
             </>
           )}
-          <Link href={`${base}/integraciones`} className="mt-4 inline-block text-sm text-stroke underline underline-offset-4">
+          <Link href={`${base}/integraciones`} className="mt-4 inline-block text-sm text-link underline underline-offset-4">
             Ir a Integraciones
           </Link>
         </section>
@@ -89,7 +89,7 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
             {flowCount ?? 0} {flowCount === 1 ? "automatización" : "automatizaciones"}
           </p>
           <p className="mt-1 text-sm text-graphite">Describe una tarea al asistente y guarda el plan que te proponga.</p>
-          <Link href={`${base}/asistente`} className="mt-4 inline-block text-sm text-stroke underline underline-offset-4">
+          <Link href={`${base}/asistente`} className="mt-4 inline-block text-sm text-link underline underline-offset-4">
             Abrir el asistente
           </Link>
         </section>

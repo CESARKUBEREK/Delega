@@ -51,7 +51,17 @@ function loadPicker(): Promise<GooglePicker> {
   return pickerLoad
 }
 
-export function PickSheetsButton({ workspaceId, apiKey, appId }: { workspaceId: string; apiKey: string; appId: string }) {
+export function PickSheetsButton({
+  workspaceId,
+  apiKey,
+  appId,
+  label = "Elegir archivos o carpetas",
+}: {
+  workspaceId: string
+  apiKey: string
+  appId: string
+  label?: string
+}) {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ error?: string; message?: string }>({})
 
@@ -75,7 +85,7 @@ export function PickSheetsButton({ workspaceId, apiKey, appId }: { workspaceId: 
         .setDeveloperKey(apiKey)
         .setAppId(appId)
         .setLocale("es")
-        .setTitle("Elige los archivos y carpetas que Delega puede usar")
+        .setTitle("Elige los archivos y carpetas que Orkesta puede usar")
         .setCallback(async (data) => {
           if (data.action === picker.Action.CANCEL) {
             setBusy(false)
@@ -88,7 +98,7 @@ export function PickSheetsButton({ workspaceId, apiKey, appId }: { workspaceId: 
             const added = result.added?.length ?? 0
             const skipped = result.skipped?.length ?? 0
             setMessage({
-              message: `${added} elemento(s) añadido(s).${skipped ? ` ${skipped} se omitieron (formularios, dibujos u otros tipos que Delega no sabe leer).` : ""}`,
+              message: `${added} elemento(s) añadido(s).${skipped ? ` ${skipped} se omitieron (formularios, dibujos u otros tipos que Orkesta no sabe leer).` : ""}`,
             })
           }
           setBusy(false)
@@ -110,7 +120,7 @@ export function PickSheetsButton({ workspaceId, apiKey, appId }: { workspaceId: 
         disabled={busy}
         className="h-11 w-fit bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90 disabled:cursor-wait disabled:opacity-70"
       >
-        {busy ? "Abriendo selector…" : "Elegir archivos o carpetas"}
+        {busy ? "Abriendo selector…" : label}
       </button>
     </div>
   )
@@ -123,7 +133,7 @@ export function DisconnectGoogleForm({ workspaceId }: { workspaceId: string }) {
       action={action}
       className="flex flex-col gap-2 border-t border-rule pt-4"
       onSubmit={(e) => {
-        if (!window.confirm("¿Desconectar Google Drive? Delega pierde el acceso y se olvidan los archivos y carpetas elegidos.")) e.preventDefault()
+        if (!window.confirm("¿Desconectar Google Drive? Orkesta pierde el acceso y se olvidan los archivos y carpetas elegidos.")) e.preventDefault()
       }}
     >
       <input type="hidden" name="workspaceId" value={workspaceId} />

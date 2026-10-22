@@ -18,7 +18,7 @@ export function Field({
       <input
         id={id}
         aria-describedby={hintId}
-        className="h-11 border border-rule bg-sheet px-3 text-base text-ink placeholder:text-graphite/70 focus:border-stroke focus:outline-none focus-visible:outline-2 focus-visible:outline-stroke"
+        className="h-11 border border-rule bg-sheet px-3 text-base text-ink placeholder:text-graphite/70 focus:border-link focus:outline-none focus-visible:outline-2 focus-visible:outline-stroke"
         {...input}
       />
       {hint ? (

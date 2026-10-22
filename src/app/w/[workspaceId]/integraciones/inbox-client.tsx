@@ -24,7 +24,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: str
       </label>
       <input
         id={id}
-        className="h-11 border border-rule bg-sheet px-3 text-sm text-ink placeholder:text-graphite/70 focus:border-stroke focus:outline-none"
+        className="h-11 border border-rule bg-sheet px-3 text-sm text-ink placeholder:text-graphite/70 focus:border-link focus:outline-none"
         {...rest}
       />
       {hint ? <p className="text-xs text-graphite">{hint}</p> : null}
@@ -51,7 +51,7 @@ export function TelegramForm({ workspaceId, replacing }: { workspaceId: string; 
         autoComplete="off"
         spellCheck={false}
         required
-        hint="Te lo da @BotFather al crear el bot. Delega lo guarda cifrado y no vuelve a mostrarlo."
+        hint="Te lo da @BotFather al crear el bot. Orkesta lo guarda cifrado y no vuelve a mostrarlo."
       />
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-56">
@@ -102,7 +102,7 @@ export function HubSpotForm({ workspaceId, replacing }: { workspaceId: string; r
         autoComplete="off"
         spellCheck={false}
         required
-        hint="Clave de servicio o token de app privada. Delega la guarda cifrada y no vuelve a mostrarla."
+        hint="Clave de servicio o token de app privada. Orkesta la guarda cifrada y no vuelve a mostrarla."
       />
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-56">
@@ -113,10 +113,10 @@ export function HubSpotForm({ workspaceId, replacing }: { workspaceId: string; r
 }
 
 const DISCONNECT: Record<string, { label: string; confirm: string }> = {
-  gmail: { label: "Gmail", confirm: "¿Desconectar Gmail? Delega pierde el acceso; las conversaciones ya guardadas siguen en la bandeja." },
+  gmail: { label: "Gmail", confirm: "¿Desconectar Gmail? Orkesta pierde el acceso; las conversaciones ya guardadas siguen en la bandeja." },
   telegram: { label: "el bot de Telegram", confirm: "¿Desconectar el bot de Telegram? Dejarán de llegar mensajes a la bandeja." },
   calendar: { label: "Google Calendar", confirm: "¿Desconectar Google Calendar? Las automatizaciones dejarán de ver y crear eventos." },
-  hubspot: { label: "HubSpot", confirm: "¿Desconectar HubSpot? Delega borra la clave; revócala también en HubSpot si ya no la usas." },
+  hubspot: { label: "HubSpot", confirm: "¿Desconectar HubSpot? Orkesta borra la clave; revócala también en HubSpot si ya no la usas." },
 }
 
 export function DisconnectInboxForm({ workspaceId, kind }: { workspaceId: string; kind: "gmail" | "telegram" | "calendar" | "hubspot" }) {

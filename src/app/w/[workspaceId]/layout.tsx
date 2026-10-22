@@ -28,7 +28,7 @@ async function WorkspaceHeading({ params }: { params: LayoutProps<"/w/[workspace
   return (
     <div>
       <p className="text-sm">
-        <Link href="/w" className="text-stroke underline underline-offset-4">
+        <Link href="/w" className="text-link underline underline-offset-4">
           Tus espacios
         </Link>
       </p>

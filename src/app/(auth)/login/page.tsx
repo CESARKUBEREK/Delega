@@ -8,12 +8,12 @@ export const metadata = { title: "Entrar" }
 export default function LoginPage() {
   return (
     <Sheet
-      title="Entra en Delega"
+      title="Entra en Orkesta"
       sheetName="Acceso"
       footer={
         <>
           ¿Aún no tienes cuenta?{" "}
-          <Link href="/signup" className="text-stroke underline underline-offset-4">
+          <Link href="/signup" className="text-link underline underline-offset-4">
             Crear cuenta
           </Link>
         </>

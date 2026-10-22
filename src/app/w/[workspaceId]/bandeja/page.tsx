@@ -24,7 +24,7 @@ export default function InboxPage({ params, searchParams }: PageProps<"/w/[works
         <h1 className="rotulo text-2xl">Bandeja</h1>
         <p className="mt-1 max-w-prose text-graphite">
           Tu correo de Gmail y los mensajes de tu bot de Telegram, clasificados por la IA. Puedes corregir cualquier
-          clasificación; Delega no envía nada sin que lo revises.
+          clasificación; Orkesta no envía nada sin que lo revises.
         </p>
       </div>
       <Suspense fallback={<div className="h-64 border border-rule bg-sheet" aria-busy="true" />}>
@@ -55,7 +55,7 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
     return (
       <p className="text-graphite">
         Conecta Gmail o un bot de Telegram en{" "}
-        <Link href={`/w/${workspaceId}/integraciones`} className="text-stroke underline underline-offset-4">
+        <Link href={`/w/${workspaceId}/integraciones`} className="text-link underline underline-offset-4">
           Integraciones
         </Link>{" "}
         para ver aquí tus conversaciones.
@@ -140,7 +140,7 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
           name="q"
           defaultValue={q}
           placeholder="Buscar contacto, asunto, cliente u obra…"
-          className="h-9 min-w-0 flex-1 border border-rule bg-sheet px-3 text-sm text-ink focus:border-stroke focus:outline-none"
+          className="h-9 min-w-0 flex-1 border border-rule bg-sheet px-3 text-sm text-ink focus:border-link focus:outline-none"
         />
         <button type="submit" className="h-9 border border-ink px-3 text-sm text-ink hover:bg-paper">
           Buscar
@@ -185,7 +185,7 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
                   <span className="font-medium text-ink">
                     <span className="mr-2 text-xs font-normal text-graphite">{CHANNEL_LABEL[t.channel]}</span>
                     {t.contact_name ?? t.contact_address ?? "Sin nombre"}
-                    {t.needs_reply ? <span className="ml-2 text-xs font-semibold text-stroke">Responder</span> : null}
+                    {t.needs_reply ? <span className="ml-2 text-xs font-semibold text-link">Responder</span> : null}
                   </span>
                   <span className="text-xs text-graphite">{t.last_message_at ? formatDateTime(t.last_message_at) : ""}</span>
                 </div>

@@ -58,7 +58,7 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
     <div className="grid gap-6 xl:grid-cols-[1fr_20rem]">
       <section className="min-w-0">
         <p className="text-sm">
-          <Link href={base} className="text-stroke underline underline-offset-4">
+          <Link href={base} className="text-link underline underline-offset-4">
             Bandeja
           </Link>
         </p>
