@@ -23,7 +23,7 @@ const MESSAGES: Record<string, string> = {
 
 export default function GoogleResultPage({ searchParams }: PageProps<"/integraciones/google">) {
   return (
-    <Sheet title="Conexión con Google" sheetName="Integraciones" footer={<Link href="/w" className="text-stroke underline underline-offset-4">Volver a tus espacios</Link>}>
+    <Sheet title="Conexión con Google" sheetName="Integraciones" footer={<Link href="/w" className="text-link underline underline-offset-4">Volver a tus espacios</Link>}>
       <Suspense fallback={<p className="text-graphite">Comprobando…</p>}>
         <Message searchParams={searchParams} />
       </Suspense>

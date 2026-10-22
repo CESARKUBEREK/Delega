@@ -100,7 +100,7 @@ export function InboxSettingsForm({
           name="categories"
           rows={6}
           defaultValue={categories.join("\n")}
-          className="border border-rule bg-sheet px-3 py-2 text-sm text-ink focus:border-stroke focus:outline-none"
+          className="border border-rule bg-sheet px-3 py-2 text-sm text-ink focus:border-link focus:outline-none"
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -115,9 +115,9 @@ export function InboxSettingsForm({
           max={3650}
           defaultValue={retentionDays ?? ""}
           placeholder="Sin límite"
-          className="h-11 w-40 border border-rule bg-sheet px-3 text-sm text-ink focus:border-stroke focus:outline-none"
+          className="h-11 w-40 border border-rule bg-sheet px-3 text-sm text-ink focus:border-link focus:outline-none"
         />
-        <p className="text-xs text-graphite">Los mensajes más antiguos se borran de Delega, no de Gmail ni de Telegram.</p>
+        <p className="text-xs text-graphite">Los mensajes más antiguos se borran de Orkesta, no de Gmail ni de Telegram.</p>
       </div>
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-48">

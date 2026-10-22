@@ -38,7 +38,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
     return (
       <div className="border border-ink bg-sheet p-5">
         <p className="text-ink">Aún no hay automatizaciones en este espacio.</p>
-        <Link href={`${base}/asistente`} className="mt-3 inline-block text-sm text-stroke underline underline-offset-4">
+        <Link href={`${base}/asistente`} className="mt-3 inline-block text-sm text-link underline underline-offset-4">
           Describe una tarea al asistente
         </Link>
       </div>

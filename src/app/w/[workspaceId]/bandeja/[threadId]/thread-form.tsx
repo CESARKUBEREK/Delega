@@ -14,7 +14,7 @@ type ThreadValues = {
   archived: boolean
 }
 
-const field = "h-10 border border-rule bg-sheet px-3 text-sm text-ink focus:border-stroke focus:outline-none"
+const field = "h-10 border border-rule bg-sheet px-3 text-sm text-ink focus:border-link focus:outline-none"
 
 export function ThreadForm({ workspaceId, thread, categories }: { workspaceId: string; thread: ThreadValues; categories: string[] }) {
   const [state, action] = useActionState<SettingsState, FormData>(updateThread, {})

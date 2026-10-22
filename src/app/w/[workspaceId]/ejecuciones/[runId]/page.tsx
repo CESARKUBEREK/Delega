@@ -188,7 +188,7 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
       <div>
         <p className="text-sm">
           {run.flow_id ? (
-            <Link href={`${base}/automatizaciones/${run.flow_id}`} className="text-stroke underline underline-offset-4">
+            <Link href={`${base}/automatizaciones/${run.flow_id}`} className="text-link underline underline-offset-4">
               {run.flow_name}
             </Link>
           ) : (

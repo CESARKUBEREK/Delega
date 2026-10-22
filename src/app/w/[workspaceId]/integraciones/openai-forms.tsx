@@ -15,7 +15,7 @@ function ModelSelect({ id, defaultValue }: { id: string; defaultValue?: string }
         id={id}
         name="model"
         defaultValue={defaultValue ?? OPENAI_MODELS[0].id}
-        className="h-11 border border-rule bg-sheet px-3 text-base text-ink focus:border-stroke focus:outline-none"
+        className="h-11 border border-rule bg-sheet px-3 text-base text-ink focus:border-link focus:outline-none"
       >
         {OPENAI_MODELS.map((m) => (
           <option key={m.id} value={m.id}>
@@ -51,7 +51,7 @@ export function ConnectKeyForm({ workspaceId, replacing, model }: { workspaceId:
           spellCheck={false}
           placeholder="sk-…"
           required
-          className="h-11 border border-rule bg-sheet px-3 font-mono text-sm text-ink placeholder:text-graphite/70 focus:border-stroke focus:outline-none"
+          className="h-11 border border-rule bg-sheet px-3 font-mono text-sm text-ink placeholder:text-graphite/70 focus:border-link focus:outline-none"
         />
       </div>
       {replacing ? <input type="hidden" name="model" value={model} /> : <ModelSelect id="openai-model-new" />}

@@ -9,7 +9,7 @@ const MAX_MESSAGE = 4000
 const MAX_PER_MINUTE = 8
 const HISTORY = 12
 
-const INSTRUCTIONS = `Eres el asistente de Delega, una plataforma en español que automatiza tareas administrativas
+const INSTRUCTIONS = `Eres el asistente de Orkesta, una plataforma en español que automatiza tareas administrativas
 de profesionales y pequeños despachos (ingenieros, arquitectos) que no programan.
 
 Tu trabajo es convertir lo que pide el usuario en un plan de automatización claro, que el usuario

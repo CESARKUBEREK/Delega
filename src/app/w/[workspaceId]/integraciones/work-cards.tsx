@@ -22,7 +22,7 @@ export async function CalendarCard({ workspaceId, isAdmin, notice }: { workspace
     <section className="border border-ink bg-sheet">
       <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
         <div>
-          <h2 className="rotulo text-lg">Google Calendar</h2>
+          <h3 className="rotulo text-lg">Google Calendar</h3>
           <p className="text-sm text-graphite">
             Las automatizaciones consultan tu agenda y proponen eventos nuevos o cambios. Nada se crea ni se mueve sin tu aprobación.
           </p>
@@ -84,7 +84,7 @@ export async function HubSpotCard({ workspaceId, isAdmin }: { workspaceId: strin
     <section className="border border-ink bg-sheet">
       <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
         <div>
-          <h2 className="rotulo text-lg">HubSpot</h2>
+          <h3 className="rotulo text-lg">HubSpot</h3>
           <p className="text-sm text-graphite">
             Contactos, empresas y negocios de tu CRM. Las automatizaciones buscan y leen; crear, actualizar, mover etapas,
             añadir notas o tareas espera tu aprobación.
@@ -120,11 +120,11 @@ export async function HubSpotCard({ workspaceId, isAdmin }: { workspaceId: strin
               <ol className="mt-2 list-decimal pl-5">
                 <li>En HubSpot, abre Desarrollo → Claves → Claves de servicio y pulsa «Crear clave de servicio».</li>
                 <li>
-                  Ponle de nombre «Delega» y añade estos permisos: <span className="font-mono text-xs">crm.objects.contacts</span>,{" "}
+                  Ponle de nombre «Orkesta» y añade estos permisos: <span className="font-mono text-xs">crm.objects.contacts</span>,{" "}
                   <span className="font-mono text-xs">crm.objects.companies</span> y <span className="font-mono text-xs">crm.objects.deals</span>, cada uno
                   de lectura y escritura.
                 </li>
-                <li>Crea la clave, cópiala y pégala aquí. Solo la ve quien la crea; en Delega queda cifrada.</li>
+                <li>Crea la clave, cópiala y pégala aquí. Solo la ve quien la crea; en Orkesta queda cifrada.</li>
               </ol>
               <p className="mt-2">
                 Si tu cuenta aún permite apps privadas (hasta el 26 de octubre de 2026 en cuentas existentes), su token también sirve.

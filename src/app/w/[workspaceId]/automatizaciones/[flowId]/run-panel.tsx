@@ -31,7 +31,7 @@ export function RunPanel({
     return (
       <p className="text-sm text-graphite">
         Para ejecutar hace falta una clave de OpenAI activa.{" "}
-        <Link href={`${base}/integraciones`} className="text-stroke underline underline-offset-4">
+        <Link href={`${base}/integraciones`} className="text-link underline underline-offset-4">
           Ir a Integraciones
         </Link>
       </p>
@@ -69,7 +69,7 @@ export function RunPanel({
           <p className="text-sm text-graphite">
             No hay archivos elegidos en este espacio.{" "}
             {isAdmin ? (
-              <Link href={`${base}/integraciones`} className="text-stroke underline underline-offset-4">
+              <Link href={`${base}/integraciones`} className="text-link underline underline-offset-4">
                 Conecta Google y elige archivos
               </Link>
             ) : (
@@ -93,7 +93,7 @@ export function RunPanel({
           rows={2}
           maxLength={2000}
           placeholder="Por ejemplo: usa la hoja «Octubre» y compárala con «Septiembre»."
-          className="border border-rule bg-sheet px-3 py-2 text-sm text-ink placeholder:text-graphite/70 focus:border-stroke focus:outline-none"
+          className="border border-rule bg-sheet px-3 py-2 text-sm text-ink placeholder:text-graphite/70 focus:border-link focus:outline-none"
         />
       </div>
 
@@ -156,7 +156,7 @@ export function ActivationPanel({
     return (
       <p className="text-sm text-graphite">
         Este flujo arranca al recibir un mensaje en Telegram. Primero conecta tu bot en{" "}
-        <Link href={`/w/${workspaceId}/integraciones`} className="text-stroke underline underline-offset-4">
+        <Link href={`/w/${workspaceId}/integraciones`} className="text-link underline underline-offset-4">
           Integraciones
         </Link>
         .

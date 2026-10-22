@@ -63,7 +63,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
     <div className="flex flex-col gap-6">
       <div>
         <p className="text-sm">
-          <Link href={`${base}/automatizaciones`} className="text-stroke underline underline-offset-4">
+          <Link href={`${base}/automatizaciones`} className="text-link underline underline-offset-4">
             Automatizaciones
           </Link>
         </p>

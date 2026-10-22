@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { Logo } from "./logo"
 
 // La lámina: el formulario se presenta como una hoja de plano, con una cota
 // encima y el cajetín (recuadro de datos del plano) al pie.
@@ -16,11 +17,8 @@ export function Sheet({
   return (
     <main className="flex min-h-dvh items-start justify-center px-4 py-10 sm:items-center sm:py-16">
       <div className="w-full max-w-[26rem]">
-        {/* Cota: línea de dimensión con sus marcas de extremo. */}
-        <div aria-hidden="true" className="mb-3 flex items-center gap-2 text-graphite">
-          <span className="h-3 w-px bg-current" />
-          <span className="h-px flex-1 bg-current opacity-60" />
-          <span className="h-3 w-px bg-current" />
+        <div className="mb-5 flex justify-center">
+          <Logo size={40} tagline id="orkesta-sheet" />
         </div>
 
         <section className="border border-ink bg-sheet">
@@ -33,7 +31,7 @@ export function Sheet({
           <div className="grid grid-cols-[1fr_auto] border-t border-ink text-sm">
             <div className="px-6 py-3 text-graphite sm:px-8">{footer}</div>
             <div className="border-l border-ink px-4 py-3">
-              <p className="rotulo text-base text-ink">Delega</p>
+              <p className="logotipo text-sm text-ink">ORKESTA</p>
               <p className="text-xs text-graphite">{sheetName}</p>
             </div>
           </div>

@@ -67,7 +67,7 @@ async function Assistant({
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
           <h1 className="rotulo text-2xl">Asistente</h1>
           {conversationId ? (
-            <Link href={`${base}/asistente`} className="text-sm text-stroke underline underline-offset-4">
+            <Link href={`${base}/asistente`} className="text-sm text-link underline underline-offset-4">
               Nueva conversación
             </Link>
           ) : null}

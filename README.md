@@ -1,4 +1,4 @@
-# Delega
+# Orkesta (antes Delega)
 
 Plataforma de automatización con IA, en español, para profesionales y pequeños despachos. El usuario describe una tarea, la IA propone un flujo y el usuario lo aprueba antes de ejecutarlo.
 

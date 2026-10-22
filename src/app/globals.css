@@ -1,37 +1,44 @@
 @import "tailwindcss";
 @import "@fontsource-variable/archivo/wdth.css";
 
-/* Delega · tokens
-   Papel vegetal frío, tinta azul oscura, trazo azul para acciones. */
+/* Orkesta · tokens
+   Paleta de marca: azul marino #0B1F3B (confianza), turquesa #00C2A8
+   (inteligencia), verde #34D399 (éxito), gris claro #F3F6FA (claridad) y
+   blanco (sencillez). El turquesa se usa como relleno con texto marino; para
+   texto y enlaces se usa un turquesa más oscuro (--link) que cumple contraste. */
 :root {
-  --paper: #edf0ec;
-  --sheet: #f8faf7;
-  --grid: #d6ddd7;
-  --ink: #1b2a38;
-  --graphite: #56636f;
-  --stroke: #2d5bd0;
-  --stroke-ink: #ffffff;
-  --rule: #b9c3bd;
+  --paper: #f3f6fa;
+  --sheet: #ffffff;
+  --grid: #e6ecf3;
+  --ink: #0b1f3b;
+  --graphite: #4a5b73;
+  --stroke: #00c2a8;
+  --stroke-ink: #0b1f3b;
+  --link: #007a6c;
+  --turquesa: #00c2a8;
+  --rule: #cfd8e3;
   --alert: #b42318;
-  --alert-bg: #fbeceb;
-  --ok: #1f6b45;
-  --ok-bg: #e6f2eb;
+  --alert-bg: #fdecea;
+  --ok: #08754f;
+  --ok-bg: #e3f8ef;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #121a22;
-    --sheet: #18222c;
-    --grid: #22303c;
-    --ink: #e4e9e5;
-    --graphite: #9aa6b0;
-    --stroke: #7ea2ff;
-    --stroke-ink: #0d1520;
-    --rule: #34434f;
+    --paper: #071528;
+    --sheet: #0b1f3b;
+    --grid: #0f2645;
+    --ink: #f3f6fa;
+    --graphite: #a9b8cc;
+    --stroke: #00c2a8;
+    --stroke-ink: #0b1f3b;
+    --link: #3ddcc4;
+    --turquesa: #00c2a8;
+    --rule: #22395b;
     --alert: #ff8a80;
     --alert-bg: #3a1d1c;
-    --ok: #7fd3a6;
-    --ok-bg: #173126;
+    --ok: #34d399;
+    --ok-bg: #0d3a32;
   }
 }
 
@@ -43,6 +50,8 @@
   --color-graphite: var(--graphite);
   --color-stroke: var(--stroke);
   --color-stroke-ink: var(--stroke-ink);
+  --color-link: var(--link);
+  --color-turquesa: var(--turquesa);
   --color-rule: var(--rule);
   --color-alert: var(--alert);
   --color-alert-bg: var(--alert-bg);
@@ -62,13 +71,21 @@ html {
 
 body {
   background-color: var(--paper);
-  /* Retícula de papel de plano cada 40 px. */
+  /* Retícula muy suave cada 40 px. */
   background-image:
     linear-gradient(var(--grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size: 40px 40px;
   background-position: -1px -1px;
   min-height: 100dvh;
+}
+
+/* Logotipo: mayúsculas anchas y compactas. */
+.logotipo {
+  font-stretch: 112%;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  line-height: 1;
 }
 
 /* Rotulado técnico: títulos en ancho expandido. */

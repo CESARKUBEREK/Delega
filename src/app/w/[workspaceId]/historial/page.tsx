@@ -77,7 +77,7 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
                     <span className="text-xs text-graphite">{formatDateTime(r.started_at)}</span>
                   </span>
                   <span
-                    className={`shrink-0 text-sm ${r.status === "failed" ? "text-alert" : r.status === "awaiting_approval" ? "font-medium text-stroke" : "text-graphite"}`}
+                    className={`shrink-0 text-sm ${r.status === "failed" ? "text-alert" : r.status === "awaiting_approval" ? "font-medium text-link" : "text-graphite"}`}
                   >
                     {RUN_STATUS_LABEL[r.status] ?? r.status}
                   </span>
