@@ -15,6 +15,23 @@
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
+-- 0. Restos de una versión de prueba con WhatsApp (descartada)
+-- -----------------------------------------------------------------------------
+-- Una versión anterior de esta fase llegó a aplicarse en remoto sin quedar
+-- registrada. Sus objetos estaban vacíos; se eliminan para crear todo limpio.
+-- En una base nueva estas sentencias no hacen nada.
+drop table if exists public.whatsapp_messages;
+drop table if exists public.whatsapp_threads;
+drop table if exists public.contacts;
+drop function if exists public.whatsapp_record_message;
+drop function if exists public.whatsapp_purge(uuid, int);
+drop function if exists public.integration_set_config(uuid, text, jsonb);
+drop function if exists public.integration_secret_by_id(uuid);
+alter table public.integrations drop column if exists config;
+alter table public.flow_runs drop column if exists trigger;
+alter table public.flows drop column if exists settings;
+
+-- -----------------------------------------------------------------------------
 -- 1. Integraciones
 -- -----------------------------------------------------------------------------
 alter table public.integrations drop constraint integrations_provider_check;
