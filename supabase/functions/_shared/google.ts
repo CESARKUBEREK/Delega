@@ -1,4 +1,4 @@
-// Cliente mínimo de Google (OAuth, Drive y Sheets) para las Edge Functions.
+// Cliente mínimo de Google (OAuth, Drive, Sheets y Docs) para las Edge Functions.
 // Nunca registra tokens. El refresh token vive en Vault; el access token
 // solo existe en memoria durante la petición.
 
@@ -262,13 +262,127 @@ export async function appendToDocument(token: string, docId: string, text: strin
   })
 }
 
-export async function createDocument(token: string, title: string, text: string): Promise<{ id: string; url: string }> {
-  const doc = await googleFetch<{ documentId: string }>(token, DOCS, { method: "POST", body: JSON.stringify({ title }) })
+export async function createDocument(token: string, title: string, text: string, parentId?: string | null): Promise<{ id: string; url: string }> {
+  // Se crea con Drive (para poder elegir carpeta) y se rellena con Docs.
+  const doc = await googleFetch<{ id: string }>(token, `${DRIVE}/files?fields=id&supportsAllDrives=true`, {
+    method: "POST",
+    body: JSON.stringify({ name: title, mimeType: DOCUMENT_MIME, ...(parentId ? { parents: [parentId] } : {}) }),
+  })
   if (text) {
-    await googleFetch(token, `${DOCS}/${encodeURIComponent(doc.documentId)}:batchUpdate`, {
+    await googleFetch(token, `${DOCS}/${encodeURIComponent(doc.id)}:batchUpdate`, {
       method: "POST",
       body: JSON.stringify({ requests: [{ insertText: { endOfSegmentLocation: {}, text } }] }),
     })
   }
-  return { id: doc.documentId, url: `https://docs.google.com/document/d/${doc.documentId}/edit` }
+  return { id: doc.id, url: `https://docs.google.com/document/d/${doc.id}/edit` }
+}
+
+// ---------------------------------------------------------------------------
+// Google Drive: carpetas y archivos de cualquier tipo
+// ---------------------------------------------------------------------------
+const DRIVE = "https://www.googleapis.com/drive/v3"
+export const FOLDER_MIME = "application/vnd.google-apps.folder"
+const SLIDES_MIME = "application/vnd.google-apps.presentation"
+const MAX_DOWNLOAD = 2_000_000
+
+export type DriveEntry = { id: string; name: string; mimeType: string; modifiedTime?: string; size?: string; parents?: string[] }
+
+// Con drive.file, Drive solo devuelve los archivos a los que Delega tiene acceso.
+export async function listFolder(token: string, folderId: string, max = 100): Promise<DriveEntry[]> {
+  const params = new URLSearchParams({
+    q: `'${folderId.replace(/'/g, "")}' in parents and trashed = false`,
+    fields: "files(id,name,mimeType,modifiedTime,size)",
+    pageSize: String(Math.min(max, 200)),
+    orderBy: "modifiedTime desc",
+    supportsAllDrives: "true",
+    includeItemsFromAllDrives: "true",
+  })
+  const data = await googleFetch<{ files?: DriveEntry[] }>(token, `${DRIVE}/files?${params}`)
+  return data.files ?? []
+}
+
+export function driveEntry(token: string, fileId: string): Promise<DriveEntry> {
+  return googleFetch<DriveEntry>(
+    token,
+    `${DRIVE}/files/${encodeURIComponent(fileId)}?fields=id,name,mimeType,modifiedTime,size,parents&supportsAllDrives=true`,
+  )
+}
+
+async function rawFetch(token: string, url: string, init: RequestInit = {}): Promise<Response> {
+  let res: Response
+  try {
+    res = await fetch(url, { ...init, headers: { Authorization: `Bearer ${token}`, ...(init.headers ?? {}) }, signal: AbortSignal.timeout(45_000) })
+  } catch {
+    throw new GoogleError("unavailable", "Google no respondió a tiempo.")
+  }
+  if (!res.ok) {
+    await res.body?.cancel()
+    if (res.status === 404) throw new GoogleError("not_found", "No se encontró el archivo.")
+    if (res.status === 401 || res.status === 403) throw new GoogleError("forbidden", "Google denegó el acceso al archivo.")
+    throw new GoogleError("unavailable", `Error de Google (${res.status}).`)
+  }
+  return res
+}
+
+async function exportText(token: string, fileId: string, mime: string): Promise<string> {
+  const res = await rawFetch(token, `${DRIVE}/files/${encodeURIComponent(fileId)}/export?mimeType=${encodeURIComponent(mime)}`)
+  return (await res.text()).slice(0, MAX_DOWNLOAD)
+}
+
+// Convierte una copia temporal a formato de Google, exporta el texto y la borra.
+async function convertAndExport(token: string, fileId: string, target: string, exportMime: string): Promise<string> {
+  const copy = await googleFetch<{ id: string }>(token, `${DRIVE}/files/${encodeURIComponent(fileId)}/copy?fields=id&supportsAllDrives=true`, {
+    method: "POST",
+    body: JSON.stringify({ mimeType: target, name: "delega-lectura-temporal" }),
+  })
+  try {
+    return await exportText(token, copy.id, exportMime)
+  } finally {
+    await rawFetch(token, `${DRIVE}/files/${encodeURIComponent(copy.id)}?supportsAllDrives=true`, { method: "DELETE" }).catch(() => undefined)
+  }
+}
+
+const TO_DOC = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.oasis.opendocument.text",
+  "application/rtf",
+  "text/html",
+]
+const TO_SHEET = [
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.oasis.opendocument.spreadsheet",
+]
+const TO_SLIDES = ["application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation"]
+
+// Texto de cualquier archivo legible: formatos de Google, Office, PDF y texto.
+export async function readDriveText(token: string, file: { id: string; mimeType: string }): Promise<string> {
+  const m = file.mimeType
+  if (m === DOCUMENT_MIME) return (await readDocument(token, file.id)).text
+  if (m === SPREADSHEET_MIME) return await exportText(token, file.id, "text/csv")
+  if (m === SLIDES_MIME) return await exportText(token, file.id, "text/plain")
+  if (TO_DOC.includes(m)) return await convertAndExport(token, file.id, DOCUMENT_MIME, "text/plain")
+  if (TO_SHEET.includes(m)) return await convertAndExport(token, file.id, SPREADSHEET_MIME, "text/csv")
+  if (TO_SLIDES.includes(m)) return await convertAndExport(token, file.id, SLIDES_MIME, "text/plain")
+  if (m.startsWith("text/") || m === "application/json" || m === "application/xml") {
+    const res = await rawFetch(token, `${DRIVE}/files/${encodeURIComponent(file.id)}?alt=media&supportsAllDrives=true`)
+    return (await res.text()).slice(0, MAX_DOWNLOAD)
+  }
+  throw new GoogleError("bad_request", "Delega aún no sabe leer este tipo de archivo (imágenes, vídeos, planos CAD…).")
+}
+
+// Archivo de texto nuevo (txt o csv) dentro de una carpeta.
+export async function createTextFile(token: string, name: string, text: string, mime: "text/plain" | "text/csv", parentId?: string | null) {
+  const boundary = `delega${crypto.randomUUID().replace(/-/g, "")}`
+  const meta = JSON.stringify({ name, mimeType: mime, ...(parentId ? { parents: [parentId] } : {}) })
+  const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: ${mime}; charset=UTF-8\r\n\r\n${text}\r\n--${boundary}--`
+  const res = await rawFetch(token, "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink&supportsAllDrives=true", {
+    method: "POST",
+    headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+    body,
+  })
+  const data = (await res.json()) as { id: string; webViewLink?: string }
+  return { id: data.id, url: data.webViewLink ?? `https://drive.google.com/file/d/${data.id}/view` }
 }

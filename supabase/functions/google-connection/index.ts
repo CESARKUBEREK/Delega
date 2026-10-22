@@ -2,6 +2,7 @@
 //   * product "drive" (provider "google"): permiso drive.file, solo las planillas
 //     y documentos que el usuario elige con el selector.
 //   * product "gmail" (provider "gmail"): leer el correo y enviar respuestas.
+//   * product "calendar" (provider "calendar"): leer la agenda y crear eventos.
 // Acciones: start, callback, picker_token, add_files, remove_file, disconnect.
 // Solo owners y admins. El refresh token se guarda cifrado en Vault.
 import { authenticate, fail, isUuid, json, membershipRole, type AuthContext } from "../_shared/core.ts"
@@ -20,11 +21,40 @@ import {
   revokeToken,
   sha256Hex,
   DOCUMENT_MIME,
+  FOLDER_MIME,
   SPREADSHEET_MIME,
 } from "../_shared/google.ts"
-import { GMAIL_SCOPES } from "../_shared/gmail.ts"
 
-const MAX_FILES_PER_WORKSPACE = 50
+const SLIDES = "application/vnd.google-apps.presentation"
+import { GMAIL_SCOPES } from "../_shared/gmail.ts"
+import { CALENDAR_REQUIRED, CALENDAR_SCOPES, primaryTimezone } from "../_shared/calendar.ts"
+
+type Provider = "google" | "gmail" | "calendar"
+const PRODUCTS: Record<Provider, { scopes: string[]; required: string[]; denied: string; deniedMessage: string }> = {
+  google: {
+    scopes: GOOGLE_SCOPES,
+    required: ["https://www.googleapis.com/auth/drive.file"],
+    denied: "scope_denied",
+    deniedMessage: "Hace falta permitir el acceso a los archivos que elijas. Vuelve a conectar y marca esa casilla.",
+  },
+  gmail: {
+    scopes: GMAIL_SCOPES,
+    required: ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send"],
+    denied: "gmail_scope_denied",
+    deniedMessage: "Hace falta permitir leer y enviar correo. Vuelve a conectar y marca las dos casillas.",
+  },
+  calendar: {
+    scopes: CALENDAR_SCOPES,
+    required: CALENDAR_REQUIRED,
+    denied: "calendar_scope_denied",
+    deniedMessage: "Hace falta permitir ver y editar los eventos del calendario. Vuelve a conectar y marca esa casilla.",
+  },
+}
+function productOf(v: unknown): Provider {
+  return v === "gmail" ? "gmail" : v === "calendar" ? "calendar" : "google"
+}
+
+const MAX_FILES_PER_WORKSPACE = 100
 
 async function requireAdmin(ctx: AuthContext, workspaceId: unknown): Promise<Response | string> {
   if (!isUuid(workspaceId)) return fail(400, "bad_request", "Espacio no válido.")
@@ -64,7 +94,7 @@ Deno.serve(async (req) => {
   if (action === "start") {
     const ws = await requireAdmin(ctx, body?.workspace_id)
     if (ws instanceof Response) return ws
-    const provider = body?.product === "gmail" ? "gmail" : "google"
+    const provider = productOf(body?.product)
 
     const state = randomToken(32)
     const verifier = randomToken(48)
@@ -78,8 +108,7 @@ Deno.serve(async (req) => {
       redirect_uri: redirectUri(),
     })
     if (error) return fail(500, "db_error", "No se pudo iniciar la conexión.")
-    const scopes = provider === "gmail" ? GMAIL_SCOPES : GOOGLE_SCOPES
-    return json({ url: authorizationUrl(state, await pkceChallenge(verifier), scopes) })
+    return json({ url: authorizationUrl(state, await pkceChallenge(verifier), PRODUCTS[provider].scopes) })
   }
 
   // ---------------------------------------------------------------------------
@@ -109,16 +138,12 @@ Deno.serve(async (req) => {
     } catch (e) {
       return googleFail(e)
     }
-    const provider = row.provider === "gmail" ? "gmail" : "google"
+    const provider = productOf(row.provider)
+    const product = PRODUCTS[provider]
     const granted = (tokens.scope ?? "").split(" ")
-    const required = provider === "gmail"
-      ? ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send"]
-      : ["https://www.googleapis.com/auth/drive.file"]
-    if (!required.every((r) => granted.includes(r))) {
+    if (!product.required.every((r) => granted.includes(r))) {
       if (tokens.refresh_token) await revokeToken(tokens.refresh_token)
-      return fail(400, provider === "gmail" ? "gmail_scope_denied" : "scope_denied", provider === "gmail"
-        ? "Hace falta permitir leer y enviar correo. Vuelve a conectar y marca las dos casillas."
-        : "Hace falta permitir el acceso a las planillas que elijas. Vuelve a conectar y marca esa casilla.")
+      return fail(400, product.denied, product.deniedMessage)
     }
     if (!tokens.refresh_token) {
       return fail(400, "no_refresh_token", "Google no devolvió un permiso duradero. Vuelve a conectar.")
@@ -142,6 +167,14 @@ Deno.serve(async (req) => {
         p_workspace_id: ws,
         p_provider: "gmail",
         p_config: { ...config, email, history_id: null },
+      })
+    }
+    if (provider === "calendar") {
+      const tz = tokens.access_token ? await primaryTimezone(tokens.access_token) : null
+      await ctx.admin.rpc("integration_set_config", {
+        p_workspace_id: ws,
+        p_provider: "calendar",
+        p_config: { email, timezone: tz ?? "Europe/Madrid" },
       })
     }
     return json({ ok: true, workspace_id: ws, provider })
@@ -200,7 +233,8 @@ Deno.serve(async (req) => {
     for (const id of ids) {
       try {
         const file = await driveFile(token, id)
-        if (file.mimeType !== SPREADSHEET_MIME && file.mimeType !== DOCUMENT_MIME) {
+        if (file.mimeType.startsWith("application/vnd.google-apps.") && ![SPREADSHEET_MIME, DOCUMENT_MIME, FOLDER_MIME, SLIDES].includes(file.mimeType)) {
+          // Formularios, dibujos, sitios…: Delega no sabe leerlos.
           skipped.push(file.name)
           continue
         }
@@ -209,7 +243,7 @@ Deno.serve(async (req) => {
             workspace_id: ws,
             integration_id: secret.integration_id,
             provider_file_id: file.id,
-            name: file.name.slice(0, 300) || "Planilla sin nombre",
+            name: file.name.slice(0, 300) || "Archivo sin nombre",
             mime_type: file.mimeType,
             url: file.webViewLink?.slice(0, 1000) ?? null,
             added_by: ctx.userId,
@@ -234,7 +268,7 @@ Deno.serve(async (req) => {
   // 5. Desconectar: revoca en Google y borra la conexión y el secreto.
   // ---------------------------------------------------------------------------
   if (action === "disconnect") {
-    const provider = body?.product === "gmail" ? "gmail" : "google"
+    const provider = productOf(body?.product)
     const { data } = await ctx.admin.rpc("integration_secret", { p_workspace_id: ws, p_provider: provider })
     const secret = data?.[0] as { refresh_token: string } | undefined
     if (secret) await revokeToken(secret.refresh_token)

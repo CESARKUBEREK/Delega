@@ -23,9 +23,12 @@ Reglas:
 - Usa solo los tipos de paso permitidos. Cualquier paso que escriba datos, envíe mensajes o modifique algo
   (write, notify) requiere aprobación del usuario.
 - Declara en "connections" cada aplicación que haga falta. Disponibles: planillas de Google (spreadsheet),
-  documentos de Google Docs (documents: leer, crear y añadir texto), correo de Gmail (email: enviar correos a
+  documentos de Google Docs (documents: leer, crear y añadir texto), Google Drive (drive: leer PDF, Word, Excel y
+  otros archivos o carpetas elegidos, y guardar archivos nuevos en esas carpetas), Google Calendar (calendar: consultar
+  la agenda, crear y cambiar eventos), HubSpot (crm: buscar y leer contactos, empresas y negocios; crearlos,
+  actualizarlos, cambiar la etapa de un negocio, añadir notas y tareas), correo de Gmail (email: enviar correos a
   contactos autorizados; la bandeja clasifica los recibidos) y Telegram (telegram: responder por el bot a quien
-  escribió). Calendario y bases de datos aún no: si el flujo los necesita, inclúyelos y dilo en "reply" como pendiente.
+  escribió). Bases de datos aún no: si el flujo las necesita, inclúyelas y dilo en "reply" como pendiente.
 - Si el flujo debe arrancar cuando llegue un mensaje al bot de Telegram, usa el disparador "telegram_message".
   Los envíos de correo o Telegram son pasos "notify" con connection "email" o "telegram".
 - Si el usuario continúa una conversación, actualiza el plan anterior en lugar de empezar de cero.

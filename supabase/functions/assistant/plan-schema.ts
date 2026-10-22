@@ -2,7 +2,7 @@
 // asistente (que lo genera) y el editor (que lo muestra y, más adelante,
 // lo editará y ejecutará). Es JSON Schema estricto para Structured Outputs.
 
-const CONNECTION_KINDS = ["spreadsheet", "documents", "email", "telegram", "calendar", "database"]
+const CONNECTION_KINDS = ["spreadsheet", "documents", "drive", "email", "telegram", "calendar", "crm", "database"]
 const STEP_KINDS = ["read", "transform", "compare", "generate", "write", "notify", "condition"]
 
 const planObject = {
