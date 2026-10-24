@@ -30,7 +30,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
   const supabase = await createClient()
   const { data: flows } = await supabase
     .from("flows")
-    .select("id, name, summary, status, updated_at")
+    .select("id, name, summary, status, updated_at, next_run_at")
     .eq("workspace_id", workspaceId)
     .order("updated_at", { ascending: false })
   const base = `/w/${workspaceId}`
@@ -68,6 +68,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
               </span>
               <span className="shrink-0 text-right text-sm text-graphite">
                 <span className="block">{FLOW_STATUS_LABEL[f.status] ?? f.status}</span>
+                  {f.next_run_at ? <span className="block text-xs text-ink">Próxima: {formatDateTime(f.next_run_at)}</span> : null}
                 <span className="text-xs">{formatDateTime(f.updated_at)}</span>
               </span>
             </Link>

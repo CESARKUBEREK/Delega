@@ -286,3 +286,18 @@ select cron.schedule('orkesta-ejecuciones', '* * * * *', $$
 $$);
 ```
 
+
+## Ejecuciones programadas y avisos a uno mismo
+
+- **Programación** (`flows.settings.schedule`, panel «Programación» de la automatización): cada día, días laborables, un día de la semana o un día del mes (1-28 o el último), a una hora. Hora local del espacio (la de Google Calendar o Europe/Madrid), también en los cambios de hora.
+  - `flows.next_run_at` la calcula un trigger (`private.flow_next_run`); el navegador no puede fijarla.
+  - `runs-cron` llama cada minuto a `flows_due()`, que toma las que tocan con `for update skip locked` y avanza su próxima ejecución en la misma operación.
+  - Las perdidas hace más de 6 h no se lanzan. Máximo 20 programadas por espacio en 24 h. Tras 3 fallos seguidos, la automatización se pausa y se avisa a su creador.
+- **Avisarme** (`notify_me`, `_shared/notify.ts`): el agente avisa a quien lanzó o creó la ejecución **sin aprobación**. El destinatario no es un parámetro: la IA no puede elegir otro.
+  - Push con el nombre de la automatización, sin datos de clientes; al tocarlo se abre la ejecución con el texto.
+  - Correo con el texto completo a la dirección de su cuenta, por el SMTP del espacio (no se guarda en la bandeja).
+  - Siempre queda en la bitácora de la ejecución. Máximo 3 por ejecución y 30 al día por persona.
+- **Bandeja para el agente** (`_shared/inbox-read.ts`): `inbox_list` y `inbox_read` sin aprobación; `reply_email` responde en el mismo hilo con aprobación.
+- **Plantillas programadas:** resumen de la mañana, correos sin responder, agenda de mañana e informe semanal del CRM; «Negocios parados» e «Informe de la semana» pasan a ser programadas.
+
+Despliegue: la migración `20261025090000_schedules.sql` y `supabase functions deploy run-flow assistant` + `supabase functions deploy runs-cron --no-verify-jwt` (el `pg_cron` de `runs-cron` ya corre cada minuto).

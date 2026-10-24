@@ -224,6 +224,7 @@ export async function setFlowActive(input: {
   active: boolean
   fileIds: string[]
   emailFilter?: { from: string[]; subject: string[]; words: string[]; skip_automatic: boolean }
+  schedule?: { frequency: string; time: string; weekday: number; day_of_month: number }
 }): Promise<ActionResult> {
   if (!UUID_RE.test(input.workspaceId) || !UUID_RE.test(input.flowId)) return { ok: false, error: "Datos no válidos." }
   const supabase = await createClient()
@@ -245,6 +246,14 @@ export async function setFlowActive(input: {
       words: clean(input.emailFilter.words),
       skip_automatic: input.emailFilter.skip_automatic !== false,
     }
+  }
+  if (input.schedule) {
+    const s = input.schedule
+    if (!["daily", "weekdays", "weekly", "monthly"].includes(s.frequency)) return { ok: false, error: "Elige una frecuencia." }
+    if (!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(s.time)) return { ok: false, error: "Escribe una hora válida (HH:MM)." }
+    const weekday = Number.isInteger(s.weekday) && s.weekday >= 1 && s.weekday <= 7 ? s.weekday : 1
+    const day = Number.isInteger(s.day_of_month) && s.day_of_month >= 0 && s.day_of_month <= 28 ? s.day_of_month : 1
+    settings.schedule = { frequency: s.frequency, time: s.time, weekday, day_of_month: day }
   }
   const { data, error } = await supabase
     .from("flows")
