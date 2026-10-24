@@ -2,7 +2,10 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState, useTransition } from "react"
+import { useActionState, useState, useTransition } from "react"
+import { FormMessage } from "@/components/form"
+import { AI_PROVIDERS } from "@/lib/plan"
+import { type AiKeyState, setFlowModel } from "../../ai-actions"
 import { setFlowActive, startRun } from "../../run-actions"
 
 export function RunPanel({
@@ -30,7 +33,7 @@ export function RunPanel({
   if (!aiReady) {
     return (
       <p className="text-sm text-graphite">
-        Para ejecutar hace falta una clave de OpenAI activa.{" "}
+        Para ejecutar hace falta una IA conectada (OpenAI, Anthropic o DeepSeek).{" "}
         <Link href={`${base}/integraciones`} className="text-link underline underline-offset-4">
           Ir a Integraciones
         </Link>
@@ -218,5 +221,64 @@ export function ActivationPanel({
         <p className="text-xs text-graphite">Solo quien creó el flujo o un administrador puede activarlo.</p>
       )}
     </div>
+  )
+}
+
+// Modelo de IA de esta automatización (o la IA principal del espacio).
+export function FlowModelForm({
+  workspaceId,
+  flowId,
+  model,
+  providers,
+  defaultLabel,
+  canEdit,
+}: {
+  workspaceId: string
+  flowId: string
+  model: string
+  providers: string[]
+  defaultLabel: string
+  canEdit: boolean
+}) {
+  const [state, action, pending] = useActionState<AiKeyState, FormData>(setFlowModel, {})
+  const options = AI_PROVIDERS.filter((p) => providers.includes(p.id) || p.models.some((m) => m.id === model))
+  return (
+    <form action={action} className="flex flex-col gap-3">
+      <input type="hidden" name="workspaceId" value={workspaceId} />
+      <input type="hidden" name="flowId" value={flowId} />
+      <label htmlFor="flow-model" className="text-sm text-graphite">
+        Qué IA ejecuta esta automatización. Si su proveedor deja de estar conectado, se usa la principal.
+      </label>
+      <select
+        id="flow-model"
+        name="model"
+        defaultValue={model}
+        disabled={!canEdit}
+        className="h-11 border border-rule bg-sheet px-3 text-base text-ink focus:border-link focus:outline-none sm:max-w-md"
+      >
+        <option value="">IA principal del espacio{defaultLabel ? ` (${defaultLabel})` : ""}</option>
+        {options.map((p) => (
+          <optgroup key={p.id} label={p.label}>
+            {p.models.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label}: {m.hint}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+      <FormMessage error={state.error} message={state.message} />
+      {canEdit ? (
+        <button
+          type="submit"
+          disabled={pending}
+          className="h-10 w-fit border border-ink bg-sheet px-4 text-sm font-medium text-ink hover:bg-paper disabled:opacity-60"
+        >
+          {pending ? "Guardando…" : "Guardar"}
+        </button>
+      ) : (
+        <p className="text-xs text-graphite">Solo quien creó la automatización o un administrador puede cambiarlo.</p>
+      )}
+    </form>
   )
 }

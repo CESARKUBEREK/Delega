@@ -77,5 +77,4 @@ export async function membershipRole(ctx: AuthContext, workspaceId: string): Pro
   return data.role as Role
 }
 
-export const OPENAI_MODELS = ["gpt-6.1-sol", "gpt-6-astra", "gpt-6-luna"] as const
-export const DEFAULT_MODEL = "gpt-6.1-sol"
+// Los modelos de cada proveedor de IA están en _shared/llm.ts.

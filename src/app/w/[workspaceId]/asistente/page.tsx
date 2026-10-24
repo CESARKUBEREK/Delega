@@ -32,8 +32,8 @@ async function Assistant({
   const { isAdmin } = await getWorkspace(workspaceId, `${base}/asistente`)
   const supabase = await createClient()
 
-  const [{ data: connection }, { data: conversations }, { data: rows }, { data: rawFiles }] = await Promise.all([
-    supabase.from("ai_connections").select("status").eq("workspace_id", workspaceId).eq("provider", "openai").maybeSingle(),
+  const [{ data: connections }, { data: conversations }, { data: rows }, { data: rawFiles }] = await Promise.all([
+    supabase.from("ai_connections").select("status").eq("workspace_id", workspaceId),
     supabase
       .from("conversations")
       .select("id, title, updated_at")
@@ -52,6 +52,7 @@ async function Assistant({
     supabase.from("integration_files").select("id, name, mime_type").eq("workspace_id", workspaceId).order("name").limit(100),
   ])
 
+  const aiActive = (connections ?? []).some((c) => c.status === "active")
   // Solo se abre la conversación si la RLS la devuelve en la lista.
   const conversationId = requested && conversations?.some((x) => x.id === requested) ? requested : null
   const messages: ChatMessage[] = conversationId
@@ -130,9 +131,9 @@ async function Assistant({
           <div className="border-t border-rule">{list}</div>
         </details>
 
-        {connection?.status !== "active" ? (
+        {!aiActive ? (
           <div className="mb-4 border-l-2 border-alert bg-alert-bg px-4 py-3 text-sm text-alert" role="status">
-            {connection ? "La clave de OpenAI de este espacio dejó de funcionar. " : "Este espacio aún no tiene una clave de OpenAI. "}
+            {connections?.length ? "La clave de la IA de este espacio dejó de funcionar. " : "Este espacio aún no tiene una IA conectada. "}
             {isAdmin ? (
               <Link href={`${base}/integraciones`} className="underline underline-offset-4">
                 Conéctala en Integraciones
@@ -150,7 +151,7 @@ async function Assistant({
           initialMessages={messages}
           runs={runs}
           files={files}
-          aiReady={connection?.status === "active"}
+          aiReady={aiActive}
         />
       </section>
 

@@ -1,9 +1,8 @@
-// mail-cron: lectura automática del correo (Gmail e IMAP) de todos los espacios.
+// mail-cron: lectura automática del correo IMAP de todos los espacios.
 // La llama pg_cron cada 5 minutos (ver README). Se despliega SIN verify_jwt y
 // exige la cabecera x-orkesta-cron con el secreto MAIL_CRON_SECRET.
 // Recorre primero las cuentas que llevan más tiempo sin leerse.
 import { createClient } from "npm:@supabase/supabase-js@2.118.0"
-import { syncGmail } from "../_shared/gmail-sync.ts"
 import { syncImap } from "../_shared/imap.ts"
 
 const BUDGET_MS = 110_000
@@ -45,8 +44,7 @@ Deno.serve(async (req) => {
     const slice = Math.min(deadline, Date.now() + 30_000)
     if (Date.now() > deadline - 5_000) break
     try {
-      if (item.provider === "gmail") await syncGmail(admin, item.workspace_id, slice)
-      else await syncImap(admin, item.workspace_id, slice)
+      await syncImap(admin, item.workspace_id, slice)
       done++
     } catch (e) {
       failed++

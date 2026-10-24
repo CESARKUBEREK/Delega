@@ -7,6 +7,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.118.0"
 import { advance, claim, createRun, type RunRow } from "../_shared/agent.ts"
 import { isUuid } from "../_shared/core.ts"
+import { resolveAi } from "../_shared/llm.ts"
 import { recordMessage } from "../_shared/inbox.ts"
 import { parseTelegramSecret } from "../_shared/telegram.ts"
 
@@ -79,9 +80,6 @@ async function launchFlows(workspaceId: string, chatId: string, name: string | n
     .limit(3)
   if (!flows?.length) return
 
-  const { data: ai } = await admin.rpc("ai_connection_secret", { p_workspace_id: workspaceId, p_provider: "openai" })
-  const conn = ai?.[0] as { model: string; status: string } | undefined
-  if (!conn || conn.status !== "active") return
 
   const since = new Date(Date.now() - 3_600_000).toISOString()
   const { count } = await admin
@@ -94,7 +92,9 @@ async function launchFlows(workspaceId: string, chatId: string, name: string | n
 
   for (const flow of flows) {
     if (budget-- <= 0) break
-    const settings = (flow.settings ?? {}) as { file_ids?: unknown }
+    const settings = (flow.settings ?? {}) as { file_ids?: unknown; model?: unknown }
+    const conn = await resolveAi(admin, workspaceId, typeof settings.model === "string" ? settings.model : null)
+    if (!conn) return
     const fileIds = Array.isArray(settings.file_ids) ? settings.file_ids.filter(isUuid).slice(0, 5) : []
     try {
       const run = await createRun(admin, {

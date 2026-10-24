@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
       .from("integrations")
       .select("config")
       .eq("workspace_id", workspaceId)
-      .in("provider", ["gmail", "telegram"])
+      .eq("provider", "telegram")
       .limit(1)
       .maybeSingle()
     const shared = (other?.config ?? {}) as { categories?: string[]; retention_days?: number | null }

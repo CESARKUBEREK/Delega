@@ -44,7 +44,7 @@ export function ClassifyButton({ workspaceId, pending, threadId }: { workspaceId
   )
 }
 
-// Trae el correo nuevo (Gmail e IMAP) por tandas hasta terminar.
+// Trae el correo nuevo por tandas hasta terminar.
 export function SyncButton({ workspaceId }: { workspaceId: string }) {
   const [busy, start] = useTransition()
   const [status, setStatus] = useState<string | null>(null)

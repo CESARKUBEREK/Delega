@@ -3,28 +3,42 @@
 import { refresh } from "next/cache"
 import { redirect } from "next/navigation"
 import { callEdgeFunction } from "@/lib/edge-functions"
-import { asPlan, OPENAI_MODELS, type FlowPlan } from "@/lib/plan"
+import { AI_PROVIDERS, type AiProvider, asPlan, type FlowPlan } from "@/lib/plan"
+import type { Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
 import { UUID_RE } from "@/lib/workspace"
 
-// La clave de OpenAI nunca se guarda ni se registra en Next.js: se reenvía
+// La clave de la IA nunca se guarda ni se registra en Next.js: se reenvía
 // tal cual a la Edge Function, que la valida y la cifra en Vault.
 
 export type AiKeyState = { error?: string; message?: string }
 
-const MODEL_IDS = new Set<string>(OPENAI_MODELS.map((m) => m.id))
+const PROVIDER_IDS = new Set<string>(AI_PROVIDERS.map((p) => p.id))
+
+function providerFrom(formData: FormData): AiProvider | null {
+  const p = String(formData.get("provider") ?? "")
+  return PROVIDER_IDS.has(p) ? (p as AiProvider) : null
+}
+
+function modelFor(provider: AiProvider, formData: FormData): string | null {
+  const model = String(formData.get("model") ?? "")
+  return AI_PROVIDERS.find((p) => p.id === provider)?.models.some((m) => m.id === model) ? model : null
+}
 
 export async function saveAiKey(_prev: AiKeyState, formData: FormData): Promise<AiKeyState> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
   const apiKey = String(formData.get("apiKey") ?? "").trim()
-  const model = String(formData.get("model") ?? "")
-  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
-  if (!apiKey.startsWith("sk-")) return { error: "Pega una clave de OpenAI: empieza por sk-." }
-  if (!MODEL_IDS.has(model)) return { error: "Elige un modelo." }
+  const provider = providerFrom(formData)
+  if (!UUID_RE.test(workspaceId) || !provider) return { error: "Datos no válidos." }
+  const info = AI_PROVIDERS.find((p) => p.id === provider)!
+  if (!apiKey.startsWith(info.keyPrefix)) return { error: `Pega una clave de ${info.label}: empieza por ${info.keyPrefix}` }
+  const model = modelFor(provider, formData)
+  if (!model) return { error: "Elige un modelo." }
 
   const result = await callEdgeFunction<{ key_hint: string }>("ai-connection", {
     workspace_id: workspaceId,
     action: "save",
+    provider,
     api_key: apiKey,
     model,
   }, 30_000)
@@ -35,23 +49,56 @@ export async function saveAiKey(_prev: AiKeyState, formData: FormData): Promise<
 
 export async function setAiModel(_prev: AiKeyState, formData: FormData): Promise<AiKeyState> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
-  const model = String(formData.get("model") ?? "")
-  if (!UUID_RE.test(workspaceId) || !MODEL_IDS.has(model)) return { error: "Elige un modelo." }
+  const provider = providerFrom(formData)
+  const model = provider ? modelFor(provider, formData) : null
+  if (!UUID_RE.test(workspaceId) || !provider || !model) return { error: "Elige un modelo." }
 
-  const result = await callEdgeFunction("ai-connection", { workspace_id: workspaceId, action: "set_model", model }, 20_000)
+  const result = await callEdgeFunction("ai-connection", { workspace_id: workspaceId, action: "set_model", provider, model }, 20_000)
   if (result.error) return { error: result.error.message }
   refresh()
   return { message: "Modelo guardado." }
 }
 
+export async function setDefaultAi(_prev: AiKeyState, formData: FormData): Promise<AiKeyState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const provider = providerFrom(formData)
+  if (!UUID_RE.test(workspaceId) || !provider) return { error: "Datos no válidos." }
+  const result = await callEdgeFunction("ai-connection", { workspace_id: workspaceId, action: "set_default", provider }, 20_000)
+  if (result.error) return { error: result.error.message }
+  refresh()
+  return { message: "Ahora es la IA principal del espacio." }
+}
+
 export async function disconnectAi(_prev: AiKeyState, formData: FormData): Promise<AiKeyState> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
-  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  const provider = providerFrom(formData)
+  if (!UUID_RE.test(workspaceId) || !provider) return { error: "Datos no válidos." }
 
-  const result = await callEdgeFunction("ai-connection", { workspace_id: workspaceId, action: "delete" }, 20_000)
+  const result = await callEdgeFunction("ai-connection", { workspace_id: workspaceId, action: "delete", provider }, 20_000)
   if (result.error) return { error: result.error.message }
   refresh()
   return { message: "Clave desconectada y borrada." }
+}
+
+// IA de una automatización: un modelo concreto o, si se deja vacío, la
+// principal del espacio. Lo guarda la persona con su sesión (RLS).
+export async function setFlowModel(_prev: AiKeyState, formData: FormData): Promise<AiKeyState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const flowId = String(formData.get("flowId") ?? "")
+  const model = String(formData.get("model") ?? "")
+  if (!UUID_RE.test(workspaceId) || !UUID_RE.test(flowId)) return { error: "Datos no válidos." }
+  if (model && !AI_PROVIDERS.some((p) => p.models.some((m) => m.id === model))) return { error: "Elige un modelo." }
+
+  const supabase = await createClient()
+  const { data: flow } = await supabase.from("flows").select("settings").eq("id", flowId).eq("workspace_id", workspaceId).maybeSingle()
+  if (!flow) return { error: "No se encontró la automatización." }
+  const settings = { ...((flow.settings ?? {}) as { [key: string]: Json | undefined }) }
+  if (model) settings.model = model
+  else delete settings.model
+  const { data, error } = await supabase.from("flows").update({ settings }).eq("id", flowId).eq("workspace_id", workspaceId).select("id")
+  if (error || !data?.length) return { error: "Solo quien creó la automatización o un administrador puede cambiarla." }
+  refresh()
+  return { message: model ? "Esta automatización usará ese modelo." : "Esta automatización usará la IA principal." }
 }
 
 // ---------------------------------------------------------------------------

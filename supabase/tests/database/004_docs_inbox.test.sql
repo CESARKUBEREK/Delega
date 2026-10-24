@@ -37,17 +37,17 @@ insert into public.memberships (workspace_id, user_id, role)
 values ((select v::uuid from t_ctx where k = 'org'), '00000000-0000-0000-0000-0000000000b1', 'member');
 
 -- ---------------------------------------------------------------------------
--- 1. Integraciones de Gmail y Telegram
+-- 1. Integraciones de correo (IMAP) y Telegram
 -- ---------------------------------------------------------------------------
 select pg_temp.as_service();
 insert into t_ctx values ('tg', public.integration_save((select v::uuid from t_ctx where k = 'org'), 'telegram',
   '{"bot_token":"123:ABC","secret_token":"s3cret"}', '@delega_bot', '', '00000000-0000-0000-0000-0000000000a1')::text);
-select public.integration_save((select v::uuid from t_ctx where k = 'org'), 'gmail', '1//refresh-gmail-0000000', 'a@gmail.com', 'gmail.readonly', '00000000-0000-0000-0000-0000000000a1');
+select public.integration_save((select v::uuid from t_ctx where k = 'org'), 'imap', '{"user":"a@estudio.es","password":"x"}', 'a@estudio.es', '', '00000000-0000-0000-0000-0000000000a1');
 select public.integration_set_config((select v::uuid from t_ctx where k = 'org'), 'telegram', '{"bot_username":"delega_bot"}');
 select is((select secret::jsonb ->> 'secret_token' from public.integration_secret_by_id((select v::uuid from t_ctx where k = 'tg'))),
           's3cret', 'service_role lee el secreto del bot por ID');
 select is((select count(*)::int from public.integrations where workspace_id = (select v::uuid from t_ctx where k = 'org')), 2,
-          'Gmail y Telegram conviven en el espacio');
+          'correo y Telegram conviven en el espacio');
 select pg_temp.logout();
 
 select pg_temp.login('00000000-0000-0000-0000-0000000000b1');

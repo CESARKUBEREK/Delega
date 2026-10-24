@@ -25,8 +25,7 @@ import {
   spreadsheetInfo,
   updateRange,
 } from "./google.ts"
-import { sendMail } from "./gmail.ts"
-import { gmailToken, recordMessage } from "./inbox.ts"
+import { recordMessage } from "./inbox.ts"
 import { MailError, sendAndRecord } from "./imap.ts"
 import { parseTelegramSecret, sendTelegram, TelegramError } from "./telegram.ts"
 import { calendarToken, createEvent, DATE_RE, DEFAULT_TIMEZONE, type EventInput, getEvent, listEvents, updateEvent } from "./calendar.ts"
@@ -46,6 +45,8 @@ import {
   updateRecord,
 } from "./hubspot.ts"
 import { notifyApproval } from "./push.ts"
+import { downloadXlsx, XLSX_MIME, xlsxInfo, xlsxRead, xlsxWrite } from "./excel.ts"
+import { type Ai, complete, fromResponsesItems, LlmError, type Msg, NO_AI_MESSAGE, providerOf, resolveAi, type ToolDef } from "./llm.ts"
 
 export const SLICE_MS = 90_000
 const LEASE_SECONDS = 140
@@ -73,7 +74,9 @@ export type RunRow = {
   file_ids: string[]
   note: string
   model: string | null
-  state: { items: unknown[] }
+  // Transcripción del agente en formato neutro (messages). Las ejecuciones
+  // anteriores guardaban los items de la Responses API de OpenAI (items).
+  state: { messages?: Msg[]; items?: unknown[] }
   pending_action: PendingAction | null
   tool_calls: number
   input_tokens: number
@@ -82,7 +85,8 @@ export type RunRow = {
   trigger: RunTrigger
 }
 
-type FileKind = "sheet" | "doc" | "folder" | "file"
+// xlsx: archivo Excel guardado en Drive; se trata como una planilla.
+type FileKind = "sheet" | "xlsx" | "doc" | "folder" | "file"
 type FileRef = { alias: string; id: string; provider_file_id: string; name: string; kind: FileKind; mime: string }
 type Contact = { alias: string; label: string; email: string }
 type Props = Record<string, string>
@@ -111,9 +115,8 @@ export class RunError extends Error {}
 type Resources = {
   files: FileRef[]
   googleActive: boolean
-  gmailActive: boolean
-  // Cuenta por la que salen los correos del agente: Gmail si está conectado; si no, IMAP/SMTP.
-  mailProvider: "gmail" | "imap" | null
+  // Los correos del agente salen por el buzón IMAP/SMTP del espacio.
+  mailActive: boolean
   calendarActive: boolean
   timezone: string
   contacts: Contact[]
@@ -125,6 +128,7 @@ type Resources = {
 function kindOf(mime: string | null): FileKind {
   if (mime === DOCUMENT_MIME) return "doc"
   if (mime === SPREADSHEET_MIME) return "sheet"
+  if (mime === XLSX_MIME) return "xlsx"
   if (mime === FOLDER_MIME) return "folder"
   return "file"
 }
@@ -156,7 +160,6 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
 
   const find = (p: string) => (integrations ?? []).find((i) => i.provider === p)
   const google = find("google")
-  const gmail = find("gmail")
   const tg = find("telegram")
   let telegram: Resources["telegram"] = null
   if (tg && tg.status === "active") {
@@ -169,10 +172,8 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
     .map((c, i) => ({ alias: `c${i + 1}`, label: c.name, email: c.email }))
     .filter((c) => c.email && EMAIL_RE.test(c.email))
   const recipients: Recipient[] = []
-  const gmailActive = gmail?.status === "active"
-  const imapActive = find("imap")?.status === "active"
-  const mailProvider = gmailActive ? "gmail" : imapActive ? "imap" : null
-  if (mailProvider) {
+  const mailActive = find("imap")?.status === "active"
+  if (mailActive) {
     contactList.forEach((c) => recipients.push({ alias: c.alias, label: c.label, channel: "email", address: c.email }))
   }
   if (telegram && run.trigger.type === "telegram_message") {
@@ -190,8 +191,7 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
   return {
     files: refs,
     googleActive: google?.status === "active",
-    gmailActive,
-    mailProvider,
+    mailActive,
     calendarActive: calendar?.status === "active",
     timezone: ((calendar?.config ?? {}) as { timezone?: string }).timezone || DEFAULT_TIMEZONE,
     contacts: contactList,
@@ -206,25 +206,23 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
 // ---------------------------------------------------------------------------
 const CELL = { type: ["string", "number", "boolean", "null"] }
 
-function fn(name: string, description: string, properties: Record<string, unknown>) {
+function fn(name: string, description: string, properties: Record<string, unknown>): ToolDef {
   return {
-    type: "function",
     name,
     description,
-    strict: true,
     parameters: { type: "object", additionalProperties: false, required: Object.keys(properties), properties },
   }
 }
 
-function toolDefs(r: Resources) {
-  const tools: unknown[] = []
-  const sheets = r.files.filter((f) => f.kind === "sheet").map((f) => f.alias)
+function toolDefs(r: Resources): ToolDef[] {
+  const tools: ToolDef[] = []
+  const sheets = r.files.filter((f) => f.kind === "sheet" || f.kind === "xlsx").map((f) => f.alias)
   const docs = r.files.filter((f) => f.kind === "doc").map((f) => f.alias)
   const range = { type: "string", description: "Rango A1 con el nombre de la hoja, p. ej. 'Ventas!A1:F200' o 'Ventas'." }
   const rows = { type: "array", items: { type: "array", items: CELL }, description: "Filas de valores." }
 
   if (sheets.length) {
-    const file = { type: "string", enum: sheets, description: "Alias de la planilla." }
+    const file = { type: "string", enum: sheets, description: "Alias de la planilla (Google Sheets o Excel en Drive)." }
     tools.push(
       fn("list_sheets", "Devuelve el título de la planilla y sus hojas con su tamaño. Úsalo antes de leer.", { file }),
       fn("read_range", `Lee valores de un rango (máximo ${MAX_READ_CELLS} celdas; si hay más, lee por partes).`, { file, range }),
@@ -403,13 +401,30 @@ export async function addEvent(admin: Admin, run: RunRow, kind: string, title: s
   })
 }
 
+// Transcripción en formato neutro (convierte la de ejecuciones antiguas).
+export function transcript(run: RunRow): Msg[] {
+  run.state.messages ??= fromResponsesItems(run.state.items ?? [])
+  delete run.state.items
+  return run.state.messages
+}
+
+// Respuesta a una acción propuesta (tras aprobarla o rechazarla).
+export function appendToolResult(run: RunRow, callId: string, output: string) {
+  transcript(run).push({ role: "tool", call_id: callId, content: output })
+}
+
 // Guarda el progreso. Nunca pisa una ejecución que el usuario ya canceló.
 export async function save(admin: Admin, run: RunRow, patch: Record<string, unknown>) {
-  const [first, ...rest] = run.state.items
-  const items = rest.length >= MAX_STATE_ITEMS ? [first, ...rest.slice(-(MAX_STATE_ITEMS - 1))] : run.state.items
+  const all = transcript(run)
+  // Se conserva el primer mensaje (el encargo) y los últimos; nunca empieza por
+  // una respuesta de herramienta suelta.
+  let tail = all.length > MAX_STATE_ITEMS ? all.slice(-(MAX_STATE_ITEMS - 1)) : all.slice(1)
+  while (tail.length && tail[0].role === "tool") tail = tail.slice(1)
+  const messages = all.length ? [all[0], ...tail] : []
+  run.state = { messages }
   const { error } = await admin
     .from("flow_runs")
-    .update({ state: { items }, tool_calls: run.tool_calls, input_tokens: run.input_tokens, output_tokens: run.output_tokens, ...patch })
+    .update({ state: { messages }, tool_calls: run.tool_calls, input_tokens: run.input_tokens, output_tokens: run.output_tokens, ...patch })
     .eq("id", run.id)
     .neq("status", "cancelled")
   if (error) {
@@ -493,6 +508,15 @@ async function googleToken(admin: Admin, run: RunRow, needed: boolean): Promise<
 async function readTool(token: string | null, file: FileRef | undefined, name: string, args: Record<string, unknown>) {
   if (!token || !file) return { error: "Ese archivo no está disponible en esta ejecución." }
   try {
+    // Excel (.xlsx) en Drive: se descarga y se lee con ExcelJS.
+    if (file.kind === "xlsx" && (name === "list_sheets" || name === "read_range")) {
+      const bytes = await downloadXlsx(token, file.provider_file_id)
+      if (name === "list_sheets") return { title: file.name, ...(await xlsxInfo(bytes)) }
+      const range = str(args.range, 200)
+      if (!range) return { error: "Falta el rango." }
+      const r = await xlsxRead(bytes, range, MAX_READ_CELLS)
+      return { range: r.range, rows: r.values.length, values: r.values, truncated: r.truncated }
+    }
     if (name === "list_sheets") return await spreadsheetInfo(token, file.provider_file_id)
     if (name === "read_document") {
       const doc = await readDocument(token, file.provider_file_id)
@@ -680,9 +704,12 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
   const byAlias = new Map(res.files.map((f) => [f.alias, f]))
   const recipients = new Map(res.recipients.map((x) => [x.alias, x]))
 
-  const { data: secretRows } = await admin.rpc("ai_connection_secret", { p_workspace_id: run.workspace_id, p_provider: "openai" })
-  const ai = secretRows?.[0] as { api_key: string; model: string; status: string } | undefined
-  if (!ai || ai.status !== "active") return finishRun(admin, run, "failed", "La clave de OpenAI de este espacio no está activa.")
+  const ai: Ai | null = await resolveAi(admin, run.workspace_id, run.model)
+  if (!ai) return finishRun(admin, run, "failed", `${NO_AI_MESSAGE} La conexión que usaba esta ejecución no está activa.`)
+  const messages = transcript(run)
+  // Si la ejecución cambió de proveedor (se desconectó el suyo), no se reenvía
+  // nada en el formato del anterior.
+  if (providerOf(run.model) !== ai.provider) for (const m of messages) if (m.role === "assistant") delete m.native
 
   let token: string | null
   try {
@@ -693,7 +720,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
   }
   if (!token) res.googleActive = false
 
-  const model = run.model ?? ai.model
+  const model = ai.model
   const tools = toolDefs(res)
   let calToken: string | null = null
   const calendar = async () => (calToken ??= (await calendarToken(admin, run.workspace_id)).token)
@@ -703,65 +730,48 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       return finishRun(admin, run, "failed", `Se alcanzó el límite de ${MAX_TOOL_CALLS} acciones sin terminar.`)
     }
 
-    let response: Response
+    let result
     try {
-      response = await fetch("https://api.openai.com/v1/responses", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${ai.api_key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model,
-          instructions: INSTRUCTIONS,
-          input: run.state.items,
-          tools,
-          parallel_tool_calls: false,
-          store: false,
-          max_output_tokens: 8000,
-        }),
-        signal: AbortSignal.timeout(Math.max(10_000, deadline - Date.now() + 20_000)),
+      result = await complete(ai, {
+        instructions: INSTRUCTIONS,
+        messages,
+        tools,
+        maxTokens: 8000,
+        timeoutMs: Math.max(10_000, deadline - Date.now() + 20_000),
       })
-    } catch {
-      await save(admin, run, { lease_until: null })
-      return "running"
+    } catch (e) {
+      if (e instanceof LlmError && e.code === "timeout") {
+        await save(admin, run, { lease_until: null })
+        return "running"
+      }
+      if (e instanceof LlmError && e.code === "invalid_key") {
+        await admin.rpc("ai_connection_mark_invalid", { p_workspace_id: run.workspace_id, p_provider: ai.provider })
+      }
+      return finishRun(admin, run, "failed", e instanceof LlmError ? e.message : "La IA no pudo procesar la petición.")
     }
 
-    if (response.status === 401) {
-      await admin.rpc("ai_connection_mark_invalid", { p_workspace_id: run.workspace_id, p_provider: "openai" })
-      return finishRun(admin, run, "failed", "OpenAI ha rechazado la clave de este espacio.")
-    }
-    if (response.status === 429) return finishRun(admin, run, "failed", "Tu cuenta de OpenAI ha llegado a su límite o no tiene saldo.")
-    if (!response.ok) return finishRun(admin, run, "failed", "OpenAI no pudo procesar la petición.")
-
-    const result = await response.json() as {
-      output?: { type: string; call_id?: string; name?: string; arguments?: string; content?: { type: string; text?: string }[] }[]
-      usage?: { input_tokens?: number; output_tokens?: number }
-    }
-    const inTok = Math.max(0, Math.trunc(result.usage?.input_tokens ?? 0))
-    const outTok = Math.max(0, Math.trunc(result.usage?.output_tokens ?? 0))
-    run.input_tokens += inTok
-    run.output_tokens += outTok
+    run.input_tokens += result.usage.input
+    run.output_tokens += result.usage.output
     await admin.from("usage_events").insert({
       workspace_id: run.workspace_id,
-      provider: "openai",
+      provider: ai.provider,
       model,
-      input_tokens: inTok,
-      output_tokens: outTok,
+      input_tokens: result.usage.input,
+      output_tokens: result.usage.output,
       created_by: run.started_by,
     })
 
-    const output = result.output ?? []
-    run.state.items.push(...output)
-    const call = output.find((o) => o.type === "function_call")
-
-    if (!call) {
-      const text = output
-        .filter((o) => o.type === "message")
-        .flatMap((o) => o.content ?? [])
-        .filter((c) => c.type === "output_text")
-        .map((c) => c.text ?? "")
-        .join("\n")
-        .trim()
-      return finishRun(admin, run, "succeeded", text || "La ejecución terminó sin resumen.")
+    messages.push(result.message)
+    const first = result.message.calls[0]
+    // Una acción cada vez: las demás llamadas de la misma respuesta se contestan sin ejecutarse.
+    for (const extra of result.message.calls.slice(1)) {
+      messages.push({ role: "tool", call_id: extra.id, content: JSON.stringify({ error: "Una acción cada vez: vuelve a pedirla después." }) })
     }
+
+    if (!first) {
+      return finishRun(admin, run, "succeeded", result.message.content || "La ejecución terminó sin resumen.")
+    }
+    const call = { call_id: first.id, name: first.name, arguments: first.arguments }
 
     run.tool_calls += 1
     let args: Record<string, unknown> = {}
@@ -771,10 +781,10 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       args = {}
     }
     const file = typeof args.file === "string" ? byAlias.get(args.file) : undefined
-    const respond = (out: unknown) => run.state.items.push({ type: "function_call_output", call_id: call.call_id, output: clipJson(out) })
+    const respond = (out: unknown) => messages.push({ role: "tool", call_id: call.call_id, content: clipJson(out) })
 
     if (call.name === "finish") {
-      run.state.items.push({ type: "function_call_output", call_id: call.call_id, output: "ok" })
+      messages.push({ role: "tool", call_id: call.call_id, content: "ok" })
       return finishRun(admin, run, "succeeded", str(args.summary, 8000) || "Ejecución terminada.")
     }
 
@@ -814,11 +824,13 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
     if (call.name === "append_rows" || call.name === "update_range") {
       const values = normalizeValues(call.name === "append_rows" ? args.rows : args.values)
       const range = str(args.range, 200)
-      if (token && file?.kind === "sheet" && values && range) {
+      if (token && (file?.kind === "sheet" || file?.kind === "xlsx") && values && range) {
         let before: Cell[][] | null = null
         if (call.name === "update_range") {
           try {
-            before = (await readRange(token, file.provider_file_id, range)).values
+            before = file.kind === "xlsx"
+              ? (await xlsxRead(await downloadXlsx(token, file.provider_file_id), range, MAX_READ_CELLS)).values
+              : (await readRange(token, file.provider_file_id, range)).values
           } catch {
             before = null
           }
@@ -839,7 +851,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       const to = typeof args.to === "string" ? recipients.get(args.to) : undefined
       const subject = str(args.subject, 300).replace(/[\r\n]+/g, " ").trim()
       const body = str(args.body, 20_000)
-      if (!res.mailProvider || to?.channel !== "email") invalid = "Ese contacto no está autorizado o no hay ninguna cuenta de correo conectada."
+      if (!res.mailActive || to?.channel !== "email") invalid = "Ese contacto no está autorizado o no hay ninguna cuenta de correo conectada."
       else if (!subject || !body.trim()) invalid = "Faltan el asunto o el cuerpo del correo."
       else pending = { call_id: call.call_id!, tool: "send_email", to_label: to.label, address: to.address, subject, body }
     } else if (call.name === "send_telegram") {
@@ -961,7 +973,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
 export async function executePending(admin: Admin, run: RunRow, pending: PendingAction, decidedBy: string | null): Promise<string> {
   const res = await loadResources(admin, run)
   try {
-    if (pending.tool === "send_email" && res.mailProvider === "imap") {
+    if (pending.tool === "send_email") {
       await sendAndRecord(admin, run.workspace_id, {
         to: pending.address,
         subject: pending.subject,
@@ -971,30 +983,6 @@ export async function executePending(admin: Admin, run: RunRow, pending: Pending
       })
       await addEvent(admin, run, "approved", `Aprobado: correo enviado a ${pending.to_label}`, { tool: pending.tool, decided_by: decidedBy })
       return JSON.stringify({ ok: true })
-    }
-
-    if (pending.tool === "send_email") {
-      const { token, config, integrationId } = await gmailToken(admin, run.workspace_id)
-      const sent = await sendMail(token, { from: config.email ?? "me", to: pending.address, subject: pending.subject, body: pending.body })
-      await recordMessage(admin, {
-        workspaceId: run.workspace_id,
-        integrationId,
-        channel: "email",
-        threadExternalId: sent.threadId,
-        externalId: sent.id,
-        direction: "out",
-        senderName: null,
-        senderAddress: config.email ?? null,
-        recipients: pending.address,
-        subject: pending.subject,
-        body: pending.body,
-        sentAt: new Date().toISOString(),
-        contactName: pending.to_label.slice(0, 200),
-        contactAddress: pending.address,
-        runId: run.id,
-      })
-      await addEvent(admin, run, "approved", `Aprobado: correo enviado a ${pending.to_label}`, { tool: pending.tool, decided_by: decidedBy })
-      return JSON.stringify({ ok: true, message_id: sent.id })
     }
 
     if (pending.tool === "send_telegram") {
@@ -1104,7 +1092,9 @@ export async function executePending(admin: Admin, run: RunRow, pending: Pending
       return JSON.stringify({ ok: true })
     }
 
-    const out = pending.tool === "append_rows"
+    const out = file.kind === "xlsx"
+      ? await xlsxWrite(token, file.provider_file_id, pending.tool === "append_rows" ? "append" : "update", pending.range, pending.values)
+      : pending.tool === "append_rows"
       ? await appendRows(token, file.provider_file_id, pending.range, pending.values)
       : await updateRange(token, file.provider_file_id, pending.range, pending.values)
     await addEvent(admin, run, "approved", `Aprobado: ${out.updatedRows} filas escritas en «${file.name}» (${out.updatedRange})`, {
@@ -1151,7 +1141,7 @@ export async function createRun(
   const listing = valid
     .map((id, i) => {
       const f = files!.find((x) => x.id === id)!
-      const kind = { doc: "documento", sheet: "planilla", folder: "carpeta", file: "archivo" }[kindOf(f.mime_type)]
+      const kind = { doc: "documento", sheet: "planilla", xlsx: "planilla Excel", folder: "carpeta", file: "archivo" }[kindOf(f.mime_type)]
       return `f${i + 1} = «${f.name}» (${kind})`
     })
     .join("\n")
@@ -1181,7 +1171,7 @@ export async function createRun(
       file_ids: valid,
       note: input.note,
       model: input.model,
-      state: { items: [{ role: "user", content: parts.filter(Boolean).join("\n\n") }] },
+      state: { messages: [{ role: "user", content: parts.filter(Boolean).join("\n\n") }] },
       started_by: input.startedBy,
       trigger: input.trigger,
       source_message_id: input.sourceMessageId ?? null,

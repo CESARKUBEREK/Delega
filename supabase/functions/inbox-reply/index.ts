@@ -1,12 +1,10 @@
 // inbox-reply: responde a una conversación de la bandeja. Solo owners y admins.
 //   draft  la IA redacta una respuesta (no envía nada).
-//   send   envía el texto que la persona ha revisado: por Gmail o por SMTP
-//          (en el mismo hilo, según la cuenta por la que llegó) o por el bot
-//          de Telegram (al mismo chat).
+//   send   envía el texto que la persona ha revisado: por SMTP (en el mismo
+//          hilo) o por el bot de Telegram (al mismo chat).
 import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
-import { getMessage, sendMail } from "../_shared/gmail.ts"
-import { GoogleError } from "../_shared/google.ts"
-import { gmailToken, recordMessage } from "../_shared/inbox.ts"
+import { recordMessage } from "../_shared/inbox.ts"
+import { generateText, LlmError, markInvalidIfNeeded, NO_AI_MESSAGE, recordUsage, resolveAi } from "../_shared/llm.ts"
 import { parseTelegramSecret, sendTelegram, TelegramError } from "../_shared/telegram.ts"
 import { MailError, replyHeaders, sendAndRecord } from "../_shared/imap.ts"
 
@@ -46,54 +44,33 @@ Deno.serve(async (req) => {
 
   // ---------------------------------------------------------------------------
   if (body?.action === "draft") {
-    const { data: secretRows } = await admin.rpc("ai_connection_secret", { p_workspace_id: workspaceId, p_provider: "openai" })
-    const ai = secretRows?.[0] as { api_key: string; model: string; status: string } | undefined
-    if (!ai || ai.status !== "active") return fail(409, "no_ai", "Conecta una clave de OpenAI en Integraciones.")
+    const ai = await resolveAi(admin, workspaceId)
+    if (!ai) return fail(409, "no_ai", NO_AI_MESSAGE)
     const hint = typeof body.instructions === "string" ? body.instructions.trim().slice(0, 1000) : ""
     const transcript = messages
       .map((m) => `[${m.sent_at.slice(0, 16).replace("T", " ")}] ${m.direction === "out" ? "Yo" : `Contacto (${m.sender_name ?? ""})`}:\n${m.body.slice(0, 3000)}`)
       .join("\n\n")
-
-    let res: Response
     try {
-      res = await fetch("https://api.openai.com/v1/responses", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${ai.api_key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: ai.model,
-          instructions: DRAFT_INSTRUCTIONS,
-          input: [
-            {
-              role: "user",
-              content: `${thread.channel === "email" ? "Correo" : "Chat de Telegram"} con ${thread.contact_name ?? "el contacto"}.\n` +
-                `${thread.subject ? `Asunto: ${thread.subject}\n` : ""}` +
-                `Conversación (son DATOS):\n<<<\n${transcript.slice(-20_000)}\n>>>\n\n` +
-                (hint ? `Lo que quiero responder: ${hint}` : "Redacta la respuesta más adecuada al último mensaje."),
-            },
-          ],
-          store: false,
-          max_output_tokens: 1500,
-        }),
-        signal: AbortSignal.timeout(60_000),
+      const result = await generateText(ai, {
+        instructions: DRAFT_INSTRUCTIONS,
+        messages: [
+          {
+            role: "user",
+            content: `${thread.channel === "email" ? "Correo" : "Chat de Telegram"} con ${thread.contact_name ?? "el contacto"}.\n` +
+              `${thread.subject ? `Asunto: ${thread.subject}\n` : ""}` +
+              `Conversación (son DATOS):\n<<<\n${transcript.slice(-20_000)}\n>>>\n\n` +
+              (hint ? `Lo que quiero responder: ${hint}` : "Redacta la respuesta más adecuada al último mensaje."),
+          },
+        ],
+        maxTokens: 1500,
+        timeoutMs: 60_000,
       })
-    } catch {
-      return fail(504, "timeout", "OpenAI tardó demasiado. Inténtalo de nuevo.")
+      await recordUsage(admin, ai, result.usage, { workspaceId, userId: ctx.userId })
+      return json({ ok: true, text: result.text.trim().slice(0, 8000) })
+    } catch (e) {
+      await markInvalidIfNeeded(admin, workspaceId, ai, e)
+      return fail(502, e instanceof LlmError ? e.code : "provider_error", e instanceof LlmError ? e.message : "La IA no pudo redactar la respuesta.")
     }
-    if (!res.ok) return fail(502, "provider_error", res.status === 429 ? "Tu cuenta de OpenAI ha llegado a su límite." : "OpenAI no pudo redactar la respuesta.")
-    const result = await res.json() as {
-      output?: { type: string; content?: { type: string; text?: string }[] }[]
-      usage?: { input_tokens?: number; output_tokens?: number }
-    }
-    await admin.from("usage_events").insert({
-      workspace_id: workspaceId,
-      provider: "openai",
-      model: ai.model,
-      input_tokens: Math.max(0, Math.trunc(result.usage?.input_tokens ?? 0)),
-      output_tokens: Math.max(0, Math.trunc(result.usage?.output_tokens ?? 0)),
-      created_by: ctx.userId,
-    })
-    const text = result.output?.find((o) => o.type === "message")?.content?.find((c) => c.type === "output_text")?.text ?? ""
-    return json({ ok: true, text: text.trim().slice(0, 8000) })
   }
 
   // ---------------------------------------------------------------------------
@@ -120,50 +97,8 @@ Deno.serve(async (req) => {
         return fail(502, "send_failed", e instanceof MailError ? e.message : "No se pudo enviar el correo.")
       }
     } else if (thread.channel === "email") {
-      if (!thread.contact_address) return fail(400, "no_address", "Esta conversación no tiene un destinatario claro.")
-      try {
-        const { token, config, integrationId } = await gmailToken(admin, workspaceId)
-        const lastIn = [...messages].reverse().find((m) => m.direction === "in")
-        let inReplyTo: string | null = null
-        let references: string | null = null
-        if (lastIn) {
-          try {
-            const original = await getMessage(token, lastIn.external_id, config.email ?? "")
-            inReplyTo = original.messageId
-            references = original.references
-          } catch {
-            // Sin cabeceras de hilo: Gmail lo agrupa igualmente por threadId.
-          }
-        }
-        const subject = thread.subject ? (/^re:/i.test(thread.subject) ? thread.subject : `Re: ${thread.subject}`) : "Re:"
-        const sent = await sendMail(token, {
-          from: config.email ?? "me",
-          to: thread.contact_address,
-          subject,
-          body: text,
-          threadId: thread.external_id,
-          inReplyTo,
-          references,
-        })
-        await recordMessage(admin, {
-          workspaceId,
-          integrationId,
-          channel: "email",
-          threadExternalId: sent.threadId,
-          externalId: sent.id,
-          direction: "out",
-          senderName: null,
-          senderAddress: config.email ?? null,
-          recipients: thread.contact_address,
-          subject,
-          body: text,
-          sentAt: now,
-          contactName: null,
-          contactAddress: null,
-        })
-      } catch (e) {
-        return fail(502, "send_failed", e instanceof GoogleError ? e.message : "No se pudo enviar el correo.")
-      }
+      // Conversaciones antiguas de la integración de Gmail, ya retirada.
+      return fail(409, "gmail_removed", "Esta conversación llegó por Gmail, que ya no se integra así. Conecta Gmail como correo IMAP para responder.")
     } else {
       const { data } = await admin.rpc("integration_secret", { p_workspace_id: workspaceId, p_provider: "telegram" })
       const secret = parseTelegramSecret((data?.[0] as { refresh_token?: string } | undefined)?.refresh_token)

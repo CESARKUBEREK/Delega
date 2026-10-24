@@ -1,6 +1,5 @@
 // Utilidades de la bandeja (correo y Telegram).
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
-import { accessTokenFrom, GoogleError } from "./google.ts"
 
 export const DEFAULT_CATEGORIES = ["Cliente", "Proveedor", "Obra o proyecto", "Administración", "Personal", "Publicidad", "Otros"]
 
@@ -52,25 +51,4 @@ export async function recordMessage(
     p_run_id: m.runId ?? null,
   })
   return (data as number | null) ?? null
-}
-
-// Access token de Gmail del espacio (o error claro si Google retiró el acceso).
-export async function gmailToken(admin: SupabaseClient, workspaceId: string): Promise<{ token: string; config: InboxConfig; integrationId: string }> {
-  const [{ data: secretRows }, { data: integ }] = await Promise.all([
-    admin.rpc("integration_secret", { p_workspace_id: workspaceId, p_provider: "gmail" }),
-    admin.from("integrations").select("id, status, config").eq("workspace_id", workspaceId).eq("provider", "gmail").maybeSingle(),
-  ])
-  const secret = secretRows?.[0] as { refresh_token: string } | undefined
-  if (!secret || !integ) throw new GoogleError("not_found", "Gmail no está conectado.")
-  if (integ.status !== "active") throw new GoogleError("invalid_grant", "Google retiró el acceso a Gmail. Vuelve a conectarlo.")
-  try {
-    const { token } = await accessTokenFrom(secret.refresh_token)
-    return { token, config: (integ.config ?? {}) as InboxConfig, integrationId: integ.id }
-  } catch (e) {
-    if (e instanceof GoogleError && e.code === "invalid_grant") {
-      await admin.rpc("integration_mark_invalid", { p_workspace_id: workspaceId, p_provider: "gmail" })
-      throw new GoogleError("invalid_grant", "Google retiró el acceso a Gmail. Vuelve a conectarlo.")
-    }
-    throw e
-  }
 }

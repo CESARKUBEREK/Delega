@@ -2,12 +2,12 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { PlanView } from "@/components/plan-view"
-import { asPlan, fileKindLabel, FLOW_STATUS_LABEL, RUN_STATUS_LABEL } from "@/lib/plan"
+import { asPlan, fileKindLabel, FLOW_STATUS_LABEL, modelLabel, RUN_STATUS_LABEL } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { deleteFlow } from "../../ai-actions"
 import { formatDateTime } from "../../format"
-import { ActivationPanel, RunPanel } from "./run-panel"
+import { ActivationPanel, FlowModelForm, RunPanel } from "./run-panel"
 
 export const metadata = { title: "Automatización" }
 
@@ -35,7 +35,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
 
   const [{ data: rawFiles }, { data: ai }, { data: runs }, { data: tg }] = await Promise.all([
     supabase.from("integration_files").select("id, name, mime_type").eq("workspace_id", workspaceId).order("name"),
-    supabase.from("ai_connections").select("status").eq("workspace_id", workspaceId).eq("provider", "openai").maybeSingle(),
+    supabase.from("ai_connections").select("provider, model, status, is_default").eq("workspace_id", workspaceId),
     supabase
       .from("flow_runs")
       .select("id, status, started_at")
@@ -92,6 +92,25 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
         </section>
       ) : null}
 
+      {(ai ?? []).length > 0 ? (
+        <section className="border border-ink bg-sheet">
+          <h2 className="border-b border-ink px-5 py-3 font-semibold">IA de esta automatización</h2>
+          <div className="px-5 py-4">
+            <FlowModelForm
+              workspaceId={workspaceId}
+              flowId={flow.id}
+              model={typeof (flow.settings as { model?: unknown } | null)?.model === "string" ? ((flow.settings as { model: string }).model) : ""}
+              providers={(ai ?? []).filter((c) => c.status === "active").map((c) => c.provider)}
+              defaultLabel={(() => {
+                const d = (ai ?? []).find((c) => c.is_default) ?? (ai ?? [])[0]
+                return d ? modelLabel(d.model) : ""
+              })()}
+              canEdit={canDelete}
+            />
+          </div>
+        </section>
+      ) : null}
+
       <section className="border border-ink bg-sheet">
         <h2 className="border-b border-ink px-5 py-3 font-semibold">{autoTrigger ? "Probar a mano" : "Ejecutar"}</h2>
         <div className="px-5 py-4">
@@ -99,7 +118,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
             workspaceId={workspaceId}
             flowId={flow.id}
             files={files}
-            aiReady={ai?.status === "active"}
+            aiReady={(ai ?? []).some((c) => c.status === "active")}
             needsFiles={Boolean(plan?.connections.some((c) => c.kind === "spreadsheet" || c.kind === "documents" || c.kind === "drive"))}
             isAdmin={isAdmin}
           />

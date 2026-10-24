@@ -44,11 +44,11 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
       .eq("workspace_id", workspaceId)
       .order("sent_at", { ascending: false })
       .limit(200),
-    supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["gmail", "imap", "telegram"]),
+    supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["imap", "telegram"]),
   ])
   if (!thread) notFound()
   const integrations = integration ?? []
-  const settings = (integrations.find((i) => i.provider === "gmail") ?? integrations.find((i) => i.provider === "imap") ?? integrations[0])
+  const settings = (integrations.find((i) => i.provider === "imap") ?? integrations[0])
     ?.config as { categories?: string[] } | undefined
   const categories = settings?.categories?.length ? settings.categories : DEFAULT_CATEGORIES
   // Se responde por la misma cuenta por la que llegó la conversación.
@@ -79,7 +79,9 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
             <p className="text-sm text-graphite">
               {channelIntegration
                 ? "No se puede responder: la conexión no está activa o falta la dirección del contacto."
-                : `Conecta ${provider === "gmail" ? "Gmail" : provider === "imap" ? "el correo IMAP" : "el bot de Telegram"} para responder desde aquí.`}
+                : provider === "gmail"
+                  ? "Esta conversación llegó por la antigua integración de Gmail. Conecta Gmail como correo IMAP para seguir la conversación."
+                  : `Conecta ${provider === "imap" ? "tu correo" : "el bot de Telegram"} para responder desde aquí.`}
             </p>
           )}
         </div>
