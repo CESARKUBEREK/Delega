@@ -116,6 +116,14 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
           Mensaje de Telegram que la lanzó: «{String((run.trigger as { text?: string }).text ?? "").slice(0, 500)}»
         </p>
       ) : null}
+      {(run.trigger as { type?: string } | null)?.type === "email_message" ? (
+        <p className="border-l-2 border-rule pl-3 text-sm text-graphite">
+          {(() => {
+            const t = run.trigger as { name?: string | null; address?: string; subject?: string }
+            return `Correo que la lanzó: de ${t.name || t.address || "un remitente"}${t.subject ? `, «${t.subject.slice(0, 200)}»` : ""}`
+          })()}
+        </p>
+      ) : null}
     </div>
   )
 }

@@ -23,6 +23,7 @@ function origin(trigger: unknown): string {
   const type = (trigger as { type?: string } | null)?.type
   if (type === "chat") return "Pedida en el chat"
   if (type === "telegram_message") return "Lanzada por un mensaje de Telegram"
+  if (type === "email_message") return "Lanzada por un correo"
   return "Automatización"
 }
 

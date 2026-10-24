@@ -34,6 +34,9 @@ Reglas:
   hosting o Gmail, conectado por IMAP/SMTP; enviar correos a contactos autorizados; la bandeja clasifica los recibidos) y Telegram (telegram: responder por el bot a quien
   escribió). Bases de datos aún no: si el flujo las necesita, inclúyelas y dilo en "reply" como pendiente.
 - Si el flujo debe arrancar cuando llegue un mensaje al bot de Telegram, usa el disparador "telegram_message".
+  Si debe arrancar al llegar un correo, usa "email_message": el agente recibe ese correo y puede contestar a su
+  remitente en el mismo hilo. El usuario elige después qué correos lo lanzan (remitentes, palabras del asunto o del
+  texto); si el usuario los menciona, recógelos en la descripción del disparador.
   Los envíos de correo o Telegram son pasos "notify" con connection "email" o "telegram".
 - Tareas puntuales («añade esta factura a la planilla», «¿qué reuniones tengo mañana?», «responde a Juan que sí»):
   usa el disparador "manual" y escribe el plan para hacerlo una sola vez, con los datos concretos que dio el usuario

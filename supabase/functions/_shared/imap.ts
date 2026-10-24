@@ -29,6 +29,9 @@ export type ImapConfig = InboxConfig & {
   sent_folder?: string | null
   uid_validity?: string | null
   last_uid?: number
+  // Último UID que ya estaba en el buzón al conectarlo: hasta ahí es histórico
+  // y no lanza automatizaciones, aunque se lea en varias vueltas.
+  history_uid?: number
 }
 
 export class MailError extends Error {
@@ -447,7 +450,15 @@ const BATCH = 25
 // por llamada (unos 0,5 s de CPU medidos); el resto, en la siguiente.
 const MAX_PER_CALL = 100
 
-export async function syncImap(admin: SupabaseClient, workspaceId: string, deadline: number): Promise<{ added: number; more: boolean }> {
+// fresh: correos recibidos nuevos (ni el histórico de la primera lectura ni
+// los de más de 48 h), para el disparador «al llegar un correo».
+export type FreshMail = { id: number; fromName: string | null; fromAddress: string; subject: string; body: string }
+
+export async function syncImap(
+  admin: SupabaseClient,
+  workspaceId: string,
+  deadline: number,
+): Promise<{ added: number; more: boolean; fresh: FreshMail[] }> {
   const { secret, config, integrationId } = await imapAccount(admin, workspaceId)
   let client: ImapFlow
   try {
@@ -461,6 +472,7 @@ export async function syncImap(admin: SupabaseClient, workspaceId: string, deadl
 
   let added = 0
   let more = false
+  const fresh: FreshMail[] = []
   const next: ImapConfig = { ...config }
   try {
     const lock = await client.getMailboxLock("INBOX", { readOnly: true })
@@ -468,12 +480,14 @@ export async function syncImap(admin: SupabaseClient, workspaceId: string, deadl
       const box = client.mailbox as { uidValidity: bigint | number; uidNext: number }
       const validity = String(box.uidValidity)
       let uids: number[]
-      if (config.uid_validity !== validity) {
+      const initial = config.uid_validity !== validity
+      if (initial) {
         // Primera vez (o el servidor renumeró la carpeta): los últimos N días.
         const since = new Date(Date.now() - (config.sync_days ?? 30) * 86_400_000)
         uids = ((await client.search({ since }, { uid: true })) || []) as number[]
         next.uid_validity = validity
         next.last_uid = 0
+        next.history_uid = Math.max(0, box.uidNext - 1)
       } else {
         const last = config.last_uid ?? 0
         uids = last + 1 < box.uidNext ? (((await client.search({ uid: `${last + 1}:*` }, { uid: true })) || []) as number[]) : []
@@ -502,7 +516,14 @@ export async function syncImap(admin: SupabaseClient, workspaceId: string, deadl
             contactName: mail.outgoing ? null : mail.from.name ?? mail.from.address,
             contactAddress: mail.outgoing ? null : mail.from.address,
           })
-          if (recorded) added++
+          if (recorded) {
+            added++
+            const time = Date.parse(mail.date)
+            const historic = initial || mail.uid <= (next.history_uid ?? 0)
+            if (!historic && !mail.outgoing && mail.from.address && Number.isFinite(time) && time > Date.now() - 48 * 3_600_000) {
+              fresh.push({ id: recorded, fromName: mail.from.name, fromAddress: mail.from.address, subject: mail.subject ?? "", body: mail.body })
+            }
+          }
         }
         next.last_uid = batch[batch.length - 1]
       }
@@ -520,7 +541,7 @@ export async function syncImap(admin: SupabaseClient, workspaceId: string, deadl
     p_provider: "imap",
     p_config: { ...next, last_sync_at: new Date().toISOString() },
   })
-  return { added, more }
+  return { added, more, fresh }
 }
 
 // Cabeceras para responder en el mismo hilo: In-Reply-To es el último correo
