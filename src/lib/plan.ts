@@ -181,3 +181,17 @@ export const RUN_STATUS_LABEL: Record<string, string> = {
   failed: "Con error",
   cancelled: "Cancelada",
 }
+
+export type FlowSchedule = { frequency: "daily" | "weekdays" | "weekly" | "monthly"; time: string; weekday: number; day_of_month: number }
+
+// Programación que propuso el asistente (plan.trigger.schedule), validada.
+export function scheduleOf(value: Json | null | undefined): FlowSchedule | null {
+  const t = obj(obj(value).trigger)
+  if (t.type !== "schedule") return null
+  const o = obj(t.schedule)
+  if (!["daily", "weekdays", "weekly", "monthly"].includes(String(o.frequency))) return null
+  if (typeof o.time !== "string" || !/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(o.time)) return null
+  const weekday = typeof o.weekday === "number" && Number.isInteger(o.weekday) && o.weekday >= 1 && o.weekday <= 7 ? o.weekday : 1
+  const day = typeof o.day_of_month === "number" && Number.isInteger(o.day_of_month) && o.day_of_month >= 0 && o.day_of_month <= 28 ? o.day_of_month : 1
+  return { frequency: o.frequency as FlowSchedule["frequency"], time: o.time, weekday, day_of_month: day }
+}

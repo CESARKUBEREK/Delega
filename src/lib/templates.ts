@@ -38,6 +38,51 @@ function steps(list: Omit<PlanStep, "id">[]): PlanStep[] {
 
 export const TEMPLATES: FlowTemplate[] = [
   {
+    id: "control-vencimientos",
+    category: "Avisos",
+    needs: ["ai", "google"],
+    settings: { schedule: { frequency: "weekly", time: "09:00", weekday: 1, day_of_month: 1 } },
+    setup: "Elige la planilla de cobros, contratos, stock o vencimientos. Cada lunes a las 9:00 te avisa de lo que vence en los próximos 7 días.",
+    plan: {
+      version: 1,
+      name: "Control de vencimientos",
+      summary: "Cada lunes revisa tu planilla de vencimientos (cobros, contratos, seguros, stock) y te avisa de lo que vence esa semana o ya está vencido.",
+      trigger: { type: "schedule", description: "Cada lunes a las 9:00" },
+      connections: [{ kind: "spreadsheet", purpose: "Leer las fechas de vencimiento" }],
+      steps: steps([
+        { kind: "read", title: "Leer la planilla", description: "Ver sus hojas y columnas y leer las filas con fecha.", connection: "spreadsheet", requires_approval: false },
+        { kind: "compare", title: "Buscar vencimientos", description: "Lo que vence en los próximos 7 días y lo ya vencido sin marcar como hecho o pagado.", connection: "none", requires_approval: false },
+        { kind: "notify", title: "Avisarte", description: "Lista breve ordenada por fecha, con importe o detalle. Si no hay nada, no avisar.", connection: "none", requires_approval: false },
+      ]),
+      open_questions: [],
+    },
+  },
+  {
+    id: "volcado-semanal",
+    category: "Informes",
+    needs: ["ai", "google", "imap"],
+    settings: { schedule: { frequency: "weekly", time: "18:00", weekday: 5, day_of_month: 1 } },
+    setup: "Elige la planilla donde se guardan las cifras (una fila por semana). Cada viernes a las 18:00 propone la fila nueva; añadirla espera tu aprobación.",
+    plan: {
+      version: 1,
+      name: "Cifras de la semana en una planilla",
+      summary: "Cada viernes añade una fila a tu planilla con las cifras de la semana: correos recibidos por categoría, conversaciones sin responder y reuniones.",
+      trigger: { type: "schedule", description: "Cada viernes a las 18:00" },
+      connections: [
+        { kind: "email", purpose: "Contar conversaciones de la semana" },
+        { kind: "calendar", purpose: "Contar reuniones" },
+        { kind: "spreadsheet", purpose: "Añadir la fila de la semana" },
+      ],
+      steps: steps([
+        { kind: "read", title: "Leer la planilla", description: "Ver las columnas para respetar su orden.", connection: "spreadsheet", requires_approval: false },
+        { kind: "read", title: "Bandeja de la semana", description: "Conversaciones de los últimos 7 días por categoría y cuántas siguen sin responder.", connection: "email", requires_approval: false },
+        { kind: "read", title: "Reuniones", description: "Eventos de lunes a viernes, si el calendario está conectado.", connection: "calendar", requires_approval: false },
+        { kind: "write", title: "Añadir la fila", description: "Una fila con la fecha y las cifras, en el orden de las columnas.", connection: "spreadsheet", requires_approval: true },
+      ]),
+      open_questions: [],
+    },
+  },
+  {
     id: "consultas-propiedades",
     category: "Inmobiliaria",
     needs: ["ai", "imap", "tokko"],

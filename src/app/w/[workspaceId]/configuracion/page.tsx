@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server"
 import { revokeInvitation } from "../../actions"
 import { InviteForm } from "../invite-form"
 import { DeleteForm, LeaveForm, RenameForm } from "../manage-panel"
+import { NoticePrefsForm, TelegramLink, TimezoneForm } from "../notice-forms"
 import { PushToggle } from "../push-toggle"
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -30,7 +31,7 @@ async function Workspace({ params }: { params: PageProps<"/w/[workspaceId]/confi
   // La RLS solo devuelve el espacio si el usuario es miembro activo.
   const { data: workspace } = await supabase
     .from("workspaces")
-    .select("id, name, kind")
+    .select("id, name, kind, timezone")
     .eq("id", workspaceId)
     .maybeSingle()
   if (!workspace) notFound()
@@ -54,6 +55,21 @@ async function Workspace({ params }: { params: PageProps<"/w/[workspaceId]/confi
   const ownerCount = (members ?? []).filter((m) => m.role === "owner" && m.status === "active").length
   // El último propietario no puede salir (lo impide también la base de datos).
   const canLeave = isOrg && !(myRole === "owner" && ownerCount <= 1)
+
+  const isAdmin = myRole === "owner" || myRole === "admin"
+  const [{ data: channel }, { data: integrations }] = await Promise.all([
+    supabase
+      .from("user_channels")
+      .select("notify_push, notify_email, notify_telegram, telegram_chat_id, telegram_name")
+      .eq("workspace_id", workspaceId)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["telegram", "imap"]),
+  ])
+  const telegram = (integrations ?? []).find((i) => i.provider === "telegram" && i.status === "active")
+  const botUsername = ((telegram?.config ?? {}) as { bot_username?: string }).bot_username ?? null
+  const mailReady = (integrations ?? []).some((i) => i.provider === "imap" && i.status === "active")
+  const zones = Intl.supportedValuesOf("timeZone")
 
   // Invitaciones pendientes: la RLS solo las devuelve a admins y propietarios.
   const { data: pending } = canInvite
@@ -96,6 +112,41 @@ async function Workspace({ params }: { params: PageProps<"/w/[workspaceId]/confi
             <PushToggle vapidPublicKey={process.env.VAPID_PUBLIC_KEY?.trim() || null} />
           </div>
         </div>
+
+        <div className="mt-8 border border-ink bg-sheet">
+          <h2 className="border-b border-ink px-5 py-3 font-semibold">Mis avisos</h2>
+          <div className="flex flex-col gap-6 px-5 py-4">
+            <NoticePrefsForm
+              workspaceId={workspace.id}
+              prefs={{
+                push: channel?.notify_push ?? true,
+                email: channel?.notify_email ?? true,
+                telegram: channel?.notify_telegram ?? true,
+              }}
+              mailReady={mailReady}
+              telegramLinked={Boolean(channel?.telegram_chat_id)}
+            />
+            <div className="border-t border-rule pt-4">
+              <TelegramLink
+                workspaceId={workspace.id}
+                botUsername={botUsername}
+                linkedName={channel?.telegram_chat_id ? (channel.telegram_name ?? "") : null}
+              />
+            </div>
+          </div>
+        </div>
+
+        {isAdmin ? (
+          <div className="mt-8 border border-ink bg-sheet">
+            <h2 className="border-b border-ink px-5 py-3 font-semibold">Zona horaria del espacio</h2>
+            <div className="px-5 py-4">
+              <p className="mb-3 text-sm text-graphite">
+                La hora a la que se ejecutan las automatizaciones programadas y la que usa el agente para fechas y agenda.
+              </p>
+              <TimezoneForm workspaceId={workspace.id} current={workspace.timezone} zones={zones} />
+            </div>
+          </div>
+        ) : null}
 
         {canInvite && pending && pending.length > 0 ? (
           <div className="mt-8 border border-ink bg-sheet">

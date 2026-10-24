@@ -10,7 +10,7 @@ import { isUuid, isWorkspaceAdmin } from "../_shared/core.ts"
 import { resolveAi } from "../_shared/llm.ts"
 import { recordMessage } from "../_shared/inbox.ts"
 import { TRIGGER_TEXT_CHARS } from "../_shared/triggers.ts"
-import { parseTelegramSecret } from "../_shared/telegram.ts"
+import { parseTelegramSecret, sendTelegram } from "../_shared/telegram.ts"
 
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined
 
@@ -118,9 +118,32 @@ async function launchFlows(workspaceId: string, chatId: string, name: string | n
   }
 }
 
-async function handleUpdate(workspaceId: string, integrationId: string, update: Update) {
+// «/vincular CÓDIGO» (o «/start CÓDIGO» desde un enlace t.me) en un chat
+// privado: vincula ese chat a la persona que pidió el código en Orkesta, para
+// recibir sus avisos. No se guarda en la bandeja ni lanza flujos.
+const LINK_RE = /^\/(?:vincular|start)(?:@\w+)?\s+([A-Za-z0-9]{8})\s*$/
+
+async function handleLink(workspaceId: string, botToken: string, m: TgMessage): Promise<boolean> {
+  const match = (m.text ?? "").trim().match(LINK_RE)
+  if (!match || m.chat?.type !== "private") return false
+  const chatId = String(m.chat.id)
+  const { data } = await admin.rpc("telegram_link_complete", {
+    p_workspace_id: workspaceId,
+    p_code: match[1].toUpperCase(),
+    p_chat_id: chatId,
+    p_name: displayName(m.from) ?? "",
+  })
+  const text = data
+    ? "Listo: este chat recibirá tus avisos de Orkesta. Puedes desactivarlo en Configuración → Mis avisos."
+    : "El código no es válido o ha caducado. Pide uno nuevo en Orkesta (Configuración → Mis avisos)."
+  await sendTelegram(botToken, chatId, text).catch(() => undefined)
+  return true
+}
+
+async function handleUpdate(workspaceId: string, integrationId: string, botToken: string, update: Update) {
   const m = update.message ?? update.edited_message
   if (!m?.chat?.id || !m.message_id || m.from?.is_bot) return
+  if (update.message && (await handleLink(workspaceId, botToken, m))) return
   const chatId = String(m.chat.id)
   const text = messageText(m).slice(0, 20_000)
   const chatName = displayName(m.chat)
@@ -166,7 +189,7 @@ Deno.serve(async (req) => {
   }
 
   // Telegram espera una respuesta rápida: el trabajo sigue en segundo plano.
-  const work = handleUpdate(row.workspace_id, integrationId, update).catch((e) =>
+  const work = handleUpdate(row.workspace_id, integrationId, secret.bot_token, update).catch((e) =>
     console.error("telegram-webhook", e instanceof Error ? e.name : "error")
   )
   if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(work)

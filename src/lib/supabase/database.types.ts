@@ -895,6 +895,45 @@ export type Database = {
           },
         ]
       }
+      user_channels: {
+        Row: {
+          link_code_expires: string | null
+          link_code_hash: string | null
+          notify_email: boolean
+          notify_push: boolean
+          notify_telegram: boolean
+          telegram_chat_id: string | null
+          telegram_name: string | null
+          updated_at: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          link_code_expires?: string | null
+          link_code_hash?: string | null
+          notify_email?: boolean
+          notify_push?: boolean
+          notify_telegram?: boolean
+          telegram_chat_id?: string | null
+          telegram_name?: string | null
+          updated_at?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          link_code_expires?: string | null
+          link_code_hash?: string | null
+          notify_email?: boolean
+          notify_push?: boolean
+          notify_telegram?: boolean
+          telegram_chat_id?: string | null
+          telegram_name?: string | null
+          updated_at?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       workspaces: {
         Row: {
           created_at: string
@@ -902,6 +941,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["workspace_kind"]
           name: string
+          timezone: string | null
           personal_owner: string | null
           updated_at: string
         }
@@ -911,6 +951,7 @@ export type Database = {
           id?: string
           kind: Database["public"]["Enums"]["workspace_kind"]
           name: string
+          timezone?: string | null
           personal_owner?: string | null
           updated_at?: string
         }
@@ -920,6 +961,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["workspace_kind"]
           name?: string
+          timezone?: string | null
           personal_owner?: string | null
           updated_at?: string
         }
@@ -1020,6 +1062,13 @@ export type Database = {
         Args: { p_provider: string; p_workspace_id: string }
         Returns: boolean
       }
+      notice_prefs_set: {
+        Args: { p_email: boolean; p_push: boolean; p_telegram: boolean; p_workspace_id: string }
+        Returns: undefined
+      }
+      telegram_link_start: { Args: { p_workspace_id: string }; Returns: string }
+      telegram_unlink: { Args: { p_workspace_id: string }; Returns: undefined }
+      workspace_set_timezone: { Args: { p_timezone: string | null; p_workspace_id: string }; Returns: string }
       flows_due: {
         Args: { p_limit?: number }
         Returns: {
