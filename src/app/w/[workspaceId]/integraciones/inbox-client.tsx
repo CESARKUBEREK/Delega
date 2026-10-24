@@ -10,7 +10,12 @@ import {
   disconnectHubSpot,
   disconnectImap,
   disconnectTelegram,
+  disconnectTokko,
+  disconnectXubio,
   type ImapState,
+  type KeyState,
+  saveTokko,
+  saveXubio,
   saveImap,
   type HubSpotState,
   saveHubSpot,
@@ -120,9 +125,17 @@ const DISCONNECT: Record<string, { label: string; confirm: string }> = {
   calendar: { label: "Google Calendar", confirm: "¿Desconectar Google Calendar? Las automatizaciones dejarán de ver y crear eventos." },
   hubspot: { label: "HubSpot", confirm: "¿Desconectar HubSpot? Orkesta borra la clave; revócala también en HubSpot si ya no la usas." },
   imap: { label: "el correo", confirm: "¿Desconectar este correo? Orkesta borra la contraseña; las conversaciones ya guardadas siguen en la bandeja." },
+  tokko: { label: "Tokko", confirm: "¿Desconectar Tokko? Orkesta borra la clave; las automatizaciones dejarán de ver tus propiedades." },
+  xubio: { label: "Xubio", confirm: "¿Desconectar Xubio? Orkesta borra las credenciales; bórralas también en Xubio si ya no las usas." },
 }
 
-export function DisconnectInboxForm({ workspaceId, kind }: { workspaceId: string; kind: "telegram" | "calendar" | "hubspot" | "imap" }) {
+export function DisconnectInboxForm({
+  workspaceId,
+  kind,
+}: {
+  workspaceId: string
+  kind: "telegram" | "calendar" | "hubspot" | "imap" | "tokko" | "xubio"
+}) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(
     kind === "calendar"
       ? disconnectGoogle
@@ -130,7 +143,11 @@ export function DisconnectInboxForm({ workspaceId, kind }: { workspaceId: string
         ? disconnectHubSpot
         : kind === "imap"
           ? disconnectImap
-          : disconnectTelegram,
+          : kind === "tokko"
+            ? disconnectTokko
+            : kind === "xubio"
+              ? disconnectXubio
+              : disconnectTelegram,
     null,
   )
   const { label, confirm } = DISCONNECT[kind]
@@ -281,6 +298,63 @@ export function ImapForm({ workspaceId, current }: { workspaceId: string; curren
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-64">
         <SubmitButton pendingLabel="Comprobando el correo…">{current ? "Guardar cambios" : "Conectar correo"}</SubmitButton>
+      </div>
+    </form>
+  )
+}
+
+export function TokkoForm({ workspaceId, replacing }: { workspaceId: string; replacing: boolean }) {
+  const formRef = useRef<HTMLFormElement>(null)
+  const [state, action] = useActionState<KeyState, FormData>(async (prev, fd) => {
+    const result = await saveTokko(prev, fd)
+    formRef.current?.reset()
+    return result
+  }, {})
+  return (
+    <form ref={formRef} action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="workspaceId" value={workspaceId} />
+      <Input
+        id="tokko-key"
+        name="key"
+        type="password"
+        label={replacing ? "Nueva clave de API de Tokko" : "Clave de API de Tokko"}
+        autoComplete="off"
+        spellCheck={false}
+        required
+        hint="Orkesta la guarda cifrada y no vuelve a mostrarla."
+      />
+      <FormMessage error={state.error} message={state.message} />
+      <div className="sm:max-w-56">
+        <SubmitButton pendingLabel="Comprobando con Tokko…">{replacing ? "Cambiar clave" : "Conectar Tokko"}</SubmitButton>
+      </div>
+    </form>
+  )
+}
+
+export function XubioForm({ workspaceId, replacing }: { workspaceId: string; replacing: boolean }) {
+  const formRef = useRef<HTMLFormElement>(null)
+  const [state, action] = useActionState<KeyState, FormData>(async (prev, fd) => {
+    const result = await saveXubio(prev, fd)
+    formRef.current?.reset()
+    return result
+  }, {})
+  return (
+    <form ref={formRef} action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="workspaceId" value={workspaceId} />
+      <Input id="xubio-client" name="clientId" label="Client ID" autoComplete="off" spellCheck={false} required />
+      <Input
+        id="xubio-secret"
+        name="secretId"
+        type="password"
+        label="Secret ID"
+        autoComplete="off"
+        spellCheck={false}
+        required
+        hint="Orkesta guarda las dos cifradas y no vuelve a mostrarlas."
+      />
+      <FormMessage error={state.error} message={state.message} />
+      <div className="sm:max-w-56">
+        <SubmitButton pendingLabel="Comprobando con Xubio…">{replacing ? "Cambiar credenciales" : "Conectar Xubio"}</SubmitButton>
       </div>
     </form>
   )

@@ -183,6 +183,56 @@ export async function disconnectHubSpot(_prev: ActionResult | null, formData: Fo
   return { ok: true }
 }
 
+// ---------------------------------------------------------------------------
+// Tokko Broker y Xubio
+// ---------------------------------------------------------------------------
+export type KeyState = { error?: string; message?: string }
+
+export async function saveTokko(_prev: KeyState, formData: FormData): Promise<KeyState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const key = String(formData.get("key") ?? "").trim()
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  if (!/^[A-Za-z0-9]{20,80}$/.test(key)) return { error: "La clave no tiene el formato esperado (solo letras y números)." }
+  const result = await callEdgeFunction<{ properties: number }>("tokko-connection", { action: "save", workspace_id: workspaceId, key }, 40_000)
+  if (result.error) return { error: result.error.message }
+  refresh()
+  return { message: `Tokko conectado: ${result.data.properties} propiedades en tu cartera.` }
+}
+
+export async function disconnectTokko(_prev: ActionResult | null, formData: FormData): Promise<ActionResult | null> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const result = await callEdgeFunction("tokko-connection", { action: "disconnect", workspace_id: workspaceId }, 20_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  refresh()
+  return { ok: true }
+}
+
+export async function saveXubio(_prev: KeyState, formData: FormData): Promise<KeyState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const clientId = String(formData.get("clientId") ?? "").trim()
+  const secretId = String(formData.get("secretId") ?? "").trim()
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  if (!clientId || !secretId) return { error: "Escribe el Client ID y el Secret ID." }
+  const result = await callEdgeFunction<{ clients: number }>(
+    "xubio-connection",
+    { action: "save", workspace_id: workspaceId, client_id: clientId, secret_id: secretId },
+    40_000,
+  )
+  if (result.error) return { error: result.error.message }
+  refresh()
+  return { message: `Xubio conectado (${result.data.clients} clientes).` }
+}
+
+export async function disconnectXubio(_prev: ActionResult | null, formData: FormData): Promise<ActionResult | null> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const result = await callEdgeFunction("xubio-connection", { action: "disconnect", workspace_id: workspaceId }, 20_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  refresh()
+  return { ok: true }
+}
+
 // Contactos autorizados para correo: la RLS solo deja a admins y owners.
 export type ContactState = { error?: string; message?: string }
 
