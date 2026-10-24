@@ -92,3 +92,23 @@ export async function isWorkspaceAdmin(admin: SupabaseClient, workspaceId: strin
     .maybeSingle()
   return data?.role === "owner" || data?.role === "admin"
 }
+
+// Zona horaria del espacio: la elegida en Configuración, si no la de Google
+// Calendar y, si tampoco, Europe/Madrid (igual que private.workspace_timezone).
+export async function workspaceTimezone(admin: SupabaseClient, workspaceId: string): Promise<string> {
+  const [{ data: ws }, { data: cal }] = await Promise.all([
+    admin.from("workspaces").select("timezone").eq("id", workspaceId).maybeSingle(),
+    admin.from("integrations").select("config").eq("workspace_id", workspaceId).eq("provider", "calendar").maybeSingle(),
+  ])
+  const candidates = [ws?.timezone, ((cal?.config ?? {}) as { timezone?: string }).timezone]
+  for (const tz of candidates) {
+    if (typeof tz !== "string" || !tz) continue
+    try {
+      new Intl.DateTimeFormat("es-ES", { timeZone: tz })
+      return tz
+    } catch {
+      // zona no válida: se prueba la siguiente
+    }
+  }
+  return "Europe/Madrid"
+}

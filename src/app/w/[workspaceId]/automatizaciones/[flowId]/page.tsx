@@ -65,7 +65,10 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
     (c) => c.status === "active" && c.provider === (trigger === "email_message" ? "imap" : "telegram"),
   )
   const emailFilter = readEmailFilter((flow.settings as { email_filter?: unknown } | null)?.email_filter)
-  const timezone = String(((channels ?? []).find((c) => c.provider === "calendar")?.config as { timezone?: string } | null)?.timezone || "Europe/Madrid")
+  const { data: ws } = await supabase.from("workspaces").select("timezone").eq("id", workspaceId).maybeSingle()
+  const timezone = String(
+    ws?.timezone || ((channels ?? []).find((c) => c.provider === "calendar")?.config as { timezone?: string } | null)?.timezone || "Europe/Madrid",
+  )
   const schedule = readSchedule((flow.settings as { schedule?: unknown } | null)?.schedule)
   const savedFileIds = Array.isArray((flow.settings as { file_ids?: unknown } | null)?.file_ids)
     ? ((flow.settings as { file_ids: unknown[] }).file_ids.filter((x) => typeof x === "string") as string[])

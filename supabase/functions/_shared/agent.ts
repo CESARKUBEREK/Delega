@@ -29,12 +29,12 @@ import { recordMessage } from "./inbox.ts"
 import { MailError, replyHeaders, sendAndRecord } from "./imap.ts"
 import { inboxList, inboxRead, loadThread } from "./inbox-read.ts"
 import { notifyMe } from "./notify.ts"
-import { isWorkspaceAdmin } from "./core.ts"
+import { isWorkspaceAdmin, workspaceTimezone } from "./core.ts"
 import { BUSINESS_READS, businessRead, businessTools, type TokkoLeadPending, tokkoLeadPending } from "./business-tools.ts"
 import { createLead, TokkoError, tokkoKey } from "./tokko.ts"
 import { type XubioCredentials, xubioCredentials } from "./xubio.ts"
 import { parseTelegramSecret, sendTelegram, TelegramError } from "./telegram.ts"
-import { calendarToken, createEvent, DATE_RE, DEFAULT_TIMEZONE, type EventInput, getEvent, listEvents, updateEvent } from "./calendar.ts"
+import { calendarToken, createEvent, DATE_RE, type EventInput, getEvent, listEvents, updateEvent } from "./calendar.ts"
 import {
   createNote,
   createRecord,
@@ -156,13 +156,14 @@ function kindOf(mime: string | null): FileKind {
 }
 
 async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
-  const [{ data: files }, { data: integrations }, { data: contacts }, starterIsAdmin] = await Promise.all([
+  const [{ data: files }, { data: integrations }, { data: contacts }, starterIsAdmin, timezone] = await Promise.all([
     run.file_ids.length
       ? admin.from("integration_files").select("id, provider_file_id, name, mime_type").eq("workspace_id", run.workspace_id).in("id", run.file_ids)
       : Promise.resolve({ data: [] as { id: string; provider_file_id: string; name: string; mime_type: string | null }[] }),
     admin.from("integrations").select("id, provider, status, config").eq("workspace_id", run.workspace_id),
     admin.from("contacts").select("name, email").eq("workspace_id", run.workspace_id).order("created_at").limit(50),
     isWorkspaceAdmin(admin, run.workspace_id, run.started_by),
+    workspaceTimezone(admin, run.workspace_id),
   ])
 
   const byId = new Map((files ?? []).map((f) => [f.id, f]))
@@ -227,7 +228,7 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
     // La bandeja solo la ven los administradores: el agente, igual.
     inboxActive: starterIsAdmin && (mailActive || tg?.status === "active"),
     calendarActive: calendar?.status === "active",
-    timezone: ((calendar?.config ?? {}) as { timezone?: string }).timezone || DEFAULT_TIMEZONE,
+    timezone,
     contacts: contactList,
     recipients,
     telegram,
@@ -1306,8 +1307,7 @@ export async function createRun(
   const valid = input.fileIds.filter((id) => files?.some((f) => f.id === id)).slice(0, 5)
   const { data: contacts } = await admin.from("contacts").select("name, email").eq("workspace_id", input.workspaceId).order("created_at").limit(50)
 
-  const { data: cal } = await admin.from("integrations").select("config").eq("workspace_id", input.workspaceId).eq("provider", "calendar").maybeSingle()
-  const tz = ((cal?.config ?? {}) as { timezone?: string }).timezone || DEFAULT_TIMEZONE
+  const tz = await workspaceTimezone(admin, input.workspaceId)
   const today = new Intl.DateTimeFormat("es-ES", { dateStyle: "full", timeStyle: "short", timeZone: tz }).format(new Date())
   const listing = valid
     .map((id, i) => {

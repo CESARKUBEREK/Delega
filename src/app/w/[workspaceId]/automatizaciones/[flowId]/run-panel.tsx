@@ -289,7 +289,7 @@ export function ActivationPanel({
             Hora
             <input type="time" value={time} onChange={(e) => setTime(e.target.value)} required className={field} />
           </label>
-          <p className="text-xs text-graphite">Hora del espacio (la de tu Google Calendar o, si no está conectado, la de Madrid).</p>
+          <p className="text-xs text-graphite">Hora del espacio: se cambia en Configuración → Zona horaria del espacio.</p>
         </fieldset>
       ) : null}
 

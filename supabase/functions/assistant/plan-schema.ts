@@ -15,10 +15,27 @@ const planObject = {
     trigger: {
       type: "object",
       additionalProperties: false,
-      required: ["type", "description"],
+      required: ["type", "description", "schedule"],
       properties: {
         type: { type: "string", enum: ["manual", "schedule", "telegram_message", "email_message"] },
         description: { type: "string", description: "Cuándo se ejecuta, en palabras (p. ej. 'el día 1 de cada mes' o 'cuando llegue un mensaje de Telegram')." },
+        schedule: {
+          description: "Solo si type es 'schedule': cuándo, para rellenar la programación. Si no, null.",
+          anyOf: [
+            { type: "null" },
+            {
+              type: "object",
+              additionalProperties: false,
+              required: ["frequency", "time", "weekday", "day_of_month"],
+              properties: {
+                frequency: { type: "string", enum: ["daily", "weekdays", "weekly", "monthly"] },
+                time: { type: "string", description: "Hora local HH:MM (24 h)." },
+                weekday: { type: "integer", description: "Solo semanal: 1 = lunes … 7 = domingo; si no, 1." },
+                day_of_month: { type: "integer", description: "Solo mensual: 1-28, o 0 = último día; si no, 1." },
+              },
+            },
+          ],
+        },
       },
     },
     connections: {
@@ -77,10 +94,22 @@ export type PlanStep = {
   requires_approval: boolean
 }
 
+export type Schedule = { frequency: "daily" | "weekdays" | "weekly" | "monthly"; time: string; weekday: number; day_of_month: number }
+
+export function sanitizeSchedule(v: unknown): Schedule | null {
+  if (!v || typeof v !== "object") return null
+  const o = v as Record<string, unknown>
+  if (!["daily", "weekdays", "weekly", "monthly"].includes(String(o.frequency))) return null
+  if (typeof o.time !== "string" || !/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(o.time)) return null
+  const weekday = Number.isInteger(o.weekday) && (o.weekday as number) >= 1 && (o.weekday as number) <= 7 ? (o.weekday as number) : 1
+  const day = Number.isInteger(o.day_of_month) && (o.day_of_month as number) >= 0 && (o.day_of_month as number) <= 28 ? (o.day_of_month as number) : 1
+  return { frequency: o.frequency as Schedule["frequency"], time: o.time, weekday, day_of_month: day }
+}
+
 export type Plan = {
   name: string
   summary: string
-  trigger: { type: "manual" | "schedule" | "telegram_message" | "email_message"; description: string }
+  trigger: { type: "manual" | "schedule" | "telegram_message" | "email_message"; description: string; schedule?: Schedule | null }
   connections: { kind: string; purpose: string }[]
   steps: PlanStep[]
   open_questions: string[]
@@ -97,7 +126,9 @@ export function sanitizePlan(plan: Plan | null): (Plan & { version: 1 }) | null 
     title: cut(s.title, 120),
     description: cut(s.description, 600),
     connection: [...CONNECTION_KINDS, "none"].includes(s.connection) ? s.connection : "none",
-    requires_approval: s.kind === "write" || s.kind === "notify" ? true : Boolean(s.requires_approval),
+    // Escribir o enviar a otros requiere aprobación; avisar al propio usuario
+    // (notify sin conexión) no.
+    requires_approval: s.kind === "write" || (s.kind === "notify" && s.connection !== "none") ? true : Boolean(s.requires_approval),
   }))
   return {
     version: 1,
@@ -108,6 +139,7 @@ export function sanitizePlan(plan: Plan | null): (Plan & { version: 1 }) | null 
         ? plan.trigger.type
         : "manual",
       description: cut(plan.trigger?.description, 200),
+      schedule: plan.trigger?.type === "schedule" ? sanitizeSchedule(plan.trigger?.schedule) : null,
     },
     connections: (plan.connections ?? []).slice(0, 10).map((c) => ({
       kind: CONNECTION_KINDS.includes(c.kind) ? c.kind : "documents",

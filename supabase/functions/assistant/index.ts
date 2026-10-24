@@ -40,8 +40,9 @@ Reglas:
   remitente en el mismo hilo. El usuario elige después qué correos lo lanzan (remitentes, palabras del asunto o del
   texto); si el usuario los menciona, recógelos en la descripción del disparador.
 - Si debe ejecutarse sola a una hora fija (cada día, días laborables, un día de la semana o un día del mes), usa el
-  disparador "schedule" y pon en la descripción cuándo («Días laborables a las 8:00»). La frecuencia mínima es diaria:
-  si pide algo más frecuente, propón una vez al día y dilo en "reply". El usuario confirma la hora al activarla.
+  disparador "schedule", pon en la descripción cuándo («Días laborables a las 8:00») y rellena "schedule" con la
+  frecuencia y la hora (si no dice hora, propón una razonable: 8:00 para resúmenes de la mañana). La frecuencia mínima
+  es diaria: si pide algo más frecuente, propón una vez al día y dilo en "reply". El usuario confirma al activarla.
 - Para avisar al propio usuario (resúmenes, alertas, recordatorios) usa un paso "notify" con connection "none" y
   requires_approval false: esos avisos le llegan sin aprobación al móvil y a su correo. Escribir a otras personas
   sigue siendo "notify" con "email" o "telegram" y con aprobación.

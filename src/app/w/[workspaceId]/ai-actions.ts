@@ -3,7 +3,7 @@
 import { refresh } from "next/cache"
 import { redirect } from "next/navigation"
 import { callEdgeFunction } from "@/lib/edge-functions"
-import { AI_PROVIDERS, type AiProvider, asPlan, type FlowPlan } from "@/lib/plan"
+import { AI_PROVIDERS, type AiProvider, asPlan, type FlowPlan, scheduleOf } from "@/lib/plan"
 import type { Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
 import { findTemplate } from "@/lib/templates"
@@ -166,6 +166,8 @@ export async function saveFlowFromMessage(formData: FormData): Promise<void> {
       name: plan.name.slice(0, 120),
       summary: plan.summary.slice(0, 2000),
       definition: plan,
+      // La hora que propuso el asistente rellena la programación (se confirma al activar).
+      settings: scheduleOf(msg.plan) ? { schedule: scheduleOf(msg.plan) } : {},
       created_by: userId,
       source_message_id: msg.id,
     })
