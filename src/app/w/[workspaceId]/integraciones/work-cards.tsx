@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { connectGoogle } from "../run-actions"
-import { DisconnectInboxForm, HubSpotForm } from "./inbox-client"
+import { DisconnectInboxForm, HubSpotForm, TokkoForm, XubioForm } from "./inbox-client"
 
 function Badge({ status, invalidLabel }: { status: string | null | undefined; invalidLabel: string }) {
   if (status === "active") return <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">Conectado</span>
@@ -134,6 +134,103 @@ export async function HubSpotCard({ workspaceId, isAdmin }: { workspaceId: strin
           </>
         ) : (
           <p className="text-sm text-graphite">Solo un administrador puede conectar HubSpot.</p>
+        )}
+      </div>
+    </section>
+  )
+}
+
+export async function TokkoCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
+  const supabase = await createClient()
+  const { data: integration } = await supabase
+    .from("integrations")
+    .select("account_email, status")
+    .eq("workspace_id", workspaceId)
+    .eq("provider", "tokko")
+    .maybeSingle()
+
+  return (
+    <section className="border border-ink bg-sheet">
+      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
+        <div>
+          <h3 className="rotulo text-lg">Tokko Broker</h3>
+          <p className="text-sm text-graphite">
+            Tu cartera de propiedades y emprendimientos. Las automatizaciones buscan y leen fichas; registrar una consulta en el CRM de
+            Tokko espera tu aprobación.
+          </p>
+        </div>
+        <Badge status={integration?.status} invalidLabel="Clave rechazada" />
+      </div>
+      <div className="flex flex-col gap-5 px-5 py-5">
+        {integration ? (
+          <p className="text-sm text-graphite">
+            <span className="font-medium text-ink">{integration.account_email}</span> conectado.
+          </p>
+        ) : null}
+        {isAdmin ? (
+          <>
+            <TokkoForm workspaceId={workspaceId} replacing={Boolean(integration)} />
+            <details className="text-sm text-graphite" open={!integration}>
+              <summary className="cursor-pointer text-ink">Cómo consigo la clave</summary>
+              <ol className="mt-2 list-decimal pl-5">
+                <li>Entra en Tokko Broker con un usuario administrador.</li>
+                <li>Abre «Mi empresa» → «Permisos» y copia la clave de API («API Key»).</li>
+                <li>Pégala aquí. Da acceso a tus propiedades, emprendimientos y al registro de consultas.</li>
+              </ol>
+            </details>
+            {integration ? <DisconnectInboxForm workspaceId={workspaceId} kind="tokko" /> : null}
+          </>
+        ) : (
+          <p className="text-sm text-graphite">Solo un administrador puede conectar Tokko.</p>
+        )}
+      </div>
+    </section>
+  )
+}
+
+export async function XubioCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
+  const supabase = await createClient()
+  const { data: integration } = await supabase
+    .from("integrations")
+    .select("account_email, status")
+    .eq("workspace_id", workspaceId)
+    .eq("provider", "xubio")
+    .maybeSingle()
+
+  return (
+    <section className="border border-ink bg-sheet">
+      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
+        <div>
+          <h3 className="rotulo text-lg">Xubio</h3>
+          <p className="text-sm text-graphite">
+            Tu contabilidad: clientes, proveedores, productos y facturas de venta y de compra. Por ahora solo lectura: Orkesta no crea
+            facturas ni cobros.
+          </p>
+        </div>
+        <Badge status={integration?.status} invalidLabel="Credenciales rechazadas" />
+      </div>
+      <div className="flex flex-col gap-5 px-5 py-5">
+        {integration ? (
+          <p className="text-sm text-graphite">
+            <span className="font-medium text-ink">{integration.account_email}</span> conectado.
+          </p>
+        ) : null}
+        {isAdmin ? (
+          <>
+            <XubioForm workspaceId={workspaceId} replacing={Boolean(integration)} />
+            <details className="text-sm text-graphite" open={!integration}>
+              <summary className="cursor-pointer text-ink">Cómo consigo las credenciales</summary>
+              <ol className="mt-2 list-decimal pl-5">
+                <li>En Xubio, abre «Configuración» → «Integraciones» → «API de Xubio».</li>
+                <li>Pulsa «Nueva App Cliente», ponle de nombre «Orkesta» y guarda.</li>
+                <li>Copia el Client ID y el Secret ID y pégalos aquí.</li>
+              </ol>
+              <p className="mt-2">La API solo está en los planes de Xubio que la incluyen (emprendedores y empresas).</p>
+            </details>
+            {integration ? <DisconnectInboxForm workspaceId={workspaceId} kind="xubio" /> : null}
+          </>
+        ) : (
+          <p className="text-sm text-graphite">Solo un administrador puede conectar Xubio.</p>
         )}
       </div>
     </section>

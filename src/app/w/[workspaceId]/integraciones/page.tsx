@@ -7,7 +7,7 @@ import { formatDateTime } from "../format"
 import { DOC_MIMES, DriveCard, EXCEL_MIMES, FilesCard, SHEET_MIMES } from "./google-card"
 import { ImapCard, TelegramCard } from "./inbox-cards"
 import { ConnectKeyForm, DefaultForm, DisconnectForm, ModelForm } from "./openai-forms"
-import { CalendarCard, HubSpotCard } from "./work-cards"
+import { CalendarCard, HubSpotCard, TokkoCard, XubioCard } from "./work-cards"
 
 export const metadata = { title: "Integraciones" }
 
@@ -20,6 +20,8 @@ const CATEGORIES = [
   { id: "bases-de-datos", label: "Bases de datos" },
   { id: "calendar", label: "Calendar" },
   { id: "crm", label: "CRM" },
+  { id: "inmobiliaria", label: "Inmobiliaria" },
+  { id: "contabilidad", label: "Contabilidad" },
 ]
 
 export default function IntegrationsPage({ params, searchParams }: PageProps<"/w/[workspaceId]/integraciones">) {
@@ -146,6 +148,14 @@ async function Integrations({
 
       <Category id="crm" title="CRM" description="Contactos, empresas y negocios de tu CRM.">
         <HubSpotCard workspaceId={workspaceId} isAdmin={isAdmin} />
+      </Category>
+
+      <Category id="inmobiliaria" title="Inmobiliaria" description="Tu cartera de propiedades: buscar fichas y registrar consultas.">
+        <TokkoCard workspaceId={workspaceId} isAdmin={isAdmin} />
+      </Category>
+
+      <Category id="contabilidad" title="Contabilidad" description="Tus datos contables, para consultas, resúmenes y avisos.">
+        <XubioCard workspaceId={workspaceId} isAdmin={isAdmin} />
       </Category>
     </div>
   )

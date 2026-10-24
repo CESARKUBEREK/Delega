@@ -42,6 +42,8 @@ async function TemplateList({ params }: { params: PageProps<"/w/[workspaceId]/au
     if (i.provider === "google") ready.add("google")
     if (i.provider === "calendar") ready.add("calendar")
     if (i.provider === "hubspot") ready.add("hubspot")
+    if (i.provider === "tokko") ready.add("tokko")
+    if (i.provider === "xubio") ready.add("xubio")
   }
 
   return (

@@ -5,11 +5,11 @@ import type { FlowPlan, PlanStep } from "@/lib/plan"
 // elige después los archivos, los filtros y la activa. Todo lo que escribe o
 // envía espera aprobación, como cualquier otro flujo.
 
-export type TemplateNeed = "ai" | "imap" | "telegram" | "google" | "calendar" | "hubspot"
+export type TemplateNeed = "ai" | "imap" | "telegram" | "google" | "calendar" | "hubspot" | "tokko" | "xubio"
 
 export type FlowTemplate = {
   id: string
-  category: "Correo" | "Telegram" | "CRM" | "Agenda" | "Informes" | "Avisos"
+  category: "Correo" | "Telegram" | "CRM" | "Agenda" | "Informes" | "Avisos" | "Inmobiliaria" | "Contabilidad"
   plan: FlowPlan
   needs: TemplateNeed[]
   // Ajustes iniciales (filtros del correo).
@@ -28,6 +28,8 @@ export const NEED_LABEL: Record<TemplateNeed, string> = {
   google: "Google Drive",
   calendar: "Google Calendar",
   hubspot: "HubSpot",
+  tokko: "Tokko Broker",
+  xubio: "Xubio",
 }
 
 function steps(list: Omit<PlanStep, "id">[]): PlanStep[] {
@@ -35,6 +37,58 @@ function steps(list: Omit<PlanStep, "id">[]): PlanStep[] {
 }
 
 export const TEMPLATES: FlowTemplate[] = [
+  {
+    id: "consultas-propiedades",
+    category: "Inmobiliaria",
+    needs: ["ai", "imap", "tokko"],
+    settings: {
+      email_filter: {
+        from: [],
+        subject: [],
+        words: ["propiedad", "departamento", "casa", "ph", "alquiler", "alquilar", "venta", "comprar", "visita", "tasación", "ambientes"],
+        skip_automatic: true,
+      },
+    },
+    setup: "Revisa las palabras que la lanzan y actívala. Cada respuesta y cada registro en Tokko esperan tu aprobación.",
+    plan: {
+      version: 1,
+      name: "Responder consultas de propiedades",
+      summary: "Cuando alguien pregunta por una propiedad por correo, la busca en Tokko, prepara la respuesta con las fichas que encajan y registra la consulta en Tokko.",
+      trigger: { type: "email_message", description: "Al llegar un correo que pregunta por propiedades" },
+      connections: [
+        { kind: "email", purpose: "Leer la consulta y contestar en el mismo hilo" },
+        { kind: "properties", purpose: "Buscar propiedades y registrar al interesado" },
+      ],
+      steps: steps([
+        { kind: "read", title: "Entender qué busca", description: "Operación, tipo, zona, presupuesto y ambientes; si nombra una propiedad o un código, esa.", connection: "email", requires_approval: false },
+        { kind: "read", title: "Buscar en Tokko", description: "Las propiedades disponibles que encajan (como mucho 5) y su ficha.", connection: "properties", requires_approval: false },
+        { kind: "notify", title: "Responder", description: "Respuesta cordial con las propiedades que encajan (precio, ambientes, zona y enlace) y ofrecer una visita. Sin inventar datos. Si no hay ninguna, decirlo y pedir más detalles.", connection: "email", requires_approval: true },
+        { kind: "write", title: "Registrar la consulta", description: "Registrar al interesado en Tokko con su correo, lo que busca y las propiedades enviadas.", connection: "properties", requires_approval: true },
+      ]),
+      open_questions: [],
+    },
+  },
+  {
+    id: "resumen-xubio",
+    category: "Contabilidad",
+    needs: ["ai", "xubio"],
+    settings: { schedule: { frequency: "weekly", time: "09:00", weekday: 1, day_of_month: 1 } },
+    setup: "Cada lunes a las 9:00 te avisa con el resumen de la semana anterior. Solo lee Xubio: no crea ni modifica nada.",
+    plan: {
+      version: 1,
+      name: "Resumen semanal de facturación",
+      summary: "Cada lunes te resume las facturas de venta y de compra de la semana anterior en Xubio: totales, principales clientes y proveedores.",
+      trigger: { type: "schedule", description: "Cada lunes a las 9:00" },
+      connections: [{ kind: "accounting", purpose: "Leer facturas de venta y de compra" }],
+      steps: steps([
+        { kind: "read", title: "Facturas de venta", description: "Las de lunes a domingo de la semana anterior.", connection: "accounting", requires_approval: false },
+        { kind: "read", title: "Facturas de compra", description: "Las de la misma semana.", connection: "accounting", requires_approval: false },
+        { kind: "generate", title: "Resumir", description: "Total facturado y comprado por moneda, número de comprobantes, principales clientes y proveedores, y lo que llame la atención.", connection: "none", requires_approval: false },
+        { kind: "notify", title: "Avisarte", description: "Enviarte el resumen.", connection: "none", requires_approval: false },
+      ]),
+      open_questions: [],
+    },
+  },
   {
     id: "resumen-manana",
     category: "Avisos",
