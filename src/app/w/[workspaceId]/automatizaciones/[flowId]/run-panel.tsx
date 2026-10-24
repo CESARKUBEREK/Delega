@@ -121,44 +121,74 @@ export function RunPanel({
   )
 }
 
-// Flujos con disparador automático (un mensaje al bot de Telegram): se activan o pausan
-// y se eligen los archivos que usará cada ejecución automática.
+// Flujos con disparador automático (un mensaje al bot de Telegram o un correo
+// recibido): se activan o pausan, se eligen los archivos que usará cada
+// ejecución y, para el correo, qué correos la lanzan.
+export type EmailFilterInput = { from: string[]; subject: string[]; words: string[]; skip_automatic: boolean }
+
+const joinList = (l: string[]) => l.join(", ")
+const splitList = (v: string) =>
+  v
+    .split(/[,\n]/)
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .slice(0, 20)
+
 export function ActivationPanel({
   workspaceId,
   flowId,
   status,
+  trigger,
   files,
   savedFileIds,
-  telegramReady,
+  channelReady,
+  emailFilter,
   canEdit,
 }: {
   workspaceId: string
   flowId: string
   status: string
+  trigger: "telegram_message" | "email_message"
   files: { id: string; name: string; kind: string }[]
   savedFileIds: string[]
-  telegramReady: boolean
+  channelReady: boolean
+  emailFilter: EmailFilterInput
   canEdit: boolean
 }) {
   const router = useRouter()
   const [selected, setSelected] = useState<string[]>(savedFileIds.filter((id) => files.some((f) => f.id === id)))
+  const [from, setFrom] = useState(joinList(emailFilter.from))
+  const [subject, setSubject] = useState(joinList(emailFilter.subject))
+  const [words, setWords] = useState(joinList(emailFilter.words))
+  const [skipAutomatic, setSkipAutomatic] = useState(emailFilter.skip_automatic)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
   const active = status === "active"
+  const email = trigger === "email_message"
 
   function save(nextActive: boolean) {
     setError(null)
     startTransition(async () => {
-      const result = await setFlowActive({ workspaceId, flowId, active: nextActive, fileIds: selected })
+      const result = await setFlowActive({
+        workspaceId,
+        flowId,
+        active: nextActive,
+        fileIds: selected,
+        emailFilter: email
+          ? { from: splitList(from), subject: splitList(subject), words: splitList(words), skip_automatic: skipAutomatic }
+          : undefined,
+      })
       if (!result.ok) setError(result.error)
       router.refresh()
     })
   }
 
-  if (!telegramReady) {
+  if (!channelReady) {
     return (
       <p className="text-sm text-graphite">
-        Este flujo arranca al recibir un mensaje en Telegram. Primero conecta tu bot en{" "}
+        {email
+          ? "Este flujo arranca al llegar un correo. Primero conecta tu correo (IMAP) en "
+          : "Este flujo arranca al recibir un mensaje en Telegram. Primero conecta tu bot en "}
         <Link href={`/w/${workspaceId}/integraciones`} className="text-link underline underline-offset-4">
           Integraciones
         </Link>
@@ -167,13 +197,46 @@ export function ActivationPanel({
     )
   }
 
+  const field = "border border-rule bg-sheet px-3 py-2 text-sm text-ink placeholder:text-graphite/70 focus:border-link focus:outline-none"
+
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-graphite">
         {active
-          ? "Activo: cada mensaje que reciba el bot del espacio lanzará una ejecución (máximo 30 por hora). Lo que quiera escribir o enviar esperará tu aprobación en Historial."
-          : "Pausado: los mensajes que lleguen se registran, pero no lanzan este flujo."}
+          ? email
+            ? "Activo: cada correo nuevo que cumpla los filtros lanzará una ejecución (máximo 30 por hora). El correo se lee cada 5 minutos. Lo que quiera escribir o enviar esperará tu aprobación."
+            : "Activo: cada mensaje que reciba el bot del espacio lanzará una ejecución (máximo 30 por hora). Lo que quiera escribir o enviar esperará tu aprobación."
+          : email
+            ? "Pausado: los correos que lleguen se guardan en la bandeja, pero no lanzan este flujo."
+            : "Pausado: los mensajes que lleguen se registran, pero no lanzan este flujo."}
       </p>
+
+      {email ? (
+        <fieldset className="flex flex-col gap-3" disabled={!canEdit}>
+          <legend className="mb-1 text-sm font-medium text-ink">Qué correos lo lanzan</legend>
+          <p className="text-xs text-graphite">
+            Separa las opciones con comas. Basta con que se cumpla una de cada casilla; las casillas vacías no filtran. Así no se
+            gasta IA en correos que no interesan.
+          </p>
+          <label className="flex flex-col gap-1 text-sm text-ink">
+            Remitente contiene
+            <input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="@cliente.com, juan@" className={field} />
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-ink">
+            Asunto contiene
+            <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="presupuesto, pedido" className={field} />
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-ink">
+            Asunto o texto contiene
+            <input value={words} onChange={(e) => setWords(e.target.value)} placeholder="visita, reunión, cita" className={field} />
+          </label>
+          <label className="flex items-center gap-2 text-sm text-ink">
+            <input type="checkbox" checked={skipAutomatic} onChange={(e) => setSkipAutomatic(e.target.checked)} />
+            Ignorar remitentes automáticos (no-reply, boletines, avisos)
+          </label>
+        </fieldset>
+      ) : null}
+
       {files.length > 0 ? (
         <fieldset className="flex flex-col gap-2" disabled={!canEdit}>
           <legend className="mb-1 text-sm font-medium text-ink">Archivos que usará (máximo 5)</legend>
@@ -204,7 +267,7 @@ export function ActivationPanel({
             onClick={() => save(true)}
             className="h-11 bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90 disabled:opacity-60"
           >
-            {pending ? "Guardando…" : active ? "Guardar archivos" : "Activar"}
+            {pending ? "Guardando…" : active ? "Guardar cambios" : "Activar"}
           </button>
           {active ? (
             <button

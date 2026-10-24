@@ -2,12 +2,12 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { PlanView } from "@/components/plan-view"
-import { asPlan, fileKindLabel, FLOW_STATUS_LABEL, modelLabel, RUN_STATUS_LABEL } from "@/lib/plan"
+import { asPlan, AUTO_TRIGGERS, fileKindLabel, FLOW_STATUS_LABEL, modelLabel, RUN_STATUS_LABEL } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { deleteFlow } from "../../ai-actions"
 import { formatDateTime } from "../../format"
-import { ActivationPanel, FlowModelForm, RunPanel } from "./run-panel"
+import { ActivationPanel, type EmailFilterInput, FlowModelForm, RunPanel } from "./run-panel"
 
 export const metadata = { title: "Automatización" }
 
@@ -33,7 +33,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
     .maybeSingle()
   if (!flow) notFound()
 
-  const [{ data: rawFiles }, { data: ai }, { data: runs }, { data: tg }] = await Promise.all([
+  const [{ data: rawFiles }, { data: ai }, { data: runs }, { data: channels }] = await Promise.all([
     supabase.from("integration_files").select("id, name, mime_type").eq("workspace_id", workspaceId).order("name"),
     supabase.from("ai_connections").select("provider, model, status, is_default").eq("workspace_id", workspaceId),
     supabase
@@ -43,7 +43,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
       .eq("flow_id", flow.id)
       .order("started_at", { ascending: false })
       .limit(10),
-    supabase.from("integrations").select("status").eq("workspace_id", workspaceId).eq("provider", "telegram").maybeSingle(),
+    supabase.from("integrations").select("provider, status").eq("workspace_id", workspaceId).in("provider", ["telegram", "imap"]),
   ])
   const files = (rawFiles ?? []).map((f) => ({
     id: f.id,
@@ -53,7 +53,12 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
 
   const plan = asPlan(flow.definition)
   const canDelete = isAdmin || flow.created_by === user.id
-  const autoTrigger = plan?.trigger.type === "telegram_message"
+  const trigger = plan && AUTO_TRIGGERS.has(plan.trigger.type) ? (plan.trigger.type as "telegram_message" | "email_message") : null
+  const autoTrigger = trigger !== null
+  const channelReady = (channels ?? []).some(
+    (c) => c.status === "active" && c.provider === (trigger === "email_message" ? "imap" : "telegram"),
+  )
+  const emailFilter = readEmailFilter((flow.settings as { email_filter?: unknown } | null)?.email_filter)
   const savedFileIds = Array.isArray((flow.settings as { file_ids?: unknown } | null)?.file_ids)
     ? ((flow.settings as { file_ids: unknown[] }).file_ids.filter((x) => typeof x === "string") as string[])
     : []
@@ -83,9 +88,11 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
               workspaceId={workspaceId}
               flowId={flow.id}
               status={flow.status}
+              trigger={trigger!}
               files={files}
               savedFileIds={savedFileIds}
-              telegramReady={tg?.status === "active"}
+              channelReady={channelReady}
+              emailFilter={emailFilter}
               canEdit={canDelete}
             />
           </div>
@@ -157,4 +164,10 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
       ) : null}
     </div>
   )
+}
+
+function readEmailFilter(v: unknown): EmailFilterInput {
+  const o = v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {}
+  const list = (x: unknown) => (Array.isArray(x) ? x.filter((y): y is string => typeof y === "string") : [])
+  return { from: list(o.from), subject: list(o.subject), words: list(o.words), skip_automatic: o.skip_automatic !== false }
 }

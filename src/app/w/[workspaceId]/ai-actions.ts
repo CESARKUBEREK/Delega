@@ -6,6 +6,7 @@ import { callEdgeFunction } from "@/lib/edge-functions"
 import { AI_PROVIDERS, type AiProvider, asPlan, type FlowPlan } from "@/lib/plan"
 import type { Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
+import { findTemplate } from "@/lib/templates"
 import { UUID_RE } from "@/lib/workspace"
 
 // La clave de la IA nunca se guarda ni se registra en Next.js: se reenvía
@@ -167,6 +168,34 @@ export async function saveFlowFromMessage(formData: FormData): Promise<void> {
       definition: plan,
       created_by: userId,
       source_message_id: msg.id,
+    })
+    .select("id")
+    .single()
+  if (!flow) return
+  redirect(`/w/${workspaceId}/automatizaciones/${flow.id}`)
+}
+
+// Crea un borrador a partir de una plantilla (src/lib/templates.ts). El plan se
+// toma del servidor, nunca del navegador.
+export async function createFlowFromTemplate(formData: FormData): Promise<void> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const template = findTemplate(String(formData.get("templateId") ?? ""))
+  if (!UUID_RE.test(workspaceId) || !template) return
+
+  const supabase = await createClient()
+  const { data: claims } = await supabase.auth.getClaims()
+  const userId = claims?.claims?.sub
+  if (!userId) redirect("/login")
+
+  const { data: flow } = await supabase
+    .from("flows")
+    .insert({
+      workspace_id: workspaceId,
+      name: template.plan.name,
+      summary: template.plan.summary,
+      definition: template.plan,
+      settings: (template.settings ?? {}) as Json,
+      created_by: userId,
     })
     .select("id")
     .single()

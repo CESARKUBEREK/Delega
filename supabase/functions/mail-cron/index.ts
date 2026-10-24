@@ -1,9 +1,11 @@
 // mail-cron: lectura automática del correo IMAP de todos los espacios.
 // La llama pg_cron cada 5 minutos (ver README). Se despliega SIN verify_jwt y
 // exige la cabecera x-orkesta-cron con el secreto MAIL_CRON_SECRET.
-// Recorre primero las cuentas que llevan más tiempo sin leerse.
+// Recorre primero las cuentas que llevan más tiempo sin leerse. Los correos
+// nuevos lanzan las automatizaciones «al llegar un correo» (las avanza runs-cron).
 import { createClient } from "npm:@supabase/supabase-js@2.118.0"
 import { syncImap } from "../_shared/imap.ts"
+import { launchEmailFlows } from "../_shared/triggers.ts"
 
 const BUDGET_MS = 110_000
 
@@ -39,12 +41,17 @@ Deno.serve(async (req) => {
   const deadline = Date.now() + BUDGET_MS
   let done = 0
   let failed = 0
+  let launched = 0
   for (const item of (due ?? []) as { workspace_id: string; provider: string }[]) {
     // Cada cuenta, como mucho 30 s; lo que falte se lee en la siguiente vuelta.
     const slice = Math.min(deadline, Date.now() + 30_000)
     if (Date.now() > deadline - 5_000) break
     try {
-      await syncImap(admin, item.workspace_id, slice)
+      const r = await syncImap(admin, item.workspace_id, slice)
+      launched += await launchEmailFlows(admin, item.workspace_id, r.fresh).catch((e) => {
+        console.error("mail-cron launch", e instanceof Error ? e.name : "error")
+        return 0
+      })
       done++
     } catch (e) {
       failed++
@@ -63,5 +70,5 @@ Deno.serve(async (req) => {
       })
     }
   }
-  return new Response(JSON.stringify({ ok: true, done, failed }), { headers: { "Content-Type": "application/json" } })
+  return new Response(JSON.stringify({ ok: true, done, failed, launched }), { headers: { "Content-Type": "application/json" } })
 })
