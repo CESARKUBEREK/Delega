@@ -1,12 +1,14 @@
 // inbox-reply: responde a una conversación de la bandeja. Solo owners y admins.
 //   draft  la IA redacta una respuesta (no envía nada).
-//   send   envía el texto que la persona ha revisado: por Gmail (en el mismo
-//          hilo) o por el bot de Telegram (al mismo chat).
+//   send   envía el texto que la persona ha revisado: por Gmail o por SMTP
+//          (en el mismo hilo, según la cuenta por la que llegó) o por el bot
+//          de Telegram (al mismo chat).
 import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
 import { getMessage, sendMail } from "../_shared/gmail.ts"
 import { GoogleError } from "../_shared/google.ts"
 import { gmailToken, recordMessage } from "../_shared/inbox.ts"
 import { parseTelegramSecret, sendTelegram, TelegramError } from "../_shared/telegram.ts"
+import { MailError, replyHeaders, sendAndRecord } from "../_shared/imap.ts"
 
 const DRAFT_INSTRUCTIONS = `Redactas respuestas para un profesional (ingeniero, arquitecto) a partir de una conversación.
 Escribe en el idioma de la conversación, en su tono (cordial y concreto), sin inventar datos, fechas ni compromisos que
@@ -101,7 +103,23 @@ Deno.serve(async (req) => {
     if (text.length > 8000) return fail(400, "too_long", "La respuesta es demasiado larga.")
     const now = new Date().toISOString()
 
-    if (thread.channel === "email") {
+    if (thread.channel === "email" && thread.external_id.startsWith("imap:")) {
+      if (!thread.contact_address) return fail(400, "no_address", "Esta conversación no tiene un destinatario claro.")
+      try {
+        const headers = await replyHeaders(admin, workspaceId, thread.id)
+        const subject = thread.subject ? (/^re:/i.test(thread.subject) ? thread.subject : `Re: ${thread.subject}`) : "Re:"
+        await sendAndRecord(admin, workspaceId, {
+          to: thread.contact_address,
+          subject,
+          text,
+          threadExternalId: thread.external_id,
+          inReplyTo: headers.inReplyTo,
+          references: headers.references,
+        })
+      } catch (e) {
+        return fail(502, "send_failed", e instanceof MailError ? e.message : "No se pudo enviar el correo.")
+      }
+    } else if (thread.channel === "email") {
       if (!thread.contact_address) return fail(400, "no_address", "Esta conversación no tiene un destinatario claro.")
       try {
         const { token, config, integrationId } = await gmailToken(admin, workspaceId)

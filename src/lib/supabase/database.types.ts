@@ -1010,6 +1010,10 @@ export type Database = {
           status: string
         }[]
       }
+      mail_integrations_due: {
+        Args: { p_limit?: number }
+        Returns: { provider: string; workspace_id: string }[]
+      }
       push_subscribe: {
         Args: { p_auth: string; p_endpoint: string; p_p256dh: string; p_user_agent: string }
         Returns: string

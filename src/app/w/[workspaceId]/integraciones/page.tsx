@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime } from "../format"
 import { DOC_MIMES, DriveCard, EXCEL_MIMES, FilesCard, SHEET_MIMES } from "./google-card"
-import { GmailCard, TelegramCard } from "./inbox-cards"
+import { GmailCard, ImapCard, TelegramCard } from "./inbox-cards"
 import { ConnectKeyForm, DisconnectForm, ModelForm } from "./openai-forms"
 import { CalendarCard, HubSpotCard } from "./work-cards"
 
@@ -100,8 +100,9 @@ async function Integrations({
 
       <Category id="comunicaciones" title="Comunicaciones" description="Correo y mensajería: bandeja clasificada y envíos con tu aprobación.">
         <GmailCard workspaceId={workspaceId} isAdmin={isAdmin} notice={gmailNotice} />
+        <ImapCard workspaceId={workspaceId} isAdmin={isAdmin} />
         <TelegramCard workspaceId={workspaceId} isAdmin={isAdmin} />
-        <ComingSoon title="SMTP" description="Envía correo desde tu propio servidor o dominio (Outlook, IONOS, tu hosting…)." />
+        <ComingSoon title="Outlook y Microsoft 365" description="Tu correo de Outlook o de Microsoft 365, con tu cuenta de Microsoft." />
       </Category>
 
       <Category id="calculos" title="Cálculos" description="Planillas que las automatizaciones leen y actualizan.">
