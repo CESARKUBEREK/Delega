@@ -6,8 +6,8 @@ import { asPlan, AUTO_TRIGGERS, fileKindLabel, FLOW_STATUS_LABEL, modelLabel, RU
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { deleteFlow } from "../../ai-actions"
-import { formatDateTime } from "../../format"
-import { ActivationPanel, type EmailFilterInput, FlowModelForm, RunPanel } from "./run-panel"
+import { formatDateTime, formatLong } from "../../format"
+import { ActivationPanel, type EmailFilterInput, FlowModelForm, RunPanel, type ScheduleInput } from "./run-panel"
 
 export const metadata = { title: "Automatización" }
 
@@ -27,7 +27,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
 
   const { data: flow } = await supabase
     .from("flows")
-    .select("id, name, status, definition, settings, created_by, created_at, updated_at, source_message_id")
+    .select("id, name, status, definition, settings, created_by, created_at, updated_at, source_message_id, next_run_at")
     .eq("id", flowId)
     .eq("workspace_id", workspaceId)
     .maybeSingle()
@@ -43,7 +43,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
       .eq("flow_id", flow.id)
       .order("started_at", { ascending: false })
       .limit(10),
-    supabase.from("integrations").select("provider, status").eq("workspace_id", workspaceId).in("provider", ["telegram", "imap"]),
+    supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["telegram", "imap", "calendar"]),
   ])
   const files = (rawFiles ?? []).map((f) => ({
     id: f.id,
@@ -53,12 +53,14 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
 
   const plan = asPlan(flow.definition)
   const canDelete = isAdmin || flow.created_by === user.id
-  const trigger = plan && AUTO_TRIGGERS.has(plan.trigger.type) ? (plan.trigger.type as "telegram_message" | "email_message") : null
+  const trigger = plan && AUTO_TRIGGERS.has(plan.trigger.type) ? (plan.trigger.type as "telegram_message" | "email_message" | "schedule") : null
   const autoTrigger = trigger !== null
   const channelReady = (channels ?? []).some(
     (c) => c.status === "active" && c.provider === (trigger === "email_message" ? "imap" : "telegram"),
   )
   const emailFilter = readEmailFilter((flow.settings as { email_filter?: unknown } | null)?.email_filter)
+  const timezone = String(((channels ?? []).find((c) => c.provider === "calendar")?.config as { timezone?: string } | null)?.timezone || "Europe/Madrid")
+  const schedule = readSchedule((flow.settings as { schedule?: unknown } | null)?.schedule)
   const savedFileIds = Array.isArray((flow.settings as { file_ids?: unknown } | null)?.file_ids)
     ? ((flow.settings as { file_ids: unknown[] }).file_ids.filter((x) => typeof x === "string") as string[])
     : []
@@ -82,7 +84,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
 
       {autoTrigger ? (
         <section className="border border-ink bg-sheet">
-          <h2 className="border-b border-ink px-5 py-3 font-semibold">Ejecución automática</h2>
+          <h2 className="border-b border-ink px-5 py-3 font-semibold">{trigger === "schedule" ? "Programación" : "Ejecución automática"}</h2>
           <div className="px-5 py-4">
             <ActivationPanel
               workspaceId={workspaceId}
@@ -93,6 +95,8 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
               savedFileIds={savedFileIds}
               channelReady={channelReady}
               emailFilter={emailFilter}
+              schedule={schedule}
+              nextRun={flow.next_run_at ? formatLong(flow.next_run_at, timezone) : null}
               canEdit={canDelete}
             />
           </div>
@@ -170,4 +174,13 @@ function readEmailFilter(v: unknown): EmailFilterInput {
   const o = v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {}
   const list = (x: unknown) => (Array.isArray(x) ? x.filter((y): y is string => typeof y === "string") : [])
   return { from: list(o.from), subject: list(o.subject), words: list(o.words), skip_automatic: o.skip_automatic !== false }
+}
+
+function readSchedule(v: unknown): ScheduleInput {
+  const o = v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {}
+  const frequency = ["daily", "weekdays", "weekly", "monthly"].includes(String(o.frequency)) ? (o.frequency as ScheduleInput["frequency"]) : "weekdays"
+  const time = typeof o.time === "string" && /^\d{2}:\d{2}$/.test(o.time) ? o.time : "08:00"
+  const weekday = typeof o.weekday === "number" ? o.weekday : 1
+  const day = typeof o.day_of_month === "number" ? o.day_of_month : 1
+  return { frequency, time, weekday, day_of_month: day }
 }

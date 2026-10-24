@@ -286,6 +286,7 @@ export type Database = {
           definition: Json
           id: string
           name: string
+          next_run_at: string | null
           source_message_id: number | null
           status: string
           summary: string
@@ -300,6 +301,7 @@ export type Database = {
           definition: Json
           id?: string
           name: string
+          next_run_at?: string | null
           source_message_id?: number | null
           status?: string
           summary?: string
@@ -314,6 +316,7 @@ export type Database = {
           definition?: Json
           id?: string
           name?: string
+          next_run_at?: string | null
           source_message_id?: number | null
           status?: string
           summary?: string
@@ -1016,6 +1019,19 @@ export type Database = {
       ai_connection_set_default: {
         Args: { p_provider: string; p_workspace_id: string }
         Returns: boolean
+      }
+      flows_due: {
+        Args: { p_limit?: number }
+        Returns: {
+          created_by: string | null
+          definition: Json
+          id: string
+          launch: boolean
+          name: string
+          scheduled_for: string
+          settings: Json
+          workspace_id: string
+        }[]
       }
       mail_integrations_due: {
         Args: { p_limit?: number }

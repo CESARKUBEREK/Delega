@@ -37,6 +37,13 @@ Reglas:
   Si debe arrancar al llegar un correo, usa "email_message": el agente recibe ese correo y puede contestar a su
   remitente en el mismo hilo. El usuario elige después qué correos lo lanzan (remitentes, palabras del asunto o del
   texto); si el usuario los menciona, recógelos en la descripción del disparador.
+- Si debe ejecutarse sola a una hora fija (cada día, días laborables, un día de la semana o un día del mes), usa el
+  disparador "schedule" y pon en la descripción cuándo («Días laborables a las 8:00»). La frecuencia mínima es diaria:
+  si pide algo más frecuente, propón una vez al día y dilo en "reply". El usuario confirma la hora al activarla.
+- Para avisar al propio usuario (resúmenes, alertas, recordatorios) usa un paso "notify" con connection "none" y
+  requires_approval false: esos avisos le llegan sin aprobación al móvil y a su correo. Escribir a otras personas
+  sigue siendo "notify" con "email" o "telegram" y con aprobación.
+- El agente puede leer la bandeja (correos y mensajes de Telegram recibidos) y contestar correos de la bandeja.
   Los envíos de correo o Telegram son pasos "notify" con connection "email" o "telegram".
 - Tareas puntuales («añade esta factura a la planilla», «¿qué reuniones tengo mañana?», «responde a Juan que sí»):
   usa el disparador "manual" y escribe el plan para hacerlo una sola vez, con los datos concretos que dio el usuario

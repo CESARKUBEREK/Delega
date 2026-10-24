@@ -63,7 +63,7 @@ async function TemplateList({ params }: { params: PageProps<"/w/[workspaceId]/au
               </div>
               <p className="text-sm text-ink">
                 <span className="text-graphite">Arranca: </span>
-                {TRIGGER_LABEL[t.plan.trigger.type] ?? t.plan.trigger.type}
+                {t.plan.trigger.type === "schedule" ? t.plan.trigger.description : (TRIGGER_LABEL[t.plan.trigger.type] ?? t.plan.trigger.type)}
               </p>
               <ul className="flex flex-wrap gap-2" aria-label="Necesita">
                 {t.needs.map((n) => (

@@ -125,6 +125,15 @@ export function RunPanel({
 // recibido): se activan o pausan, se eligen los archivos que usará cada
 // ejecución y, para el correo, qué correos la lanzan.
 export type EmailFilterInput = { from: string[]; subject: string[]; words: string[]; skip_automatic: boolean }
+export type ScheduleInput = { frequency: "daily" | "weekdays" | "weekly" | "monthly"; time: string; weekday: number; day_of_month: number }
+
+const FREQUENCIES: { id: ScheduleInput["frequency"]; label: string }[] = [
+  { id: "weekdays", label: "Días laborables (lunes a viernes)" },
+  { id: "daily", label: "Todos los días" },
+  { id: "weekly", label: "Una vez por semana" },
+  { id: "monthly", label: "Una vez al mes" },
+]
+const WEEKDAYS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
 
 const joinList = (l: string[]) => l.join(", ")
 const splitList = (v: string) =>
@@ -143,16 +152,20 @@ export function ActivationPanel({
   savedFileIds,
   channelReady,
   emailFilter,
+  schedule,
+  nextRun,
   canEdit,
 }: {
   workspaceId: string
   flowId: string
   status: string
-  trigger: "telegram_message" | "email_message"
+  trigger: "telegram_message" | "email_message" | "schedule"
   files: { id: string; name: string; kind: string }[]
   savedFileIds: string[]
   channelReady: boolean
   emailFilter: EmailFilterInput
+  schedule: ScheduleInput
+  nextRun: string | null
   canEdit: boolean
 }) {
   const router = useRouter()
@@ -165,6 +178,11 @@ export function ActivationPanel({
   const [pending, startTransition] = useTransition()
   const active = status === "active"
   const email = trigger === "email_message"
+  const scheduled = trigger === "schedule"
+  const [frequency, setFrequency] = useState(schedule.frequency)
+  const [time, setTime] = useState(schedule.time)
+  const [weekday, setWeekday] = useState(schedule.weekday)
+  const [dayOfMonth, setDayOfMonth] = useState(schedule.day_of_month)
 
   function save(nextActive: boolean) {
     setError(null)
@@ -177,13 +195,14 @@ export function ActivationPanel({
         emailFilter: email
           ? { from: splitList(from), subject: splitList(subject), words: splitList(words), skip_automatic: skipAutomatic }
           : undefined,
+        schedule: scheduled ? { frequency, time, weekday, day_of_month: dayOfMonth } : undefined,
       })
       if (!result.ok) setError(result.error)
       router.refresh()
     })
   }
 
-  if (!channelReady) {
+  if (!channelReady && !scheduled) {
     return (
       <p className="text-sm text-graphite">
         {email
@@ -202,7 +221,13 @@ export function ActivationPanel({
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-graphite">
-        {active
+        {scheduled
+          ? active
+            ? nextRun
+              ? `Activa. Próxima ejecución: ${nextRun}. Lo que quiera escribir o enviar a otros esperará tu aprobación; los avisos para ti te llegan directamente.`
+              : "Activa, pero la programación no es válida: revísala y guarda."
+            : "Pausada: no se ejecutará sola. Elige cuándo y actívala."
+          : active
           ? email
             ? "Activo: cada correo nuevo que cumpla los filtros lanzará una ejecución (máximo 30 por hora). El correo se lee cada 5 minutos. Lo que quiera escribir o enviar esperará tu aprobación."
             : "Activo: cada mensaje que reciba el bot del espacio lanzará una ejecución (máximo 30 por hora). Lo que quiera escribir o enviar esperará tu aprobación."
@@ -210,6 +235,52 @@ export function ActivationPanel({
             ? "Pausado: los correos que lleguen se guardan en la bandeja, pero no lanzan este flujo."
             : "Pausado: los mensajes que lleguen se registran, pero no lanzan este flujo."}
       </p>
+
+      {scheduled ? (
+        <fieldset className="flex flex-col gap-3" disabled={!canEdit}>
+          <legend className="mb-1 text-sm font-medium text-ink">Cuándo se ejecuta</legend>
+          <label className="flex flex-col gap-1 text-sm text-ink">
+            Frecuencia
+            <select value={frequency} onChange={(e) => setFrequency(e.target.value as ScheduleInput["frequency"])} className={field}>
+              {FREQUENCIES.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {frequency === "weekly" ? (
+            <label className="flex flex-col gap-1 text-sm text-ink">
+              Día
+              <select value={weekday} onChange={(e) => setWeekday(Number(e.target.value))} className={field}>
+                {WEEKDAYS.map((d, i) => (
+                  <option key={d} value={i + 1}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          {frequency === "monthly" ? (
+            <label className="flex flex-col gap-1 text-sm text-ink">
+              Día del mes
+              <select value={dayOfMonth} onChange={(e) => setDayOfMonth(Number(e.target.value))} className={field}>
+                {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+                <option value={0}>Último día del mes</option>
+              </select>
+            </label>
+          ) : null}
+          <label className="flex flex-col gap-1 text-sm text-ink">
+            Hora
+            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} required className={field} />
+          </label>
+          <p className="text-xs text-graphite">Hora del espacio (la de tu Google Calendar o, si no está conectado, la de Madrid).</p>
+        </fieldset>
+      ) : null}
 
       {email ? (
         <fieldset className="flex flex-col gap-3" disabled={!canEdit}>

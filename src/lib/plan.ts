@@ -14,7 +14,7 @@ export type PlanStep = {
 }
 
 export type TriggerType = "manual" | "schedule" | "telegram_message" | "email_message"
-export const AUTO_TRIGGERS = new Set<TriggerType>(["telegram_message", "email_message"])
+export const AUTO_TRIGGERS = new Set<TriggerType>(["telegram_message", "email_message", "schedule"])
 
 export type FlowPlan = {
   version: 1
@@ -110,7 +110,7 @@ export function fileKindLabel(mime: string | null): string {
 
 export const TRIGGER_LABEL: Record<string, string> = {
   manual: "Manual",
-  schedule: "Programado (aún no automático)",
+  schedule: "Programado",
   telegram_message: "Al recibir un mensaje en Telegram",
   email_message: "Al llegar un correo",
 }
