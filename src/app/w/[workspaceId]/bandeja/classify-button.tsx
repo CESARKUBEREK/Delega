@@ -44,7 +44,7 @@ export function ClassifyButton({ workspaceId, pending, threadId }: { workspaceId
   )
 }
 
-// Trae el correo nuevo de Gmail por tandas hasta terminar.
+// Trae el correo nuevo (Gmail e IMAP) por tandas hasta terminar.
 export function SyncButton({ workspaceId }: { workspaceId: string }) {
   const [busy, start] = useTransition()
   const [status, setStatus] = useState<string | null>(null)
@@ -59,7 +59,8 @@ export function SyncButton({ workspaceId }: { workspaceId: string }) {
           return
         }
         total += result.added
-        setStatus(`${total} correos nuevos${result.more ? ", sigue leyendo…" : "."}`)
+        const warn = result.warnings.length ? ` ${result.warnings.join(" ")}` : ""
+        setStatus(`${total} correos nuevos${result.more ? ", sigue leyendo…" : "."}${warn}`)
         if (!result.more) return
       }
     })
@@ -73,7 +74,7 @@ export function SyncButton({ workspaceId }: { workspaceId: string }) {
       title={status ?? undefined}
       className="h-10 border border-ink px-4 text-sm text-ink hover:bg-paper disabled:opacity-60"
     >
-      {busy ? (status ?? "Leyendo Gmail…") : status ? `Traer correo · ${status}` : "Traer correo"}
+      {busy ? (status ?? "Leyendo el correo…") : status ? `Traer correo · ${status}` : "Traer correo"}
     </button>
   )
 }
@@ -117,7 +118,7 @@ export function InboxSettingsForm({
           placeholder="Sin límite"
           className="h-11 w-40 border border-rule bg-sheet px-3 text-sm text-ink focus:border-link focus:outline-none"
         />
-        <p className="text-xs text-graphite">Los mensajes más antiguos se borran de Orkesta, no de Gmail ni de Telegram.</p>
+        <p className="text-xs text-graphite">Los mensajes más antiguos se borran de Orkesta, no de tu buzón ni de Telegram.</p>
       </div>
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-48">

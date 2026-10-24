@@ -27,6 +27,7 @@ import {
 } from "./google.ts"
 import { sendMail } from "./gmail.ts"
 import { gmailToken, recordMessage } from "./inbox.ts"
+import { MailError, sendAndRecord } from "./imap.ts"
 import { parseTelegramSecret, sendTelegram, TelegramError } from "./telegram.ts"
 import { calendarToken, createEvent, DATE_RE, DEFAULT_TIMEZONE, type EventInput, getEvent, listEvents, updateEvent } from "./calendar.ts"
 import {
@@ -111,6 +112,8 @@ type Resources = {
   files: FileRef[]
   googleActive: boolean
   gmailActive: boolean
+  // Cuenta por la que salen los correos del agente: Gmail si está conectado; si no, IMAP/SMTP.
+  mailProvider: "gmail" | "imap" | null
   calendarActive: boolean
   timezone: string
   contacts: Contact[]
@@ -167,7 +170,9 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
     .filter((c) => c.email && EMAIL_RE.test(c.email))
   const recipients: Recipient[] = []
   const gmailActive = gmail?.status === "active"
-  if (gmailActive) {
+  const imapActive = find("imap")?.status === "active"
+  const mailProvider = gmailActive ? "gmail" : imapActive ? "imap" : null
+  if (mailProvider) {
     contactList.forEach((c) => recipients.push({ alias: c.alias, label: c.label, channel: "email", address: c.email }))
   }
   if (telegram && run.trigger.type === "telegram_message") {
@@ -186,6 +191,7 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
     files: refs,
     googleActive: google?.status === "active",
     gmailActive,
+    mailProvider,
     calendarActive: calendar?.status === "active",
     timezone: ((calendar?.config ?? {}) as { timezone?: string }).timezone || DEFAULT_TIMEZONE,
     contacts: contactList,
@@ -247,7 +253,7 @@ function toolDefs(r: Resources) {
   const emails = r.recipients.filter((x) => x.channel === "email").map((x) => x.alias)
   if (emails.length) {
     tools.push(
-      fn("send_email", "Envía un correo desde la cuenta de Gmail conectada a un contacto autorizado. Requiere aprobación.", {
+      fn("send_email", "Envía un correo desde la cuenta de correo conectada a un contacto autorizado. Requiere aprobación.", {
         to: { type: "string", enum: emails, description: "Alias del contacto." },
         subject: { type: "string" },
         body: { type: "string", description: "Cuerpo del correo en texto plano." },
@@ -833,7 +839,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       const to = typeof args.to === "string" ? recipients.get(args.to) : undefined
       const subject = str(args.subject, 300).replace(/[\r\n]+/g, " ").trim()
       const body = str(args.body, 20_000)
-      if (!res.gmailActive || to?.channel !== "email") invalid = "Ese contacto no está autorizado o Gmail no está conectado."
+      if (!res.mailProvider || to?.channel !== "email") invalid = "Ese contacto no está autorizado o no hay ninguna cuenta de correo conectada."
       else if (!subject || !body.trim()) invalid = "Faltan el asunto o el cuerpo del correo."
       else pending = { call_id: call.call_id!, tool: "send_email", to_label: to.label, address: to.address, subject, body }
     } else if (call.name === "send_telegram") {
@@ -955,6 +961,18 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
 export async function executePending(admin: Admin, run: RunRow, pending: PendingAction, decidedBy: string | null): Promise<string> {
   const res = await loadResources(admin, run)
   try {
+    if (pending.tool === "send_email" && res.mailProvider === "imap") {
+      await sendAndRecord(admin, run.workspace_id, {
+        to: pending.address,
+        subject: pending.subject,
+        text: pending.body,
+        runId: run.id,
+        contactName: pending.to_label.slice(0, 200),
+      })
+      await addEvent(admin, run, "approved", `Aprobado: correo enviado a ${pending.to_label}`, { tool: pending.tool, decided_by: decidedBy })
+      return JSON.stringify({ ok: true })
+    }
+
     if (pending.tool === "send_email") {
       const { token, config, integrationId } = await gmailToken(admin, run.workspace_id)
       const sent = await sendMail(token, { from: config.email ?? "me", to: pending.address, subject: pending.subject, body: pending.body })
@@ -1096,7 +1114,7 @@ export async function executePending(admin: Admin, run: RunRow, pending: Pending
     })
     return JSON.stringify({ ok: true, ...out })
   } catch (e) {
-    const msg = e instanceof RunError || e instanceof GoogleError || e instanceof TelegramError || e instanceof HubSpotError
+    const msg = e instanceof RunError || e instanceof GoogleError || e instanceof TelegramError || e instanceof HubSpotError || e instanceof MailError
       ? e.message
       : "No se pudo completar la acción."
     await addEvent(admin, run, "error", `Aprobado, pero falló: ${msg}`)

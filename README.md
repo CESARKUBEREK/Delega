@@ -198,3 +198,34 @@ supabase functions deploy run-flow assistant voice-transcribe push
 supabase functions deploy telegram-webhook --no-verify-jwt
 ```
 
+## Correo IMAP/SMTP
+
+- **Conexión** (`imap-connection`, tarjeta «Correo IMAP/SMTP» en Comunicaciones): dirección, contraseña (mejor una contraseña de aplicación) y servidores, con autocompletado para los proveedores habituales. Antes de guardar se comprueban IMAP (993, TLS) y SMTP (465, TLS directo). Supabase bloquea los puertos 25 y 587, así que los proveedores que solo admiten el 587 no sirven. Usuario y contraseña van en Vault como JSON; en `config` solo hay datos no secretos (servidores, carpeta de enviados, `uid_validity` y `last_uid`). Un buzón IMAP por espacio.
+- **Seguridad de red:** el servidor lo escribe el usuario, así que se resuelve su nombre y se rechazan direcciones internas (localhost, redes privadas, Supabase). La conexión va a la IP comprobada, con el nombre original para validar el certificado.
+- **Lectura** (`_shared/imap.ts`, librería `imapflow`): bandeja de entrada por UID. La primera vez, los últimos 30 días; después, solo lo nuevo. Si cambia `UIDVALIDITY`, vuelve a empezar. Solo se descarga la parte de texto (los adjuntos quedan como nombre) y como mucho 100 correos por llamada, para no pasar de los 2 s de CPU. No marca nada como leído ni mueve nada. El hilo se agrupa por el primer `Message-ID` de `References`/`In-Reply-To`, y los identificadores llevan el prefijo `imap:`.
+- **Envío** (`nodemailer`): las respuestas de la bandeja (`inbox-reply`) y el `send_email` del agente salen por SMTP con `In-Reply-To`/`References`, y se guarda una copia en la carpeta de enviados (`APPEND`). El agente usa Gmail si está conectado; si no, IMAP/SMTP. Siempre con aprobación.
+- **«Traer correo»** (`inbox-sync`) lee Gmail e IMAP; la lógica de Gmail vive ahora en `_shared/gmail-sync.ts`.
+- **Lectura automática** (`mail-cron`, sin `verify_jwt`, cabecera `x-orkesta-cron`): recorre las cuentas de correo activas (`mail_integrations_due`), empezando por las que llevan más tiempo sin leerse.
+
+```bash
+supabase functions deploy imap-connection inbox-sync inbox-reply inbox-classify run-flow assistant
+supabase functions deploy telegram-webhook mail-cron --no-verify-jwt
+supabase secrets set MAIL_CRON_SECRET=$(openssl rand -hex 32)
+```
+
+Programar la lectura cada 5 minutos (extensiones `pg_cron` y `pg_net`; el secreto, el mismo que `MAIL_CRON_SECRET`, guardado en Vault):
+
+```sql
+select vault.create_secret('<MAIL_CRON_SECRET>', 'orkesta_mail_cron_secret');
+select cron.schedule('orkesta-correo', '*/5 * * * *', $$
+  select net.http_post(
+    url := 'https://owefcumdoqvtmhaksxln.supabase.co/functions/v1/mail-cron',
+    headers := jsonb_build_object('Content-Type', 'application/json',
+      'x-orkesta-cron', (select decrypted_secret from vault.decrypted_secrets where name = 'orkesta_mail_cron_secret')),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 5000)
+$$);
+```
+
+Pruebas locales: `MAIL_TEST_INSECURE=1` (más `MAIL_TEST_IMAP_PORT` y `MAIL_TEST_SMTP_PORT`) admite `localhost` y certificados propios. Nunca se define en producción.
+

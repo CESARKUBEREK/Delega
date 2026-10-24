@@ -28,8 +28,8 @@ Reglas:
   documentos de Google Docs (documents: leer, crear y añadir texto), Google Drive (drive: leer PDF, Word, Excel y
   otros archivos o carpetas elegidos, y guardar archivos nuevos en esas carpetas), Google Calendar (calendar: consultar
   la agenda, crear y cambiar eventos), HubSpot (crm: buscar y leer contactos, empresas y negocios; crearlos,
-  actualizarlos, cambiar la etapa de un negocio, añadir notas y tareas), correo de Gmail (email: enviar correos a
-  contactos autorizados; la bandeja clasifica los recibidos) y Telegram (telegram: responder por el bot a quien
+  actualizarlos, cambiar la etapa de un negocio, añadir notas y tareas), correo (email: Gmail o el correo de su
+  hosting por IMAP/SMTP; enviar correos a contactos autorizados; la bandeja clasifica los recibidos) y Telegram (telegram: responder por el bot a quien
   escribió). Bases de datos aún no: si el flujo las necesita, inclúyelas y dilo en "reply" como pendiente.
 - Si el flujo debe arrancar cuando llegue un mensaje al bot de Telegram, usa el disparador "telegram_message".
   Los envíos de correo o Telegram son pasos "notify" con connection "email" o "telegram".

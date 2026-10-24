@@ -95,7 +95,7 @@ function decode(data: string | undefined): string {
   }
 }
 
-function htmlToText(html: string): string {
+export function htmlToText(html: string): string {
   return html
     .replace(/<(script|style)[\s\S]*?<\/\1>/gi, "")
     .replace(/<br\s*\/?>/gi, "\n")
@@ -126,7 +126,7 @@ function findBody(part: Part | undefined): { text: string; attachments: string[]
 }
 
 // Quita las citas del mensaje anterior para no repetir el hilo entero.
-function stripQuoted(text: string): string {
+export function stripQuoted(text: string): string {
   const lines = text.split("\n")
   const cut = lines.findIndex((l) => /^(El .+ escribió:|On .+ wrote:|-----Original Message-----|De: .+)$/.test(l.trim()))
   const kept = (cut > 0 ? lines.slice(0, cut) : lines).filter((l) => !l.startsWith(">"))
