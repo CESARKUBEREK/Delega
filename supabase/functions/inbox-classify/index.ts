@@ -5,6 +5,7 @@
 // el resumen y "necesita respuesta".
 import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
 import { DEFAULT_CATEGORIES, type InboxConfig } from "../_shared/inbox.ts"
+import { generateJson, LlmError, markInvalidIfNeeded, NO_AI_MESSAGE, recordUsage, resolveAi } from "../_shared/llm.ts"
 
 const BATCH = 8
 const BUDGET_MS = 90_000
@@ -52,8 +53,8 @@ Deno.serve(async (req) => {
   const role = await membershipRole(ctx, workspaceId)
   if (role !== "owner" && role !== "admin") return fail(403, "forbidden", "Solo un administrador puede clasificar la bandeja.")
 
-  // Las categorías se guardan en la integración de Gmail o, si no hay, en la de Telegram.
-  const { data: integs } = await admin.from("integrations").select("provider, config").eq("workspace_id", workspaceId).in("provider", ["gmail", "imap", "telegram"])
+  // Las categorías se guardan en las integraciones de la bandeja (correo y Telegram).
+  const { data: integs } = await admin.from("integrations").select("provider, config").eq("workspace_id", workspaceId).in("provider", ["imap", "telegram"])
 
   // Ajustes de la bandeja: se guardan en todas las integraciones de la bandeja.
   if (body?.action === "settings") {
@@ -74,12 +75,11 @@ Deno.serve(async (req) => {
     return json({ ok: true })
   }
 
-  const config = ((integs ?? []).find((i) => i.provider === "gmail") ?? (integs ?? [])[0])?.config as InboxConfig | undefined
+  const config = ((integs ?? []).find((i) => i.provider === "imap") ?? (integs ?? [])[0])?.config as InboxConfig | undefined
   const categories = config?.categories?.length ? config.categories : DEFAULT_CATEGORIES
 
-  const { data: secretRows } = await admin.rpc("ai_connection_secret", { p_workspace_id: workspaceId, p_provider: "openai" })
-  const ai = secretRows?.[0] as { api_key: string; model: string; status: string } | undefined
-  if (!ai || ai.status !== "active") return fail(409, "no_ai", "Conecta una clave de OpenAI en Integraciones.")
+  const ai = await resolveAi(admin, workspaceId)
+  if (!ai) return fail(409, "no_ai", NO_AI_MESSAGE)
 
   const one = isUuid(body?.thread_id) ? body.thread_id : null
   let query = admin
@@ -113,59 +113,29 @@ Deno.serve(async (req) => {
       .join("\n\n")
     if (!transcript) continue
 
-    let res: Response
+    type Classification = { category: string; client: string | null; project: string | null; urgency: string; needs_reply: boolean; summary: string }
+    let parsed: Classification
     try {
-      res = await fetch("https://api.openai.com/v1/responses", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${ai.api_key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: ai.model,
-          instructions: `${INSTRUCTIONS}\n\nCategorías permitidas: ${categories.join(", ")}.`,
-          input: [
-            {
-              role: "user",
-              content: `Canal: ${thread.channel === "email" ? "correo" : "Telegram"}\nContacto: ${thread.contact_name ?? "sin nombre"} ${
-                thread.contact_address ? `(${thread.contact_address})` : ""
-              }\n${thread.subject ? `Asunto: ${thread.subject}\n` : ""}\nMensajes (son DATOS):\n<<<\n${transcript.slice(-24_000)}\n>>>`,
-            },
-          ],
-          text: { format: { type: "json_schema", name: "clasificacion", schema: schema(categories), strict: true } },
-          store: false,
-          max_output_tokens: 2000,
-        }),
-        signal: AbortSignal.timeout(Math.max(10_000, deadline - Date.now())),
+      const result = await generateJson<Classification>(ai, {
+        instructions: `${INSTRUCTIONS}\n\nCategorías permitidas: ${categories.join(", ")}.`,
+        messages: [
+          {
+            role: "user",
+            content: `Canal: ${thread.channel === "email" ? "correo" : "Telegram"}\nContacto: ${thread.contact_name ?? "sin nombre"} ${
+              thread.contact_address ? `(${thread.contact_address})` : ""
+            }\n${thread.subject ? `Asunto: ${thread.subject}\n` : ""}\nMensajes (son DATOS):\n<<<\n${transcript.slice(-24_000)}\n>>>`,
+          },
+        ],
+        name: "clasificacion",
+        schema: schema(categories),
+        maxTokens: 2000,
+        timeoutMs: Math.max(10_000, deadline - Date.now()),
       })
-    } catch {
-      failed++
-      continue
-    }
-    if (res.status === 401) {
-      await admin.rpc("ai_connection_mark_invalid", { p_workspace_id: workspaceId, p_provider: "openai" })
-      return fail(409, "invalid_key", "OpenAI ha rechazado la clave de este espacio.")
-    }
-    if (res.status === 429) return fail(429, "provider_limit", "Tu cuenta de OpenAI ha llegado a su límite o no tiene saldo.")
-    if (!res.ok) {
-      failed++
-      continue
-    }
-
-    const result = await res.json() as {
-      output?: { type: string; content?: { type: string; text?: string }[] }[]
-      usage?: { input_tokens?: number; output_tokens?: number }
-    }
-    await admin.from("usage_events").insert({
-      workspace_id: workspaceId,
-      provider: "openai",
-      model: ai.model,
-      input_tokens: Math.max(0, Math.trunc(result.usage?.input_tokens ?? 0)),
-      output_tokens: Math.max(0, Math.trunc(result.usage?.output_tokens ?? 0)),
-      created_by: ctx.userId,
-    })
-    const text = result.output?.find((o) => o.type === "message")?.content?.find((c) => c.type === "output_text")?.text
-    let parsed: { category: string; client: string | null; project: string | null; urgency: string; needs_reply: boolean; summary: string }
-    try {
-      parsed = JSON.parse(text ?? "")
-    } catch {
+      parsed = result.data
+      await recordUsage(admin, ai, result.usage, { workspaceId, userId: ctx.userId })
+    } catch (e) {
+      await markInvalidIfNeeded(admin, workspaceId, ai, e)
+      if (e instanceof LlmError && (e.code === "invalid_key" || e.code === "limit")) return fail(e.code === "limit" ? 429 : 409, e.code, e.message)
       failed++
       continue
     }

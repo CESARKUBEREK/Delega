@@ -169,9 +169,9 @@ supabase functions deploy telegram-webhook --no-verify-jwt
 ## Google Docs, Gmail, Telegram y bandeja
 
 - **Docs:** con el mismo permiso `drive.file`, el selector admite documentos. El agente puede `read_document`, `append_to_document` y `create_document` (los documentos creados se registran como archivos del espacio). Escrituras siempre con aprobación.
-- **Gmail:** conexión aparte (provider `gmail`) con `gmail.readonly` y `gmail.send` (alcances restringidos de Google: mientras la app esté en pruebas, el acceso caduca cada 7 días). `inbox-sync` importa los últimos 30 días y después usa el historial de Gmail, por tandas. Delega no borra ni archiva nada del buzón.
+- **Gmail:** retirado como integración OAuth en la migración 8 (sus permisos son restringidos y exigen una auditoría de Google). Gmail y Google Workspace se conectan ahora como correo IMAP/SMTP con una contraseña de aplicación.
 - **Telegram:** bot propio creado con @BotFather. `telegram-connection` valida el token con `getMe`, lo guarda en Vault y registra el webhook `…/telegram-webhook?c=<integración>` con un `secret_token` aleatorio. `telegram-webhook` se despliega **sin** `verify_jwt` y comprueba `X-Telegram-Bot-Api-Secret-Token`. Los mensajes nuevos lanzan los flujos activos con disparador `telegram_message` (máx. 30 por hora y espacio).
-- **Bandeja:** `/w/[id]/bandeja`, correo y Telegram juntos. `inbox-classify` propone categoría (lista configurable), cliente, proyecto, urgencia, si necesita respuesta y un resumen; las correcciones manuales no las pisa la IA. `inbox-reply` redacta con IA (`draft`) y envía lo que la persona revisa (`send`, en el mismo hilo de Gmail o el mismo chat). Solo admins y owners. Conservación configurable en días.
+- **Bandeja:** `/w/[id]/bandeja`, correo y Telegram juntos. `inbox-classify` propone categoría (lista configurable), cliente, proyecto, urgencia, si necesita respuesta y un resumen; las correcciones manuales no las pisa la IA. `inbox-reply` redacta con IA (`draft`) y envía lo que la persona revisa (`send`, en el mismo hilo de correo o el mismo chat). Solo admins y owners. Conservación configurable en días.
 - **Envíos del agente:** `send_email` solo a contactos autorizados; `send_telegram` solo a quien escribió al bot. Siempre con aprobación.
 
 ```bash
@@ -203,8 +203,8 @@ supabase functions deploy telegram-webhook --no-verify-jwt
 - **Conexión** (`imap-connection`, tarjeta «Correo IMAP/SMTP» en Comunicaciones): dirección, contraseña (mejor una contraseña de aplicación) y servidores, con autocompletado para los proveedores habituales. Antes de guardar se comprueban IMAP (993, TLS) y SMTP (465, TLS directo). Supabase bloquea los puertos 25 y 587, así que los proveedores que solo admiten el 587 no sirven. Usuario y contraseña van en Vault como JSON; en `config` solo hay datos no secretos (servidores, carpeta de enviados, `uid_validity` y `last_uid`). Un buzón IMAP por espacio.
 - **Seguridad de red:** el servidor lo escribe el usuario, así que se resuelve su nombre y se rechazan direcciones internas (localhost, redes privadas, Supabase). La conexión va a la IP comprobada, con el nombre original para validar el certificado.
 - **Lectura** (`_shared/imap.ts`, librería `imapflow`): bandeja de entrada por UID. La primera vez, los últimos 30 días; después, solo lo nuevo. Si cambia `UIDVALIDITY`, vuelve a empezar. Solo se descarga la parte de texto (los adjuntos quedan como nombre) y como mucho 100 correos por llamada, para no pasar de los 2 s de CPU. No marca nada como leído ni mueve nada. El hilo se agrupa por el primer `Message-ID` de `References`/`In-Reply-To`, y los identificadores llevan el prefijo `imap:`.
-- **Envío** (`nodemailer`): las respuestas de la bandeja (`inbox-reply`) y el `send_email` del agente salen por SMTP con `In-Reply-To`/`References`, y se guarda una copia en la carpeta de enviados (`APPEND`). El agente usa Gmail si está conectado; si no, IMAP/SMTP. Siempre con aprobación.
-- **«Traer correo»** (`inbox-sync`) lee Gmail e IMAP; la lógica de Gmail vive ahora en `_shared/gmail-sync.ts`.
+- **Envío** (`nodemailer`): las respuestas de la bandeja (`inbox-reply`) y el `send_email` del agente salen por SMTP con `In-Reply-To`/`References`, y se guarda una copia en la carpeta de enviados (`APPEND`). Siempre con aprobación.
+- **«Traer correo»** (`inbox-sync`) lee el buzón IMAP del espacio.
 - **Lectura automática** (`mail-cron`, sin `verify_jwt`, cabecera `x-orkesta-cron`): recorre las cuentas de correo activas (`mail_integrations_due`), empezando por las que llevan más tiempo sin leerse.
 
 ```bash
@@ -228,4 +228,35 @@ $$);
 ```
 
 Pruebas locales: `MAIL_TEST_INSECURE=1` (más `MAIL_TEST_IMAP_PORT` y `MAIL_TEST_SMTP_PORT`) admite `localhost` y certificados propios. Nunca se define en producción.
+
+## Varias IAs: OpenAI, Anthropic y DeepSeek
+
+- **Conexiones** (`ai-connection`, una tarjeta por proveedor en Integraciones → LLMs): clave propia de cada proveedor (BYOK), validada listando sus modelos y cifrada en Vault. Un espacio puede tener las tres. Una es la **principal** (`ai_connections.is_default`): la primera que se conecta, y se cambia con «Usar como IA principal». Si se borra, pasa a serlo otra.
+- **Quién usa cuál:** el asistente, la clasificación y los borradores de la bandeja usan la principal. Cada automatización puede fijar su propio modelo (`flows.settings.model`, en la página de la automatización); si su proveedor deja de estar conectado, se usa la principal. Las ejecuciones desde el chat usan la principal. El dictado usa siempre OpenAI.
+- **Capa común** (`_shared/llm.ts`): la conversación va en un formato neutro y cada adaptador la traduce:
+  - **OpenAI:** Responses API, con `json_schema` estricto y `store: false`.
+  - **Anthropic:** Messages API, con `output_config.format` para el JSON y herramientas con `tool_choice` sin llamadas en paralelo.
+  - **DeepSeek:** Chat Completions en formato OpenAI. Usa `response_format: json_object` con el esquema en las instrucciones, y sin modo de razonamiento.
+
+  Lo que devuelve cada proveedor se guarda en `native` para reenviarlo tal cual en la siguiente vuelta. Las ejecuciones antiguas (items de la Responses API) se convierten al vuelo. El agente atiende una acción por respuesta; si llegan más, las demás se contestan sin ejecutarse.
+- **Modelos:**
+  - OpenAI: `gpt-6.1-sol`, `gpt-6-astra`, `gpt-6-luna`.
+  - Anthropic: `claude-sonnet-5-5`, `claude-opus-5-5`, `claude-haiku-5-5`, `claude-fable-5-1`.
+  - DeepSeek: `deepseek-flash`, `deepseek-v4-pro`.
+
+  Deben coincidir en `_shared/llm.ts` y `src/lib/plan.ts`.
+
+## Excel en Google Drive
+
+- Los archivos `.xlsx` elegidos en Drive se tratan como planillas (`_shared/excel.ts`, con ExcelJS): `list_sheets` y `read_range` sin aprobación; `append_rows` y `update_range`, con aprobación. Se descarga el archivo, se modifica y se sube como nueva versión del mismo archivo; Drive conserva la anterior.
+- **Límites:**
+  - Hasta 5 MB.
+  - Los `.xls` antiguos se pueden leer, pero no escribir.
+  - En los libros con gráficos, tablas dinámicas, segmentaciones o vínculos externos no se escribe (ExcelJS no los conserva); para escribir en ellos hay que pasarlos a Google Sheets.
+- Los textos se escriben tal cual (aunque empiecen por «=», no son fórmulas). Las fórmulas y el formato que ya había se conservan.
+
+```bash
+supabase functions deploy ai-connection assistant run-flow inbox-classify inbox-reply inbox-sync imap-connection google-connection voice-transcribe push
+supabase functions deploy telegram-webhook mail-cron --no-verify-jwt
+```
 

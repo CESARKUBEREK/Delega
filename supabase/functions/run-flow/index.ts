@@ -11,7 +11,8 @@
 // justo después de tocar «Aprobar».
 import { type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { authenticate, fail, isUuid, json, membershipRole, type AuthContext } from "../_shared/core.ts"
-import { addEvent, advance, claim, createRun, executePending, RunError, type RunRow, save } from "../_shared/agent.ts"
+import { addEvent, advance, appendToolResult, claim, createRun, executePending, RunError, type RunRow, save } from "../_shared/agent.ts"
+import { NO_AI_MESSAGE, resolveAi } from "../_shared/llm.ts"
 
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined
 
@@ -25,11 +26,11 @@ function kick(admin: SupabaseClient, runId: string) {
   )
 }
 
-// Clave de OpenAI activa y límite de 10 ejecuciones cada 10 minutos por persona.
-async function readyToRun(ctx: AuthContext, workspaceId: string): Promise<{ model: string } | Response> {
-  const { data: secretRows } = await ctx.admin.rpc("ai_connection_secret", { p_workspace_id: workspaceId, p_provider: "openai" })
-  const ai = secretRows?.[0] as { model: string; status: string } | undefined
-  if (!ai || ai.status !== "active") return fail(409, "no_connection", "Conecta una clave de OpenAI en Integraciones.")
+// IA activa (la del modelo de la automatización o la principal) y límite de
+// 10 ejecuciones cada 10 minutos por persona.
+async function readyToRun(ctx: AuthContext, workspaceId: string, preferredModel?: string | null): Promise<{ model: string } | Response> {
+  const ai = await resolveAi(ctx.admin, workspaceId, preferredModel)
+  if (!ai) return fail(409, "no_connection", NO_AI_MESSAGE)
 
   const since = new Date(Date.now() - 10 * 60_000).toISOString()
   const { count } = await ctx.admin
@@ -78,13 +79,14 @@ async function handle(req: Request): Promise<Response> {
 
     const { data: flow } = await ctx.userClient
       .from("flows")
-      .select("id, name, definition")
+      .select("id, name, definition, settings")
       .eq("id", flowId)
       .eq("workspace_id", workspaceId)
       .maybeSingle()
     if (!flow) return fail(404, "not_found", "No se encontró la automatización.")
 
-    const ai = await readyToRun(ctx, workspaceId)
+    const flowModel = (flow.settings as { model?: unknown } | null)?.model
+    const ai = await readyToRun(ctx, workspaceId, typeof flowModel === "string" ? flowModel : null)
     if (ai instanceof Response) return ai
 
     const run = await createRun(ctx.admin, {
@@ -184,7 +186,7 @@ async function handle(req: Request): Promise<Response> {
       await addEvent(ctx.admin, claimed, "rejected", "Rechazado por el usuario", { tool: pending.tool, decided_by: ctx.userId })
     }
 
-    claimed.state.items.push({ type: "function_call_output", call_id: pending.call_id, output })
+    appendToolResult(claimed, pending.call_id, output)
     claimed.status = "running"
     claimed.pending_action = null
     // Sigue en segundo plano; el panel también puede retomarla con "continue".

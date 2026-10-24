@@ -1,12 +1,8 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { formatDateTime } from "../format"
-import { connectGoogle, removeContact } from "../run-actions"
+import { removeContact } from "../run-actions"
 import { AddContactForm, DisconnectInboxForm, ImapForm, TelegramForm } from "./inbox-client"
-
-const GMAIL_NOTICES: Record<string, string> = {
-  connected: "Gmail conectado. Abre la bandeja y pulsa «Traer correo» para importar los últimos 30 días.",
-}
 
 function Badge({ status, invalidLabel }: { status: string | null | undefined; invalidLabel: string }) {
   if (status === "active") return <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">Conectado</span>
@@ -14,74 +10,7 @@ function Badge({ status, invalidLabel }: { status: string | null | undefined; in
   return <span className="shrink-0 border border-rule px-2 py-0.5 text-xs text-graphite">Sin conectar</span>
 }
 
-export async function GmailCard({ workspaceId, isAdmin, notice }: { workspaceId: string; isAdmin: boolean; notice: string | null }) {
-  const supabase = await createClient()
-  const [{ data: integration }, { data: contacts }] = await Promise.all([
-    supabase.from("integrations").select("account_email, status, config").eq("workspace_id", workspaceId).eq("provider", "gmail").maybeSingle(),
-    supabase.from("contacts").select("id, name, email").eq("workspace_id", workspaceId).order("name"),
-  ])
-  const config = (integration?.config ?? {}) as { last_sync_at?: string }
-
-  return (
-    <section className="border border-ink bg-sheet">
-      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
-        <div>
-          <h3 className="rotulo text-lg">Gmail</h3>
-          <p className="text-sm text-graphite">
-            Orkesta lee tu correo para ordenarlo en la bandeja y redacta respuestas. Nada se envía sin que lo revises.
-          </p>
-        </div>
-        <Badge status={integration?.status} invalidLabel="Acceso retirado" />
-      </div>
-
-      <div className="flex flex-col gap-6 px-5 py-5">
-        {notice ? (
-          <p role="status" className="border-l-2 border-ok bg-ok-bg px-3 py-2 text-sm text-ok">
-            {GMAIL_NOTICES[notice] ?? notice}
-          </p>
-        ) : null}
-
-        {integration ? (
-          <p className="text-sm text-graphite">
-            Cuenta <span className="font-medium text-ink">{integration.account_email ?? "de Gmail"}</span>.{" "}
-            {integration.status === "active"
-              ? config.last_sync_at
-                ? `Última lectura: ${formatDateTime(config.last_sync_at)}.`
-                : "Aún no se ha leído el correo."
-              : "Google retiró el acceso (mientras la app de Orkesta esté en pruebas, ocurre cada 7 días): vuelve a conectar."}{" "}
-            <Link href={`/w/${workspaceId}/bandeja`} className="text-link underline underline-offset-4">
-              Abrir la bandeja
-            </Link>
-          </p>
-        ) : (
-          <p className="text-sm text-graphite">
-            Conecta tu cuenta de Gmail. Google te pedirá permiso para leer y enviar correo; Orkesta no borra ni archiva nada en tu buzón.
-          </p>
-        )}
-
-        {isAdmin ? (
-          integration?.status !== "active" ? (
-            <form action={connectGoogle}>
-              <input type="hidden" name="workspaceId" value={workspaceId} />
-              <input type="hidden" name="product" value="gmail" />
-              <button type="submit" className="h-11 bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90">
-                {integration ? "Volver a conectar Gmail" : "Conectar Gmail"}
-              </button>
-            </form>
-          ) : null
-        ) : (
-          <p className="text-sm text-graphite">Solo un administrador puede conectar Gmail.</p>
-        )}
-
-        <Contacts workspaceId={workspaceId} isAdmin={isAdmin} contacts={contacts ?? []} />
-
-        {isAdmin && integration ? <DisconnectInboxForm workspaceId={workspaceId} kind="gmail" /> : null}
-      </div>
-    </section>
-  )
-}
-
-// Contactos a los que las automatizaciones pueden escribir (Gmail o IMAP).
+// Contactos a los que las automatizaciones pueden escribir.
 function Contacts({ workspaceId, isAdmin, contacts }: { workspaceId: string; isAdmin: boolean; contacts: { id: string; name: string; email: string }[] }) {
   return (
     <div>
@@ -182,9 +111,8 @@ export async function TelegramCard({ workspaceId, isAdmin }: { workspaceId: stri
 
 export async function ImapCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
   const supabase = await createClient()
-  const [{ data: integration }, { data: gmail }, { data: contacts }] = await Promise.all([
+  const [{ data: integration }, { data: contacts }] = await Promise.all([
     supabase.from("integrations").select("account_email, status, config").eq("workspace_id", workspaceId).eq("provider", "imap").maybeSingle(),
-    supabase.from("integrations").select("id").eq("workspace_id", workspaceId).eq("provider", "gmail").maybeSingle(),
     supabase.from("contacts").select("id, name, email").eq("workspace_id", workspaceId).order("name"),
   ])
   const config = (integration?.config ?? {}) as {
@@ -202,7 +130,7 @@ export async function ImapCard({ workspaceId, isAdmin }: { workspaceId: string; 
         <div>
           <h3 className="rotulo text-lg">Correo IMAP/SMTP</h3>
           <p className="text-sm text-graphite">
-            El correo de tu dominio o de tu hosting (OVH, IONOS, Hostinger…). Llega a la bandeja y puedes responder desde Orkesta, siempre
+            El correo de tu dominio, de tu hosting (OVH, IONOS, Hostinger…) o de Gmail. Llega a la bandeja y puedes responder desde Orkesta, siempre
             revisando antes.
           </p>
         </div>
@@ -252,8 +180,7 @@ export async function ImapCard({ workspaceId, isAdmin }: { workspaceId: string; 
           </>
         ) : null}
 
-        {/* Si Gmail está conectado, los contactos ya aparecen en su tarjeta. */}
-        {integration && !gmail ? <Contacts workspaceId={workspaceId} isAdmin={isAdmin} contacts={contacts ?? []} /> : null}
+        {integration ? <Contacts workspaceId={workspaceId} isAdmin={isAdmin} contacts={contacts ?? []} /> : null}
 
         {isAdmin ? (
           <>

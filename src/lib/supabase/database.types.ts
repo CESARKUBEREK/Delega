@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          is_default: boolean
           key_hint: string
           last_validated_at: string
           model: string
@@ -32,6 +33,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_default?: boolean
           key_hint: string
           last_validated_at?: string
           model: string
@@ -45,6 +47,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_default?: boolean
           key_hint?: string
           last_validated_at?: string
           model?: string
@@ -1009,6 +1012,10 @@ export type Database = {
           refresh_token: string
           status: string
         }[]
+      }
+      ai_connection_set_default: {
+        Args: { p_provider: string; p_workspace_id: string }
+        Returns: boolean
       }
       mail_integrations_due: {
         Args: { p_limit?: number }
