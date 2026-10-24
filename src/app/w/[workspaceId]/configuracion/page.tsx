@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server"
 import { revokeInvitation } from "../../actions"
 import { InviteForm } from "../invite-form"
 import { DeleteForm, LeaveForm, RenameForm } from "../manage-panel"
+import { PushToggle } from "../push-toggle"
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -87,6 +88,13 @@ async function Workspace({ params }: { params: PageProps<"/w/[workspaceId]/confi
               </li>
             ))}
           </ul>
+        </div>
+
+        <div className="mt-8 border border-ink bg-sheet">
+          <h2 className="border-b border-ink px-5 py-3 font-semibold">Avisos en este dispositivo</h2>
+          <div className="px-5 py-4">
+            <PushToggle vapidPublicKey={process.env.VAPID_PUBLIC_KEY?.trim() || null} />
+          </div>
         </div>
 
         {canInvite && pending && pending.length > 0 ? (

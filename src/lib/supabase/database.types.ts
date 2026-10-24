@@ -191,6 +191,7 @@ export type Database = {
           output_tokens: number
           pending_action: Json | null
           plan: Json
+          source_message_id: number | null
           started_at: string
           started_by: string | null
           state: Json
@@ -215,6 +216,7 @@ export type Database = {
           output_tokens?: number
           pending_action?: Json | null
           plan: Json
+          source_message_id?: number | null
           started_at?: string
           started_by?: string | null
           state?: Json
@@ -239,6 +241,7 @@ export type Database = {
           output_tokens?: number
           pending_action?: Json | null
           plan?: Json
+          source_message_id?: number | null
           started_at?: string
           started_by?: string | null
           state?: Json
@@ -249,6 +252,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "flow_runs_source_message_fkey"
+            columns: ["source_message_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id", "workspace_id"]
+          },
           {
             foreignKeyName: "flow_runs_flow_id_workspace_id_fkey"
             columns: ["flow_id", "workspace_id"]
@@ -724,6 +734,39 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_used_at: string | null
+          p256dh: string
+          user_agent: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_used_at?: string | null
+          p256dh: string
+          user_agent?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_used_at?: string | null
+          p256dh?: string
+          user_agent?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -791,33 +834,39 @@ export type Database = {
       }
       usage_events: {
         Row: {
+          audio_seconds: number
           conversation_id: string | null
           created_at: string
           created_by: string | null
           id: number
           input_tokens: number
+          kind: string
           model: string
           output_tokens: number
           provider: string
           workspace_id: string
         }
         Insert: {
+          audio_seconds?: number
           conversation_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: never
           input_tokens?: number
+          kind?: string
           model: string
           output_tokens?: number
           provider: string
           workspace_id: string
         }
         Update: {
+          audio_seconds?: number
           conversation_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: never
           input_tokens?: number
+          kind?: string
           model?: string
           output_tokens?: number
           provider?: string
@@ -960,6 +1009,10 @@ export type Database = {
           refresh_token: string
           status: string
         }[]
+      }
+      push_subscribe: {
+        Args: { p_auth: string; p_endpoint: string; p_p256dh: string; p_user_agent: string }
+        Returns: string
       }
     }
     Enums: {

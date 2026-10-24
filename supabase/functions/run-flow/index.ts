@@ -1,11 +1,45 @@
-// run-flow: ejecuciones lanzadas por una persona desde el panel.
-// Acciones: start, continue, decide, cancel. El agente vive en _shared/agent.ts.
+// run-flow: ejecuciones lanzadas por una persona desde el panel o desde el chat.
+// Acciones: start, start_from_message, continue, decide, cancel. El agente vive
+// en _shared/agent.ts.
 //
 // La ejecución avanza por tramos (como mucho ~90 s por petición). Si no
 // termina, queda en "running" y el panel pide "continue". Un lease en la fila
 // impide que dos peticiones avancen la misma ejecución a la vez.
+//
+// Al lanzar una ejecución o decidir una aprobación, el primer tramo arranca
+// también en segundo plano: así avanza aunque se cierre la app del móvil
+// justo después de tocar «Aprobar».
+import { type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { authenticate, fail, isUuid, json, membershipRole, type AuthContext } from "../_shared/core.ts"
 import { addEvent, advance, claim, createRun, executePending, RunError, type RunRow, save } from "../_shared/agent.ts"
+
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined
+
+function kick(admin: SupabaseClient, runId: string) {
+  if (typeof EdgeRuntime === "undefined") return
+  EdgeRuntime.waitUntil(
+    (async () => {
+      const claimed = await claim(admin, runId, "running")
+      if (claimed) await advance(admin, claimed, 60_000)
+    })().catch((e) => console.error("run-flow kick", e instanceof Error ? e.name : "error")),
+  )
+}
+
+// Clave de OpenAI activa y límite de 10 ejecuciones cada 10 minutos por persona.
+async function readyToRun(ctx: AuthContext, workspaceId: string): Promise<{ model: string } | Response> {
+  const { data: secretRows } = await ctx.admin.rpc("ai_connection_secret", { p_workspace_id: workspaceId, p_provider: "openai" })
+  const ai = secretRows?.[0] as { model: string; status: string } | undefined
+  if (!ai || ai.status !== "active") return fail(409, "no_connection", "Conecta una clave de OpenAI en Integraciones.")
+
+  const since = new Date(Date.now() - 10 * 60_000).toISOString()
+  const { count } = await ctx.admin
+    .from("flow_runs")
+    .select("id", { count: "exact", head: true })
+    .eq("started_by", ctx.userId)
+    .gte("started_at", since)
+  if ((count ?? 0) >= 10) return fail(429, "rate_limited", "Has lanzado muchas ejecuciones seguidas. Espera unos minutos.")
+  return { model: ai.model }
+}
 
 async function canManage(ctx: AuthContext, run: RunRow): Promise<boolean> {
   if (run.started_by === ctx.userId) return true
@@ -50,17 +84,8 @@ async function handle(req: Request): Promise<Response> {
       .maybeSingle()
     if (!flow) return fail(404, "not_found", "No se encontró la automatización.")
 
-    const { data: secretRows } = await ctx.admin.rpc("ai_connection_secret", { p_workspace_id: workspaceId, p_provider: "openai" })
-    const ai = secretRows?.[0] as { model: string; status: string } | undefined
-    if (!ai || ai.status !== "active") return fail(409, "no_connection", "Conecta una clave de OpenAI en Integraciones.")
-
-    const since = new Date(Date.now() - 10 * 60_000).toISOString()
-    const { count } = await ctx.admin
-      .from("flow_runs")
-      .select("id", { count: "exact", head: true })
-      .eq("started_by", ctx.userId)
-      .gte("started_at", since)
-    if ((count ?? 0) >= 10) return fail(429, "rate_limited", "Has lanzado muchas ejecuciones seguidas. Espera unos minutos.")
+    const ai = await readyToRun(ctx, workspaceId)
+    if (ai instanceof Response) return ai
 
     const run = await createRun(ctx.admin, {
       workspaceId,
@@ -71,7 +96,63 @@ async function handle(req: Request): Promise<Response> {
       startedBy: ctx.userId,
       trigger: { type: "manual" },
     })
-    // El panel de la ejecución pide "continue" enseguida y va mostrando el avance.
+    // El panel de la ejecución pide "continue" y va mostrando el avance.
+    kick(ctx.admin, run.id)
+    return json({ run_id: run.id, status: "running" })
+  }
+
+  // «Ejecutar ahora» desde el chat: el plan se lee de la base de datos (RLS),
+  // nunca del navegador, y no se guarda como automatización.
+  if (action === "start_from_message") {
+    const workspaceId = body?.workspace_id
+    const messageId = body?.message_id
+    if (!isUuid(workspaceId) || typeof messageId !== "number" || !Number.isSafeInteger(messageId) || messageId <= 0) {
+      return fail(400, "bad_request", "Datos no válidos.")
+    }
+    const role = await membershipRole(ctx, workspaceId)
+    if (!role) return fail(403, "forbidden", "No perteneces a este espacio.")
+    const fileIds = (Array.isArray(body?.file_ids) ? body.file_ids : []).filter(isUuid).slice(0, 5)
+
+    const { data: msg } = await ctx.userClient
+      .from("messages")
+      .select("id, conversation_id, role, plan")
+      .eq("id", messageId)
+      .eq("workspace_id", workspaceId)
+      .maybeSingle()
+    const plan = msg?.plan as { name?: unknown; trigger?: { type?: unknown } } | null | undefined
+    if (!msg || msg.role !== "assistant" || !plan || typeof plan !== "object") {
+      return fail(404, "not_found", "No se encontró el plan.")
+    }
+    if (plan.trigger?.type && plan.trigger.type !== "manual") {
+      return fail(409, "not_manual", "Este plan arranca solo: guárdalo como automatización para activarlo.")
+    }
+
+    // La petición que originó el plan acompaña a la ejecución (cifras, nombres…).
+    const { data: ask } = await ctx.userClient
+      .from("messages")
+      .select("content")
+      .eq("conversation_id", msg.conversation_id)
+      .eq("workspace_id", workspaceId)
+      .eq("role", "user")
+      .lt("id", msg.id)
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const ai = await readyToRun(ctx, workspaceId)
+    if (ai instanceof Response) return ai
+
+    const run = await createRun(ctx.admin, {
+      workspaceId,
+      flow: { id: null, name: typeof plan.name === "string" ? plan.name : "", definition: plan },
+      fileIds,
+      note: ask?.content ? `Lo que pidió en el chat: ${ask.content}`.slice(0, 2000) : "",
+      model: ai.model,
+      startedBy: ctx.userId,
+      trigger: { type: "chat", conversation_id: msg.conversation_id, message_id: msg.id },
+      sourceMessageId: msg.id,
+    })
+    kick(ctx.admin, run.id)
     return json({ run_id: run.id, status: "running" })
   }
 
@@ -106,8 +187,9 @@ async function handle(req: Request): Promise<Response> {
     claimed.state.items.push({ type: "function_call_output", call_id: pending.call_id, output })
     claimed.status = "running"
     claimed.pending_action = null
-    // El panel retoma la ejecución con "continue".
+    // Sigue en segundo plano; el panel también puede retomarla con "continue".
     await save(ctx.admin, claimed, { status: "running", pending_action: null, lease_until: null })
+    kick(ctx.admin, claimed.id)
     return json({ run_id: claimed.id, status: "running" })
   }
 

@@ -1,5 +1,6 @@
-// Agente de ejecución de Delega. Lo usan run-flow (ejecuciones lanzadas por
-// una persona) y telegram-webhook (ejecuciones lanzadas por un mensaje).
+// Agente de ejecución de Orkesta. Lo usan run-flow (ejecuciones lanzadas por
+// una persona, desde una automatización o desde el chat) y telegram-webhook
+// (ejecuciones lanzadas por un mensaje).
 //
 // Lee libremente los archivos, la agenda y el CRM; cualquier acción que escriba
 // o envíe algo (planillas, documentos, archivos, eventos, CRM, correo, Telegram) se detiene en
@@ -43,6 +44,7 @@ import {
   search as crmSearch,
   updateRecord,
 } from "./hubspot.ts"
+import { notifyApproval } from "./push.ts"
 
 export const SLICE_MS = 90_000
 const LEASE_SECONDS = 140
@@ -59,6 +61,7 @@ export type Admin = SupabaseClient
 export type RunTrigger =
   | { type: "manual" }
   | { type: "telegram_message"; chat_id: string; name?: string | null; message_id: number; text: string }
+  | { type: "chat"; conversation_id: string; message_id: number }
 
 export type RunRow = {
   id: string
@@ -937,6 +940,8 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
 
     await save(admin, run, { status: "awaiting_approval", pending_action: pending, lease_until: null })
     await addEvent(admin, run, "approval_requested", proposalTitle(pending), { tool: pending.tool })
+    // Aviso al móvil; un fallo aquí no detiene la ejecución.
+    await notifyApproval(admin, run, pending.tool).catch(() => console.error("push: no se pudo avisar"))
     return "awaiting_approval"
   }
 
@@ -1106,12 +1111,14 @@ export async function createRun(
   admin: Admin,
   input: {
     workspaceId: string
-    flow: { id: string; name: string; definition: unknown }
+    // id null: plan ejecutado desde el chat sin guardarlo como automatización.
+    flow: { id: string | null; name: string; definition: unknown }
     fileIds: string[]
     note: string
     model: string
     startedBy: string | null
     trigger: RunTrigger
+    sourceMessageId?: number | null
   },
 ): Promise<RunRow> {
   const { data: files } = input.fileIds.length
@@ -1151,7 +1158,7 @@ export async function createRun(
     .insert({
       workspace_id: input.workspaceId,
       flow_id: input.flow.id,
-      flow_name: input.flow.name,
+      flow_name: input.flow.name.trim().slice(0, 120) || "Petición del chat",
       plan: input.flow.definition,
       file_ids: valid,
       note: input.note,
@@ -1159,6 +1166,7 @@ export async function createRun(
       state: { items: [{ role: "user", content: parts.filter(Boolean).join("\n\n") }] },
       started_by: input.startedBy,
       trigger: input.trigger,
+      source_message_id: input.sourceMessageId ?? null,
     })
     .select("*")
     .single()
@@ -1170,6 +1178,8 @@ export async function createRun(
     "started",
     input.trigger.type === "telegram_message"
       ? `Lanzada por un mensaje de Telegram de ${input.trigger.name ?? "un contacto"}`
+      : input.trigger.type === "chat"
+      ? `Lanzada desde el chat${valid.length ? ` con ${valid.length} archivo(s)` : ""}`
       : valid.length
         ? `Ejecución iniciada con ${valid.length} archivo(s)`
         : "Ejecución iniciada sin archivos",

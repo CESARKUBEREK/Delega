@@ -2,11 +2,11 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { RUN_STATUS_LABEL } from "@/lib/plan"
-import type { Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { formatDateTime, formatNumber } from "../../format"
-import { ApprovalCard, type Cell, RunControls, type Pending } from "./run-live"
+import { asPending } from "@/lib/pending"
+import { ApprovalCard, RunControls } from "./run-live"
 
 export const metadata = { title: "Ejecución" }
 // Cada tramo del agente puede tardar hasta ~90 s.
@@ -31,137 +31,6 @@ const EVENT_MARK: Record<string, string> = {
   finished: "Fin",
 }
 
-function asPending(value: Json | null): Pending | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null
-  const v = value as Record<string, unknown>
-  const t = (x: unknown) => (typeof x === "string" ? x : "")
-  switch (v.tool) {
-    case "append_rows":
-    case "update_range":
-      if (!Array.isArray(v.values)) return null
-      return {
-        tool: v.tool,
-        fileName: t(v.file_name),
-        range: t(v.range),
-        values: v.values as Cell[][],
-        before: Array.isArray(v.before) ? (v.before as Cell[][]) : null,
-      }
-    case "append_to_document":
-      return { tool: "append_to_document", fileName: t(v.file_name), text: t(v.text) }
-    case "create_document":
-      return { tool: "create_document", title: t(v.title), text: t(v.text) }
-    case "send_email":
-      return { tool: "send_email", to: t(v.to_label), address: t(v.address), subject: t(v.subject), text: t(v.body) }
-    case "send_telegram":
-      return { tool: "send_telegram", to: t(v.to_label), text: t(v.text) }
-    case "save_file": {
-      const ext = v.format === "documento" ? "documento de Google" : v.format === "csv" ? "CSV" : "texto"
-      return {
-        tool: "generic",
-        description: `Guardar «${t(v.name)}» (${ext}) en la carpeta «${t(v.folder_name)}».`,
-        verb: "Aprobar y guardar",
-        fields: [],
-        text: t(v.text),
-        textCaption: "Contenido",
-      }
-    }
-    case "create_event": {
-      const ev = obj(v.event)
-      const attendees = Array.isArray(v.attendees) ? v.attendees.map((a) => `${t(obj(a).label)} <${t(obj(a).email)}>`).join(", ") : ""
-      return {
-        tool: "generic",
-        description: attendees
-          ? "Crear este evento en tu calendario y enviar la invitación a los invitados."
-          : "Crear este evento en tu calendario.",
-        verb: "Aprobar y crear",
-        fields: [
-          { label: "Título", value: t(ev.title) },
-          { label: ev.all_day ? "Día" : "Inicio", value: when(t(ev.start)) },
-          ...(ev.all_day ? [] : [{ label: "Fin", value: when(t(ev.end)) }]),
-          ...(t(ev.location) ? [{ label: "Lugar", value: t(ev.location) }] : []),
-          ...(attendees ? [{ label: "Invitados", value: attendees }] : []),
-        ],
-        text: t(ev.description) || null,
-        textCaption: "Descripción",
-      }
-    }
-    case "update_event": {
-      const c = obj(v.changes)
-      const fields = [
-        ["title", "Título"],
-        ["start", "Inicio"],
-        ["end", "Fin"],
-        ["location", "Lugar"],
-        ["description", "Descripción"],
-      ]
-        .filter(([k]) => typeof c[k] === "string" && c[k])
-        .map(([k, label]) => ({ label, value: k === "start" || k === "end" ? when(t(c[k])) : t(c[k]) }))
-      return {
-        tool: "generic",
-        description: `Cambiar el evento «${t(v.title_before)}» (${t(v.when_before)}). Se avisará a sus invitados.`,
-        verb: "Aprobar y cambiar",
-        fields,
-        text: null,
-        textCaption: "",
-      }
-    }
-    case "crm_create":
-    case "crm_update": {
-      const props = obj(v.properties)
-      const before = obj(v.before)
-      const label = CRM_LABEL[t(v.object)] ?? "registro"
-      return {
-        tool: "generic",
-        description: v.tool === "crm_create" ? `Crear un ${label} en HubSpot.` : `Actualizar el ${label} «${t(v.label)}» en HubSpot.`,
-        verb: v.tool === "crm_create" ? "Aprobar y crear" : "Aprobar y actualizar",
-        fields: Object.entries(props).map(([k, val]) =>
-          v.tool === "crm_update" ? { label: k, value: t(val), before: typeof before[k] === "string" ? (before[k] as string) : null } : { label: k, value: t(val) }
-        ),
-        text: null,
-        textCaption: "",
-      }
-    }
-    case "crm_note":
-      return {
-        tool: "generic",
-        description: `Añadir esta nota al ${CRM_LABEL[t(v.object)] ?? "registro"} «${t(v.label)}» en HubSpot.`,
-        verb: "Aprobar y añadir",
-        fields: [],
-        text: t(v.text),
-        textCaption: "Nota",
-      }
-    case "crm_task":
-      return {
-        tool: "generic",
-        description: `Crear una tarea para el ${CRM_LABEL[t(v.object)] ?? "registro"} «${t(v.label)}» en HubSpot.`,
-        verb: "Aprobar y crear",
-        fields: [
-          { label: "Asunto", value: t(v.subject) },
-          { label: "Vence", value: t(v.due_date) ? when(t(v.due_date)) : "mañana" },
-        ],
-        text: t(v.text) || null,
-        textCaption: "Detalle",
-      }
-    default:
-      return null
-  }
-}
-
-const CRM_LABEL: Record<string, string> = { contacts: "contacto", companies: "empresa", deals: "negocio" }
-
-function obj(x: unknown): Record<string, unknown> {
-  return x && typeof x === "object" && !Array.isArray(x) ? (x as Record<string, unknown>) : {}
-}
-
-// "2026-11-03T10:00" → "3 nov 2026, 10:00"; "2026-11-03" → "3 nov 2026".
-function when(value: string): string {
-  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/)
-  if (!m) return value
-  const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
-  const date = `${Number(m[3])} ${months[Number(m[2]) - 1]} ${m[1]}`
-  return m[4] ? `${date}, ${m[4]}:${m[5]}` : date
-}
-
 async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones/[runId]">["params"] }) {
   const { workspaceId, runId } = await params
   if (!UUID_RE.test(runId)) notFound()
@@ -182,6 +51,10 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
   const base = `/w/${workspaceId}`
   const pending = run.status === "awaiting_approval" ? asPending(run.pending_action) : null
   const active = run.status === "running" || run.status === "awaiting_approval"
+  const trigger = run.trigger as { type?: string; conversation_id?: unknown } | null
+  const chat = trigger?.type === "chat" && typeof trigger.conversation_id === "string" && UUID_RE.test(trigger.conversation_id)
+    ? { conversation_id: trigger.conversation_id }
+    : null
 
   return (
     <div className="flex flex-col gap-6">
@@ -190,6 +63,10 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
           {run.flow_id ? (
             <Link href={`${base}/automatizaciones/${run.flow_id}`} className="text-link underline underline-offset-4">
               {run.flow_name}
+            </Link>
+          ) : chat ? (
+            <Link href={`${base}/asistente?c=${chat.conversation_id}`} className="text-link underline underline-offset-4">
+              {run.flow_name} (pedida en el chat)
             </Link>
           ) : (
             <span className="text-graphite">{run.flow_name} (automatización borrada)</span>

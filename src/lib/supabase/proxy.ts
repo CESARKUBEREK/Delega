@@ -4,7 +4,9 @@ import type { Database } from "./database.types"
 import { supabasePublishableKey, supabaseUrl } from "./env"
 
 // Rutas que exigen sesión y rutas que solo tienen sentido sin ella.
-const PROTECTED_PREFIXES = ["/w", "/reset-password", "/integraciones"]
+const PROTECTED_PREFIXES = ["/w", "/reset-password", "/integraciones", "/abrir"]
+// /w/<espacio>/…: se recuerda el último espacio para abrir la app instalada en él.
+const WORKSPACE_PATH = /^\/w\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\/|$)/i
 const GUEST_ONLY = ["/login", "/signup", "/forgot-password"]
 
 function matches(pathname: string, prefixes: string[]) {
@@ -58,6 +60,17 @@ export async function updateSession(request: NextRequest) {
 
   if (signedIn && matches(pathname, GUEST_ONLY)) {
     return redirectTo("/w")
+  }
+
+  const workspace = signedIn ? pathname.match(WORKSPACE_PATH)?.[1] : undefined
+  if (workspace && request.cookies.get("orkesta_ws")?.value !== workspace) {
+    response.cookies.set("orkesta_ws", workspace, {
+      httpOnly: true,
+      secure: request.nextUrl.protocol === "https:",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    })
   }
 
   return response
