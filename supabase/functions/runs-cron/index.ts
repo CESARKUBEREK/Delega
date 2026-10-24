@@ -6,11 +6,13 @@
 //
 // Cada vuelta toma hasta 3 ejecuciones en estado «running» sin lease vigente,
 // de las últimas 24 h, y avanza cada una un tramo de 50 s en paralelo. El lease
-// impide que dos procesos avancen a la vez la misma ejecución. Lo que quieran
+// impide que dos procesos avancen a la vez la misma ejecución. Las que llevan
+// más de 24 h sin terminar se dan por fallidas. Lo que quieran
 // escribir o enviar se queda esperando aprobación, como siempre.
-import { createClient } from "npm:@supabase/supabase-js@2.118.0"
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { advance, claim } from "../_shared/agent.ts"
 import { launchScheduled } from "../_shared/schedule.ts"
+import { runInBackground } from "../_shared/background.ts"
 
 const PER_CALL = 3
 const SLICE_MS = 50_000
@@ -42,8 +44,13 @@ Deno.serve(async (req) => {
     return new Response("Forbidden", { status: 403 })
   }
 
+  return runInBackground("runs-cron", tick)
+})
+
+async function tick() {
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
   const scheduled = await launchScheduled(admin)
+  const stale = await failStale(admin)
 
   const now = new Date().toISOString()
   const { data: due } = await admin
@@ -67,5 +74,23 @@ Deno.serve(async (req) => {
       }
     }),
   )
-  return new Response(JSON.stringify({ ok: true, scheduled, runs: results }), { headers: { "Content-Type": "application/json" } })
-})
+  return { scheduled, stale, runs: results }
+}
+
+// Ejecuciones «en marcha» de hace más de 24 h que ya no avanzan: se dan por
+// fallidas para que no queden colgadas para siempre.
+async function failStale(admin: SupabaseClient): Promise<number> {
+  const { data } = await admin
+    .from("flow_runs")
+    .update({
+      status: "failed",
+      error: "Se detuvo: llevaba más de 24 horas sin terminar.",
+      finished_at: new Date().toISOString(),
+      lease_until: null,
+    })
+    .eq("status", "running")
+    .lt("started_at", new Date(Date.now() - 86_400_000).toISOString())
+    .or(`lease_until.is.null,lease_until.lt.${new Date().toISOString()}`)
+    .select("id")
+  return data?.length ?? 0
+}

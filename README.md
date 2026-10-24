@@ -321,3 +321,13 @@ Despliegue: la migración `20261025090000_schedules.sql` y `supabase functions d
 supabase functions deploy tokko-connection xubio-connection run-flow assistant
 supabase functions deploy runs-cron telegram-webhook mail-cron --no-verify-jwt
 ```
+
+## Revisión antes del despliegue (24 oct)
+
+- **Bandeja y contabilidad, solo administradores:** la bandeja solo la ven owners y admins.
+  - El agente solo usa `inbox_list`, `inbox_read`, `reply_email` y Xubio en ejecuciones lanzadas por un owner o admin activo.
+  - Las automatizaciones «al llegar un correo» y de Telegram solo se lanzan si las creó un owner o admin.
+  - Antes, un miembro podía leer correos a través del agente o de una automatización suya.
+- **Tareas periódicas** (`mail-cron`, `runs-cron`): responden enseguida (202) y siguen en segundo plano con `EdgeRuntime.waitUntil`, como recomienda Supabase. Así no dependen del tiempo de espera de `pg_net`.
+- **Ejecuciones colgadas:** `runs-cron` da por fallidas las ejecuciones «en marcha» de hace más de 24 h.
+- **Migraciones:** las 11 se aplican de cero, en orden, sobre una base limpia, y pasan los 173 tests.

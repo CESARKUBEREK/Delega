@@ -6,7 +6,7 @@
 // la aprobación de una persona.
 import { createClient } from "npm:@supabase/supabase-js@2.118.0"
 import { advance, claim, createRun, type RunRow } from "../_shared/agent.ts"
-import { isUuid } from "../_shared/core.ts"
+import { isUuid, isWorkspaceAdmin } from "../_shared/core.ts"
 import { resolveAi } from "../_shared/llm.ts"
 import { recordMessage } from "../_shared/inbox.ts"
 import { TRIGGER_TEXT_CHARS } from "../_shared/triggers.ts"
@@ -92,6 +92,8 @@ async function launchFlows(workspaceId: string, chatId: string, name: string | n
   let budget = MAX_RUNS_PER_HOUR - (count ?? 0)
 
   for (const flow of flows) {
+    // La bandeja solo la ven los administradores: solo flujos creados por uno.
+    if (!(await isWorkspaceAdmin(admin, workspaceId, flow.created_by))) continue
     if (budget-- <= 0) break
     const settings = (flow.settings ?? {}) as { file_ids?: unknown; model?: unknown }
     const conn = await resolveAi(admin, workspaceId, typeof settings.model === "string" ? settings.model : null)

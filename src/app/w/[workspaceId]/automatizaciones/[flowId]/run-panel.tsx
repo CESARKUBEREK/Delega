@@ -154,6 +154,7 @@ export function ActivationPanel({
   emailFilter,
   schedule,
   nextRun,
+  inboxBlocked,
   canEdit,
 }: {
   workspaceId: string
@@ -166,6 +167,7 @@ export function ActivationPanel({
   emailFilter: EmailFilterInput
   schedule: ScheduleInput
   nextRun: string | null
+  inboxBlocked: boolean
   canEdit: boolean
 }) {
   const router = useRouter()
@@ -200,6 +202,15 @@ export function ActivationPanel({
       if (!result.ok) setError(result.error)
       router.refresh()
     })
+  }
+
+  if (inboxBlocked) {
+    return (
+      <p className="text-sm text-graphite">
+        Esta automatización lee mensajes de la bandeja, que solo ven los administradores. Solo se lanza sola si la creó un administrador:
+        pide a uno que la cree desde el asistente o desde una plantilla.
+      </p>
+    )
   }
 
   if (!channelReady && !scheduled) {

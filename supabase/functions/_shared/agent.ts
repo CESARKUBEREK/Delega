@@ -29,6 +29,7 @@ import { recordMessage } from "./inbox.ts"
 import { MailError, replyHeaders, sendAndRecord } from "./imap.ts"
 import { inboxList, inboxRead, loadThread } from "./inbox-read.ts"
 import { notifyMe } from "./notify.ts"
+import { isWorkspaceAdmin } from "./core.ts"
 import { BUSINESS_READS, businessRead, businessTools, type TokkoLeadPending, tokkoLeadPending } from "./business-tools.ts"
 import { createLead, TokkoError, tokkoKey } from "./tokko.ts"
 import { type XubioCredentials, xubioCredentials } from "./xubio.ts"
@@ -155,12 +156,13 @@ function kindOf(mime: string | null): FileKind {
 }
 
 async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
-  const [{ data: files }, { data: integrations }, { data: contacts }] = await Promise.all([
+  const [{ data: files }, { data: integrations }, { data: contacts }, starterIsAdmin] = await Promise.all([
     run.file_ids.length
       ? admin.from("integration_files").select("id, provider_file_id, name, mime_type").eq("workspace_id", run.workspace_id).in("id", run.file_ids)
       : Promise.resolve({ data: [] as { id: string; provider_file_id: string; name: string; mime_type: string | null }[] }),
     admin.from("integrations").select("id, provider, status, config").eq("workspace_id", run.workspace_id),
     admin.from("contacts").select("name, email").eq("workspace_id", run.workspace_id).order("created_at").limit(50),
+    isWorkspaceAdmin(admin, run.workspace_id, run.started_by),
   ])
 
   const byId = new Map((files ?? []).map((f) => [f.id, f]))
@@ -222,7 +224,8 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
     files: refs,
     googleActive: google?.status === "active",
     mailActive,
-    inboxActive: mailActive || tg?.status === "active",
+    // La bandeja solo la ven los administradores: el agente, igual.
+    inboxActive: starterIsAdmin && (mailActive || tg?.status === "active"),
     calendarActive: calendar?.status === "active",
     timezone: ((calendar?.config ?? {}) as { timezone?: string }).timezone || DEFAULT_TIMEZONE,
     contacts: contactList,
@@ -230,7 +233,8 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
     telegram,
     hubspot,
     tokko: find("tokko")?.status === "active" ? await tokkoKey(admin, run.workspace_id) : null,
-    xubio: find("xubio")?.status === "active" ? await xubioCredentials(admin, run.workspace_id) : null,
+    // Contabilidad: solo en ejecuciones de administradores.
+    xubio: starterIsAdmin && find("xubio")?.status === "active" ? await xubioCredentials(admin, run.workspace_id) : null,
   }
 }
 
