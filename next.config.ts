@@ -15,6 +15,8 @@ const csp = [
   "font-src 'self'",
   `connect-src 'self' ${supabaseUrl} ${supabaseWs}`.trim(),
   "frame-src https://docs.google.com https://drive.google.com https://accounts.google.com",
+  "worker-src 'self'",
+  "manifest-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
   // Los formularios de OAuth redirigen a Supabase y de ahí a Google/Microsoft.
@@ -30,7 +32,8 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+  // El micrófono solo lo usa el dictado del asistente, en el propio sitio.
+  { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=(), payment=()" },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   // El selector de Google abre ventanas emergentes que hablan con esta página.
   { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
@@ -49,7 +52,18 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
-    return [{ source: "/(.*)", headers: securityHeaders }]
+    return [
+      { source: "/(.*)", headers: securityHeaders },
+      // El service worker siempre se descarga de nuevo, para que las versiones nuevas lleguen enseguida.
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
+    ]
   },
 }
 

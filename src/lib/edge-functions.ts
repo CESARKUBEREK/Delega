@@ -9,6 +9,15 @@ export type EdgeResult<T> = { data: T; error?: undefined } | { data?: undefined;
 // usuario. La función vuelve a verificar la sesión y los permisos: aquí no
 // se decide nada. Ninguna clave secreta pasa por Next.js.
 export async function callEdgeFunction<T>(name: string, body: unknown, timeoutMs = 115_000): Promise<EdgeResult<T>> {
+  return send<T>(name, JSON.stringify(body), "application/json", timeoutMs)
+}
+
+// Igual, pero con multipart/form-data (por ejemplo, una grabación de audio).
+export async function callEdgeFunctionForm<T>(name: string, form: FormData, timeoutMs = 115_000): Promise<EdgeResult<T>> {
+  return send<T>(name, form, null, timeoutMs)
+}
+
+async function send<T>(name: string, body: BodyInit, contentType: string | null, timeoutMs: number): Promise<EdgeResult<T>> {
   const supabase = await createClient()
   const { data: claims } = await supabase.auth.getClaims()
   const { data: session } = await supabase.auth.getSession()
@@ -24,9 +33,10 @@ export async function callEdgeFunction<T>(name: string, body: unknown, timeoutMs
       headers: {
         Authorization: `Bearer ${token}`,
         apikey: supabasePublishableKey,
-        "Content-Type": "application/json",
+        // Con FormData, fetch pone el Content-Type con su boundary.
+        ...(contentType ? { "Content-Type": contentType } : {}),
       },
-      body: JSON.stringify(body),
+      body,
       cache: "no-store",
       signal: AbortSignal.timeout(timeoutMs),
     })

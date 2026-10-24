@@ -2,19 +2,8 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
+import type { Cell, Field, Pending } from "@/lib/pending"
 import { cancelRun, continueRun, decideRun } from "../../run-actions"
-
-export type Cell = string | number | boolean | null
-export type Pending =
-  | { tool: "append_rows" | "update_range"; fileName: string; range: string; values: Cell[][]; before: Cell[][] | null }
-  | { tool: "append_to_document"; fileName: string; text: string }
-  | { tool: "create_document"; title: string; text: string }
-  | { tool: "send_email"; to: string; address: string; subject: string; text: string }
-  | { tool: "send_telegram"; to: string; text: string }
-  // Archivos, eventos y CRM: la página ya prepara la descripción y los campos.
-  | { tool: "generic"; description: string; verb: string; fields: Field[]; text: string | null; textCaption: string }
-
-export type Field = { label: string; value: string; before?: string | null }
 
 function describe(p: Pending): string {
   switch (p.tool) {
@@ -75,8 +64,17 @@ function TextPreview({ text, caption }: { text: string; caption: string }) {
 }
 
 // Mientras la ejecución está "en curso", pide al servidor que avance otro
-// tramo y refresca la página con la bitácora nueva.
-export function RunControls({ runId, status }: { runId: string; status: string }) {
+// tramo y refresca la página con la bitácora nueva. Si el servidor ya la está
+// avanzando en segundo plano (busy), espera un poco más antes de volver a pedir.
+export function RunControls({
+  runId,
+  status,
+  workingText = "El agente está trabajando… La bitácora se actualiza sola.",
+}: {
+  runId: string
+  status: string
+  workingText?: string
+}) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [cancelling, startCancel] = useTransition()
@@ -104,7 +102,7 @@ export function RunControls({ runId, status }: { runId: string; status: string }
         return
       }
       if (result.status === "running") {
-        await new Promise((r) => setTimeout(r, 1500))
+        await new Promise((r) => setTimeout(r, result.busy ? 3000 : 1500))
         if (mounted.current) setTick((t) => t + 1)
       }
     })()
@@ -114,7 +112,7 @@ export function RunControls({ runId, status }: { runId: string; status: string }
     <div className="flex flex-wrap items-center gap-4">
       {status === "running" ? (
         <p className="text-sm text-graphite" role="status">
-          El agente está trabajando… La bitácora se actualiza sola.
+          {workingText}
         </p>
       ) : null}
       {error ? (

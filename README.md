@@ -55,7 +55,7 @@ npm run dev                  # http://localhost:3000
 
 ### Variables en Vercel
 
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` y `NEXT_PUBLIC_SITE_URL`. Son valores públicos; ninguna variable secreta hace falta en Vercel en esta fase.
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SITE_URL` y `VAPID_PUBLIC_KEY` (la clave pública de los avisos, ver «App móvil»). Son valores públicos; ninguna variable secreta hace falta en Vercel.
 
 ## Base de datos
 
@@ -178,3 +178,23 @@ supabase functions deploy telegram-webhook --no-verify-jwt
 supabase functions deploy inbox-sync inbox-classify inbox-reply telegram-connection
 supabase functions deploy telegram-webhook --no-verify-jwt
 ```
+
+## App móvil (PWA), chat que ejecuta y dictado
+
+- **App instalable:** `src/app/manifest.ts` (abre en `/abrir`, que lleva al chat del último espacio usado; lo recuerda la cookie `orkesta_ws` que pone el proxy), iconos en `public/icons/` y `src/app/apple-icon.png`. El service worker (`public/sw.js`) solo guarda `/offline` y los iconos: nunca páginas ni datos de clientes. En el móvil, barra inferior Chat · Aprobaciones · Bandeja · Más.
+- **«Ejecutar ahora»:** los planes con disparador manual se ejecutan desde el chat sin guardarlos (`run-flow`, acción `start_from_message`; el plan se lee del mensaje con la RLS del usuario y la petición original acompaña a la ejecución). `flow_runs.source_message_id` enlaza la ejecución con el mensaje y el chat muestra su avance, las aprobaciones y el resultado. Al lanzar o aprobar, `run-flow` avanza el primer tramo también en segundo plano (`EdgeRuntime.waitUntil`), para que siga aunque se cierre la app.
+- **Aprobaciones:** `/w/[id]/aprobaciones` reúne todo lo pendiente (RLS: las propias o, para admins, las del espacio) y sigue avanzando las ejecuciones en curso. Nunca se aprueba por voz ni desde el aviso.
+- **Avisos (Web Push):** `push_subscriptions` + función `push_subscribe` (cada usuario ve y borra sus dispositivos; las claves solo las lee `service_role`). El agente avisa al pedir aprobación (`_shared/push.ts`: VAPID y cifrado `aes128gcm` con WebCrypto, sin dependencias) a quien lanzó la ejecución o, si no hay nadie, a los administradores. El texto del aviso no incluye datos de clientes. Solo se envía a los servicios de push de los navegadores (Google, Mozilla, Apple, Microsoft). En iPhone hace falta iOS 16.4+ y la app instalada. La función `push` envía un aviso de prueba.
+- **Dictado:** botón de micrófono en el chat (hasta 2 minutos) → `/w/[id]/voz` (Route Handler) → `voice-transcribe`, que transcribe con la clave de OpenAI del espacio (`gpt-transcribe`, o `gpt-4o-mini-transcribe` si la cuenta no tiene acceso). El audio no se guarda; el texto aparece en el cuadro para revisarlo antes de enviarlo. Consumo en `usage_events` (`kind = 'transcription'`, `audio_seconds`).
+- **Respuesta leída:** con la voz del propio dispositivo (gratis, sin servidor). No se usa la voz de OpenAI: sus modelos de `/v1/audio/speech` se retiran el 6 de enero de 2027.
+
+Claves VAPID (una vez; la privada no sale de Supabase):
+
+```bash
+node -e "const c=require('crypto').createECDH('prime256v1');c.generateKeys();console.log('VAPID_PUBLIC_KEY='+c.getPublicKey().toString('base64url'));console.log('VAPID_PRIVATE_KEY='+c.getPrivateKey().toString('base64url'))"
+supabase secrets set VAPID_PUBLIC_KEY=... VAPID_PRIVATE_KEY=... VAPID_SUBJECT=mailto:tu-correo@ejemplo.com
+# y VAPID_PUBLIC_KEY (la misma pública) en las variables de Vercel
+supabase functions deploy run-flow assistant voice-transcribe push
+supabase functions deploy telegram-webhook --no-verify-jwt
+```
+

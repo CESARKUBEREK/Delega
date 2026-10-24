@@ -71,7 +71,7 @@ export async function disconnectGoogle(_prev: ActionResult | null, formData: For
 // ---------------------------------------------------------------------------
 
 export type RunStatus = "running" | "awaiting_approval" | "succeeded" | "failed" | "cancelled"
-export type RunStep = { ok: true; status: RunStatus; runId: string } | { ok: false; code: string; error: string }
+export type RunStep = { ok: true; status: RunStatus; runId: string; busy?: boolean } | { ok: false; code: string; error: string }
 
 export async function startRun(input: {
   workspaceId: string
@@ -92,11 +92,28 @@ export async function startRun(input: {
   return { ok: true, status: result.data.status, runId: result.data.run_id }
 }
 
+// «Ejecutar ahora» desde el chat. La Edge Function lee el plan del mensaje
+// con los permisos del usuario: aquí solo viaja su número.
+export async function startRunFromMessage(input: { workspaceId: string; messageId: number; fileIds: string[] }): Promise<RunStep> {
+  if (!UUID_RE.test(input.workspaceId) || !Number.isSafeInteger(input.messageId) || input.messageId <= 0) {
+    return { ok: false, code: "bad_request", error: "Datos no válidos." }
+  }
+  const result = await callEdgeFunction<{ run_id: string; status: RunStatus }>("run-flow", {
+    action: "start_from_message",
+    workspace_id: input.workspaceId,
+    message_id: input.messageId,
+    file_ids: input.fileIds.filter((id) => UUID_RE.test(id)).slice(0, 5),
+  })
+  if (result.error) return { ok: false, code: result.error.code, error: result.error.message }
+  refresh()
+  return { ok: true, status: result.data.status, runId: result.data.run_id }
+}
+
 async function runAction(body: Record<string, unknown>): Promise<RunStep> {
   if (typeof body.run_id !== "string" || !UUID_RE.test(body.run_id)) return { ok: false, code: "bad_request", error: "Ejecución no válida." }
-  const result = await callEdgeFunction<{ run_id: string; status: RunStatus }>("run-flow", body)
+  const result = await callEdgeFunction<{ run_id: string; status: RunStatus; busy?: boolean }>("run-flow", body)
   if (result.error) return { ok: false, code: result.error.code, error: result.error.message }
-  return { ok: true, status: result.data.status, runId: result.data.run_id }
+  return { ok: true, status: result.data.status, runId: result.data.run_id, busy: result.data.busy === true }
 }
 
 export async function continueRun(runId: string): Promise<RunStep> {
@@ -325,4 +342,60 @@ export async function updateThread(_prev: SettingsState, formData: FormData): Pr
   if (error || !data?.length) return { error: "Solo un administrador puede corregir la clasificación." }
   refresh()
   return { message: "Clasificación guardada. La IA ya no cambiará estos campos." }
+}
+
+// ---------------------------------------------------------------------------
+// Avisos en el móvil (Web Push)
+// ---------------------------------------------------------------------------
+// Servicios de push de los navegadores: el servidor solo envía avisos a estos.
+const PUSH_HOSTS = [
+  /^fcm\.googleapis\.com$/,
+  /^([a-z0-9-]+\.)*push\.services\.mozilla\.com$/,
+  /^([a-z0-9-]+\.)*push\.apple\.com$/,
+  /^([a-z0-9-]+\.)*notify\.windows\.com$/,
+]
+const B64URL = /^[A-Za-z0-9_-]+$/
+
+export async function savePushSubscription(input: {
+  endpoint: string
+  p256dh: string
+  auth: string
+  userAgent: string
+}): Promise<ActionResult> {
+  let url: URL
+  try {
+    url = new URL(input.endpoint)
+  } catch {
+    return { ok: false, error: "Este navegador devolvió una suscripción no válida." }
+  }
+  if (url.protocol !== "https:" || url.port || !PUSH_HOSTS.some((re) => re.test(url.hostname)) || input.endpoint.length > 1000) {
+    return { ok: false, error: "Este navegador usa un servicio de avisos que Orkesta no admite." }
+  }
+  const p256dh = input.p256dh.replace(/=+$/, "")
+  const auth = input.auth.replace(/=+$/, "")
+  if (!B64URL.test(p256dh) || !B64URL.test(auth)) return { ok: false, error: "Este navegador devolvió claves no válidas." }
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("push_subscribe", {
+    p_endpoint: input.endpoint,
+    p_p256dh: p256dh,
+    p_auth: auth,
+    p_user_agent: input.userAgent.slice(0, 300),
+  })
+  if (error) return { ok: false, error: "No se pudieron activar los avisos en este dispositivo." }
+  return { ok: true }
+}
+
+export async function removePushSubscription(endpoint: string): Promise<ActionResult> {
+  if (!endpoint.startsWith("https://") || endpoint.length > 1000) return { ok: false, error: "Suscripción no válida." }
+  const supabase = await createClient()
+  // La RLS solo deja borrar los dispositivos propios.
+  await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint)
+  return { ok: true }
+}
+
+export async function sendTestPush(): Promise<ActionResult> {
+  const result = await callEdgeFunction("push", { action: "test" }, 30_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  return { ok: true }
 }

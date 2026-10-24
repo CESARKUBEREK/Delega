@@ -44,7 +44,7 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
 
       {waiting ? (
         <Link
-          href={`${base}/historial`}
+          href={`${base}/aprobaciones`}
           className="border-2 border-stroke bg-sheet px-5 py-3 font-medium text-ink hover:bg-paper"
         >
           {waiting === 1 ? "1 ejecución espera tu aprobación" : `${waiting} ejecuciones esperan tu aprobación`} →
