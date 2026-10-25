@@ -331,3 +331,19 @@ supabase functions deploy runs-cron telegram-webhook mail-cron --no-verify-jwt
 - **Tareas periódicas** (`mail-cron`, `runs-cron`): responden enseguida (202) y siguen en segundo plano con `EdgeRuntime.waitUntil`, como recomienda Supabase. Así no dependen del tiempo de espera de `pg_net`.
 - **Ejecuciones colgadas:** `runs-cron` da por fallidas las ejecuciones «en marcha» de hace más de 24 h.
 - **Migraciones:** las 11 se aplican de cero, en orden, sobre una base limpia, y pasan los 173 tests.
+
+## Zona horaria y canales de aviso (6E-2)
+
+- **Zona horaria del espacio** (`workspaces.timezone`, Configuración → Zona horaria del espacio): solo owners y admins, con `workspace_set_timezone`. Al cambiarla se recalculan las programadas. Si no se elige, se usa la de Google Calendar y, si no hay, Europe/Madrid. El agente la usa para fechas y agenda.
+- **Mis avisos** (`user_channels`, Configuración → Mis avisos): cada persona elige por dónde le llegan sus avisos (`notify_me`): push, correo o Telegram. Por defecto, todos. El aviso siempre queda en la ejecución.
+- **Vincular Telegram:**
+  1. «Vincular mi Telegram» genera un código de 8 caracteres que caduca en 15 min. Solo se guarda su huella sha256.
+  2. Se escribe `/vincular CÓDIGO` al bot del espacio en un chat privado, o se abre el enlace `t.me/<bot>?start=CÓDIGO`.
+  3. `telegram-webhook` lo resuelve con `telegram_link_complete`. Ese mensaje no entra en la bandeja ni lanza flujos.
+- **El asistente propone la programación:** `plan.trigger.schedule` (frecuencia, hora, día) rellena la programación al guardar el plan. Avisar al propio usuario es un paso `notify` sin conexión y sin aprobación.
+- **Plantillas nuevas:** Control de vencimientos (lunes) y Cifras de la semana en una planilla (viernes).
+
+```bash
+supabase functions deploy run-flow assistant
+supabase functions deploy telegram-webhook runs-cron mail-cron --no-verify-jwt
+```
