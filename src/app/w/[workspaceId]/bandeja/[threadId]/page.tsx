@@ -33,7 +33,7 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
   const [{ data: thread }, { data: messages }, { data: integration }] = await Promise.all([
     supabase
       .from("inbox_threads")
-      .select("id, channel, subject, contact_name, contact_address, category, client, project, urgency, needs_reply, summary, archived, manually_edited, classified_at, message_count")
+      .select("id, channel, external_id, subject, contact_name, contact_address, category, client, project, urgency, needs_reply, summary, archived, manually_edited, classified_at, message_count")
       .eq("id", threadId)
       .eq("workspace_id", workspaceId)
       .maybeSingle(),
@@ -44,13 +44,16 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
       .eq("workspace_id", workspaceId)
       .order("sent_at", { ascending: false })
       .limit(200),
-    supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["gmail", "telegram"]),
+    supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["gmail", "imap", "telegram"]),
   ])
   if (!thread) notFound()
   const integrations = integration ?? []
-  const settings = (integrations.find((i) => i.provider === "gmail") ?? integrations[0])?.config as { categories?: string[] } | undefined
+  const settings = (integrations.find((i) => i.provider === "gmail") ?? integrations.find((i) => i.provider === "imap") ?? integrations[0])
+    ?.config as { categories?: string[] } | undefined
   const categories = settings?.categories?.length ? settings.categories : DEFAULT_CATEGORIES
-  const channelIntegration = integrations.find((i) => i.provider === (thread.channel === "email" ? "gmail" : "telegram"))
+  // Se responde por la misma cuenta por la que llegó la conversación.
+  const provider = thread.channel === "telegram" ? "telegram" : thread.external_id.startsWith("imap:") ? "imap" : "gmail"
+  const channelIntegration = integrations.find((i) => i.provider === provider)
   const canReply = channelIntegration?.status === "active" && (thread.channel === "telegram" || Boolean(thread.contact_address))
   const who = thread.contact_name ?? thread.contact_address ?? "Sin nombre"
 
@@ -76,7 +79,7 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
             <p className="text-sm text-graphite">
               {channelIntegration
                 ? "No se puede responder: la conexión no está activa o falta la dirección del contacto."
-                : `Conecta ${thread.channel === "email" ? "Gmail" : "el bot de Telegram"} para responder desde aquí.`}
+                : `Conecta ${provider === "gmail" ? "Gmail" : provider === "imap" ? "el correo IMAP" : "el bot de Telegram"} para responder desde aquí.`}
             </p>
           )}
         </div>

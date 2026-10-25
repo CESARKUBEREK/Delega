@@ -244,12 +244,14 @@ export async function setFlowActive(input: {
 // ---------------------------------------------------------------------------
 export type SettingsState = { error?: string; message?: string }
 
-export async function syncInbox(workspaceId: string): Promise<{ ok: true; added: number; more: boolean } | { ok: false; error: string }> {
+export async function syncInbox(
+  workspaceId: string,
+): Promise<{ ok: true; added: number; more: boolean; warnings: string[] } | { ok: false; error: string }> {
   if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
-  const result = await callEdgeFunction<{ added: number; more: boolean }>("inbox-sync", { workspace_id: workspaceId }, 110_000)
+  const result = await callEdgeFunction<{ added: number; more: boolean; warnings?: string[] }>("inbox-sync", { workspace_id: workspaceId }, 110_000)
   if (result.error) return { ok: false, error: result.error.message }
   refresh()
-  return { ok: true, added: result.data.added, more: result.data.more }
+  return { ok: true, added: result.data.added, more: result.data.more, warnings: result.data.warnings ?? [] }
 }
 
 export async function saveInboxSettings(_prev: SettingsState, formData: FormData): Promise<SettingsState> {
@@ -397,5 +399,53 @@ export async function removePushSubscription(endpoint: string): Promise<ActionRe
 export async function sendTestPush(): Promise<ActionResult> {
   const result = await callEdgeFunction("push", { action: "test" }, 30_000)
   if (result.error) return { ok: false, error: result.error.message }
+  return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
+// Correo IMAP/SMTP
+// ---------------------------------------------------------------------------
+export type ImapState = { error?: string; message?: string }
+const HOST = /^(?=.{4,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i
+
+// La contraseña se reenvía tal cual a la Edge Function, que la comprueba con
+// el servidor y la guarda cifrada en Vault. Next.js no la guarda ni la registra.
+export async function saveImap(_prev: ImapState, formData: FormData): Promise<ImapState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const email = String(formData.get("email") ?? "").trim()
+  const password = String(formData.get("password") ?? "")
+  const imapHost = String(formData.get("imapHost") ?? "").trim()
+  const smtpHost = String(formData.get("smtpHost") ?? "").trim()
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Escribe una dirección de correo válida." }
+  if (!password) return { error: "Escribe la contraseña del correo." }
+  if (!HOST.test(imapHost) || !HOST.test(smtpHost)) return { error: "Escribe los servidores IMAP y SMTP (por ejemplo, imap.tudominio.com)." }
+  const result = await callEdgeFunction<{ email: string; sent_folder: string | null }>(
+    "imap-connection",
+    {
+      action: "save",
+      workspace_id: workspaceId,
+      email,
+      user: String(formData.get("user") ?? "").trim(),
+      password,
+      display_name: String(formData.get("displayName") ?? "").trim(),
+      imap_host: imapHost,
+      smtp_host: smtpHost,
+    },
+    60_000,
+  )
+  if (result.error) return { error: result.error.message }
+  refresh()
+  return {
+    message: `Correo ${result.data.email} conectado.${result.data.sent_folder ? "" : " No se encontró la carpeta de enviados: las respuestas salen igual, pero no se guardará copia."} Abre la bandeja y pulsa «Traer correo».`,
+  }
+}
+
+export async function disconnectImap(_prev: ActionResult | null, formData: FormData): Promise<ActionResult | null> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const result = await callEdgeFunction("imap-connection", { action: "disconnect", workspace_id: workspaceId }, 20_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  refresh()
   return { ok: true }
 }
