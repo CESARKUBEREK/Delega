@@ -348,6 +348,16 @@ supabase functions deploy run-flow assistant
 supabase functions deploy telegram-webhook runs-cron mail-cron --no-verify-jwt
 ```
 
+## Tu chat con Orkesta por Telegram (25 oct)
+
+El chat privado que cada persona vincula (Configuración → Mis avisos) es también su chat con Orkesta. Sus mensajes no entran en la bandeja; cualquier otro chat sigue igual (bandeja y automatizaciones `telegram_message`). Código: `_shared/telegram-chat.ts`, `_shared/telegram-notice.ts`, `_shared/decide.ts`, `_shared/transcribe.ts`.
+
+- **Peticiones:** texto o nota de voz (transcrita con la clave de OpenAI del espacio, máx. 150 s). Crea una ejecución con disparador `telegram_chat`, con los permisos de esa persona y los 5 archivos elegidos más recientes. Lleva como contexto los 3 últimos intercambios de la última hora (`/nuevo` lo corta: `user_channels.telegram_chat_since`). La respuesta (el resumen de `finish`) vuelve al chat; si tarda, sigue `runs-cron`. Máx. 30 peticiones por hora y persona.
+- **Aprobaciones con botones:** cuando una ejecución espera aprobación, además del push se envía el detalle al chat de quien decide (quien la lanzó o, si no, los admins), si tiene Telegram vinculado y activado en Mis avisos. Cada botón lleva el id de la ejecución y una huella de la acción concreta (`ap|re:<run>:<sha256(call_id)[0..12]>`): un botón viejo nunca decide otra acción. Caducan a las 24 h. Solo cuenta si lo pulsa la persona dueña del chat privado. `update_range` (sobrescribir celdas) solo se aprueba en la app. La decisión usa la misma lógica que la app (`decideRun`) y queda en la ejecución como «Decisión tomada desde Telegram».
+- **Comandos:** `/pendientes`, `/automatizaciones` (botones para lanzar, pausar o reactivar; solo quien la creó o un admin), `/resumen`, `/nuevo`, `/ayuda`.
+- **Webhook:** ahora también recibe `callback_query`. `runs-cron` vuelve a registrar una vez los webhooks de los bots conectados antes (`config.webhook_v`), con el mismo secreto y sin perder mensajes. No hace falta volver a conectar el bot.
+- Migración `20261025230000_telegram_chat.sql`, test `014_telegram_chat.test.sql` y `supabase/functions/_shared/telegram-chat.test.ts` (`deno test -A`).
+
 ## Despliegue automático de las funciones (desde el 25 oct)
 
 - **Proyecto:** Supabase **DOrkesta** (`xgbmpziocflgsszzgyeb`).

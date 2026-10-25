@@ -5,7 +5,7 @@
 import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
 import { randomToken } from "../_shared/google.ts"
 import { DEFAULT_CATEGORIES } from "../_shared/inbox.ts"
-import { BOT_TOKEN_RE, deleteWebhook, getMe, parseTelegramSecret, setWebhook, TelegramError } from "../_shared/telegram.ts"
+import { BOT_TOKEN_RE, deleteWebhook, getMe, parseTelegramSecret, setWebhook, TelegramError, WEBHOOK_VERSION } from "../_shared/telegram.ts"
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
 
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     await admin.rpc("integration_set_config", {
       p_workspace_id: workspaceId,
       p_provider: "telegram",
-      p_config: { categories: DEFAULT_CATEGORIES, ...(prev?.config ?? {}), bot_username: me.username ?? null, bot_id: me.id },
+      p_config: { categories: DEFAULT_CATEGORIES, ...(prev?.config ?? {}), bot_username: me.username ?? null, bot_id: me.id, webhook_v: WEBHOOK_VERSION },
     })
     try {
       await setWebhook(token, `${SUPABASE_URL}/functions/v1/telegram-webhook?c=${integrationId}`, secretToken)

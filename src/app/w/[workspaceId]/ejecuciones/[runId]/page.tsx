@@ -121,6 +121,12 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
           Mensaje de Telegram que la lanzó: «{String((run.trigger as { text?: string }).text ?? "").slice(0, 500)}»
         </p>
       ) : null}
+      {(run.trigger as { type?: string } | null)?.type === "telegram_chat" ? (
+        <p className="border-l-2 border-rule pl-3 text-sm text-graphite">
+          {(run.trigger as { voice?: boolean }).voice ? "Nota de voz que enviaste por Telegram" : "Lo que pediste por Telegram"}: «
+          {String((run.trigger as { text?: string }).text ?? "").slice(0, 500)}»
+        </p>
+      ) : null}
       {(run.trigger as { type?: string } | null)?.type === "email_message" ? (
         <p className="border-l-2 border-rule pl-3 text-sm text-graphite">
           {(() => {
