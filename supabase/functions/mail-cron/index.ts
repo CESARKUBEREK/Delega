@@ -6,6 +6,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.118.0"
 import { syncImap } from "../_shared/imap.ts"
 import { launchEmailFlows } from "../_shared/triggers.ts"
+import { runInBackground } from "../_shared/background.ts"
 
 const BUDGET_MS = 110_000
 
@@ -36,6 +37,10 @@ Deno.serve(async (req) => {
     return new Response("Forbidden", { status: 403 })
   }
 
+  return runInBackground("mail-cron", syncAll)
+})
+
+async function syncAll() {
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
   const { data: due } = await admin.rpc("mail_integrations_due", { p_limit: 30 })
   const deadline = Date.now() + BUDGET_MS
@@ -70,5 +75,5 @@ Deno.serve(async (req) => {
       })
     }
   }
-  return new Response(JSON.stringify({ ok: true, done, failed, launched }), { headers: { "Content-Type": "application/json" } })
-})
+  return { done, failed, launched }
+}

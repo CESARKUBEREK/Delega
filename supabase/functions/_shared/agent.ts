@@ -29,6 +29,10 @@ import { recordMessage } from "./inbox.ts"
 import { MailError, replyHeaders, sendAndRecord } from "./imap.ts"
 import { inboxList, inboxRead, loadThread } from "./inbox-read.ts"
 import { notifyMe } from "./notify.ts"
+import { isWorkspaceAdmin } from "./core.ts"
+import { BUSINESS_READS, businessRead, businessTools, type TokkoLeadPending, tokkoLeadPending } from "./business-tools.ts"
+import { createLead, TokkoError, tokkoKey } from "./tokko.ts"
+import { type XubioCredentials, xubioCredentials } from "./xubio.ts"
 import { parseTelegramSecret, sendTelegram, TelegramError } from "./telegram.ts"
 import { calendarToken, createEvent, DATE_RE, DEFAULT_TIMEZONE, type EventInput, getEvent, listEvents, updateEvent } from "./calendar.ts"
 import {
@@ -119,6 +123,7 @@ export type PendingAction =
   | { call_id: string; tool: "crm_update"; object: CrmObject; id: string; label: string; properties: Props; before: Record<string, string | null> }
   | { call_id: string; tool: "crm_note"; object: CrmObject; id: string; label: string; text: string }
   | { call_id: string; tool: "crm_task"; object: CrmObject; id: string; label: string; subject: string; text: string; due_date: string | null }
+  | TokkoLeadPending
 
 export class RunError extends Error {}
 
@@ -138,6 +143,8 @@ type Resources = {
   recipients: Recipient[]
   telegram: { token: string; integrationId: string } | null
   hubspot: { token: string; portalId: number | null } | null
+  tokko: string | null
+  xubio: XubioCredentials | null
 }
 
 function kindOf(mime: string | null): FileKind {
@@ -149,12 +156,13 @@ function kindOf(mime: string | null): FileKind {
 }
 
 async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
-  const [{ data: files }, { data: integrations }, { data: contacts }] = await Promise.all([
+  const [{ data: files }, { data: integrations }, { data: contacts }, starterIsAdmin] = await Promise.all([
     run.file_ids.length
       ? admin.from("integration_files").select("id, provider_file_id, name, mime_type").eq("workspace_id", run.workspace_id).in("id", run.file_ids)
       : Promise.resolve({ data: [] as { id: string; provider_file_id: string; name: string; mime_type: string | null }[] }),
     admin.from("integrations").select("id, provider, status, config").eq("workspace_id", run.workspace_id),
     admin.from("contacts").select("name, email").eq("workspace_id", run.workspace_id).order("created_at").limit(50),
+    isWorkspaceAdmin(admin, run.workspace_id, run.started_by),
   ])
 
   const byId = new Map((files ?? []).map((f) => [f.id, f]))
@@ -216,13 +224,17 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
     files: refs,
     googleActive: google?.status === "active",
     mailActive,
-    inboxActive: mailActive || tg?.status === "active",
+    // La bandeja solo la ven los administradores: el agente, igual.
+    inboxActive: starterIsAdmin && (mailActive || tg?.status === "active"),
     calendarActive: calendar?.status === "active",
     timezone: ((calendar?.config ?? {}) as { timezone?: string }).timezone || DEFAULT_TIMEZONE,
     contacts: contactList,
     recipients,
     telegram,
     hubspot,
+    tokko: find("tokko")?.status === "active" ? await tokkoKey(admin, run.workspace_id) : null,
+    // Contabilidad: solo en ejecuciones de administradores.
+    xubio: starterIsAdmin && find("xubio")?.status === "active" ? await xubioCredentials(admin, run.workspace_id) : null,
   }
 }
 
@@ -389,6 +401,7 @@ function toolDefs(r: Resources): ToolDef[] {
       }),
     )
   }
+  tools.push(...businessTools(r))
   if (r.inboxActive) {
     tools.push(
       fn("inbox_list", "Lista conversaciones de la bandeja (correo y Telegram), de la más reciente a la más antigua, con su clasificación.", {
@@ -447,6 +460,9 @@ Reglas:
   3 veces por ejecución. Nunca lo uses para escribir a otras personas.
 - En la bandeja, primero inbox_list y luego inbox_read para leer una conversación. Para contestar a un correo de la
   bandeja usa reply_email (requiere aprobación).
+- Tokko Broker: busca con tokko_search antes de responder sobre propiedades y no inventes precios ni características;
+  usa los datos y el enlace de la ficha. Registra al interesado con tokko_register_lead (requiere aprobación).
+- Xubio es contabilidad: solo puedes consultar (xubio_list, xubio_get). No digas que creaste facturas ni cobros.
 - Cuando acabes, llama a finish con un resumen en español: qué hiciste, resultados clave y qué quedó pendiente.`
 
 // ---------------------------------------------------------------------------
@@ -753,6 +769,8 @@ function proposalTitle(p: PendingAction): string {
       return `Propone añadir una nota a «${p.label}» en HubSpot`
     case "crm_task":
       return `Propone crear la tarea «${p.subject}» en HubSpot`
+    case "tokko_lead":
+      return `Propone registrar la consulta de ${p.name} en Tokko`
   }
 }
 
@@ -785,6 +803,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
   const tools = toolDefs(res)
   let calToken: string | null = null
   const calendar = async () => (calToken ??= (await calendarToken(admin, run.workspace_id)).token)
+  const business: { xubioToken?: string } = {}
 
   while (Date.now() < deadline) {
     if (run.tool_calls >= MAX_TOOL_CALLS) {
@@ -902,6 +921,14 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       continue
     }
 
+    if (BUSINESS_READS.has(call.name ?? "")) {
+      const { out, title } = await businessRead(call.name!, args, res, business)
+      respond(out)
+      await addEvent(admin, run, (out as { error?: string }).error ? "error" : "tool", title, { tool: call.name })
+      await save(admin, run, {})
+      continue
+    }
+
     // Aviso al propio usuario: sin aprobación.
     if (call.name === "notify_me") {
       const out = await notifyMe(admin, run, { subject: str(args.subject, 300), text: str(args.text, 8000) }, res.mailActive)
@@ -950,6 +977,10 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
         pending = { call_id: call.call_id!, tool: "send_email", to_label: to.label, address: to.address, subject, body }
         if (to.thread) pending.thread_id = to.thread
       }
+    } else if (call.name === "tokko_register_lead") {
+      const p = tokkoLeadPending(call.call_id!, args, res)
+      if (typeof p === "string") invalid = p
+      else pending = p
     } else if (call.name === "reply_email") {
       const thread = res.mailActive ? await loadThread(admin, run.workspace_id, args.thread) : null
       const body = str(args.body, 20_000)
@@ -1152,6 +1183,13 @@ export async function executePending(admin: Admin, run: RunRow, pending: Pending
       return JSON.stringify({ ok: true, event: ev })
     }
 
+    if (pending.tool === "tokko_lead") {
+      if (!res.tokko) throw new RunError("Tokko no está conectado.")
+      await createLead(res.tokko, pending)
+      await addEvent(admin, run, "approved", `Aprobado: consulta de ${pending.name} registrada en Tokko`, { tool: pending.tool, decided_by: decidedBy })
+      return JSON.stringify({ ok: true })
+    }
+
     if (pending.tool === "crm_create" || pending.tool === "crm_update" || pending.tool === "crm_note" || pending.tool === "crm_task") {
       if (!res.hubspot) throw new RunError("HubSpot no está conectado.")
       const hs = res.hubspot.token
@@ -1236,7 +1274,8 @@ export async function executePending(admin: Admin, run: RunRow, pending: Pending
     })
     return JSON.stringify({ ok: true, ...out })
   } catch (e) {
-    const msg = e instanceof RunError || e instanceof GoogleError || e instanceof TelegramError || e instanceof HubSpotError || e instanceof MailError
+    const msg = e instanceof RunError || e instanceof GoogleError || e instanceof TelegramError || e instanceof HubSpotError || e instanceof MailError ||
+        e instanceof TokkoError
       ? e.message
       : "No se pudo completar la acción."
     await addEvent(admin, run, "error", `Aprobado, pero falló: ${msg}`)

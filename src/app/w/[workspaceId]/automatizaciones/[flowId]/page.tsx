@@ -55,6 +55,12 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
   const canDelete = isAdmin || flow.created_by === user.id
   const trigger = plan && AUTO_TRIGGERS.has(plan.trigger.type) ? (plan.trigger.type as "telegram_message" | "email_message" | "schedule") : null
   const autoTrigger = trigger !== null
+  // La bandeja solo la ven los administradores: los flujos que arrancan con un
+  // correo o un mensaje solo se lanzan si los creó un owner o admin.
+  const { data: creator } = flow.created_by
+    ? await supabase.from("memberships").select("role, status").eq("workspace_id", workspaceId).eq("user_id", flow.created_by).maybeSingle()
+    : { data: null }
+  const creatorIsAdmin = creator?.status === "active" && (creator.role === "owner" || creator.role === "admin")
   const channelReady = (channels ?? []).some(
     (c) => c.status === "active" && c.provider === (trigger === "email_message" ? "imap" : "telegram"),
   )
@@ -94,6 +100,7 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
               files={files}
               savedFileIds={savedFileIds}
               channelReady={channelReady}
+              inboxBlocked={(trigger === "email_message" || trigger === "telegram_message") && !creatorIsAdmin}
               emailFilter={emailFilter}
               schedule={schedule}
               nextRun={flow.next_run_at ? formatLong(flow.next_run_at, timezone) : null}

@@ -32,7 +32,9 @@ Reglas:
   la agenda, crear y cambiar eventos), HubSpot (crm: buscar y leer contactos, empresas y negocios; crearlos,
   actualizarlos, cambiar la etapa de un negocio, añadir notas y tareas), correo (email: el correo de su dominio, de su
   hosting o Gmail, conectado por IMAP/SMTP; enviar correos a contactos autorizados; la bandeja clasifica los recibidos) y Telegram (telegram: responder por el bot a quien
-  escribió). Bases de datos aún no: si el flujo las necesita, inclúyelas y dilo en "reply" como pendiente.
+  escribió), Tokko Broker (properties: buscar propiedades y emprendimientos de la inmobiliaria y registrar consultas
+  de interesados en su CRM) y Xubio (accounting: consultar clientes, proveedores, productos y facturas de venta y de
+  compra; solo lectura, no emite facturas). Bases de datos aún no: si el flujo las necesita, inclúyelas y dilo en "reply" como pendiente.
 - Si el flujo debe arrancar cuando llegue un mensaje al bot de Telegram, usa el disparador "telegram_message".
   Si debe arrancar al llegar un correo, usa "email_message": el agente recibe ese correo y puede contestar a su
   remitente en el mismo hilo. El usuario elige después qué correos lo lanzan (remitentes, palabras del asunto o del

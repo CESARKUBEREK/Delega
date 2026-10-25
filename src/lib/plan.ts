@@ -78,11 +78,13 @@ export const CONNECTION_LABEL: Record<string, string> = {
   telegram: "Telegram",
   drive: "Drive",
   crm: "HubSpot",
+  properties: "Tokko",
+  accounting: "Xubio",
   none: "",
 }
 
 // Conexiones que ya funcionan en esta versión.
-export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet", "documents", "drive", "email", "telegram", "calendar", "crm"])
+export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet", "documents", "drive", "email", "telegram", "calendar", "crm", "properties", "accounting"])
 
 // Tipo legible de un archivo elegido en Drive.
 export function fileKindLabel(mime: string | null): string {

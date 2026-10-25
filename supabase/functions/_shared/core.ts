@@ -78,3 +78,17 @@ export async function membershipRole(ctx: AuthContext, workspaceId: string): Pro
 }
 
 // Los modelos de cada proveedor de IA están en _shared/llm.ts.
+
+// ¿Es esta persona owner o admin activa del espacio? La bandeja y la
+// contabilidad solo las ven ellos, así que el agente solo las usa en sus ejecuciones.
+export async function isWorkspaceAdmin(admin: SupabaseClient, workspaceId: string, userId: string | null): Promise<boolean> {
+  if (!userId) return false
+  const { data } = await admin
+    .from("memberships")
+    .select("role")
+    .eq("workspace_id", workspaceId)
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .maybeSingle()
+  return data?.role === "owner" || data?.role === "admin"
+}

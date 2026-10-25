@@ -301,3 +301,33 @@ $$);
 - **Plantillas programadas:** resumen de la mañana, correos sin responder, agenda de mañana e informe semanal del CRM; «Negocios parados» e «Informe de la semana» pasan a ser programadas.
 
 Despliegue: la migración `20261025090000_schedules.sql` y `supabase functions deploy run-flow assistant` + `supabase functions deploy runs-cron --no-verify-jwt` (el `pg_cron` de `runs-cron` ya corre cada minuto).
+
+## Tokko Broker y Xubio
+
+- **Tokko Broker** (`tokko-connection`, `_shared/tokko.ts`, categoría Inmobiliaria): clave de API de la inmobiliaria (Mi empresa → Permisos), validada al guardar y cifrada en Vault.
+  - Lectura libre:
+    - `tokko_search` recorre la cartera (hasta 600 propiedades) y filtra por operación, tipo, zona o texto, precio, moneda y ambientes.
+    - `tokko_property` devuelve la ficha completa.
+    - `tokko_developments` devuelve los emprendimientos.
+  - Con aprobación: `tokko_register_lead`, que registra la consulta en el CRM de Tokko (`POST /api/v1/webcontact/`) con la etiqueta «Orkesta» y las propiedades.
+- **Xubio** (`xubio-connection`, `_shared/xubio.ts`, categoría Contabilidad): Client ID y Secret ID (Configuración → Integraciones → API de Xubio), en Vault como JSON.
+  - Token OAuth2 `client_credentials` (1 hora), que se pide al usarlo.
+  - **Solo lectura:** `xubio_list` (clientes, proveedores, productos, facturas de venta y de compra con rango de fechas) y `xubio_get`.
+  - No se crean comprobantes: una factura es un documento fiscal (ARCA/AFIP) que no se deshace.
+- **Plantillas:** «Responder consultas de propiedades» (al llegar un correo) y «Resumen semanal de facturación» (los lunes).
+- **Sin probar con cuentas reales:** los formatos de respuesta se tomaron de la documentación pública y de integraciones existentes. La primera conexión real lo confirmará.
+
+```bash
+supabase functions deploy tokko-connection xubio-connection run-flow assistant
+supabase functions deploy runs-cron telegram-webhook mail-cron --no-verify-jwt
+```
+
+## Revisión antes del despliegue (24 oct)
+
+- **Bandeja y contabilidad, solo administradores:** la bandeja solo la ven owners y admins.
+  - El agente solo usa `inbox_list`, `inbox_read`, `reply_email` y Xubio en ejecuciones lanzadas por un owner o admin activo.
+  - Las automatizaciones «al llegar un correo» y de Telegram solo se lanzan si las creó un owner o admin.
+  - Antes, un miembro podía leer correos a través del agente o de una automatización suya.
+- **Tareas periódicas** (`mail-cron`, `runs-cron`): responden enseguida (202) y siguen en segundo plano con `EdgeRuntime.waitUntil`, como recomienda Supabase. Así no dependen del tiempo de espera de `pg_net`.
+- **Ejecuciones colgadas:** `runs-cron` da por fallidas las ejecuciones «en marcha» de hace más de 24 h.
+- **Migraciones:** las 11 se aplican de cero, en orden, sobre una base limpia, y pasan los 173 tests.

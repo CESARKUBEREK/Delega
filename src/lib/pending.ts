@@ -37,6 +37,22 @@ export function asPending(value: Json | null): Pending | null {
       return { tool: "send_email", to: t(v.to_label), address: t(v.address), subject: t(v.subject), text: t(v.body) }
     case "send_telegram":
       return { tool: "send_telegram", to: t(v.to_label), text: t(v.text) }
+    case "tokko_lead": {
+      const ids = Array.isArray(v.property_ids) ? v.property_ids.filter((x) => typeof x === "number").map((x) => `#${x}`).join(", ") : ""
+      return {
+        tool: "generic",
+        description: "Registrar esta consulta en el CRM de Tokko Broker.",
+        verb: "Aprobar y registrar",
+        fields: [
+          { label: "Nombre", value: t(v.name) },
+          ...(t(v.email) ? [{ label: "Correo", value: t(v.email) }] : []),
+          ...(t(v.phone) ? [{ label: "Teléfono", value: t(v.phone) }] : []),
+          ...(ids ? [{ label: "Propiedades", value: ids }] : []),
+        ],
+        text: t(v.text),
+        textCaption: "Consulta",
+      }
+    }
     case "save_file": {
       const ext = v.format === "documento" ? "documento de Google" : v.format === "csv" ? "CSV" : "texto"
       return {

@@ -6,11 +6,12 @@
 // - Solo correos recibidos en las últimas 48 h y nunca en la primera lectura
 //   del buzón (que trae el histórico).
 // - Máximo 3 automatizaciones por correo y 30 ejecuciones por hora y espacio.
+// - Solo las automatizaciones creadas por un owner o admin (la bandeja es suya).
 // - Las ejecuciones se crean aquí y las avanza runs-cron (cada minuto): lo que
 //   quieran escribir o enviar espera la aprobación de una persona.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { createRun } from "./agent.ts"
-import { isUuid } from "./core.ts"
+import { isUuid, isWorkspaceAdmin } from "./core.ts"
 import { resolveAi } from "./llm.ts"
 
 export const MAX_EMAIL_RUNS_PER_HOUR = 30
@@ -78,6 +79,11 @@ export async function launchEmailFlows(admin: SupabaseClient, workspaceId: strin
     .order("created_at")
     .limit(10)
   if (!flows?.length) return 0
+  // La bandeja solo la ven los administradores: solo se lanzan las
+  // automatizaciones creadas por un owner o admin activo del espacio.
+  const allowed = []
+  for (const f of flows) if (await isWorkspaceAdmin(admin, workspaceId, f.created_by)) allowed.push(f)
+  if (!allowed.length) return 0
 
   const since = new Date(Date.now() - 3_600_000).toISOString()
   const { count } = await admin
@@ -101,7 +107,7 @@ export async function launchEmailFlows(admin: SupabaseClient, workspaceId: strin
     const threadId = threadOf.get(mail.id)
     if (!threadId) continue
     let perMail = 0
-    for (const flow of flows) {
+    for (const flow of allowed) {
       if (budget <= 0) return launched
       if (perMail >= MAX_FLOWS_PER_MAIL) break
       const settings = (flow.settings ?? {}) as { file_ids?: unknown; model?: unknown; email_filter?: unknown }
