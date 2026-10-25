@@ -219,7 +219,7 @@ Programar la lectura cada 5 minutos (extensiones `pg_cron` y `pg_net`; el secret
 select vault.create_secret('<MAIL_CRON_SECRET>', 'orkesta_mail_cron_secret');
 select cron.schedule('orkesta-correo', '*/5 * * * *', $$
   select net.http_post(
-    url := 'https://owefcumdoqvtmhaksxln.supabase.co/functions/v1/mail-cron',
+    url := 'https://xgbmpziocflgsszzgyeb.supabase.co/functions/v1/mail-cron',
     headers := jsonb_build_object('Content-Type', 'application/json',
       'x-orkesta-cron', (select decrypted_secret from vault.decrypted_secrets where name = 'orkesta_mail_cron_secret')),
     body := '{}'::jsonb,
@@ -278,7 +278,7 @@ supabase functions deploy telegram-webhook mail-cron runs-cron --no-verify-jwt
 ```sql
 select cron.schedule('orkesta-ejecuciones', '* * * * *', $$
   select net.http_post(
-    url := 'https://owefcumdoqvtmhaksxln.supabase.co/functions/v1/runs-cron',
+    url := 'https://xgbmpziocflgsszzgyeb.supabase.co/functions/v1/runs-cron',
     headers := jsonb_build_object('Content-Type', 'application/json',
       'x-orkesta-cron', (select decrypted_secret from vault.decrypted_secrets where name = 'orkesta_mail_cron_secret')),
     body := '{}'::jsonb,
@@ -347,3 +347,10 @@ supabase functions deploy runs-cron telegram-webhook mail-cron --no-verify-jwt
 supabase functions deploy run-flow assistant
 supabase functions deploy telegram-webhook runs-cron mail-cron --no-verify-jwt
 ```
+
+## Despliegue automático de las funciones (desde el 25 oct)
+
+- **Proyecto:** Supabase **DOrkesta** (`xgbmpziocflgsszzgyeb`).
+- **GitHub Actions** (`.github/workflows/deploy-functions.yml`): despliega las 17 Edge Functions cada vez que cambian en `main`, o a mano desde Actions → «Desplegar funciones de Supabase» → Run workflow. Usa `--use-api`, así que no necesita Docker.
+- **Requisito único:** el secreto del repositorio `SUPABASE_ACCESS_TOKEN`, un token personal de https://supabase.com/dashboard/account/tokens.
+- **Secreto de las tareas periódicas:** `mail-cron` y `runs-cron` leen el secreto de Vault (`orkesta_mail_cron_secret`) con la RPC `cron_secret` (migración 13, solo `service_role`). La variable `MAIL_CRON_SECRET` ya no es necesaria; si existe, tiene prioridad.

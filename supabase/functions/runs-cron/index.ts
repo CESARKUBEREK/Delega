@@ -2,7 +2,7 @@
 // ejecuciones que nadie está mirando (las lanzadas por un
 // correo o por Telegram, o las que se quedaron a medias al cerrar el móvil).
 // La llama pg_cron cada minuto (ver README). Se despliega SIN verify_jwt y exige
-// la cabecera x-orkesta-cron con el secreto MAIL_CRON_SECRET.
+// la cabecera x-orkesta-cron con el secreto de Vault «orkesta_mail_cron_secret» (ver _shared/cron.ts).
 //
 // Cada vuelta toma hasta 3 ejecuciones en estado «running» sin lease vigente,
 // de las últimas 24 h, y avanza cada una un tramo de 50 s en paralelo. El lease
@@ -13,6 +13,7 @@ import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.1
 import { advance, claim } from "../_shared/agent.ts"
 import { launchScheduled } from "../_shared/schedule.ts"
 import { runInBackground } from "../_shared/background.ts"
+import { cronAuthorized } from "../_shared/cron.ts"
 
 const PER_CALL = 3
 const SLICE_MS = 50_000
@@ -30,25 +31,16 @@ function serviceKey(): string {
   return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
-  if (!a || a.length !== b.length) return false
-  let diff = 0
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  return diff === 0
-}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 })
-  const secret = Deno.env.get("MAIL_CRON_SECRET") ?? ""
-  if (secret.length < 32 || !timingSafeEqual(req.headers.get("x-orkesta-cron") ?? "", secret)) {
-    return new Response("Forbidden", { status: 403 })
-  }
+  const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
+  if (!(await cronAuthorized(req, admin))) return new Response("Forbidden", { status: 403 })
 
-  return runInBackground("runs-cron", tick)
+  return runInBackground("runs-cron", () => tick(admin))
 })
 
-async function tick() {
-  const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
+async function tick(admin: SupabaseClient) {
   const scheduled = await launchScheduled(admin)
   const stale = await failStale(admin)
 
