@@ -23,7 +23,7 @@ export default function InboxPage({ params, searchParams }: PageProps<"/w/[works
       <div>
         <h1 className="rotulo text-2xl">Bandeja</h1>
         <p className="mt-1 max-w-prose text-graphite">
-          Tu correo (Gmail o el de tu hosting) y los mensajes de tu bot de Telegram, clasificados por la IA. Puedes corregir cualquier
+          Tu correo y los mensajes de tu bot de Telegram, clasificados por la IA. Puedes corregir cualquier
           clasificación; Orkesta no envía nada sin que lo revises.
         </p>
       </div>
@@ -48,11 +48,10 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
     .from("integrations")
     .select("provider, status, config")
     .eq("workspace_id", workspaceId)
-    .in("provider", ["gmail", "imap", "telegram"])
-  const gmail = (integrations ?? []).find((i) => i.provider === "gmail")
+    .in("provider", ["imap", "telegram"])
   const imap = (integrations ?? []).find((i) => i.provider === "imap")
-  const mailActive = gmail?.status === "active" || imap?.status === "active"
-  const settings = ((gmail ?? imap ?? integrations?.[0])?.config ?? {}) as { categories?: string[]; retention_days?: number | null }
+  const mailActive = imap?.status === "active"
+  const settings = ((imap ?? integrations?.[0])?.config ?? {}) as { categories?: string[]; retention_days?: number | null }
   if (!integrations?.length) {
     return (
       <p className="text-graphite">
@@ -118,15 +117,6 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
           <ClassifyButton workspaceId={workspaceId} pending={pending} />
         </div>
       </div>
-      {gmail && gmail.status !== "active" ? (
-        <p className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
-          Google retiró el acceso a Gmail.{" "}
-          <Link href={`/w/${workspaceId}/integraciones`} className="underline underline-offset-4">
-            Vuelve a conectarlo
-          </Link>
-          .
-        </p>
-      ) : null}
       {imap && imap.status !== "active" ? (
         <p className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
           Tu servidor de correo rechazó la contraseña.{" "}

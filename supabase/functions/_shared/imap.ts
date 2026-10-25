@@ -14,7 +14,7 @@ import nodemailer from "npm:nodemailer@6.9.16"
 import MailComposer from "npm:nodemailer@6.9.16/lib/mail-composer/index.js"
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { Buffer } from "node:buffer"
-import { htmlToText, stripQuoted } from "./gmail.ts"
+import { htmlToText, stripQuoted } from "./text.ts"
 import { type InboxConfig, recordMessage } from "./inbox.ts"
 
 export const IMAP_PORT = 993

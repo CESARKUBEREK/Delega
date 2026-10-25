@@ -8,8 +8,6 @@ const MESSAGES: Record<string, string> = {
   denied: "Cancelaste la conexión en Google. No se ha guardado nada.",
   invalid_state: "La conexión caducó o se inició desde otra sesión. Vuelve a intentarlo desde Integraciones.",
   scope_denied: "Hace falta permitir el acceso a las planillas que elijas. Vuelve a conectar y marca esa casilla en Google.",
-  gmail_scope_denied:
-    "Para la bandeja hace falta permitir leer y enviar correo. Vuelve a conectar Gmail y marca las dos casillas en Google.",
   calendar_scope_denied:
     "Para usar el calendario hace falta permitir ver y editar los eventos. Vuelve a conectar Google Calendar y marca esa casilla.",
   no_refresh_token: "Google no devolvió un permiso duradero. Vuelve a intentarlo.",

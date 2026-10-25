@@ -117,11 +117,56 @@ export const FLOW_STATUS_LABEL: Record<string, string> = {
   paused: "En pausa",
 }
 
-export const OPENAI_MODELS = [
-  { id: "gpt-6.1-sol", label: "GPT-6.1 Sol", hint: "Equilibrado. Recomendado." },
-  { id: "gpt-6-astra", label: "GPT-6 Astra", hint: "El más capaz, más caro." },
-  { id: "gpt-6-luna", label: "GPT-6 Luna", hint: "El más económico." },
-] as const
+export type AiProvider = "openai" | "anthropic" | "deepseek"
+export type AiModel = { id: string; label: string; hint: string }
+
+// Proveedores de IA (BYOK) y sus modelos. Debe coincidir con
+// supabase/functions/_shared/llm.ts. El primero de cada lista es el recomendado.
+export const AI_PROVIDERS: { id: AiProvider; label: string; keyPrefix: string; console: string; models: AiModel[] }[] = [
+  {
+    id: "openai",
+    label: "OpenAI",
+    keyPrefix: "sk-",
+    console: "platform.openai.com → API keys",
+    models: [
+      { id: "gpt-6.1-sol", label: "GPT-6.1 Sol", hint: "Equilibrado. Recomendado." },
+      { id: "gpt-6-astra", label: "GPT-6 Astra", hint: "El más capaz, más caro." },
+      { id: "gpt-6-luna", label: "GPT-6 Luna", hint: "El más económico." },
+    ],
+  },
+  {
+    id: "anthropic",
+    label: "Anthropic (Claude)",
+    keyPrefix: "sk-ant-",
+    console: "platform.claude.com → API Keys",
+    models: [
+      { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5", hint: "Rápido y capaz. Recomendado." },
+      { id: "claude-opus-5-5", label: "Claude Opus 5.5", hint: "El más capaz para tareas largas." },
+      { id: "claude-haiku-5-5", label: "Claude Haiku 5.5", hint: "El más rápido y económico." },
+      { id: "claude-fable-5-1", label: "Claude Fable 5.1", hint: "Para el razonamiento más exigente, más caro." },
+    ],
+  },
+  {
+    id: "deepseek",
+    label: "DeepSeek",
+    keyPrefix: "sk-",
+    console: "platform.deepseek.com → API keys",
+    models: [
+      { id: "deepseek-flash", label: "DeepSeek V4.1 Flash", hint: "Rápido y muy económico. Recomendado." },
+      { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro", hint: "Más capaz." },
+    ],
+  },
+]
+
+export const AI_MODELS: AiModel[] = AI_PROVIDERS.flatMap((p) => p.models)
+
+export function aiProviderOf(model: string | null | undefined): AiProvider | null {
+  return AI_PROVIDERS.find((p) => p.models.some((m) => m.id === model))?.id ?? null
+}
+
+export function modelLabel(model: string | null | undefined): string {
+  return AI_MODELS.find((m) => m.id === model)?.label ?? model ?? ""
+}
 
 export const RUN_STATUS_LABEL: Record<string, string> = {
   running: "En curso",

@@ -1,7 +1,6 @@
 // google-connection: conecta cuentas de Google a un espacio.
 //   * product "drive" (provider "google"): permiso drive.file, solo las planillas
 //     y documentos que el usuario elige con el selector.
-//   * product "gmail" (provider "gmail"): leer el correo y enviar respuestas.
 //   * product "calendar" (provider "calendar"): leer la agenda y crear eventos.
 // Acciones: start, callback, picker_token, add_files, remove_file, disconnect.
 // Solo owners y admins. El refresh token se guarda cifrado en Vault.
@@ -24,24 +23,17 @@ import {
   FOLDER_MIME,
   SPREADSHEET_MIME,
 } from "../_shared/google.ts"
-import { GMAIL_SCOPES } from "../_shared/gmail.ts"
 import { CALENDAR_REQUIRED, CALENDAR_SCOPES, primaryTimezone } from "../_shared/calendar.ts"
 
 const SLIDES = "application/vnd.google-apps.presentation"
 
-type Provider = "google" | "gmail" | "calendar"
+type Provider = "google" | "calendar"
 const PRODUCTS: Record<Provider, { scopes: string[]; required: string[]; denied: string; deniedMessage: string }> = {
   google: {
     scopes: GOOGLE_SCOPES,
     required: ["https://www.googleapis.com/auth/drive.file"],
     denied: "scope_denied",
     deniedMessage: "Hace falta permitir el acceso a los archivos que elijas. Vuelve a conectar y marca esa casilla.",
-  },
-  gmail: {
-    scopes: GMAIL_SCOPES,
-    required: ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send"],
-    denied: "gmail_scope_denied",
-    deniedMessage: "Hace falta permitir leer y enviar correo. Vuelve a conectar y marca las dos casillas.",
   },
   calendar: {
     scopes: CALENDAR_SCOPES,
@@ -51,7 +43,7 @@ const PRODUCTS: Record<Provider, { scopes: string[]; required: string[]; denied:
   },
 }
 function productOf(v: unknown): Provider {
-  return v === "gmail" ? "gmail" : v === "calendar" ? "calendar" : "google"
+  return v === "calendar" ? "calendar" : "google"
 }
 
 const MAX_FILES_PER_WORKSPACE = 100
@@ -159,16 +151,6 @@ Deno.serve(async (req) => {
       p_actor: ctx.userId,
     })
     if (error) return fail(500, "save_failed", "No se pudo guardar la conexión.")
-    if (provider === "gmail") {
-      // Conserva categorías y conservación si ya existían; la sincronización empieza de cero.
-      const { data: prev } = await ctx.admin.from("integrations").select("config").eq("workspace_id", ws).eq("provider", "gmail").maybeSingle()
-      const config = (prev?.config ?? {}) as Record<string, unknown>
-      await ctx.admin.rpc("integration_set_config", {
-        p_workspace_id: ws,
-        p_provider: "gmail",
-        p_config: { ...config, email, history_id: null },
-      })
-    }
     if (provider === "calendar") {
       const tz = tokens.access_token ? await primaryTimezone(tokens.access_token) : null
       await ctx.admin.rpc("integration_set_config", {

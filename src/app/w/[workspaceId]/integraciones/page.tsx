@@ -1,12 +1,12 @@
 import type { ReactNode } from "react"
 import { Suspense } from "react"
-import { OPENAI_MODELS } from "@/lib/plan"
+import { AI_PROVIDERS, type AiProvider, modelLabel } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime } from "../format"
 import { DOC_MIMES, DriveCard, EXCEL_MIMES, FilesCard, SHEET_MIMES } from "./google-card"
-import { GmailCard, ImapCard, TelegramCard } from "./inbox-cards"
-import { ConnectKeyForm, DisconnectForm, ModelForm } from "./openai-forms"
+import { ImapCard, TelegramCard } from "./inbox-cards"
+import { ConnectKeyForm, DefaultForm, DisconnectForm, ModelForm } from "./openai-forms"
 import { CalendarCard, HubSpotCard } from "./work-cards"
 
 export const metadata = { title: "Integraciones" }
@@ -81,16 +81,15 @@ async function Integrations({
   const { workspaceId } = await params
   const sp = await searchParams
   const notice = sp.google === "conectado" ? "connected" : typeof sp.google_error === "string" ? sp.google_error : null
-  const gmailNotice = sp.gmail === "conectado" ? "connected" : null
   const calendarNotice = sp.calendar === "conectado"
   const { isAdmin } = await getWorkspace(workspaceId, `/w/${workspaceId}/integraciones`)
 
   return (
     <div className="flex flex-col gap-10">
-      <Category id="llms" title="LLMs" description="El modelo de IA que prepara y ejecuta tus automatizaciones, con tu propia clave.">
-        <OpenAICard workspaceId={workspaceId} isAdmin={isAdmin} />
-        <ComingSoon title="Anthropic" description="Modelos Claude con tu propia clave de API." />
-        <ComingSoon title="DeepSeek" description="Modelos DeepSeek con tu propia clave de API." />
+      <Category id="llms" title="LLMs" description="La IA que prepara y ejecuta tus automatizaciones, con tu propia clave. La principal la usan el asistente y la bandeja; cada automatización puede usar otra.">
+        {AI_PROVIDERS.map((p) => (
+          <AiCard key={p.id} workspaceId={workspaceId} isAdmin={isAdmin} provider={p.id} />
+        ))}
         <ComingSoon title="Kimi" description="Modelos Kimi de Moonshot AI con tu propia clave de API." />
       </Category>
 
@@ -99,7 +98,6 @@ async function Integrations({
       </Category>
 
       <Category id="comunicaciones" title="Comunicaciones" description="Correo y mensajería: bandeja clasificada y envíos con tu aprobación.">
-        <GmailCard workspaceId={workspaceId} isAdmin={isAdmin} notice={gmailNotice} />
         <ImapCard workspaceId={workspaceId} isAdmin={isAdmin} />
         <TelegramCard workspaceId={workspaceId} isAdmin={isAdmin} />
         <ComingSoon title="Outlook y Microsoft 365" description="Tu correo de Outlook o de Microsoft 365, con tu cuenta de Microsoft." />
@@ -119,8 +117,8 @@ async function Integrations({
           workspaceId={workspaceId}
           isAdmin={isAdmin}
           title="Excel"
-          description="Archivos .xlsx y .xls guardados en tu Google Drive."
-          capability="Por ahora solo lectura. Para que Orkesta escriba en una planilla, usa Google Sheets."
+          description="Archivos Excel guardados en tu Google Drive."
+          capability="Leer hojas y rangos, añadir filas y actualizar celdas (.xlsx) con tu aprobación; Drive guarda la versión anterior. Los .xls antiguos y los libros con gráficos o tablas dinámicas, solo lectura."
           mimes={EXCEL_MIMES}
           pickLabel="Elegir archivos Excel"
         />
@@ -153,39 +151,72 @@ async function Integrations({
   )
 }
 
-async function OpenAICard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
+const AI_HELP: Record<AiProvider, { description: string; steps: string[]; note: string }> = {
+  openai: {
+    description: "Modelos GPT. Es también la que transcribe el dictado por voz.",
+    steps: [
+      "Entra en platform.openai.com con tu cuenta y abre «API keys».",
+      "Crea una clave nueva para Orkesta y cópiala. Tu cuenta de OpenAI necesita saldo o un método de pago.",
+    ],
+    note: "Orkesta pide a OpenAI que no conserve las conversaciones (store: false).",
+  },
+  anthropic: {
+    description: "Modelos Claude, de Anthropic.",
+    steps: [
+      "Entra en platform.claude.com con tu cuenta y abre «API Keys».",
+      "Crea una clave nueva para Orkesta y cópiala (empieza por sk-ant-). Tu cuenta necesita créditos.",
+    ],
+    note: "Anthropic no usa los datos de la API para entrenar sus modelos.",
+  },
+  deepseek: {
+    description: "Modelos DeepSeek: muy económicos.",
+    steps: [
+      "Entra en platform.deepseek.com con tu cuenta y abre «API keys».",
+      "Crea una clave nueva para Orkesta y cópiala. Tu cuenta necesita saldo.",
+    ],
+    note: "DeepSeek procesa los datos en servidores fuera de la UE: tenlo en cuenta con datos sensibles de clientes.",
+  },
+}
+
+async function AiCard({ workspaceId, isAdmin, provider }: { workspaceId: string; isAdmin: boolean; provider: AiProvider }) {
   const supabase = await createClient()
   const { data: connection } = await supabase
     .from("ai_connections")
-    .select("model, key_hint, status, last_validated_at")
+    .select("model, key_hint, status, last_validated_at, is_default")
     .eq("workspace_id", workspaceId)
-    .eq("provider", "openai")
+    .eq("provider", provider)
     .maybeSingle()
-  const modelLabel = OPENAI_MODELS.find((m) => m.id === connection?.model)?.label ?? connection?.model
+  const p = AI_PROVIDERS.find((x) => x.id === provider)!
+  const help = AI_HELP[provider]
 
   return (
     <section className="border border-ink bg-sheet">
       <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
         <div>
-          <h3 className="rotulo text-lg">OpenAI</h3>
-          <p className="text-sm text-graphite">El modelo que usan el asistente y las automatizaciones.</p>
+          <h3 className="rotulo text-lg">{p.label}</h3>
+          <p className="text-sm text-graphite">{help.description}</p>
         </div>
-        <StatusBadge status={connection ? connection.status : null} />
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <StatusBadge status={connection ? connection.status : null} />
+          {connection?.is_default ? <span className="border border-stroke px-2 py-0.5 text-xs text-ink">Principal</span> : null}
+        </div>
       </div>
 
       <div className="flex flex-col gap-6 px-5 py-5">
         {connection ? (
           <p className="text-sm text-graphite">
             Clave <span className="font-medium text-ink">{connection.key_hint}</span>, modelo{" "}
-            <span className="font-medium text-ink">{modelLabel}</span>. Validada el {formatDateTime(connection.last_validated_at)}.
+            <span className="font-medium text-ink">{modelLabel(connection.model)}</span>. Validada el {formatDateTime(connection.last_validated_at)}.
+            {connection.is_default ? " Es la IA principal del espacio." : ""}
           </p>
         ) : null}
 
         {isAdmin ? (
           <>
-            {connection ? <ModelForm workspaceId={workspaceId} model={connection.model} /> : null}
-            <ConnectKeyForm workspaceId={workspaceId} replacing={Boolean(connection)} model={connection?.model} />
-            {connection ? <DisconnectForm workspaceId={workspaceId} /> : null}
+            {connection && !connection.is_default && connection.status === "active" ? <DefaultForm workspaceId={workspaceId} provider={provider} /> : null}
+            {connection ? <ModelForm workspaceId={workspaceId} provider={provider} model={connection.model} /> : null}
+            <ConnectKeyForm workspaceId={workspaceId} provider={provider} replacing={Boolean(connection)} model={connection?.model} />
+            {connection ? <DisconnectForm workspaceId={workspaceId} provider={provider} /> : null}
           </>
         ) : (
           <p className="text-sm text-graphite">Solo un administrador del espacio puede conectar o cambiar la clave.</p>
@@ -194,13 +225,13 @@ async function OpenAICard({ workspaceId, isAdmin }: { workspaceId: string; isAdm
         <details className="text-sm text-graphite">
           <summary className="cursor-pointer text-ink">Cómo consigo una clave y qué se hace con ella</summary>
           <ol className="mt-2 list-decimal pl-5">
-            <li>Entra en platform.openai.com con tu cuenta y abre «API keys».</li>
-            <li>Crea una clave nueva para Orkesta y cópiala. Tu cuenta de OpenAI necesita saldo o un método de pago.</li>
-            <li>Pégala aquí. Orkesta la comprueba con OpenAI y la guarda cifrada; nadie, ni siquiera tú, puede volver a verla.</li>
+            {help.steps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+            <li>Pégala aquí. Orkesta la comprueba con {p.label} y la guarda cifrada; nadie, ni siquiera tú, puede volver a verla.</li>
           </ol>
           <p className="mt-2">
-            El consumo se factura en tu cuenta de OpenAI. Orkesta pide a OpenAI que no conserve las conversaciones y anota
-            cuántos tokens usa cada petición en Historial.
+            El consumo se factura en tu cuenta de {p.label}, y Orkesta anota cuántos tokens usa cada petición en Historial. {help.note}
           </p>
         </details>
       </div>

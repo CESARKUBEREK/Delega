@@ -116,16 +116,15 @@ export function HubSpotForm({ workspaceId, replacing }: { workspaceId: string; r
 }
 
 const DISCONNECT: Record<string, { label: string; confirm: string }> = {
-  gmail: { label: "Gmail", confirm: "¿Desconectar Gmail? Orkesta pierde el acceso; las conversaciones ya guardadas siguen en la bandeja." },
   telegram: { label: "el bot de Telegram", confirm: "¿Desconectar el bot de Telegram? Dejarán de llegar mensajes a la bandeja." },
   calendar: { label: "Google Calendar", confirm: "¿Desconectar Google Calendar? Las automatizaciones dejarán de ver y crear eventos." },
   hubspot: { label: "HubSpot", confirm: "¿Desconectar HubSpot? Orkesta borra la clave; revócala también en HubSpot si ya no la usas." },
   imap: { label: "el correo", confirm: "¿Desconectar este correo? Orkesta borra la contraseña; las conversaciones ya guardadas siguen en la bandeja." },
 }
 
-export function DisconnectInboxForm({ workspaceId, kind }: { workspaceId: string; kind: "gmail" | "telegram" | "calendar" | "hubspot" | "imap" }) {
+export function DisconnectInboxForm({ workspaceId, kind }: { workspaceId: string; kind: "telegram" | "calendar" | "hubspot" | "imap" }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(
-    kind === "gmail" || kind === "calendar"
+    kind === "calendar"
       ? disconnectGoogle
       : kind === "hubspot"
         ? disconnectHubSpot
@@ -144,7 +143,7 @@ export function DisconnectInboxForm({ workspaceId, kind }: { workspaceId: string
       }}
     >
       <input type="hidden" name="workspaceId" value={workspaceId} />
-      {kind === "gmail" || kind === "calendar" ? <input type="hidden" name="product" value={kind} /> : null}
+      {kind === "calendar" ? <input type="hidden" name="product" value={kind} /> : null}
       {state && !state.ok ? <FormMessage error={state.error} /> : null}
       <button type="submit" disabled={pending} className="w-fit text-sm text-alert underline underline-offset-4 disabled:opacity-60">
         {pending ? "Desconectando…" : `Desconectar ${label}`}
@@ -158,6 +157,7 @@ export function DisconnectInboxForm({ workspaceId, kind }: { workspaceId: string
 const MAIL_PROVIDERS = [
   { id: "otro", label: "Otro proveedor", imap: "", smtp: "" },
   { id: "hosting", label: "Mi hosting (cPanel, SiteGround, Plesk…)", imap: "mail.{dominio}", smtp: "mail.{dominio}" },
+  { id: "gmail", label: "Gmail o Google Workspace", imap: "imap.gmail.com", smtp: "smtp.gmail.com" },
   { id: "ovh", label: "OVH (MX Plan)", imap: "ssl0.ovh.net", smtp: "ssl0.ovh.net" },
   { id: "ionos", label: "IONOS (España)", imap: "imap.ionos.es", smtp: "smtp.ionos.es" },
   { id: "hostinger", label: "Hostinger", imap: "imap.hostinger.com", smtp: "smtp.hostinger.com" },
@@ -241,6 +241,13 @@ export function ImapForm({ workspaceId, current }: { workspaceId: string; curren
         required
         hint="Si tu proveedor ofrece «contraseñas de aplicación», crea una para Orkesta y úsala aquí. Se guarda cifrada y no se vuelve a mostrar."
       />
+      {provider === "gmail" ? (
+        <p className="border-l-2 border-stroke pl-3 text-xs text-graphite">
+          Gmail no admite tu contraseña normal: activa la verificación en dos pasos en tu cuenta de Google y crea una
+          «contraseña de aplicación» (Cuenta de Google → Seguridad → Contraseñas de aplicación). En Google Workspace, el
+          administrador tiene que permitir IMAP.
+        </p>
+      ) : null}
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
           id="imap-host"
