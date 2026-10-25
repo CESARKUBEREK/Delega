@@ -4,6 +4,10 @@
 // Registra el mensaje en la bandeja y lanza los flujos activos con disparador
 // "telegram_message". Lo que esos flujos quieran enviar o escribir espera
 // la aprobación de una persona.
+//
+// Excepción: el chat privado que una persona vinculó a su cuenta es su chat
+// con Orkesta (peticiones, notas de voz, comandos y botones de aprobación; ver
+// _shared/telegram-chat.ts). Sus mensajes no van a la bandeja.
 import { createClient } from "npm:@supabase/supabase-js@2.118.0"
 import { advance, claim, createRun, type RunRow } from "../_shared/agent.ts"
 import { isUuid, isWorkspaceAdmin } from "../_shared/core.ts"
@@ -11,6 +15,7 @@ import { resolveAi } from "../_shared/llm.ts"
 import { recordMessage } from "../_shared/inbox.ts"
 import { TRIGGER_TEXT_CHARS } from "../_shared/triggers.ts"
 import { parseTelegramSecret, sendTelegram } from "../_shared/telegram.ts"
+import { chatOwner, handleCallback, handleOwnerMessage, type TgCallback } from "../_shared/telegram-chat.ts"
 
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined
 
@@ -51,10 +56,11 @@ type TgMessage = {
   caption?: string
   document?: { file_name?: string }
   photo?: unknown[]
-  voice?: unknown
+  voice?: { file_id?: string; duration?: number; mime_type?: string; file_size?: number }
+  audio?: { file_id?: string; duration?: number; mime_type?: string; file_size?: number }
   location?: unknown
 }
-type Update = { update_id?: number; message?: TgMessage; edited_message?: TgMessage }
+type Update = { update_id?: number; message?: TgMessage; edited_message?: TgMessage; callback_query?: TgCallback }
 
 function displayName(u: { first_name?: string; last_name?: string; title?: string; username?: string } | undefined): string | null {
   if (!u) return null
@@ -141,10 +147,19 @@ async function handleLink(workspaceId: string, botToken: string, m: TgMessage): 
 }
 
 async function handleUpdate(workspaceId: string, integrationId: string, botToken: string, update: Update) {
+  if (update.callback_query?.id) return handleCallback(admin, workspaceId, botToken, update.callback_query)
   const m = update.message ?? update.edited_message
   if (!m?.chat?.id || !m.message_id || m.from?.is_bot) return
   if (update.message && (await handleLink(workspaceId, botToken, m))) return
   const chatId = String(m.chat.id)
+  // Chat privado vinculado: es la persona hablando con Orkesta.
+  if (m.chat.type === "private" && m.from?.id === m.chat.id) {
+    const owner = await chatOwner(admin, workspaceId, chatId)
+    if (owner) {
+      if (update.message) await handleOwnerMessage(admin, workspaceId, botToken, owner, m)
+      return
+    }
+  }
   const text = messageText(m).slice(0, 20_000)
   const chatName = displayName(m.chat)
   const senderName = displayName(m.from)

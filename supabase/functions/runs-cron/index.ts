@@ -14,6 +14,7 @@ import { advance, claim } from "../_shared/agent.ts"
 import { launchScheduled } from "../_shared/schedule.ts"
 import { runInBackground } from "../_shared/background.ts"
 import { cronAuthorized } from "../_shared/cron.ts"
+import { upgradeTelegramWebhooks } from "../_shared/telegram-notice.ts"
 
 const PER_CALL = 3
 const SLICE_MS = 50_000
@@ -43,6 +44,7 @@ Deno.serve(async (req) => {
 async function tick(admin: SupabaseClient) {
   const scheduled = await launchScheduled(admin)
   const stale = await failStale(admin)
+  const webhooks = await upgradeTelegramWebhooks(admin).catch(() => 0)
 
   const now = new Date().toISOString()
   const { data: due } = await admin
@@ -66,7 +68,7 @@ async function tick(admin: SupabaseClient) {
       }
     }),
   )
-  return { scheduled, stale, runs: results }
+  return { scheduled, stale, webhooks, runs: results }
 }
 
 // Ejecuciones «en marcha» de hace más de 24 h que ya no avanzan: se dan por

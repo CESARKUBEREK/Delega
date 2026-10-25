@@ -91,6 +91,11 @@ export function TelegramLink({
         <p className="text-sm text-ink">
           Tu Telegram{linkedName ? ` (${linkedName})` : ""} está vinculado con @{botUsername}.
         </p>
+        <p className="text-sm text-graphite">
+          Además de tus avisos, en ese chat puedes pedirle cosas a Orkesta (por escrito o con notas de voz), aprobar o
+          rechazar con botones lo que espera tu aprobación y lanzar o pausar tus automatizaciones. Escribe /ayuda en el
+          chat para ver los comandos.
+        </p>
         <FormMessage error={unlinkState.error} message={unlinkState.message} />
         <button type="submit" className="w-fit text-sm text-alert underline underline-offset-4">
           Desvincular mi Telegram

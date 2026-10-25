@@ -11,7 +11,8 @@
 // justo después de tocar «Aprobar».
 import { type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { authenticate, fail, isUuid, json, membershipRole, type AuthContext } from "../_shared/core.ts"
-import { addEvent, advance, appendToolResult, claim, createRun, executePending, RunError, type RunRow, save } from "../_shared/agent.ts"
+import { addEvent, advance, claim, createRun, RunError, type RunRow } from "../_shared/agent.ts"
+import { decideRun } from "../_shared/decide.ts"
 import { NO_AI_MESSAGE, resolveAi } from "../_shared/llm.ts"
 
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined
@@ -173,26 +174,11 @@ async function handle(req: Request): Promise<Response> {
     if (run.status !== "awaiting_approval" || !run.pending_action) {
       return fail(409, "not_pending", "Esta ejecución no está esperando tu aprobación.")
     }
-    const approve = body?.approve === true
-    const claimed = await claim(ctx.admin, run.id, "awaiting_approval")
-    if (!claimed || !claimed.pending_action) return fail(409, "busy", "La ejecución se está procesando. Recarga la página.")
-    const pending = claimed.pending_action
-
-    let output: string
-    if (approve) {
-      output = await executePending(ctx.admin, claimed, pending, ctx.userId)
-    } else {
-      output = JSON.stringify({ ok: false, rejected: true, message: "El usuario rechazó esta acción." })
-      await addEvent(ctx.admin, claimed, "rejected", "Rechazado por el usuario", { tool: pending.tool, decided_by: ctx.userId })
-    }
-
-    appendToolResult(claimed, pending.call_id, output)
-    claimed.status = "running"
-    claimed.pending_action = null
+    const decision = await decideRun(ctx.admin, run.id, body?.approve === true, ctx.userId)
+    if (!decision.ok) return fail(409, "busy", "La ejecución se está procesando. Recarga la página.")
     // Sigue en segundo plano; el panel también puede retomarla con "continue".
-    await save(ctx.admin, claimed, { status: "running", pending_action: null, lease_until: null })
-    kick(ctx.admin, claimed.id)
-    return json({ run_id: claimed.id, status: "running" })
+    kick(ctx.admin, run.id)
+    return json({ run_id: run.id, status: "running" })
   }
 
   if (action === "cancel") {
