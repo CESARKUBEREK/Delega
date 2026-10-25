@@ -9,11 +9,14 @@ export type TemplateNeed = "ai" | "imap" | "telegram" | "google" | "calendar" | 
 
 export type FlowTemplate = {
   id: string
-  category: "Correo" | "Telegram" | "CRM" | "Agenda" | "Informes"
+  category: "Correo" | "Telegram" | "CRM" | "Agenda" | "Informes" | "Avisos"
   plan: FlowPlan
   needs: TemplateNeed[]
   // Ajustes iniciales (filtros del correo).
-  settings?: { email_filter?: { from: string[]; subject: string[]; words: string[]; skip_automatic: boolean } }
+  settings?: {
+    email_filter?: { from: string[]; subject: string[]; words: string[]; skip_automatic: boolean }
+    schedule?: { frequency: "daily" | "weekdays" | "weekly" | "monthly"; time: string; weekday: number; day_of_month: number }
+  }
   // Qué tiene que hacer la persona después de crearla.
   setup: string
 }
@@ -32,6 +35,95 @@ function steps(list: Omit<PlanStep, "id">[]): PlanStep[] {
 }
 
 export const TEMPLATES: FlowTemplate[] = [
+  {
+    id: "resumen-manana",
+    category: "Avisos",
+    needs: ["ai", "imap", "calendar"],
+    settings: { schedule: { frequency: "weekdays", time: "08:00", weekday: 1, day_of_month: 1 } },
+    setup: "Te llega cada día laborable a las 8:00, al móvil y a tu correo, sin aprobación. Cambia la hora si quieres.",
+    plan: {
+      version: 1,
+      name: "Resumen de la mañana",
+      summary: "Cada mañana te avisa de lo importante: correos y mensajes de las últimas 24 horas, la agenda del día y lo que espera tu aprobación.",
+      trigger: { type: "schedule", description: "Días laborables a las 8:00" },
+      connections: [
+        { kind: "email", purpose: "Leer la bandeja de las últimas 24 horas" },
+        { kind: "calendar", purpose: "Ver la agenda de hoy" },
+      ],
+      steps: steps([
+        { kind: "read", title: "Revisar la bandeja", description: "Conversaciones con actividad en las últimas 24 horas, primero las urgentes y las que esperan respuesta.", connection: "email", requires_approval: false },
+        { kind: "read", title: "Mirar la agenda", description: "Eventos de hoy, con hora y asistentes.", connection: "calendar", requires_approval: false },
+        { kind: "generate", title: "Preparar el resumen", description: "Lo urgente arriba; después la agenda y el resto, en pocas líneas.", connection: "none", requires_approval: false },
+        { kind: "notify", title: "Avisarte", description: "Enviarte el resumen.", connection: "none", requires_approval: false },
+      ]),
+      open_questions: [],
+    },
+  },
+  {
+    id: "correos-sin-responder",
+    category: "Correo",
+    needs: ["ai", "imap"],
+    settings: { schedule: { frequency: "weekdays", time: "17:00", weekday: 1, day_of_month: 1 } },
+    setup: "Cada día laborable a las 17:00 te avisa de lo pendiente y deja borradores; cada respuesta espera tu aprobación.",
+    plan: {
+      version: 1,
+      name: "Correos sin responder",
+      summary: "Busca las conversaciones de correo que llevan más de 48 horas sin respuesta, te avisa con la lista y deja preparada una respuesta para cada una.",
+      trigger: { type: "schedule", description: "Días laborables a las 17:00" },
+      connections: [{ kind: "email", purpose: "Leer la bandeja y responder en el mismo hilo" }],
+      steps: steps([
+        { kind: "read", title: "Buscar lo pendiente", description: "Conversaciones de correo de los últimos 14 días cuyo último mensaje es del contacto y tiene más de 48 horas. Ignorar publicidad y avisos automáticos.", connection: "email", requires_approval: false },
+        { kind: "read", title: "Leer cada conversación", description: "Como mucho las 5 más importantes.", connection: "email", requires_approval: false },
+        { kind: "notify", title: "Avisarte", description: "Lista breve: quién, qué pide y desde cuándo.", connection: "none", requires_approval: false },
+        { kind: "notify", title: "Preparar respuestas", description: "Una respuesta para cada una en el mismo hilo; sin inventar datos, lo que falte entre corchetes.", connection: "email", requires_approval: true },
+      ]),
+      open_questions: [],
+    },
+  },
+  {
+    id: "agenda-manana",
+    category: "Agenda",
+    needs: ["ai", "calendar", "hubspot"],
+    settings: { schedule: { frequency: "weekdays", time: "18:00", weekday: 1, day_of_month: 1 } },
+    setup: "Cada día laborable a las 18:00 te avisa de las reuniones de mañana con la ficha de cada cliente.",
+    plan: {
+      version: 1,
+      name: "Agenda de mañana",
+      summary: "La tarde anterior te avisa de las reuniones del día siguiente, con lo que hay de cada cliente en HubSpot.",
+      trigger: { type: "schedule", description: "Días laborables a las 18:00" },
+      connections: [
+        { kind: "calendar", purpose: "Ver las reuniones de mañana" },
+        { kind: "crm", purpose: "Leer la ficha de cada cliente y sus negocios" },
+      ],
+      steps: steps([
+        { kind: "read", title: "Reuniones de mañana", description: "Eventos del día siguiente con asistentes.", connection: "calendar", requires_approval: false },
+        { kind: "read", title: "Fichas del CRM", description: "Para cada asistente externo: contacto, empresa, negocios abiertos y última nota.", connection: "crm", requires_approval: false },
+        { kind: "notify", title: "Avisarte", description: "Para cada reunión: hora, con quién, en qué punto está y qué preparar. Si no hay reuniones, no avisar.", connection: "none", requires_approval: false },
+      ]),
+      open_questions: [],
+    },
+  },
+  {
+    id: "informe-crm",
+    category: "CRM",
+    needs: ["ai", "hubspot"],
+    settings: { schedule: { frequency: "weekly", time: "08:30", weekday: 1, day_of_month: 1 } },
+    setup: "Cada lunes a las 8:30 te avisa con el estado del CRM.",
+    plan: {
+      version: 1,
+      name: "Informe semanal del CRM",
+      summary: "Cada lunes te resume el CRM: negocios nuevos, los que cambiaron de etapa, los que llevan tiempo parados y las tareas vencidas.",
+      trigger: { type: "schedule", description: "Cada lunes a las 8:30" },
+      connections: [{ kind: "crm", purpose: "Leer negocios y tareas" }],
+      steps: steps([
+        { kind: "read", title: "Etapas", description: "Pipelines y etapas de los negocios.", connection: "crm", requires_approval: false },
+        { kind: "read", title: "Negocios", description: "Negocios abiertos con su etapa, importe y fecha de última modificación.", connection: "crm", requires_approval: false },
+        { kind: "generate", title: "Resumir", description: "Nuevos de la semana, cambios de etapa, parados más de 14 días e importe total abierto.", connection: "none", requires_approval: false },
+        { kind: "notify", title: "Avisarte", description: "Enviarte el informe.", connection: "none", requires_approval: false },
+      ]),
+      open_questions: [],
+    },
+  },
   {
     id: "responder-consultas",
     category: "Correo",
@@ -178,12 +270,13 @@ export const TEMPLATES: FlowTemplate[] = [
     id: "negocios-parados",
     category: "CRM",
     needs: ["ai", "hubspot", "imap"],
-    setup: "Ejecútala cuando quieras (por ejemplo, los lunes). Solo puede escribir a tus contactos autorizados.",
+    settings: { schedule: { frequency: "weekly", time: "09:00", weekday: 1, day_of_month: 1 } },
+    setup: "Se ejecuta los lunes a las 9:00 (puedes cambiarlo) y te avisa con la lista. Solo puede escribir a tus contactos autorizados.",
     plan: {
       version: 1,
       name: "Seguimiento de negocios parados",
       summary: "Busca los negocios abiertos de HubSpot sin actividad reciente y prepara un correo de seguimiento y una tarea para cada uno.",
-      trigger: { type: "manual", description: "Cuando lo pidas (recomendado: una vez por semana)" },
+      trigger: { type: "schedule", description: "Cada lunes a las 9:00" },
       connections: [
         { kind: "crm", purpose: "Buscar negocios sin actividad y crear tareas" },
         { kind: "email", purpose: "Enviar el seguimiento" },
@@ -193,6 +286,7 @@ export const TEMPLATES: FlowTemplate[] = [
         { kind: "condition", title: "Quedarse con los parados", description: "Los que llevan más de 14 días sin cambios (máximo 5).", connection: "none", requires_approval: false },
         { kind: "notify", title: "Correo de seguimiento", description: "Un correo breve y cordial a su contacto, si es un contacto autorizado.", connection: "email", requires_approval: true },
         { kind: "write", title: "Tarea en el CRM", description: "Tarea de seguimiento para dentro de 3 días.", connection: "crm", requires_approval: true },
+        { kind: "notify", title: "Avisarte", description: "Avisarte con la lista de negocios parados y lo que queda por aprobar.", connection: "none", requires_approval: false },
       ]),
       open_questions: [],
     },
@@ -201,12 +295,13 @@ export const TEMPLATES: FlowTemplate[] = [
     id: "informe-semanal",
     category: "Informes",
     needs: ["ai", "calendar", "hubspot", "google"],
-    setup: "Ejecútala cuando quieras (por ejemplo, el viernes). Si prefieres una planilla, elígela al ejecutar.",
+    settings: { schedule: { frequency: "weekly", time: "17:00", weekday: 5, day_of_month: 1 } },
+    setup: "Se ejecuta los viernes a las 17:00 (puedes cambiarlo). Crear el documento espera tu aprobación.",
     plan: {
       version: 1,
       name: "Informe de la semana",
       summary: "Resume la semana en un documento: reuniones hechas, negocios que avanzaron y tareas pendientes en el CRM.",
-      trigger: { type: "manual", description: "Cuando lo pidas (recomendado: el viernes)" },
+      trigger: { type: "schedule", description: "Cada viernes a las 17:00" },
       connections: [
         { kind: "calendar", purpose: "Reuniones de la semana" },
         { kind: "crm", purpose: "Negocios y tareas" },

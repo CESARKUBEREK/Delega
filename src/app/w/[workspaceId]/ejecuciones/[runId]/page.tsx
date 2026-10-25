@@ -44,7 +44,7 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
       .eq("id", runId)
       .eq("workspace_id", workspaceId)
       .maybeSingle(),
-    supabase.from("run_events").select("id, kind, title, created_at").eq("run_id", runId).eq("workspace_id", workspaceId).order("id"),
+    supabase.from("run_events").select("id, kind, title, detail, created_at").eq("run_id", runId).eq("workspace_id", workspaceId).order("id"),
   ])
   if (!run) notFound()
 
@@ -103,7 +103,12 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
               <span className={`text-xs font-medium ${e.kind === "error" || e.kind === "rejected" ? "text-alert" : e.kind === "approved" || e.kind === "finished" ? "text-ok" : "text-graphite"}`}>
                 {EVENT_MARK[e.kind] ?? e.kind}
               </span>
-              <span className="text-ink">{e.title}</span>
+              <span className="text-ink">
+                {e.title}
+                {noticeText(e.detail) ? (
+                  <span className="mt-1.5 block whitespace-pre-wrap border-l-2 border-link pl-3 text-ink">{noticeText(e.detail)}</span>
+                ) : null}
+              </span>
               <span className="text-xs text-graphite">{formatDateTime(e.created_at)}</span>
             </li>
           ))}
@@ -126,4 +131,10 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
       ) : null}
     </div>
   )
+}
+
+// Texto de un aviso enviado al propio usuario (notify_me).
+function noticeText(detail: unknown): string | null {
+  const n = detail && typeof detail === "object" ? (detail as { notice?: unknown }).notice : null
+  return typeof n === "string" && n ? n : null
 }

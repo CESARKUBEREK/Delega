@@ -1,4 +1,5 @@
-// runs-cron: avanza las ejecuciones que nadie está mirando (las lanzadas por un
+// runs-cron: lanza las automatizaciones programadas que tocan y avanza las
+// ejecuciones que nadie está mirando (las lanzadas por un
 // correo o por Telegram, o las que se quedaron a medias al cerrar el móvil).
 // La llama pg_cron cada minuto (ver README). Se despliega SIN verify_jwt y exige
 // la cabecera x-orkesta-cron con el secreto MAIL_CRON_SECRET.
@@ -9,6 +10,7 @@
 // escribir o enviar se queda esperando aprobación, como siempre.
 import { createClient } from "npm:@supabase/supabase-js@2.118.0"
 import { advance, claim } from "../_shared/agent.ts"
+import { launchScheduled } from "../_shared/schedule.ts"
 
 const PER_CALL = 3
 const SLICE_MS = 50_000
@@ -41,6 +43,8 @@ Deno.serve(async (req) => {
   }
 
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
+  const scheduled = await launchScheduled(admin)
+
   const now = new Date().toISOString()
   const { data: due } = await admin
     .from("flow_runs")
@@ -63,5 +67,5 @@ Deno.serve(async (req) => {
       }
     }),
   )
-  return new Response(JSON.stringify({ ok: true, runs: results }), { headers: { "Content-Type": "application/json" } })
+  return new Response(JSON.stringify({ ok: true, scheduled, runs: results }), { headers: { "Content-Type": "application/json" } })
 })
