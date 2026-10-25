@@ -24,9 +24,13 @@ Deno.serve(async (req) => {
     const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "")
     const email = str(body.email, 320).toLowerCase()
     const user = str(body.user, 320) || email
-    const password = typeof body.password === "string" ? body.password.slice(0, 500) : ""
     const imapHost = str(body.imap_host, 253).toLowerCase()
     const smtpHost = str(body.smtp_host, 253).toLowerCase()
+    // Gmail muestra las contraseñas de aplicación en grupos («abcd efgh ijkl mnop»)
+    // y no llevan espacios: se quitan. En otros proveedores se respeta la contraseña.
+    const gmail = isGmailHost(imapHost) || isGmailHost(smtpHost)
+    const rawPassword = typeof body.password === "string" ? body.password.slice(0, 500) : ""
+    const password = gmail ? rawPassword.replace(/\s+/g, "") : rawPassword
     const displayName = str(body.display_name, 120).replace(/[\r\n"<>]/g, "") || null
     if (!EMAIL_RE.test(email)) return fail(400, "bad_email", "Escribe una dirección de correo válida.")
     if (!password) return fail(400, "no_password", "Escribe la contraseña del correo.")
@@ -46,6 +50,13 @@ Deno.serve(async (req) => {
       }
       await verifySmtp(smtpHost, secret)
     } catch (e) {
+      if (gmail && e instanceof MailError && e.code === "auth") {
+        return fail(
+          400,
+          "auth",
+          "Gmail rechazó la contraseña. Gmail no acepta la contraseña normal de la cuenta: activa la verificación en dos pasos y crea una contraseña de aplicación en myaccount.google.com/apppasswords.",
+        )
+      }
       return fail(400, e instanceof MailError ? e.code : "mail_error", e instanceof MailError ? e.message : "No se pudo comprobar el correo.")
     }
 
@@ -101,3 +112,7 @@ Deno.serve(async (req) => {
 
   return fail(400, "bad_request", "Acción no válida.")
 })
+
+function isGmailHost(host: string): boolean {
+  return /(^|\.)(gmail|googlemail)\.com$/.test(host)
+}
