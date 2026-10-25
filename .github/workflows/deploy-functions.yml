@@ -33,20 +33,45 @@ jobs:
 
       - name: Comprobar el token
         run: |
-          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+          token="$(printf '%s' "$SUPABASE_ACCESS_TOKEN" | tr -d '[:space:]')"
+          if [ -z "$token" ]; then
             echo "::error::Falta el secreto SUPABASE_ACCESS_TOKEN en Settings → Secrets and variables → Actions."
             exit 1
           fi
+          case "$token" in
+            sbp_*) ;;
+            *) echo "::error::SUPABASE_ACCESS_TOKEN no es un token personal de Supabase: debe empezar por sbp_ (se crea en supabase.com/dashboard/account/tokens)."; exit 1 ;;
+          esac
+          echo "::add-mask::$token"
+          echo "SUPABASE_ACCESS_TOKEN=$token" >> "$GITHUB_ENV"
+          code=$(curl -s -o /tmp/projects.json -w '%{http_code}' -H "Authorization: Bearer $token" https://api.supabase.com/v1/projects)
+          if [ "$code" != "200" ]; then
+            echo "::error::Supabase rechazó el token (HTTP $code). Genera uno nuevo y vuelve a guardarlo."
+            exit 1
+          fi
+          if ! grep -q "$PROJECT_REF" /tmp/projects.json; then
+            echo "::error::El token es válido, pero su cuenta no tiene acceso al proyecto $PROJECT_REF (DOrkesta)."
+            exit 1
+          fi
+          echo "Token correcto y con acceso a $PROJECT_REF."
 
       - name: Funciones con verificación de JWT
-        run: >
-          supabase functions deploy
-          ai-connection assistant run-flow voice-transcribe push
-          google-connection hubspot-connection telegram-connection imap-connection
-          inbox-sync inbox-reply inbox-classify tokko-connection xubio-connection
-          --project-ref "$PROJECT_REF" --use-api
+        run: |
+          set -o pipefail
+          supabase functions deploy \
+            ai-connection assistant run-flow voice-transcribe push \
+            google-connection hubspot-connection telegram-connection imap-connection \
+            inbox-sync inbox-reply inbox-classify tokko-connection xubio-connection \
+            --project-ref "$PROJECT_REF" --use-api 2>&1 | tee /tmp/deploy1.txt || {
+              echo "::error::$(tail -n 8 /tmp/deploy1.txt | tr '\n' ' ' | cut -c1-900)"
+              exit 1
+            }
 
       - name: Funciones sin verificación de JWT (webhook y tareas periódicas)
-        run: >
-          supabase functions deploy telegram-webhook mail-cron runs-cron
-          --no-verify-jwt --project-ref "$PROJECT_REF" --use-api
+        run: |
+          set -o pipefail
+          supabase functions deploy telegram-webhook mail-cron runs-cron \
+            --no-verify-jwt --project-ref "$PROJECT_REF" --use-api 2>&1 | tee /tmp/deploy2.txt || {
+              echo "::error::$(tail -n 8 /tmp/deploy2.txt | tr '\n' ' ' | cut -c1-900)"
+              exit 1
+            }
