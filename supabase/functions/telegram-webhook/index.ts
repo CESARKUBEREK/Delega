@@ -9,6 +9,7 @@ import { advance, claim, createRun, type RunRow } from "../_shared/agent.ts"
 import { isUuid } from "../_shared/core.ts"
 import { resolveAi } from "../_shared/llm.ts"
 import { recordMessage } from "../_shared/inbox.ts"
+import { TRIGGER_TEXT_CHARS } from "../_shared/triggers.ts"
 import { parseTelegramSecret } from "../_shared/telegram.ts"
 
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined
@@ -104,7 +105,7 @@ async function launchFlows(workspaceId: string, chatId: string, name: string | n
         note: "",
         model: conn.model,
         startedBy: flow.created_by,
-        trigger: { type: "telegram_message", chat_id: chatId, name, message_id: messageId, text },
+        trigger: { type: "telegram_message", chat_id: chatId, name, message_id: messageId, text: text.slice(0, TRIGGER_TEXT_CHARS) },
       })
       await admin.from("inbox_messages").update({ run_id: run.id }).eq("id", messageId)
       const claimed: RunRow | null = await claim(admin, run.id, "running")

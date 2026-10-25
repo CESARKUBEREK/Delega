@@ -3,6 +3,7 @@
 // y el panel vuelve a llamar.
 import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
 import { MailError, syncImap } from "../_shared/imap.ts"
+import { launchEmailFlows } from "../_shared/triggers.ts"
 
 const BUDGET_MS = 80_000
 
@@ -20,7 +21,8 @@ Deno.serve(async (req) => {
 
   try {
     const r = await syncImap(admin, workspaceId, Date.now() + BUDGET_MS)
-    return json({ ok: true, added: r.added, more: r.more, warnings: [] })
+    const launched = await launchEmailFlows(admin, workspaceId, r.fresh).catch(() => 0)
+    return json({ ok: true, added: r.added, more: r.more, launched, warnings: [] })
   } catch (e) {
     if (e instanceof MailError && e.code === "mailbox") return fail(409, "no_mail", "Conecta tu correo en Integraciones.")
     return fail(502, "mail_error", e instanceof MailError ? e.message : "No se pudo leer el correo.")

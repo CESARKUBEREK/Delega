@@ -3,6 +3,7 @@
 import { refresh } from "next/cache"
 import { redirect } from "next/navigation"
 import { callEdgeFunction } from "@/lib/edge-functions"
+import type { Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
 import { UUID_RE } from "@/lib/workspace"
 
@@ -222,15 +223,32 @@ export async function setFlowActive(input: {
   flowId: string
   active: boolean
   fileIds: string[]
+  emailFilter?: { from: string[]; subject: string[]; words: string[]; skip_automatic: boolean }
 }): Promise<ActionResult> {
   if (!UUID_RE.test(input.workspaceId) || !UUID_RE.test(input.flowId)) return { ok: false, error: "Datos no válidos." }
   const supabase = await createClient()
+  const { data: flow } = await supabase.from("flows").select("settings").eq("id", input.flowId).eq("workspace_id", input.workspaceId).maybeSingle()
+  if (!flow) return { ok: false, error: "No se encontró la automatización." }
+  // Se conservan los demás ajustes (por ejemplo, el modelo de IA).
+  const settings = { ...((flow.settings ?? {}) as { [key: string]: Json | undefined }) }
+  settings.file_ids = input.fileIds.filter((id) => UUID_RE.test(id)).slice(0, 5)
+  if (input.emailFilter) {
+    const clean = (l: unknown) =>
+      (Array.isArray(l) ? l : [])
+        .filter((x): x is string => typeof x === "string")
+        .map((x) => x.trim().slice(0, 100))
+        .filter(Boolean)
+        .slice(0, 20)
+    settings.email_filter = {
+      from: clean(input.emailFilter.from),
+      subject: clean(input.emailFilter.subject),
+      words: clean(input.emailFilter.words),
+      skip_automatic: input.emailFilter.skip_automatic !== false,
+    }
+  }
   const { data, error } = await supabase
     .from("flows")
-    .update({
-      status: input.active ? "active" : "paused",
-      settings: { file_ids: input.fileIds.filter((id) => UUID_RE.test(id)).slice(0, 5) },
-    })
+    .update({ status: input.active ? "active" : "paused", settings })
     .eq("id", input.flowId)
     .eq("workspace_id", input.workspaceId)
     .select("id")

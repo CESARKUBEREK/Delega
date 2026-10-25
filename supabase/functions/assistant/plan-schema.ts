@@ -17,7 +17,7 @@ const planObject = {
       additionalProperties: false,
       required: ["type", "description"],
       properties: {
-        type: { type: "string", enum: ["manual", "schedule", "telegram_message"] },
+        type: { type: "string", enum: ["manual", "schedule", "telegram_message", "email_message"] },
         description: { type: "string", description: "Cuándo se ejecuta, en palabras (p. ej. 'el día 1 de cada mes' o 'cuando llegue un mensaje de Telegram')." },
       },
     },
@@ -80,7 +80,7 @@ export type PlanStep = {
 export type Plan = {
   name: string
   summary: string
-  trigger: { type: "manual" | "schedule" | "telegram_message"; description: string }
+  trigger: { type: "manual" | "schedule" | "telegram_message" | "email_message"; description: string }
   connections: { kind: string; purpose: string }[]
   steps: PlanStep[]
   open_questions: string[]
@@ -104,7 +104,9 @@ export function sanitizePlan(plan: Plan | null): (Plan & { version: 1 }) | null 
     name: cut(plan.name, 120) || "Flujo sin nombre",
     summary: cut(plan.summary, 600),
     trigger: {
-      type: plan.trigger?.type === "schedule" || plan.trigger?.type === "telegram_message" ? plan.trigger.type : "manual",
+      type: plan.trigger?.type === "schedule" || plan.trigger?.type === "telegram_message" || plan.trigger?.type === "email_message"
+        ? plan.trigger.type
+        : "manual",
       description: cut(plan.trigger?.description, 200),
     },
     connections: (plan.connections ?? []).slice(0, 10).map((c) => ({

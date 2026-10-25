@@ -260,3 +260,29 @@ supabase functions deploy ai-connection assistant run-flow inbox-classify inbox-
 supabase functions deploy telegram-webhook mail-cron --no-verify-jwt
 ```
 
+## Al llegar un correo, plantillas y ejecuciones en segundo plano
+
+- **Disparador «al llegar un correo»** (`email_message`, `_shared/triggers.ts`): cuando `mail-cron` o «Traer correo» leen correos nuevos, cada uno puede lanzar las automatizaciones activas con ese disparador.
+  - Solo cuentan los correos recibidos en las últimas 48 h, nunca el histórico de la primera lectura.
+  - **Filtros sin IA** (`flows.settings.email_filter`, en la página de la automatización): remitente, asunto y asunto o texto. Cada casilla no vacía tiene que cumplirse (basta una de sus palabras), sin distinguir mayúsculas ni acentos. Por defecto se ignoran los remitentes automáticos (no-reply, boletines, avisos).
+  - Máximo 3 automatizaciones por correo y 30 ejecuciones por hora y espacio.
+  - El agente recibe el correo como dato y puede contestar al «remitente» en el mismo hilo (`In-Reply-To`/`References`), siempre con aprobación.
+- **Plantillas** (`src/lib/templates.ts`, página Automatizaciones → «Empezar con una plantilla»): ocho planes listos para usar (consultas por correo, pedidos a planilla, contactos al CRM, proponer cita, incidencias por Telegram, preparar reunión, negocios parados, informe semanal). Crean un borrador; se eligen los archivos, se ajustan los filtros y se activa.
+- **`runs-cron`** (sin `verify_jwt`, mismo secreto `MAIL_CRON_SECRET`): cada minuto avanza hasta 3 ejecuciones en marcha que nadie está mirando (lanzadas por correo o Telegram, o que se quedaron a medias), de las últimas 24 h, con tramos de 50 s. El lease impide avanzar dos veces la misma.
+
+```bash
+supabase functions deploy run-flow assistant inbox-sync
+supabase functions deploy telegram-webhook mail-cron runs-cron --no-verify-jwt
+```
+
+```sql
+select cron.schedule('orkesta-ejecuciones', '* * * * *', $$
+  select net.http_post(
+    url := 'https://owefcumdoqvtmhaksxln.supabase.co/functions/v1/runs-cron',
+    headers := jsonb_build_object('Content-Type', 'application/json',
+      'x-orkesta-cron', (select decrypted_secret from vault.decrypted_secrets where name = 'orkesta_mail_cron_secret')),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 5000)
+$$);
+```
+
