@@ -1,12 +1,13 @@
 // mail-cron: lectura automática del correo IMAP de todos los espacios.
 // La llama pg_cron cada 5 minutos (ver README). Se despliega SIN verify_jwt y
-// exige la cabecera x-orkesta-cron con el secreto MAIL_CRON_SECRET.
+// exige la cabecera x-orkesta-cron con el secreto de Vault «orkesta_mail_cron_secret» (ver _shared/cron.ts).
 // Recorre primero las cuentas que llevan más tiempo sin leerse. Los correos
 // nuevos lanzan las automatizaciones «al llegar un correo» (las avanza runs-cron).
-import { createClient } from "npm:@supabase/supabase-js@2.118.0"
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { syncImap } from "../_shared/imap.ts"
 import { launchEmailFlows } from "../_shared/triggers.ts"
 import { runInBackground } from "../_shared/background.ts"
+import { cronAuthorized } from "../_shared/cron.ts"
 
 const BUDGET_MS = 110_000
 
@@ -23,25 +24,16 @@ function serviceKey(): string {
   return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
-  if (!a || a.length !== b.length) return false
-  let diff = 0
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  return diff === 0
-}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 })
-  const secret = Deno.env.get("MAIL_CRON_SECRET") ?? ""
-  if (secret.length < 32 || !timingSafeEqual(req.headers.get("x-orkesta-cron") ?? "", secret)) {
-    return new Response("Forbidden", { status: 403 })
-  }
+  const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
+  if (!(await cronAuthorized(req, admin))) return new Response("Forbidden", { status: 403 })
 
-  return runInBackground("mail-cron", syncAll)
+  return runInBackground("mail-cron", () => syncAll(admin))
 })
 
-async function syncAll() {
-  const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } })
+async function syncAll(admin: SupabaseClient) {
   const { data: due } = await admin.rpc("mail_integrations_due", { p_limit: 30 })
   const deadline = Date.now() + BUDGET_MS
   let done = 0
