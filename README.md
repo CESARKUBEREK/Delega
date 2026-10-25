@@ -358,6 +358,17 @@ El chat privado que cada persona vincula (Configuración → Mis avisos) es tamb
 - **Webhook:** ahora también recibe `callback_query`. `runs-cron` vuelve a registrar una vez los webhooks de los bots conectados antes (`config.webhook_v`), con el mismo secreto y sin perder mensajes. No hace falta volver a conectar el bot.
 - Migración `20261025230000_telegram_chat.sql`, test `014_telegram_chat.test.sql` y `supabase/functions/_shared/telegram-chat.test.ts` (`deno test -A`).
 
+## Editor visual de flujos (26 oct)
+
+- **Dónde:** Automatizaciones → «Crear desde cero» (`/automatizaciones/nueva`) y «Editar pasos» en cada automatización (`/automatizaciones/[id]/editar`, solo autor o admin).
+- **Forma:** una tarjeta «Cuándo empieza» y una lista de pasos en orden (sin ramas: el agente sigue el orden y entiende condiciones escritas). Cada paso: qué hace (`read`, `compare`, `transform`, `generate`, `condition`, `write`, `notify`), con qué aplicación (solo las conectadas y válidas para ese tipo, `KIND_CONNECTIONS`), título e instrucciones. Insertar con «+», subir, bajar, duplicar, borrar. En el móvil, el paso se edita en un panel inferior.
+- **«Complétalo tú (IA)»:** `assistant` con `action: "step"` convierte una frase en un paso (`STEP_SCHEMA`, `sanitizeStep`); no guarda nada. Límite: 12 llamadas de IA por minuto y persona.
+- **Archivos que usa:** hasta 5 de los elegidos en Drive; se guardan en `settings.file_ids` (los mismos que usa la activación).
+- **Comprobaciones** (`planChecks`): integraciones sin conectar, planillas o documentos sin elegir, envíos por correo sin contactos autorizados, Telegram fuera del disparador de Telegram, programadas que no avisan ni guardan nada. Avisan, no bloquean.
+- **Reglas** (`src/lib/plan-edit.ts`, `normalizePlan`): el servidor (`flow-editor-actions.ts`) vuelve a normalizar todo lo que llega del navegador: máximo 20 pasos, límites de texto, tipos y aplicaciones válidos, ids `s1…sn`, conexiones deducidas de los pasos, aprobación obligatoria en `write` y en `notify` a otros. La base de datos lo impone otra vez (trigger `flows_enforce_approval`, migración `20261026000000_flow_editor.sql`).
+- Si se cambia el inicio de una automatización activa, se pausa para revisar su activación.
+- **Tests:** `npm test` (reglas del editor) y pgTAP `015_flow_editor.test.sql`.
+
 ## Despliegue automático de las funciones (desde el 25 oct)
 
 - **Proyecto:** Supabase **DOrkesta** (`xgbmpziocflgsszzgyeb`).

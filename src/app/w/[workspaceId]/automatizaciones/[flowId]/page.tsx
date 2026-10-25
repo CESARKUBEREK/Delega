@@ -11,16 +11,23 @@ import { ActivationPanel, type EmailFilterInput, FlowModelForm, RunPanel, type S
 
 export const metadata = { title: "Automatización" }
 
-export default function FlowPage({ params }: PageProps<"/w/[workspaceId]/automatizaciones/[flowId]">) {
+export default function FlowPage({ params, searchParams }: PageProps<"/w/[workspaceId]/automatizaciones/[flowId]">) {
   return (
     <Suspense fallback={<div className="h-96 border border-rule bg-sheet" aria-busy="true" />}>
-      <Flow params={params} />
+      <Flow params={params} searchParams={searchParams} />
     </Suspense>
   )
 }
 
-async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatizaciones/[flowId]">["params"] }) {
+async function Flow({
+  params,
+  searchParams,
+}: {
+  params: PageProps<"/w/[workspaceId]/automatizaciones/[flowId]">["params"]
+  searchParams: PageProps<"/w/[workspaceId]/automatizaciones/[flowId]">["searchParams"]
+}) {
   const { workspaceId, flowId } = await params
+  const justPaused = (await searchParams).pausada === "1"
   if (!UUID_RE.test(flowId)) notFound()
   const { user, isAdmin } = await getWorkspace(workspaceId, `/w/${workspaceId}/automatizaciones/${flowId}`)
   const supabase = await createClient()
@@ -89,7 +96,21 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
         </p>
       </div>
 
+      {justPaused ? (
+        <p role="status" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+          Has cambiado cuándo empieza, así que la he pausado. Revisa su activación más abajo y vuelve a activarla.
+        </p>
+      ) : null}
+
       {plan ? <PlanView plan={plan} /> : <p className="text-graphite">Este flujo no tiene un plan legible.</p>}
+      {canDelete ? (
+        <Link
+          href={`${base}/automatizaciones/${flow.id}/editar`}
+          className="-mt-3 inline-flex h-11 w-fit items-center border border-ink px-5 text-base font-medium text-ink hover:bg-paper"
+        >
+          Editar pasos
+        </Link>
+      ) : null}
 
       {autoTrigger ? (
         <section className="border border-ink bg-sheet">
@@ -163,8 +184,8 @@ async function Flow({ params }: { params: PageProps<"/w/[workspaceId]/automatiza
       ) : null}
 
       <p className="text-sm text-graphite">
-        Para cambiar el plan, pídeselo al asistente
-        {flow.source_message_id ? " en la conversación original" : ""} y guarda la nueva versión.
+        {canDelete ? "Puedes cambiar los pasos con «Editar pasos» o pedírselo" : "Para cambiar el plan, pídeselo"} al asistente
+        {flow.source_message_id ? " en la conversación original" : ""} y guardar la nueva versión.
       </p>
 
       {canDelete ? (

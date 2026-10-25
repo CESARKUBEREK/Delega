@@ -149,3 +149,29 @@ export function sanitizePlan(plan: Plan | null): (Plan & { version: 1 }) | null 
     open_questions: (plan.open_questions ?? []).slice(0, 8).map((q) => cut(q, 300)),
   }
 }
+
+// Un solo paso (editor visual, «Complétalo tú»).
+export const STEP_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["kind", "title", "description", "connection"],
+  properties: {
+    kind: { type: "string", enum: STEP_KINDS },
+    title: { type: "string" },
+    description: { type: "string" },
+    connection: { type: "string", enum: [...CONNECTION_KINDS.filter((c) => c !== "database"), "none"] },
+  },
+}
+
+export function sanitizeStep(v: unknown): { kind: string; title: string; description: string; connection: string; requires_approval: boolean } {
+  const o = v && typeof v === "object" ? (v as Record<string, unknown>) : {}
+  const kind = STEP_KINDS.includes(String(o.kind)) ? String(o.kind) : "transform"
+  const connection = [...CONNECTION_KINDS, "none"].includes(String(o.connection)) && o.connection !== "database" ? String(o.connection) : "none"
+  return {
+    kind,
+    title: typeof o.title === "string" ? o.title.slice(0, 120) : "",
+    description: typeof o.description === "string" ? o.description.slice(0, 600) : "",
+    connection,
+    requires_approval: kind === "write" || (kind === "notify" && connection !== "none"),
+  }
+}
