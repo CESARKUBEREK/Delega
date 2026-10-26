@@ -95,9 +95,9 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
           </Link>
         </section>
 
-        <section className="border border-ink bg-sheet p-5">
+        <section className="dashboard-stat-card dashboard-flow-card border border-ink bg-sheet p-5">
           <h2 className="text-sm font-medium text-graphite">Automatizaciones</h2>
-          <p className="rotulo mt-2 text-lg text-ink">
+          <p className="dashboard-flow-count rotulo mt-2 text-lg text-ink">
             {flowCount ?? 0} {flowCount === 1 ? "automatización" : "automatizaciones"}
           </p>
           <p className="mt-1 text-sm text-graphite">Describe una tarea al asistente y guarda el plan que te proponga.</p>
@@ -107,7 +107,7 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
         </section>
       </div>
 
-      <section className="border border-ink bg-sheet">
+      <section className="dashboard-recent border border-ink bg-sheet">
         <h2 className="border-b border-ink px-5 py-3 font-semibold">Conversaciones recientes</h2>
         {conversations && conversations.length > 0 ? (
           <ul className="divide-y divide-rule">
