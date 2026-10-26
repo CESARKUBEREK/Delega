@@ -55,7 +55,7 @@ export async function inboxList(
   const rows = threads
     .map((t) => ({
       thread: t.id,
-      channel: t.channel === "email" ? "correo" : "telegram",
+      channel: t.channel === "email" ? "correo" : t.channel,
       subject: t.subject,
       contact: t.contact_name && t.contact_address ? `${t.contact_name} <${t.contact_address}>` : t.contact_name ?? t.contact_address,
       last_message_at: t.last_message_at,
@@ -100,7 +100,7 @@ export async function inboxRead(admin: SupabaseClient, workspaceId: string, thre
   }))
   return {
     thread: thread.id,
-    channel: thread.channel === "email" ? "correo" : "telegram",
+    channel: thread.channel === "email" ? "correo" : thread.channel,
     subject: thread.subject,
     contact: thread.contact_name ?? thread.contact_address,
     messages,

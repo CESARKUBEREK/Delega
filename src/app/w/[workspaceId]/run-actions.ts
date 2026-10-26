@@ -159,6 +159,42 @@ export async function disconnectTelegram(_prev: ActionResult | null, formData: F
 }
 
 // ---------------------------------------------------------------------------
+// WhatsApp (a través de Twilio)
+// ---------------------------------------------------------------------------
+export type WhatsAppState = { error?: string; message?: string; webhookUrl?: string }
+
+export async function saveWhatsApp(_prev: WhatsAppState, formData: FormData): Promise<WhatsAppState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const accountSid = String(formData.get("accountSid") ?? "").trim()
+  const authToken = String(formData.get("authToken") ?? "").trim()
+  const from = String(formData.get("from") ?? "").replace(/[\s()-]/g, "")
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  if (!/^AC[0-9a-f]{32}$/.test(accountSid)) return { error: "El Account SID empieza por AC y tiene 34 caracteres." }
+  if (!/^[0-9a-f]{32}$/.test(authToken)) return { error: "El Auth Token tiene 32 caracteres (letras a-f y números)." }
+  if (from && !/^\+[1-9][0-9]{6,14}$/.test(from)) return { error: "Escribe el número con prefijo internacional, por ejemplo +14155238886." }
+  const result = await callEdgeFunction<{ webhook_url: string; sandbox: boolean }>(
+    "whatsapp-connection",
+    { action: "save", workspace_id: workspaceId, account_sid: accountSid, auth_token: authToken, from },
+    30_000,
+  )
+  if (result.error) return { error: result.error.message }
+  refresh()
+  return {
+    message: result.data.sandbox ? "Conectado al entorno de pruebas de Twilio. Falta el último paso: pega la dirección en Twilio." : "WhatsApp conectado.",
+    webhookUrl: result.data.webhook_url,
+  }
+}
+
+export async function disconnectWhatsApp(_prev: ActionResult | null, formData: FormData): Promise<ActionResult | null> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const result = await callEdgeFunction("whatsapp-connection", { action: "disconnect", workspace_id: workspaceId }, 20_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  refresh()
+  return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
 // HubSpot
 // ---------------------------------------------------------------------------
 export type HubSpotState = { error?: string; message?: string }
@@ -317,7 +353,7 @@ export async function setFlowActive(input: {
 }
 
 // ---------------------------------------------------------------------------
-// Bandeja (correo y Telegram)
+// Bandeja (correo, WhatsApp y Telegram)
 // ---------------------------------------------------------------------------
 export type SettingsState = { error?: string; message?: string }
 

@@ -25,6 +25,7 @@ const TELEGRAM_APPROVABLE = new Set<PendingAction["tool"]>([
   "create_document",
   "send_email",
   "send_telegram",
+  "send_whatsapp",
   "save_file",
   "create_event",
   "update_event",
@@ -67,6 +68,8 @@ export function proposalDetail(p: PendingAction): string {
       return `Para: ${p.to_label} <${p.address}>\nAsunto: ${p.subject}\n\n${clip(p.body, 2000)}`
     case "send_telegram":
       return `Para: ${p.to_label}\n\n${clip(p.text, 2000)}`
+    case "send_whatsapp":
+      return `Por WhatsApp a: ${p.to_label} (${p.phone})\n\n${clip(p.text, 2000)}`
     case "append_rows":
       return p.values.slice(0, 8).map((r) => `• ${clip(r.map((c) => (c === null ? "" : String(c))).join(" | "), 200)}`).join("\n") +
         (p.values.length > 8 ? `\n… y ${p.values.length - 8} filas más` : "")

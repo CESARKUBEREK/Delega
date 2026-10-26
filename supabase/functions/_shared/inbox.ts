@@ -1,4 +1,4 @@
-// Utilidades de la bandeja (correo y Telegram).
+// Utilidades de la bandeja (correo, Telegram y WhatsApp).
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 
 export const DEFAULT_CATEGORIES = ["Cliente", "Proveedor", "Obra o proyecto", "Administración", "Personal", "Publicidad", "Otros"]
@@ -18,7 +18,7 @@ export async function recordMessage(
   m: {
     workspaceId: string
     integrationId: string | null
-    channel: "email" | "telegram"
+    channel: "email" | "telegram" | "whatsapp"
     threadExternalId: string
     externalId: string
     direction: "in" | "out"

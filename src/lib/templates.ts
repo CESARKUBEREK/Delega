@@ -5,11 +5,11 @@ import type { FlowPlan, PlanStep } from "@/lib/plan"
 // elige después los archivos, los filtros y la activa. Todo lo que escribe o
 // envía espera aprobación, como cualquier otro flujo.
 
-export type TemplateNeed = "ai" | "imap" | "telegram" | "google" | "calendar" | "hubspot" | "tokko" | "xubio"
+export type TemplateNeed = "ai" | "imap" | "telegram" | "whatsapp" | "google" | "calendar" | "hubspot" | "tokko" | "xubio"
 
 export type FlowTemplate = {
   id: string
-  category: "Correo" | "Telegram" | "CRM" | "Agenda" | "Informes" | "Avisos" | "Inmobiliaria" | "Contabilidad"
+  category: "Correo" | "WhatsApp" | "Telegram" | "CRM" | "Agenda" | "Informes" | "Avisos" | "Inmobiliaria" | "Contabilidad"
   plan: FlowPlan
   needs: TemplateNeed[]
   // Ajustes iniciales (filtros del correo).
@@ -25,6 +25,7 @@ export const NEED_LABEL: Record<TemplateNeed, string> = {
   ai: "IA",
   imap: "Correo",
   telegram: "Telegram",
+  whatsapp: "WhatsApp",
   google: "Google Drive",
   calendar: "Google Calendar",
   hubspot: "HubSpot",
@@ -219,6 +220,52 @@ export const TEMPLATES: FlowTemplate[] = [
         { kind: "read", title: "Negocios", description: "Negocios abiertos con su etapa, importe y fecha de última modificación.", connection: "crm", requires_approval: false },
         { kind: "generate", title: "Resumir", description: "Nuevos de la semana, cambios de etapa, parados más de 14 días e importe total abierto.", connection: "none", requires_approval: false },
         { kind: "notify", title: "Avisarte", description: "Enviarte el informe.", connection: "none", requires_approval: false },
+      ]),
+      open_questions: [],
+    },
+  },
+  {
+    id: "whatsapp-consultas",
+    category: "WhatsApp",
+    needs: ["ai", "whatsapp"],
+    setup:
+      "Elige (opcional) la carpeta de Drive con tus tarifas o preguntas frecuentes y actívala. Cada respuesta espera tu aprobación, en la app o en Telegram, y solo puede salir en las 24 horas siguientes al mensaje del cliente.",
+    plan: {
+      version: 1,
+      name: "Atender WhatsApp de clientes",
+      summary: "Cuando un cliente escribe por WhatsApp, entiende qué pide, busca la respuesta en tus documentos y te deja preparada la contestación para que la apruebes.",
+      trigger: { type: "whatsapp_message", description: "Al recibir un WhatsApp de un cliente" },
+      connections: [
+        { kind: "whatsapp", purpose: "Leer el mensaje y responder a quien escribió" },
+        { kind: "drive", purpose: "Tarifas, condiciones o preguntas frecuentes" },
+      ],
+      steps: steps([
+        { kind: "read", title: "Entender el mensaje", description: "Qué pide o pregunta. Si es un saludo, un «gracias» o no necesita respuesta, terminar sin contestar.", connection: "whatsapp", requires_approval: false },
+        { kind: "read", title: "Buscar la información", description: "En los archivos elegidos, lo relacionado con la consulta. Si no hay archivos, contestar solo con lo que se pueda sin inventar.", connection: "drive", requires_approval: false },
+        { kind: "generate", title: "Redactar la respuesta", description: "Breve y cordial, como en un chat, sin Markdown. Lo que falte, entre corchetes para completarlo.", connection: "none", requires_approval: false },
+        { kind: "notify", title: "Responder por WhatsApp", description: "Enviar la respuesta a quien escribió.", connection: "whatsapp", requires_approval: true },
+      ]),
+      open_questions: [],
+    },
+  },
+  {
+    id: "whatsapp-al-crm",
+    category: "WhatsApp",
+    needs: ["ai", "whatsapp", "hubspot"],
+    setup: "Actívala y cada persona nueva que te escriba por WhatsApp se propondrá como contacto en HubSpot, con una nota de lo que pide. Crear el contacto espera tu aprobación.",
+    plan: {
+      version: 1,
+      name: "Contactos de WhatsApp a HubSpot",
+      summary: "Si te escribe por WhatsApp alguien que no está en tu CRM, propone crearlo en HubSpot con su teléfono y una nota de lo que pide.",
+      trigger: { type: "whatsapp_message", description: "Al recibir un WhatsApp" },
+      connections: [
+        { kind: "whatsapp", purpose: "Leer el mensaje" },
+        { kind: "crm", purpose: "Buscar y crear el contacto" },
+      ],
+      steps: steps([
+        { kind: "read", title: "Buscar en HubSpot", description: "Buscar el contacto por su teléfono y por su nombre. Si ya existe, terminar.", connection: "crm", requires_approval: false },
+        { kind: "write", title: "Crear el contacto", description: "Nombre (el de su perfil de WhatsApp) y teléfono.", connection: "crm", requires_approval: true },
+        { kind: "write", title: "Añadir una nota", description: "Qué pide, en una o dos frases, con la fecha.", connection: "crm", requires_approval: true },
       ]),
       open_questions: [],
     },

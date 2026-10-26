@@ -39,6 +39,7 @@ async function TemplateList({ params }: { params: PageProps<"/w/[workspaceId]/au
     if (i.status !== "active") continue
     if (i.provider === "imap") ready.add("imap")
     if (i.provider === "telegram") ready.add("telegram")
+    if (i.provider === "whatsapp") ready.add("whatsapp")
     if (i.provider === "google") ready.add("google")
     if (i.provider === "calendar") ready.add("calendar")
     if (i.provider === "hubspot") ready.add("hubspot")

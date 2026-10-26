@@ -50,7 +50,7 @@ async function Flow({
       .eq("flow_id", flow.id)
       .order("started_at", { ascending: false })
       .limit(10),
-    supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["telegram", "imap", "calendar"]),
+    supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["telegram", "imap", "whatsapp", "calendar"]),
   ])
   const files = (rawFiles ?? []).map((f) => ({
     id: f.id,
@@ -60,7 +60,7 @@ async function Flow({
 
   const plan = asPlan(flow.definition)
   const canDelete = isAdmin || flow.created_by === user.id
-  const trigger = plan && AUTO_TRIGGERS.has(plan.trigger.type) ? (plan.trigger.type as "telegram_message" | "email_message" | "schedule") : null
+  const trigger = plan && AUTO_TRIGGERS.has(plan.trigger.type) ? (plan.trigger.type as "telegram_message" | "email_message" | "whatsapp_message" | "schedule") : null
   const autoTrigger = trigger !== null
   // La bandeja solo la ven los administradores: los flujos que arrancan con un
   // correo o un mensaje solo se lanzan si los creó un owner o admin.
@@ -69,7 +69,7 @@ async function Flow({
     : { data: null }
   const creatorIsAdmin = creator?.status === "active" && (creator.role === "owner" || creator.role === "admin")
   const channelReady = (channels ?? []).some(
-    (c) => c.status === "active" && c.provider === (trigger === "email_message" ? "imap" : "telegram"),
+    (c) => c.status === "active" && c.provider === (trigger === "email_message" ? "imap" : trigger === "whatsapp_message" ? "whatsapp" : "telegram"),
   )
   const emailFilter = readEmailFilter((flow.settings as { email_filter?: unknown } | null)?.email_filter)
   const { data: ws } = await supabase.from("workspaces").select("timezone").eq("id", workspaceId).maybeSingle()
@@ -124,7 +124,7 @@ async function Flow({
               files={files}
               savedFileIds={savedFileIds}
               channelReady={channelReady}
-              inboxBlocked={(trigger === "email_message" || trigger === "telegram_message") && !creatorIsAdmin}
+              inboxBlocked={(trigger === "email_message" || trigger === "telegram_message" || trigger === "whatsapp_message") && !creatorIsAdmin}
               emailFilter={emailFilter}
               schedule={schedule}
               nextRun={flow.next_run_at ? formatLong(flow.next_run_at, timezone) : null}

@@ -38,6 +38,7 @@ const TRIGGER_HINT: Record<string, string> = {
   schedule: "Se ejecuta sola. La hora y los días se eligen al activarla.",
   email_message: "Arranca al llegar un correo. Qué correos la lanzan se elige al activarla.",
   telegram_message: "Arranca cuando alguien (que no seas tú) escribe al bot del espacio.",
+  whatsapp_message: "Arranca cuando un cliente te escribe por WhatsApp. Contestar siempre espera tu aprobación.",
 }
 
 // Claves estables para React (no se guardan: al guardar, los pasos se numeran s1, s2…).
@@ -183,7 +184,7 @@ export function FlowEditor({
         <div className="flex flex-col gap-3 px-5 py-4">
           <div role="radiogroup" aria-label="Cuándo empieza" className="grid gap-2 sm:grid-cols-2">
             {TRIGGERS.map((t) => {
-              const needs = t === "email_message" ? "imap" : t === "telegram_message" ? "telegram" : null
+              const needs = t === "email_message" ? "imap" : t === "telegram_message" ? "telegram" : t === "whatsapp_message" ? "whatsapp" : null
               const off = needs !== null && !connectedSet.has(needs)
               return (
                 <label
@@ -195,7 +196,7 @@ export function FlowEditor({
                   <input type="radio" name="trigger" className="mt-1" checked={trigger.type === t} onChange={() => setTrigger({ ...trigger, type: t })} />
                   <span>
                     <span className="block font-medium text-ink">{TRIGGER_LABEL[t]}</span>
-                    {off ? <span className="block text-xs text-graphite">{needs === "imap" ? "Correo" : "Telegram"} no está conectado</span> : null}
+                    {off ? <span className="block text-xs text-graphite">{needs === "imap" ? "Correo" : needs === "whatsapp" ? "WhatsApp" : "Telegram"} no está conectado</span> : null}
                   </span>
                 </label>
               )
@@ -358,7 +359,7 @@ function StepCard({
   const kind = step.kind as StepKind
   const approval = needsApproval(step.kind, step.connection)
   const appLabel =
-    step.kind === "notify" ? NOTIFY_TARGET[step.connection as "none" | "email" | "telegram"]?.split(" (")[0] : step.connection !== "none" ? CONNECTION_NAME[step.connection as ConnectionKind] : null
+    step.kind === "notify" ? NOTIFY_TARGET[step.connection as keyof typeof NOTIFY_TARGET]?.split(" (")[0] : step.connection !== "none" ? CONNECTION_NAME[step.connection as ConnectionKind] : null
   const offline = step.connection !== "none" && step.connection in CONNECTION_PROVIDER && !connectedSet.has(CONNECTION_PROVIDER[step.connection as ConnectionKind])
 
   return (
@@ -484,7 +485,7 @@ function StepFields({ step, onChange, connectedSet }: { step: EditorStep; onChan
           >
             {options.map((c) => (
               <option key={c} value={c}>
-                {kind === "notify" ? NOTIFY_TARGET[c as "none" | "email" | "telegram"] : CONNECTION_NAME[c]}
+                {kind === "notify" ? NOTIFY_TARGET[c as keyof typeof NOTIFY_TARGET] : CONNECTION_NAME[c]}
                 {c !== "none" && !connectedSet.has(CONNECTION_PROVIDER[c as ConnectionKind]) ? " (no conectado)" : ""}
               </option>
             ))}

@@ -369,9 +369,20 @@ El chat privado que cada persona vincula (Configuración → Mis avisos) es tamb
 - Si se cambia el inicio de una automatización activa, se pausa para revisar su activación.
 - **Tests:** `npm test` (reglas del editor) y pgTAP `015_flow_editor.test.sql`.
 
+## WhatsApp por Twilio (26 oct)
+
+WhatsApp entra como canal de clientes a través de **Twilio** (proveedor oficial). Ahora se usa su **entorno de pruebas** (número compartido +1 415 523 8886), sin Meta ni empresa. Con un número propio aprobado en Twilio funciona igual; más adelante, la conexión directa con Meta (Cloud API) podrá ser otro proveedor del mismo canal.
+
+- **Conexión** (`whatsapp-connection`, owners y admins): Account SID, Auth Token y número remitente (vacío = entorno de pruebas). Se comprueban con la API de Twilio y se guardan en Vault. Integraciones muestra la dirección para Twilio: `…/functions/v1/whatsapp-webhook?c=<integración>`, que se pega en «Sandbox settings → When a message comes in» (POST).
+- **Recepción** (`whatsapp-webhook`, sin `verify_jwt`): exige la firma `X-Twilio-Signature` (HMAC-SHA1 con el Auth Token sobre la URL pública y los parámetros ordenados) y que el `AccountSid` sea el conectado. Registra el mensaje en la bandeja (canal `whatsapp`, conversación = número del cliente) y lanza las automatizaciones activas con inicio `whatsapp_message` creadas por un owner o admin (máx. 3 por mensaje y 30 por hora). Responde TwiML vacío.
+- **Respuesta:** `send_whatsapp` (a quien escribió) y `reply_whatsapp` (a una conversación de la bandeja), siempre con aprobación (app o botones de Telegram). Solo dentro de la **ventana de 24 h** desde el último mensaje del cliente: se comprueba al proponer y otra vez al aprobar. Máx. 1600 caracteres. También desde la Bandeja (`inbox-reply`).
+- **Plantillas:** «Atender WhatsApp de clientes» y «Contactos de WhatsApp a HubSpot».
+- **Pendiente:** plantillas de Meta para escribir fuera de las 24 h; adjuntos (ahora se anotan como «[archivo adjunto]»); alta de clientes con un clic cuando Orkesta sea proveedor tecnológico de Meta.
+- Migración `20261026100000_whatsapp.sql`, test pgTAP `016_whatsapp.test.sql`, `supabase/functions/_shared/whatsapp.test.ts` (firma de Twilio contra una implementación de referencia).
+
 ## Despliegue automático de las funciones (desde el 25 oct)
 
 - **Proyecto:** Supabase **DOrkesta** (`xgbmpziocflgsszzgyeb`).
-- **GitHub Actions** (`.github/workflows/deploy-functions.yml`): despliega las 17 Edge Functions cada vez que cambian en `main`, o a mano desde Actions → «Desplegar funciones de Supabase» → Run workflow. Usa `--use-api`, así que no necesita Docker.
+- **GitHub Actions** (`.github/workflows/deploy-functions.yml`): despliega las 19 Edge Functions cada vez que cambian en `main`, o a mano desde Actions → «Desplegar funciones de Supabase» → Run workflow. Usa `--use-api`, así que no necesita Docker.
 - **Requisito único:** el secreto del repositorio `SUPABASE_ACCESS_TOKEN`, un token personal de https://supabase.com/dashboard/account/tokens.
 - **Secreto de las tareas periódicas:** `mail-cron` y `runs-cron` leen el secreto de Vault (`orkesta_mail_cron_secret`) con la RPC `cron_secret` (migración 13, solo `service_role`). La variable `MAIL_CRON_SECRET` ya no es necesaria; si existe, tiene prioridad.

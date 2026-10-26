@@ -160,7 +160,7 @@ export function ActivationPanel({
   workspaceId: string
   flowId: string
   status: string
-  trigger: "telegram_message" | "email_message" | "schedule"
+  trigger: "telegram_message" | "email_message" | "whatsapp_message" | "schedule"
   files: { id: string; name: string; kind: string }[]
   savedFileIds: string[]
   channelReady: boolean
@@ -181,6 +181,7 @@ export function ActivationPanel({
   const active = status === "active"
   const email = trigger === "email_message"
   const scheduled = trigger === "schedule"
+  const channelName = trigger === "whatsapp_message" ? "WhatsApp" : "Telegram"
   const [frequency, setFrequency] = useState(schedule.frequency)
   const [time, setTime] = useState(schedule.time)
   const [weekday, setWeekday] = useState(schedule.weekday)
@@ -218,7 +219,9 @@ export function ActivationPanel({
       <p className="text-sm text-graphite">
         {email
           ? "Este flujo arranca al llegar un correo. Primero conecta tu correo (IMAP) en "
-          : "Este flujo arranca al recibir un mensaje en Telegram. Primero conecta tu bot en "}
+          : trigger === "whatsapp_message"
+            ? "Este flujo arranca al recibir un WhatsApp. Primero conecta WhatsApp en "
+            : "Este flujo arranca al recibir un mensaje en Telegram. Primero conecta tu bot en "}
         <Link href={`/w/${workspaceId}/integraciones`} className="text-link underline underline-offset-4">
           Integraciones
         </Link>
@@ -241,7 +244,7 @@ export function ActivationPanel({
           : active
           ? email
             ? "Activo: cada correo nuevo que cumpla los filtros lanzará una ejecución (máximo 30 por hora). El correo se lee cada 5 minutos. Lo que quiera escribir o enviar esperará tu aprobación."
-            : "Activo: cada mensaje que reciba el bot del espacio lanzará una ejecución (máximo 30 por hora). Lo que quiera escribir o enviar esperará tu aprobación."
+            : `Activo: cada mensaje que llegue por ${channelName} lanzará una ejecución (máximo 30 por hora). Lo que quiera escribir o enviar esperará tu aprobación.`
           : email
             ? "Pausado: los correos que lleguen se guardan en la bandeja, pero no lanzan este flujo."
             : "Pausado: los mensajes que lleguen se registran, pero no lanzan este flujo."}

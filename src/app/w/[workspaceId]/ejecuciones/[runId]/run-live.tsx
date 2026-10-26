@@ -19,6 +19,8 @@ function describe(p: Pending): string {
       return `Enviar este correo a ${p.to} (${p.address}) con el asunto «${p.subject}».`
     case "send_telegram":
       return `Enviar este mensaje por Telegram a ${p.to}.`
+    case "send_whatsapp":
+      return `Enviar este WhatsApp a ${p.to}${p.phone && p.phone !== p.to ? ` (${p.phone})` : ""}.`
     case "generic":
       return p.description
   }
@@ -198,7 +200,7 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
         ) : (
           <TextPreview
             text={"text" in pending && pending.text !== null ? pending.text : ""}
-            caption={pending.tool === "send_email" ? "Correo" : pending.tool === "send_telegram" ? "Mensaje" : "Texto"}
+            caption={pending.tool === "send_email" ? "Correo" : pending.tool === "send_telegram" || pending.tool === "send_whatsapp" ? "Mensaje" : "Texto"}
           />
         )}
         {error ? (
