@@ -13,7 +13,7 @@ export default function FlowsPage({ params }: PageProps<"/w/[workspaceId]/automa
       <div>
         <h1 className="rotulo text-2xl">Automatizaciones</h1>
         <p className="mt-1 max-w-prose text-graphite">
-          Los planes que guardas desde el asistente o creas desde una plantilla. Se ejecutan a mano o, si están activos, al llegar un correo
+          Los planes que guardas desde el asistente, creas desde una plantilla o montas paso a paso. Se ejecutan a mano o, si están activos, al llegar un correo
           o un mensaje de Telegram.
         </p>
       </div>
@@ -45,6 +45,10 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
         <span className="text-sm text-graphite">o</span>{" "}
         <Link href={`${base}/automatizaciones/plantillas`} className="text-sm text-link underline underline-offset-4">
           usa una plantilla
+        </Link>{" "}
+        <span className="text-sm text-graphite">o</span>{" "}
+        <Link href={`${base}/automatizaciones/nueva`} className="text-sm text-link underline underline-offset-4">
+          créala desde cero
         </Link>
       </div>
     )
@@ -52,12 +56,20 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
 
   return (
     <div className="flex flex-col gap-4">
-      <Link
-        href={`${base}/automatizaciones/plantillas`}
-        className="inline-flex h-11 w-fit items-center border border-ink px-5 text-base font-medium text-ink hover:bg-paper"
-      >
-        Empezar con una plantilla
-      </Link>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Link
+          href={`${base}/automatizaciones/plantillas`}
+          className="inline-flex h-11 items-center justify-center border border-ink px-5 text-base font-medium text-ink hover:bg-paper"
+        >
+          Empezar con una plantilla
+        </Link>
+        <Link
+          href={`${base}/automatizaciones/nueva`}
+          className="inline-flex h-11 items-center justify-center bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90"
+        >
+          Crear desde cero
+        </Link>
+      </div>
       <ul className="divide-y divide-rule border border-ink bg-sheet">
         {flows.map((f) => (
           <li key={f.id}>
