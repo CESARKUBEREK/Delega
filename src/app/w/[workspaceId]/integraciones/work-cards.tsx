@@ -19,8 +19,8 @@ export async function CalendarCard({ workspaceId, isAdmin, notice }: { workspace
   const tz = ((integration?.config ?? {}) as { timezone?: string }).timezone
 
   return (
-    <section className="border border-ink bg-sheet">
-      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Google Calendar</h3>
           <p className="text-sm text-graphite">
@@ -28,7 +28,7 @@ export async function CalendarCard({ workspaceId, isAdmin, notice }: { workspace
           </p>
         </div>
         <Badge status={integration?.status} invalidLabel="Acceso retirado" />
-      </div>
+      </summary>
 
       <div className="flex flex-col gap-5 px-5 py-5">
         {notice ? (
@@ -66,7 +66,7 @@ export async function CalendarCard({ workspaceId, isAdmin, notice }: { workspace
           <p className="text-sm text-graphite">Solo un administrador puede conectar Google Calendar.</p>
         )}
       </div>
-    </section>
+    </details>
   )
 }
 
@@ -81,8 +81,8 @@ export async function HubSpotCard({ workspaceId, isAdmin }: { workspaceId: strin
   const config = (integration?.config ?? {}) as { portal_id?: number | null }
 
   return (
-    <section className="border border-ink bg-sheet">
-      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">HubSpot</h3>
           <p className="text-sm text-graphite">
@@ -91,7 +91,7 @@ export async function HubSpotCard({ workspaceId, isAdmin }: { workspaceId: strin
           </p>
         </div>
         <Badge status={integration?.status} invalidLabel="Clave rechazada" />
-      </div>
+      </summary>
 
       <div className="flex flex-col gap-5 px-5 py-5">
         {integration ? (
@@ -136,7 +136,7 @@ export async function HubSpotCard({ workspaceId, isAdmin }: { workspaceId: strin
           <p className="text-sm text-graphite">Solo un administrador puede conectar HubSpot.</p>
         )}
       </div>
-    </section>
+    </details>
   )
 }
 
@@ -150,8 +150,8 @@ export async function TokkoCard({ workspaceId, isAdmin }: { workspaceId: string;
     .maybeSingle()
 
   return (
-    <section className="border border-ink bg-sheet">
-      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Tokko Broker</h3>
           <p className="text-sm text-graphite">
@@ -160,7 +160,7 @@ export async function TokkoCard({ workspaceId, isAdmin }: { workspaceId: string;
           </p>
         </div>
         <Badge status={integration?.status} invalidLabel="Clave rechazada" />
-      </div>
+      </summary>
       <div className="flex flex-col gap-5 px-5 py-5">
         {integration ? (
           <p className="text-sm text-graphite">
@@ -184,7 +184,7 @@ export async function TokkoCard({ workspaceId, isAdmin }: { workspaceId: string;
           <p className="text-sm text-graphite">Solo un administrador puede conectar Tokko.</p>
         )}
       </div>
-    </section>
+    </details>
   )
 }
 
@@ -198,8 +198,8 @@ export async function XubioCard({ workspaceId, isAdmin }: { workspaceId: string;
     .maybeSingle()
 
   return (
-    <section className="border border-ink bg-sheet">
-      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Xubio</h3>
           <p className="text-sm text-graphite">
@@ -208,7 +208,7 @@ export async function XubioCard({ workspaceId, isAdmin }: { workspaceId: string;
           </p>
         </div>
         <Badge status={integration?.status} invalidLabel="Credenciales rechazadas" />
-      </div>
+      </summary>
       <div className="flex flex-col gap-5 px-5 py-5">
         {integration ? (
           <p className="text-sm text-graphite">
@@ -233,6 +233,6 @@ export async function XubioCard({ workspaceId, isAdmin }: { workspaceId: string;
           <p className="text-sm text-graphite">Solo un administrador puede conectar Xubio.</p>
         )}
       </div>
-    </section>
+    </details>
   )
 }

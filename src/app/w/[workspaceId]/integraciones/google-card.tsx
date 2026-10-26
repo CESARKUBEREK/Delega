@@ -76,8 +76,8 @@ export async function DriveCard({ workspaceId, isAdmin, notice }: { workspaceId:
   const own = files.filter((f) => !LISTED_ELSEWHERE.includes(f.mime_type ?? ""))
 
   return (
-    <section className="border border-ink bg-sheet">
-      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Google Drive</h3>
           <p className="text-sm text-graphite">
@@ -86,7 +86,7 @@ export async function DriveCard({ workspaceId, isAdmin, notice }: { workspaceId:
           </p>
         </div>
         <Badge status={integration?.status} />
-      </div>
+      </summary>
 
       <div className="flex flex-col gap-5 px-5 py-5">
         {notice ? (
@@ -135,7 +135,7 @@ export async function DriveCard({ workspaceId, isAdmin, notice }: { workspaceId:
           <p className="text-sm text-graphite">Solo un administrador del espacio puede conectar Google Drive o elegir archivos.</p>
         )}
       </div>
-    </section>
+    </details>
   )
 }
 
@@ -162,8 +162,8 @@ export async function FilesCard({
   const active = integration?.status === "active"
 
   return (
-    <section className="border border-ink bg-sheet">
-      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">{title}</h3>
           <p className="text-sm text-graphite">{description}</p>
@@ -171,7 +171,7 @@ export async function FilesCard({
         <span className={`shrink-0 border px-2 py-0.5 text-xs ${active ? "border-ok text-ok" : "border-rule text-graphite"}`}>
           {active ? `${mine.length} elegido${mine.length === 1 ? "" : "s"}` : "Sin conectar"}
         </span>
-      </div>
+      </summary>
       <div className="flex flex-col gap-4 px-5 py-5">
         <p className="text-xs text-graphite">{capability}</p>
         {mine.length > 0 ? (
@@ -191,6 +191,6 @@ export async function FilesCard({
           </p>
         )}
       </div>
-    </section>
+    </details>
   )
 }
