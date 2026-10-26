@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Logo } from "./logo"
+import { Logo, LogoMark } from "./logo"
 
 // La lámina: el formulario se presenta como una hoja de plano, con una cota
 // encima y el cajetín (recuadro de datos del plano) al pie.
@@ -15,28 +15,40 @@ export function Sheet({
   footer?: ReactNode
 }) {
   return (
-    <main className="flex min-h-dvh items-start justify-center px-4 py-10 sm:items-center sm:py-16">
-      <div className="w-full max-w-[26rem]">
-        <div className="mb-5 flex justify-center">
-          <Logo size={40} tagline id="orkesta-sheet" />
+    <main className="auth-shell">
+      <section className="auth-story" aria-label="Qué puedes hacer con Orkesta">
+        <header className="auth-brand"><Logo size={38} id="orkesta-auth" /></header>
+        <div className="auth-copy">
+          <span className="auth-eyebrow"><span className="auth-live-dot" /> AUTOMATIZACIÓN CON IA</span>
+          <h2>Las tareas avanzan.<br /><span>Tú decides.</span></h2>
+          <p>Conecta tus herramientas, describe lo que necesitas y deja que Orkesta prepare el trabajo.</p>
         </div>
-
-        <section className="border border-ink bg-sheet">
-          <div className="px-6 pt-7 pb-6 sm:px-8">
-            <h1 className="rotulo text-[1.75rem] text-ink">{title}</h1>
-            <div className="mt-6">{children}</div>
+        <div className="workflow-card" aria-label="Ejemplo de automatización: correo, Orkesta y aprobación">
+          <div className="workflow-top"><span>FLUJO DE TRABAJO</span><span className="workflow-status"><i /> LISTO PARA REVISAR</span></div>
+          <div className="workflow-lane">
+            <div className="workflow-node"><span className="workflow-icon inbox-icon">✉</span><span><b>Nuevo correo</b><small>Solicitud recibida</small></span></div>
+            <span className="workflow-link" aria-hidden="true"><i /></span>
+            <div className="workflow-node orkesta-node"><span className="workflow-icon orkesta-icon"><LogoMark size={22} id="orkesta-flow" /></span><span><b>Orkesta prepara</b><small>Clasifica y propone</small></span></div>
+            <span className="workflow-link" aria-hidden="true"><i /></span>
+            <div className="workflow-node"><span className="workflow-icon check-icon">✓</span><span><b>Tu aprobación</b><small>Antes de ejecutar</small></span></div>
           </div>
+          <div className="workflow-bottom"><span className="workflow-check">✓</span> Tú mantienes el control de cada acción</div>
+        </div>
+        <div className="auth-footnote"><span>01</span> Automatiza lo repetitivo. Conserva las decisiones.</div>
+        <div className="auth-orbit auth-orbit-one" /><div className="auth-orbit auth-orbit-two" />
+      </section>
 
-          {/* Cajetín */}
-          <div className="grid grid-cols-[1fr_auto] border-t border-ink text-sm">
-            <div className="px-6 py-3 text-graphite sm:px-8">{footer}</div>
-            <div className="border-l border-ink px-4 py-3">
-              <p className="logotipo text-sm text-ink">ORKESTA</p>
-              <p className="text-xs text-graphite">{sheetName}</p>
-            </div>
-          </div>
-        </section>
-      </div>
+      <section className="auth-form-side">
+        <div className="auth-form-brand"><Logo size={34} tagline id="orkesta-auth-mobile" /></div>
+        <div className="auth-form-card">
+          <div className="auth-form-kicker">{sheetName.toUpperCase()}</div>
+          <h1 className="rotulo text-[1.8rem] text-ink">{title}</h1>
+          <div className="auth-form-content">{children}</div>
+          <div className="auth-form-footer">{footer}</div>
+        </div>
+        <p className="auth-privacy"><span>⌑</span> Tus datos y tus conexiones permanecen bajo tu control.</p>
+      </section>
     </main>
   )
 }
+
