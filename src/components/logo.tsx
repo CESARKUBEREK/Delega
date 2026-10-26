@@ -1,3 +1,5 @@
+import Image from "next/image"
+
 // Marca de Orkesta: anillo fluido (verde → turquesa → azul) y logotipo.
 // Paleta: azul marino #0B1F3B, turquesa #00C2A8, verde #34D399, gris #F3F6FA, blanco.
 
@@ -30,8 +32,6 @@ export function LogoMark({ size = 32, id = "orkesta", className }: { size?: numb
 }
 
 // Logotipo completo: usa el archivo de marca enviado, incluida su leyenda.
-import Image from "next/image"
-
 export function Logo({ size = 28, tagline = false, id }: { size?: number; tagline?: boolean; id?: string }) {
   const width = Math.round(size * 749 / 223)
   return (
