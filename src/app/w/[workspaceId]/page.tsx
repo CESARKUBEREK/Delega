@@ -41,7 +41,7 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="rotulo text-2xl">Inicio</h1>
+      <div className="dashboard-intro"><div><p className="app-eyebrow">RESUMEN DEL ESPACIO</p><h1 className="rotulo">Tu espacio, en marcha</h1><p>Un vistazo a tus automatizaciones y actividad reciente.</p></div></div>
 
       {waiting ? (
         <Link
@@ -117,3 +117,4 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
     </div>
   )
 }
+
