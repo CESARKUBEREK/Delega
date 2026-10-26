@@ -41,19 +41,29 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="dashboard-intro"><div><p className="app-eyebrow">RESUMEN DEL ESPACIO</p><h1 className="rotulo">Tu espacio, en marcha</h1><p>Un vistazo a tus automatizaciones y actividad reciente.</p></div></div>
+      <div className="dashboard-intro">
+        <div>
+          <p className="app-eyebrow">CENTRO DE CONTROL</p>
+          <h1 className="rotulo">Tu espacio, en marcha</h1>
+          <p>Coordina tu IA, automatizaciones y conversaciones desde un solo lugar.</p>
+        </div>
+        <span className={`dashboard-status ${connection?.status === "active" ? "is-connected" : ""}`}>
+          <i aria-hidden="true" />
+          {connection?.status === "active" ? "IA conectada" : connection ? "IA por revisar" : "IA sin configurar"}
+        </span>
+      </div>
 
       {waiting ? (
         <Link
           href={`${base}/aprobaciones`}
-          className="border-2 border-stroke bg-sheet px-5 py-3 font-medium text-ink hover:bg-paper"
+          className="dashboard-approval border-2 border-stroke bg-sheet px-5 py-3 font-medium text-ink hover:bg-paper"
         >
           {waiting === 1 ? "1 ejecución espera tu aprobación" : `${waiting} ejecuciones esperan tu aprobación`} →
         </Link>
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <section className="border border-ink bg-sheet p-5">
+        <section className="dashboard-stat-card border border-ink bg-sheet p-5">
           <h2 className="text-sm font-medium text-graphite">Inteligencia artificial</h2>
           {connection?.status === "active" ? (
             <>
@@ -85,9 +95,9 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
           </Link>
         </section>
 
-        <section className="border border-ink bg-sheet p-5">
+        <section className="dashboard-stat-card dashboard-flow-card border border-ink bg-sheet p-5">
           <h2 className="text-sm font-medium text-graphite">Automatizaciones</h2>
-          <p className="rotulo mt-2 text-lg text-ink">
+          <p className="dashboard-flow-count rotulo mt-2 text-lg text-ink">
             {flowCount ?? 0} {flowCount === 1 ? "automatización" : "automatizaciones"}
           </p>
           <p className="mt-1 text-sm text-graphite">Describe una tarea al asistente y guarda el plan que te proponga.</p>
@@ -97,7 +107,7 @@ async function Home({ params }: { params: PageProps<"/w/[workspaceId]">["params"
         </section>
       </div>
 
-      <section className="border border-ink bg-sheet">
+      <section className="dashboard-recent border border-ink bg-sheet">
         <h2 className="border-b border-ink px-5 py-3 font-semibold">Conversaciones recientes</h2>
         {conversations && conversations.length > 0 ? (
           <ul className="divide-y divide-rule">
