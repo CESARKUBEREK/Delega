@@ -7,9 +7,9 @@ import { PendingInviteNotice } from "./pending-invite-notice"
 
 export default function WorkspacesLayout({ children }: LayoutProps<"/w">) {
   return (
-    <div className="min-h-dvh">
-      <header className="border-b border-ink bg-sheet">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+    <div className="app-shell min-h-dvh">
+      <header className="app-topbar">
+        <div className="app-topbar-inner">
           <Link href="/w" aria-label="Orkesta, inicio">
             <Logo size={30} id="orkesta-header" />
           </Link>
@@ -18,7 +18,7 @@ export default function WorkspacesLayout({ children }: LayoutProps<"/w">) {
           </Suspense>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">
+      <main className="app-frame app-workspaces-page">
         <PendingInviteNotice />
         {children}
       </main>
@@ -39,3 +39,4 @@ async function Account() {
     </div>
   )
 }
+
