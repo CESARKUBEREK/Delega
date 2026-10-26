@@ -9,8 +9,9 @@ export const metadata = { title: "Tus espacios" }
 
 export default function WorkspacesPage() {
   return (
-    <div className="grid gap-10 lg:grid-cols-[1fr_22rem]">
+    <div className="workspaces-grid grid gap-10 lg:grid-cols-[1fr_22rem]">
       <section>
+        <p className="app-eyebrow">TU ESPACIO DE TRABAJO</p>
         <h1 className="rotulo text-3xl">Tus espacios</h1>
         <p className="mt-2 max-w-prose text-graphite">
           Cada espacio guarda sus propios flujos, conexiones y claves. Lo que haces en uno no se ve en los demás.
@@ -20,7 +21,7 @@ export default function WorkspacesPage() {
         </Suspense>
       </section>
 
-      <aside className="h-fit border border-ink bg-sheet p-6">
+      <aside className="workspaces-create-card h-fit border border-ink bg-sheet p-6">
         <h2 className="rotulo text-lg">Nueva organización</h2>
         <p className="mt-1 mb-5 text-sm text-graphite">
           Para trabajar con tu equipo: invitas a cada persona y le das un rol.
@@ -49,7 +50,7 @@ async function WorkspaceList() {
     .sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name, "es") : a.kind === "personal" ? -1 : 1))
 
   return (
-    <ul className="mt-6 divide-y divide-rule border border-ink bg-sheet">
+    <ul className="workspace-list mt-6 divide-y divide-rule border border-ink bg-sheet">
       {rows.map((w) => (
         <li key={w.id}>
           <Link href={`/w/${w.id}`} className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-paper">
@@ -64,3 +65,4 @@ async function WorkspaceList() {
     </ul>
   )
 }
+
