@@ -231,4 +231,120 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+/* App shell: navegación, espacios y todas las vistas autenticadas. */
+.app-shell {
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse at 13% 0%, rgb(0 194 168 / 5%), transparent 24rem),
+    radial-gradient(ellipse at 95% 9%, rgb(27 94 158 / 4%), transparent 25rem),
+    #f5f8fb;
+  color: #0b1f3b;
+}
+.app-topbar {
+  position: sticky; z-index: 30; top: 0; border-bottom: 1px solid #e3eaf1;
+  background: rgb(255 255 255 / 88%); box-shadow: 0 5px 22px rgb(11 31 59 / 3%); backdrop-filter: blur(18px);
+}
+.app-topbar-inner {
+  display: flex; width: min(100%, 1500px); min-height: 76px; align-items: center; gap: 20px;
+  margin: 0 auto; padding: 12px clamp(18px, 4vw, 56px);
+}
+.app-brand-link { display: inline-flex; align-items: center; flex: 0 0 auto; text-decoration: none; }
+.app-topbar-divider { width: 1px; height: 34px; background: #e1e8ef; }
+.app-current-workspace { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.app-current-workspace span { color: #8392a5; font-size: 9px; font-weight: 700; letter-spacing: .13em; }
+.app-current-workspace strong { overflow: hidden; color: #102642; font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.app-topbar-spacer { flex: 1; }
+.app-workspace-role { padding: 6px 10px; border: 1px solid #e2eaf0; border-radius: 999px; background: #f8fafc; color: #65768b; font-size: 11px; white-space: nowrap; }
+.app-switch-link { display: inline-flex; align-items: center; gap: 7px; color: #08776b; font-size: 12px; font-weight: 650; text-decoration: none; white-space: nowrap; }
+.app-switch-link:hover { color: #055e55; }
+.app-frame { width: min(100%, 1500px); margin: 0 auto; padding: 34px clamp(18px, 4vw, 56px) 54px; }
+.app-layout-grid { display: grid; grid-template-columns: 218px minmax(0, 1fr); align-items: start; gap: clamp(24px, 3vw, 42px); }
+.app-sidebar { top: 96px; }
+.app-nav-heading { margin: 0 0 9px 12px; color: #8a98a8; font-size: 9px; font-weight: 700; letter-spacing: .15em; }
+.app-sidebar-list { gap: 4px; padding: 5px; border: 1px solid #e8edf2; border-radius: 16px; background: rgb(255 255 255 / 72%); box-shadow: 0 12px 34px rgb(11 31 59 / 4%); list-style: none; }
+.app-sidebar-list > li { border: 0; }
+.app-sidebar-link { display: flex; min-height: 42px; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 10px; color: #586a80; font-size: 12px; text-decoration: none; transition: background-color .16s ease, color .16s ease; }
+.app-sidebar-link:hover { background: #f0f6f7; color: #17415a; }
+.app-sidebar-link[aria-current="page"] { background: #e6f6f2; color: #075f56; font-weight: 650; }
+.app-nav-icon { display: grid; width: 21px; height: 21px; flex: 0 0 21px; place-items: center; color: #8796a8; }
+.app-nav-icon svg { width: 18px; height: 18px; }
+.app-sidebar-link[aria-current="page"] .app-nav-icon { color: #058a79; }
+.app-sidebar-link .ml-auto { margin-left: auto; }
+.panel-content { display: flex; min-width: 0; flex-direction: column; gap: 24px; }
+.panel-content h1 { color: #102642; letter-spacing: -.035em; }
+.panel-content .border-ink { border-color: #dfe7ee; }
+.panel-content .border-rule { border-color: #e6ecf1; }
+.panel-content .bg-sheet { background-color: #fff; }
+.panel-content section.border-ink,
+.panel-content section[class*="border-ink"] { overflow: hidden; border-radius: 17px; box-shadow: 0 12px 32px rgb(11 31 59 / 4%); }
+.panel-content ul.border-ink,
+.panel-content ul[class*="border-ink"] { overflow: hidden; border-radius: 14px; background: #fff; box-shadow: 0 10px 26px rgb(11 31 59 / 3%); }
+.panel-content section > h2.border-b,
+.panel-content section > div.border-b { border-color: #e8eef2; background: linear-gradient(90deg, #f2faf8, #fff 74%); }
+.panel-content button.border-ink,
+.panel-content a.border-ink { border-color: #d8e2ea; border-radius: 10px; transition: border-color .16s ease, background-color .16s ease, transform .16s ease; }
+.panel-content button.border-ink:hover,
+.panel-content a.border-ink:hover { border-color: #9dcfc5; }
+.panel-content button.bg-stroke,
+.panel-content a.bg-stroke { border-radius: 10px; box-shadow: 0 5px 14px rgb(0 194 168 / 15%); transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease; }
+.panel-content button.bg-stroke:hover,
+.panel-content a.bg-stroke:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgb(0 194 168 / 21%); }
+.panel-content input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.panel-content select, .panel-content textarea,
+.auth-form-content input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.auth-form-content select, .auth-form-content textarea { border-color: #d9e3ea; border-radius: 10px; background-color: #fff; }
+.panel-content input:focus, .panel-content select:focus, .panel-content textarea:focus,
+.auth-form-content input:focus, .auth-form-content select:focus, .auth-form-content textarea:focus { border-color: #11a995; box-shadow: 0 0 0 3px rgb(17 169 149 / 11%); outline: none; }
+.panel-content details.border, .panel-content details[class*="border-"] { overflow: hidden; border-radius: 12px; }
+.app-eyebrow { margin: 0 0 8px; color: #0c8578; font-size: 10px; font-weight: 700; letter-spacing: .15em; }
+.app-workspaces-page .workspaces-grid > section > h1 { margin: 0; font-size: clamp(32px, 4vw, 42px); }
+.app-workspaces-page .workspaces-grid > section > p:not(.app-eyebrow) { line-height: 1.7; }
+.workspaces-create-card { border-color: #e0e8ee; border-radius: 17px; background: linear-gradient(145deg, #fff, #f5faf9); box-shadow: 0 16px 38px rgb(11 31 59 / 5%); }
+.workspace-list { overflow: hidden; border-color: #e1e9ef; border-radius: 16px; box-shadow: 0 14px 34px rgb(11 31 59 / 4%); }
+.workspace-list a { transition: background-color .16s ease, padding .16s ease; }
+.workspace-list a:hover { background-color: #f0f8f7; }
+.dashboard-intro { display: flex; align-items: end; justify-content: space-between; gap: 20px; padding: 6px 0 3px; }
+.dashboard-intro h1 { margin: 0; font-size: clamp(30px, 3.8vw, 42px); }
+.dashboard-intro p:not(.app-eyebrow) { margin: 8px 0 0; color: #64758a; font-size: 14px; }
+.mobile-tab-nav { padding: 0 10px; }
+.mobile-tab-list { overflow: hidden; margin: 0 auto calc(7px + env(safe-area-inset-bottom)); border: 1px solid rgb(216 226 234 / 95%); border-radius: 20px; background: rgb(255 255 255 / 92%); box-shadow: 0 12px 35px rgb(11 31 59 / 15%); backdrop-filter: blur(18px); }
+.app-mobile-tab-link { transition: color .15s ease, background-color .15s ease; }
+.mobile-more-menu { overflow: hidden; border-color: #dfe7ee; border-radius: 15px; box-shadow: 0 16px 38px rgb(11 31 59 / 13%); }
+.auth-form-content input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]) { transition: border-color .16s ease, box-shadow .16s ease; }
+.auth-form-content button { border-radius: 10px; transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease; }
+.auth-form-content button.bg-stroke { box-shadow: 0 7px 18px rgb(0 194 168 / 17%); }
+.auth-form-content button.bg-stroke:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgb(0 194 168 / 22%); }
+
+@media (max-width: 1023px) {
+  .app-layout-grid { grid-template-columns: minmax(0, 1fr); }
+  .app-frame { padding-top: 24px; }
+}
+@media (max-width: 700px) {
+  .app-topbar-inner { min-height: 64px; gap: 12px; padding: 10px 16px; }
+  .app-topbar-inner > .flex { gap: 12px; }
+  .app-topbar-divider { height: 29px; }
+  .app-current-workspace strong { max-width: 40vw; font-size: 12px; }
+  .app-current-workspace span { font-size: 8px; }
+  .app-workspace-role { display: none; }
+  .app-switch-link { font-size: 11px; }
+  .app-frame { padding: 22px 16px 30px; }
+  .panel-content { gap: 18px; }
+  .panel-content section.border-ink,
+  .panel-content section[class*="border-ink"] { border-radius: 14px; }
+  .dashboard-intro { align-items: flex-start; flex-direction: column; }
+  .dashboard-intro h1 { font-size: 32px; }
+  .app-workspaces-page .workspaces-grid { gap: 28px; }
+}
+@media (max-width: 430px) {
+  .app-topbar-inner { gap: 9px; }
+  .app-brand-link svg { width: 29px; height: 29px; }
+  .app-topbar-divider { margin-left: 1px; }
+  .app-current-workspace strong { max-width: 34vw; }
+  .app-switch-link { gap: 3px; font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-sidebar-link, .app-mobile-tab-link, .workspace-list a,
+  .panel-content button, .panel-content a { transition-duration: 0.01ms; }
+}
 
