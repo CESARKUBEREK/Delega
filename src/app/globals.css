@@ -477,3 +477,9 @@ body {
 @media (prefers-reduced-motion:reduce) {
   .integration-summary::after,.integration-accordion[open] > :not(summary) { transition:none; animation:none; }
 }
+
+/* Wordmark horizontal enviado por el usuario. */
+.orkesta-logo-image { display:block; max-width:100%; height:auto; }
+@media (max-width:700px) {
+  .app-brand-link .orkesta-logo-image { height:30px; width:auto; }
+}
