@@ -441,3 +441,7 @@ body {
 @media (max-width: 700px) {
   .app-shell .dashboard-intro { align-items: flex-start; }
 }
+
+.app-shell .dashboard-flow-card .dashboard-flow-count { margin-top: 18px; font-size: clamp(28px, 4vw, 38px); line-height: 1; letter-spacing: -.05em; }
+.app-shell .dashboard-approval { border-color: #907dff; border-radius: 13px; background: linear-gradient(95deg, rgb(117 85 255 / 16%), rgb(82 215 238 / 8%), #0e1b2b); box-shadow: 0 12px 30px rgb(117 85 255 / 9%); }
+.app-shell .dashboard-approval:hover { background: linear-gradient(95deg, rgb(117 85 255 / 23%), rgb(82 215 238 / 12%), #112236); }
