@@ -29,17 +29,21 @@ export function LogoMark({ size = 32, id = "orkesta", className }: { size?: numb
   )
 }
 
-// Logotipo completo. "size" es la altura de la marca en píxeles.
+// Logotipo completo: usa el archivo de marca enviado, incluida su leyenda.
+import Image from "next/image"
+
 export function Logo({ size = 28, tagline = false, id }: { size?: number; tagline?: boolean; id?: string }) {
+  const width = Math.round(size * 749 / 223)
   return (
-    <span className="inline-flex items-center gap-2.5">
-      <LogoMark size={size} id={id} />
-      <span className="flex flex-col">
-        <span className="logotipo text-ink" style={{ fontSize: Math.round(size * 0.72) }}>
-          ORKEST<span className="text-turquesa">A</span>
-        </span>
-        {tagline ? <span className="text-xs text-graphite">Tu negocio, en automático.</span> : null}
-      </span>
-    </span>
+    <Image
+      src="/orkesta-logo-azul.png"
+      alt="ORKESTA.ME. Tu asistente. Tu negocio."
+      width={width}
+      height={size}
+      sizes={`${width}px`}
+      className="orkesta-logo-image"
+      id={id}
+      data-tagline={tagline ? "included" : undefined}
+    />
   )
 }
