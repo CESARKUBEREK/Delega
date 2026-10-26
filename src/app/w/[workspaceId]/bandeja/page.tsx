@@ -9,7 +9,7 @@ export const metadata = { title: "Bandeja" }
 export const maxDuration = 120
 
 const DEFAULT_CATEGORIES = ["Cliente", "Proveedor", "Obra o proyecto", "Administración", "Personal", "Publicidad", "Otros"]
-const CHANNEL_LABEL: Record<string, string> = { email: "Correo", telegram: "Telegram" }
+const CHANNEL_LABEL: Record<string, string> = { email: "Correo", telegram: "Telegram", whatsapp: "WhatsApp" }
 
 const URGENCY_STYLE: Record<string, string> = {
   alta: "border-alert text-alert",
@@ -23,7 +23,7 @@ export default function InboxPage({ params, searchParams }: PageProps<"/w/[works
       <div>
         <h1 className="rotulo text-2xl">Bandeja</h1>
         <p className="mt-1 max-w-prose text-graphite">
-          Tu correo y los mensajes de tu bot de Telegram, clasificados por la IA. Puedes corregir cualquier
+          Tu correo, tus WhatsApp y los mensajes de tu bot de Telegram, clasificados por la IA. Puedes corregir cualquier
           clasificación; Orkesta no envía nada sin que lo revises.
         </p>
       </div>
@@ -48,14 +48,14 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
     .from("integrations")
     .select("provider, status, config")
     .eq("workspace_id", workspaceId)
-    .in("provider", ["imap", "telegram"])
+    .in("provider", ["imap", "telegram", "whatsapp"])
   const imap = (integrations ?? []).find((i) => i.provider === "imap")
   const mailActive = imap?.status === "active"
   const settings = ((imap ?? integrations?.[0])?.config ?? {}) as { categories?: string[]; retention_days?: number | null }
   if (!integrations?.length) {
     return (
       <p className="text-graphite">
-        Conecta tu correo o un bot de Telegram en{" "}
+        Conecta tu correo, WhatsApp o un bot de Telegram en{" "}
         <Link href={`/w/${workspaceId}/integraciones`} className="text-link underline underline-offset-4">
           Integraciones
         </Link>{" "}
@@ -66,7 +66,7 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
 
   const one = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "")
   const cat = one("cat")
-  const ch = ["email", "telegram"].includes(one("ch")) ? one("ch") : ""
+  const ch = ["email", "telegram", "whatsapp"].includes(one("ch")) ? one("ch") : ""
   const urg = one("urg")
   const reply = one("reply") === "1"
   const archived = one("arch") === "1"
@@ -149,7 +149,7 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
       </form>
 
       <nav aria-label="Filtros" className="flex flex-wrap gap-2">
-        {(["email", "telegram"] as const).map((c) => (
+        {(["email", "whatsapp", "telegram"] as const).map((c) => (
           <Link key={c} href={filterHref({ ch: ch === c ? "" : c })} className={chip(ch === c)}>
             {CHANNEL_LABEL[c]}
           </Link>

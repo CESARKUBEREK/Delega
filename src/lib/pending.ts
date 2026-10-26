@@ -7,6 +7,7 @@ export type Pending =
   | { tool: "create_document"; title: string; text: string }
   | { tool: "send_email"; to: string; address: string; subject: string; text: string }
   | { tool: "send_telegram"; to: string; text: string }
+  | { tool: "send_whatsapp"; to: string; phone: string; text: string }
   // Archivos, eventos y CRM: la página ya prepara la descripción y los campos.
   | { tool: "generic"; description: string; verb: string; fields: Field[]; text: string | null; textCaption: string }
 
@@ -37,6 +38,8 @@ export function asPending(value: Json | null): Pending | null {
       return { tool: "send_email", to: t(v.to_label), address: t(v.address), subject: t(v.subject), text: t(v.body) }
     case "send_telegram":
       return { tool: "send_telegram", to: t(v.to_label), text: t(v.text) }
+    case "send_whatsapp":
+      return { tool: "send_whatsapp", to: t(v.to_label), phone: t(v.phone), text: t(v.text) }
     case "tokko_lead": {
       const ids = Array.isArray(v.property_ids) ? v.property_ids.filter((x) => typeof x === "number").map((x) => `#${x}`).join(", ") : ""
       return {

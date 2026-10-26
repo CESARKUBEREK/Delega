@@ -2,7 +2,8 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { formatDateTime } from "../format"
 import { removeContact } from "../run-actions"
-import { AddContactForm, DisconnectInboxForm, ImapForm, TelegramForm } from "./inbox-client"
+import { supabaseUrl } from "@/lib/supabase/env"
+import { AddContactForm, DisconnectInboxForm, ImapForm, TelegramForm, WebhookUrl, WhatsAppForm } from "./inbox-client"
 
 function Badge({ status, invalidLabel }: { status: string | null | undefined; invalidLabel: string }) {
   if (status === "active") return <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">Conectado</span>
@@ -42,6 +43,72 @@ function Contacts({ workspaceId, isAdmin, contacts }: { workspaceId: string; isA
       )}
       {isAdmin ? <AddContactForm workspaceId={workspaceId} /> : null}
     </div>
+  )
+}
+
+export async function WhatsAppCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
+  const supabase = await createClient()
+  const { data: integration } = await supabase
+    .from("integrations")
+    .select("id, account_email, status, config")
+    .eq("workspace_id", workspaceId)
+    .eq("provider", "whatsapp")
+    .maybeSingle()
+  const sandbox = (integration?.config as { sandbox?: boolean } | null)?.sandbox === true
+
+  return (
+    <section className="border border-ink bg-sheet">
+      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
+        <div>
+          <h3 className="rotulo text-lg">WhatsApp</h3>
+          <p className="text-sm text-graphite">
+            A través de Twilio, proveedor oficial de WhatsApp. Los mensajes de tus clientes llegan a la bandeja y pueden lanzar automatizaciones.
+            Las respuestas esperan tu aprobación y solo pueden salir en las 24 horas siguientes al último mensaje del cliente.
+          </p>
+        </div>
+        <Badge status={integration?.status} invalidLabel="Desconectado" />
+      </div>
+
+      <div className="flex flex-col gap-6 px-5 py-5">
+        {integration ? (
+          <div className="flex flex-col gap-3 text-sm text-graphite">
+            <p>
+              Número <span className="font-medium text-ink">{integration.account_email}</span>
+              {sandbox ? " (entorno de pruebas de Twilio: solo pueden escribir los números que se hayan unido con «join …»; la unión caduca a los 3 días)." : "."}
+            </p>
+            {isAdmin ? <WebhookUrl url={`${supabaseUrl}/functions/v1/whatsapp-webhook?c=${integration.id}`} /> : null}
+          </div>
+        ) : null}
+
+        {isAdmin ? (
+          <>
+            <WhatsAppForm workspaceId={workspaceId} replacing={Boolean(integration)} />
+            <details className="text-sm text-graphite" open={!integration}>
+              <summary className="cursor-pointer text-ink">Cómo lo conecto (entorno de pruebas, gratis)</summary>
+              <ol className="mt-2 flex list-decimal flex-col gap-1 pl-5">
+                <li>Crea una cuenta en twilio.com (te pedirá verificar tu correo y tu teléfono).</li>
+                <li>En la consola, copia el Account SID y el Auth Token y pégalos aquí. Deja vacío el número.</li>
+                <li>
+                  En Twilio, abre Messaging → Try it out → Send a WhatsApp message. Desde tu WhatsApp, envía al +1 415 523 8886 el
+                  mensaje «join …» que te indica (cada persona que quiera probar tiene que hacerlo).
+                </li>
+                <li>
+                  En la pestaña Sandbox settings, pega la dirección para Twilio en «When a message comes in», con el método POST, y guarda.
+                </li>
+                <li>Escribe un WhatsApp a ese número: aparecerá en tu Bandeja.</li>
+              </ol>
+              <p className="mt-2">
+                Para usar tu propio número hace falta darlo de alta en Twilio como remitente de WhatsApp (con verificación de Meta, a nombre de
+                una empresa). Cuando lo tengas, escribe aquí ese número.
+              </p>
+            </details>
+            {integration ? <DisconnectInboxForm workspaceId={workspaceId} kind="whatsapp" /> : null}
+          </>
+        ) : (
+          <p className="text-sm text-graphite">Solo un administrador puede conectar WhatsApp.</p>
+        )}
+      </div>
+    </section>
   )
 }
 

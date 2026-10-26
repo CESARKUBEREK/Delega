@@ -13,8 +13,8 @@ export type PlanStep = {
   requires_approval: boolean
 }
 
-export type TriggerType = "manual" | "schedule" | "telegram_message" | "email_message"
-export const AUTO_TRIGGERS = new Set<TriggerType>(["telegram_message", "email_message", "schedule"])
+export type TriggerType = "manual" | "schedule" | "telegram_message" | "email_message" | "whatsapp_message"
+export const AUTO_TRIGGERS = new Set<TriggerType>(["telegram_message", "email_message", "whatsapp_message", "schedule"])
 
 export type FlowPlan = {
   version: 1
@@ -40,7 +40,10 @@ export function asPlan(value: Json | null | undefined): FlowPlan | null {
     name: str(p.name) || "Flujo sin nombre",
     summary: str(p.summary),
     trigger: {
-      type: trigger.type === "schedule" || trigger.type === "telegram_message" || trigger.type === "email_message" ? trigger.type : "manual",
+      type:
+        trigger.type === "schedule" || trigger.type === "telegram_message" || trigger.type === "email_message" || trigger.type === "whatsapp_message"
+          ? trigger.type
+          : "manual",
       description: str(trigger.description),
     },
     connections: arr(p.connections).map((c) => ({ kind: str(obj(c).kind), purpose: str(obj(c).purpose) })),
@@ -76,6 +79,7 @@ export const CONNECTION_LABEL: Record<string, string> = {
   database: "Base de datos",
   documents: "Documento",
   telegram: "Telegram",
+  whatsapp: "WhatsApp",
   drive: "Drive",
   crm: "HubSpot",
   properties: "Tokko",
@@ -84,7 +88,7 @@ export const CONNECTION_LABEL: Record<string, string> = {
 }
 
 // Conexiones que ya funcionan en esta versión.
-export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet", "documents", "drive", "email", "telegram", "calendar", "crm", "properties", "accounting"])
+export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet", "documents", "drive", "email", "telegram", "whatsapp", "calendar", "crm", "properties", "accounting"])
 
 // Tipo legible de un archivo elegido en Drive.
 export function fileKindLabel(mime: string | null): string {
@@ -114,6 +118,7 @@ export const TRIGGER_LABEL: Record<string, string> = {
   manual: "Manual",
   schedule: "Programado",
   telegram_message: "Al recibir un mensaje en Telegram",
+  whatsapp_message: "Al recibir un WhatsApp",
   email_message: "Al llegar un correo",
 }
 

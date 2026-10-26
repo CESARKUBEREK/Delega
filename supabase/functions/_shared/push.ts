@@ -213,6 +213,7 @@ const ACTION_PHRASE: Record<string, string> = {
   save_file: "quiere guardar un archivo en Drive",
   send_email: "quiere enviar un correo",
   send_telegram: "quiere responder por Telegram",
+  send_whatsapp: "quiere responder por WhatsApp",
   create_event: "quiere crear un evento",
   update_event: "quiere cambiar un evento",
   crm_create: "quiere crear un registro en HubSpot",

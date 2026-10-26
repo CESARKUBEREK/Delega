@@ -2,7 +2,7 @@
 // asistente (que lo genera) y el editor (que lo muestra y, más adelante,
 // lo editará y ejecutará). Es JSON Schema estricto para Structured Outputs.
 
-const CONNECTION_KINDS = ["spreadsheet", "documents", "drive", "email", "telegram", "calendar", "crm", "properties", "accounting", "database"]
+const CONNECTION_KINDS = ["spreadsheet", "documents", "drive", "email", "telegram", "whatsapp", "calendar", "crm", "properties", "accounting", "database"]
 const STEP_KINDS = ["read", "transform", "compare", "generate", "write", "notify", "condition"]
 
 const planObject = {
@@ -17,7 +17,7 @@ const planObject = {
       additionalProperties: false,
       required: ["type", "description", "schedule"],
       properties: {
-        type: { type: "string", enum: ["manual", "schedule", "telegram_message", "email_message"] },
+        type: { type: "string", enum: ["manual", "schedule", "telegram_message", "email_message", "whatsapp_message"] },
         description: { type: "string", description: "Cuándo se ejecuta, en palabras (p. ej. 'el día 1 de cada mes' o 'cuando llegue un mensaje de Telegram')." },
         schedule: {
           description: "Solo si type es 'schedule': cuándo, para rellenar la programación. Si no, null.",
@@ -109,7 +109,7 @@ export function sanitizeSchedule(v: unknown): Schedule | null {
 export type Plan = {
   name: string
   summary: string
-  trigger: { type: "manual" | "schedule" | "telegram_message" | "email_message"; description: string; schedule?: Schedule | null }
+  trigger: { type: "manual" | "schedule" | "telegram_message" | "email_message" | "whatsapp_message"; description: string; schedule?: Schedule | null }
   connections: { kind: string; purpose: string }[]
   steps: PlanStep[]
   open_questions: string[]
@@ -135,7 +135,8 @@ export function sanitizePlan(plan: Plan | null): (Plan & { version: 1 }) | null 
     name: cut(plan.name, 120) || "Flujo sin nombre",
     summary: cut(plan.summary, 600),
     trigger: {
-      type: plan.trigger?.type === "schedule" || plan.trigger?.type === "telegram_message" || plan.trigger?.type === "email_message"
+      type: plan.trigger?.type === "schedule" || plan.trigger?.type === "telegram_message" || plan.trigger?.type === "email_message" ||
+          plan.trigger?.type === "whatsapp_message"
         ? plan.trigger.type
         : "manual",
       description: cut(plan.trigger?.description, 200),

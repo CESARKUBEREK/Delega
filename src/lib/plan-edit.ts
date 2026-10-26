@@ -21,10 +21,10 @@ export const MAX_FILES = 5
 export const STEP_KINDS = ["read", "compare", "transform", "generate", "condition", "write", "notify"] as const
 export type StepKind = (typeof STEP_KINDS)[number]
 
-export const CONNECTION_KINDS = ["spreadsheet", "documents", "drive", "email", "telegram", "calendar", "crm", "properties", "accounting"] as const
+export const CONNECTION_KINDS = ["spreadsheet", "documents", "drive", "email", "telegram", "whatsapp", "calendar", "crm", "properties", "accounting"] as const
 export type ConnectionKind = (typeof CONNECTION_KINDS)[number]
 
-export const TRIGGERS: TriggerType[] = ["manual", "schedule", "email_message", "telegram_message"]
+export const TRIGGERS: TriggerType[] = ["manual", "schedule", "email_message", "whatsapp_message", "telegram_message"]
 
 // Qué hace cada tipo de paso, en palabras del usuario.
 export const KIND_INFO: Record<StepKind, { label: string; hint: string }> = {
@@ -39,13 +39,13 @@ export const KIND_INFO: Record<StepKind, { label: string; hint: string }> = {
 
 // Aplicaciones que tiene sentido elegir en cada tipo de paso. "none" = sin aplicación.
 export const KIND_CONNECTIONS: Record<StepKind, ("none" | ConnectionKind)[]> = {
-  read: ["spreadsheet", "documents", "drive", "email", "telegram", "calendar", "crm", "properties", "accounting"],
+  read: ["spreadsheet", "documents", "drive", "email", "whatsapp", "telegram", "calendar", "crm", "properties", "accounting"],
   compare: ["none", "spreadsheet", "documents", "drive", "email", "calendar", "crm", "properties", "accounting"],
-  transform: ["none", "spreadsheet", "documents", "email", "telegram"],
+  transform: ["none", "spreadsheet", "documents", "email", "whatsapp", "telegram"],
   generate: ["none", "documents"],
   condition: ["none"],
   write: ["spreadsheet", "documents", "drive", "calendar", "crm", "properties"],
-  notify: ["none", "email", "telegram"],
+  notify: ["none", "email", "whatsapp", "telegram"],
 }
 
 // Qué integración del espacio necesita cada aplicación (para ocultar las que no están conectadas).
@@ -55,6 +55,7 @@ export const CONNECTION_PROVIDER: Record<ConnectionKind, string> = {
   drive: "google",
   email: "imap",
   telegram: "telegram",
+  whatsapp: "whatsapp",
   calendar: "calendar",
   crm: "hubspot",
   properties: "tokko",
@@ -68,6 +69,7 @@ export const CONNECTION_NAME: Record<"none" | ConnectionKind, string> = {
   drive: "Archivos o carpetas de Drive",
   email: "Correo",
   telegram: "Telegram",
+  whatsapp: "WhatsApp",
   calendar: "Google Calendar",
   crm: "HubSpot",
   properties: "Tokko Broker",
@@ -75,9 +77,10 @@ export const CONNECTION_NAME: Record<"none" | ConnectionKind, string> = {
 }
 
 // En «Avisar o enviar», qué significa cada opción.
-export const NOTIFY_TARGET: Record<"none" | "email" | "telegram", string> = {
+export const NOTIFY_TARGET: Record<"none" | "email" | "whatsapp" | "telegram", string> = {
   none: "A mí (móvil, correo o Telegram, sin aprobación)",
   email: "Por correo a otra persona (con aprobación)",
+  whatsapp: "Por WhatsApp a quien escribió (con aprobación)",
   telegram: "Por Telegram a quien escribió al bot (con aprobación)",
 }
 
@@ -187,6 +190,9 @@ export function planChecks(plan: EditorPlan, ctx: CheckContext): string[] {
   }
   if (steps.some((s) => s.kind === "notify" && s.connection === "telegram") && plan.trigger.type !== "telegram_message") {
     out.push("Enviar por Telegram solo funciona para contestar a quien escribió al bot: usa el inicio «Al recibir un mensaje en Telegram».")
+  }
+  if (steps.some((s) => s.kind === "notify" && s.connection === "whatsapp") && plan.trigger.type !== "whatsapp_message") {
+    out.push("Por WhatsApp solo se puede contestar a quien escribió en las últimas 24 h: lo normal es empezar con «Al recibir un WhatsApp».")
   }
   if (plan.trigger.type === "schedule" && !steps.some((s) => s.kind === "notify" || s.kind === "write")) {
     out.push("Se ejecuta sola, pero ningún paso te avisa ni guarda nada: no verás el resultado salvo en Ejecuciones.")

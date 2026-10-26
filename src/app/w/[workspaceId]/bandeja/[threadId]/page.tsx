@@ -12,7 +12,7 @@ export const metadata = { title: "Conversación" }
 export const maxDuration = 120
 
 const DEFAULT_CATEGORIES = ["Cliente", "Proveedor", "Obra o proyecto", "Administración", "Personal", "Publicidad", "Otros"]
-const CHANNEL_LABEL: Record<string, string> = { email: "Correo", telegram: "Telegram" }
+const CHANNEL_LABEL: Record<string, string> = { email: "Correo", telegram: "Telegram", whatsapp: "WhatsApp" }
 
 export default function ThreadPage({ params }: PageProps<"/w/[workspaceId]/bandeja/[threadId]">) {
   return (
@@ -44,7 +44,7 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
       .eq("workspace_id", workspaceId)
       .order("sent_at", { ascending: false })
       .limit(200),
-    supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["imap", "telegram"]),
+    supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["imap", "telegram", "whatsapp"]),
   ])
   if (!thread) notFound()
   const integrations = integration ?? []
@@ -52,9 +52,10 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
     ?.config as { categories?: string[] } | undefined
   const categories = settings?.categories?.length ? settings.categories : DEFAULT_CATEGORIES
   // Se responde por la misma cuenta por la que llegó la conversación.
-  const provider = thread.channel === "telegram" ? "telegram" : thread.external_id.startsWith("imap:") ? "imap" : "gmail"
+  const provider =
+    thread.channel === "telegram" || thread.channel === "whatsapp" ? thread.channel : thread.external_id.startsWith("imap:") ? "imap" : "gmail"
   const channelIntegration = integrations.find((i) => i.provider === provider)
-  const canReply = channelIntegration?.status === "active" && (thread.channel === "telegram" || Boolean(thread.contact_address))
+  const canReply = channelIntegration?.status === "active" && (thread.channel === "telegram" || thread.channel === "whatsapp" || Boolean(thread.contact_address))
   const who = thread.contact_name ?? thread.contact_address ?? "Sin nombre"
 
   return (

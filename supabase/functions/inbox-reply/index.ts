@@ -6,6 +6,7 @@ import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/cor
 import { recordMessage } from "../_shared/inbox.ts"
 import { generateText, LlmError, markInvalidIfNeeded, NO_AI_MESSAGE, recordUsage, resolveAi } from "../_shared/llm.ts"
 import { parseTelegramSecret, sendTelegram, TelegramError } from "../_shared/telegram.ts"
+import { insideWindow, PHONE_RE, sendWhatsApp, WhatsAppError, whatsappSecret } from "../_shared/whatsapp.ts"
 import { MailError, replyHeaders, sendAndRecord } from "../_shared/imap.ts"
 
 const DRAFT_INSTRUCTIONS = `Redactas respuestas para un profesional (ingeniero, arquitecto) a partir de una conversación.
@@ -99,6 +100,32 @@ Deno.serve(async (req) => {
     } else if (thread.channel === "email") {
       // Conversaciones antiguas de la integración de Gmail, ya retirada.
       return fail(409, "gmail_removed", "Esta conversación llegó por Gmail, que ya no se integra así. Conecta Gmail como correo IMAP para responder.")
+    } else if (thread.channel === "whatsapp") {
+      const wa = await whatsappSecret(admin, workspaceId)
+      if (!wa) return fail(409, "no_whatsapp", "WhatsApp no está conectado.")
+      if (!PHONE_RE.test(thread.external_id)) return fail(400, "no_address", "Esta conversación no tiene un número válido.")
+      if (!(await insideWindow(admin, workspaceId, thread.external_id))) {
+        return fail(409, "outside_window", "Han pasado más de 24 horas desde su último mensaje: WhatsApp no deja escribirle con texto libre.")
+      }
+      try {
+        const sid = await sendWhatsApp(wa.secret, thread.external_id, text)
+        await recordMessage(admin, {
+          workspaceId,
+          integrationId: wa.integrationId,
+          channel: "whatsapp",
+          threadExternalId: thread.external_id,
+          externalId: sid,
+          direction: "out",
+          senderName: null,
+          senderAddress: null,
+          body: text,
+          sentAt: now,
+          contactName: null,
+          contactAddress: null,
+        })
+      } catch (e) {
+        return fail(502, "send_failed", e instanceof WhatsAppError ? e.message : "No se pudo enviar el WhatsApp.")
+      }
     } else {
       const { data } = await admin.rpc("integration_secret", { p_workspace_id: workspaceId, p_provider: "telegram" })
       const secret = parseTelegramSecret((data?.[0] as { refresh_token?: string } | undefined)?.refresh_token)

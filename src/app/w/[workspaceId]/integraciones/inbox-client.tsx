@@ -10,6 +10,7 @@ import {
   disconnectHubSpot,
   disconnectImap,
   disconnectTelegram,
+  disconnectWhatsApp,
   disconnectTokko,
   disconnectXubio,
   type ImapState,
@@ -20,7 +21,9 @@ import {
   type HubSpotState,
   saveHubSpot,
   saveTelegram,
+  saveWhatsApp,
   type TelegramState,
+  type WhatsAppState,
 } from "../run-actions"
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string; id: string; hint?: string }) {
@@ -66,6 +69,68 @@ export function TelegramForm({ workspaceId, replacing }: { workspaceId: string; 
         <SubmitButton pendingLabel="Comprobando con Telegram…">{replacing ? "Cambiar bot" : "Conectar bot"}</SubmitButton>
       </div>
     </form>
+  )
+}
+
+export function WhatsAppForm({ workspaceId, replacing }: { workspaceId: string; replacing: boolean }) {
+  const formRef = useRef<HTMLFormElement>(null)
+  const [state, action] = useActionState<WhatsAppState, FormData>(async (prev, fd) => {
+    const result = await saveWhatsApp(prev, fd)
+    // El Auth Token no se queda en el formulario.
+    if (!result.error) formRef.current?.reset()
+    return result
+  }, {})
+  return (
+    <form ref={formRef} action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="workspaceId" value={workspaceId} />
+      <Input id="wa-sid" name="accountSid" label="Account SID" autoComplete="off" spellCheck={false} required placeholder="AC…" hint="En la portada de tu consola de Twilio (Account Info)." />
+      <Input
+        id="wa-token"
+        name="authToken"
+        type="password"
+        label={replacing ? "Nuevo Auth Token" : "Auth Token"}
+        autoComplete="off"
+        spellCheck={false}
+        required
+        hint="Justo debajo del Account SID. Orkesta lo guarda cifrado y no vuelve a mostrarlo."
+      />
+      <Input
+        id="wa-from"
+        name="from"
+        label="Número de WhatsApp"
+        autoComplete="off"
+        inputMode="tel"
+        placeholder="+14155238886"
+        hint="Déjalo vacío para usar el número de pruebas de Twilio (+1 415 523 8886)."
+      />
+      <FormMessage error={state.error} message={state.message} />
+      {state.webhookUrl ? <WebhookUrl url={state.webhookUrl} /> : null}
+      <div className="sm:max-w-56">
+        <SubmitButton pendingLabel="Comprobando con Twilio…">{replacing ? "Cambiar cuenta" : "Conectar WhatsApp"}</SubmitButton>
+      </div>
+    </form>
+  )
+}
+
+// Dirección que hay que pegar en Twilio («When a message comes in»).
+export function WebhookUrl({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="text-sm font-medium text-ink">Dirección para Twilio («When a message comes in», método POST)</p>
+      <div className="flex gap-2">
+        <input readOnly value={url} onFocus={(e) => e.target.select()} className="h-11 min-w-0 flex-1 border border-rule bg-paper px-3 font-mono text-xs text-ink" aria-label="Dirección para Twilio" />
+        <button
+          type="button"
+          onClick={() => {
+            navigator.clipboard?.writeText(url).then(() => setCopied(true), () => undefined)
+          }}
+          className="h-11 shrink-0 border border-ink px-3 text-sm text-ink hover:bg-paper"
+        >
+          {copied ? "Copiada" : "Copiar"}
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -122,6 +187,7 @@ export function HubSpotForm({ workspaceId, replacing }: { workspaceId: string; r
 
 const DISCONNECT: Record<string, { label: string; confirm: string }> = {
   telegram: { label: "el bot de Telegram", confirm: "¿Desconectar el bot de Telegram? Dejarán de llegar mensajes a la bandeja." },
+  whatsapp: { label: "WhatsApp", confirm: "¿Desconectar WhatsApp? Orkesta borra las credenciales de Twilio; las conversaciones ya guardadas siguen en la bandeja." },
   calendar: { label: "Google Calendar", confirm: "¿Desconectar Google Calendar? Las automatizaciones dejarán de ver y crear eventos." },
   hubspot: { label: "HubSpot", confirm: "¿Desconectar HubSpot? Orkesta borra la clave; revócala también en HubSpot si ya no la usas." },
   imap: { label: "el correo", confirm: "¿Desconectar este correo? Orkesta borra la contraseña; las conversaciones ya guardadas siguen en la bandeja." },
@@ -134,7 +200,7 @@ export function DisconnectInboxForm({
   kind,
 }: {
   workspaceId: string
-  kind: "telegram" | "calendar" | "hubspot" | "imap" | "tokko" | "xubio"
+  kind: "telegram" | "whatsapp" | "calendar" | "hubspot" | "imap" | "tokko" | "xubio"
 }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(
     kind === "calendar"
@@ -147,7 +213,9 @@ export function DisconnectInboxForm({
             ? disconnectTokko
             : kind === "xubio"
               ? disconnectXubio
-              : disconnectTelegram,
+              : kind === "whatsapp"
+                ? disconnectWhatsApp
+                : disconnectTelegram,
     null,
   )
   const { label, confirm } = DISCONNECT[kind]

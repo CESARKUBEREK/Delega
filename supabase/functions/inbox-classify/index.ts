@@ -53,12 +53,12 @@ Deno.serve(async (req) => {
   const role = await membershipRole(ctx, workspaceId)
   if (role !== "owner" && role !== "admin") return fail(403, "forbidden", "Solo un administrador puede clasificar la bandeja.")
 
-  // Las categorías se guardan en las integraciones de la bandeja (correo y Telegram).
-  const { data: integs } = await admin.from("integrations").select("provider, config").eq("workspace_id", workspaceId).in("provider", ["imap", "telegram"])
+  // Las categorías se guardan en las integraciones de la bandeja (correo, Telegram y WhatsApp).
+  const { data: integs } = await admin.from("integrations").select("provider, config").eq("workspace_id", workspaceId).in("provider", ["imap", "telegram", "whatsapp"])
 
   // Ajustes de la bandeja: se guardan en todas las integraciones de la bandeja.
   if (body?.action === "settings") {
-    if (!integs?.length) return fail(409, "no_inbox", "Conecta un correo o Telegram primero.")
+    if (!integs?.length) return fail(409, "no_inbox", "Conecta un correo, Telegram o WhatsApp primero.")
     const categories = Array.isArray(body.categories)
       ? [...new Set(body.categories.filter((c): c is string => typeof c === "string").map((c) => c.trim().slice(0, 60)).filter(Boolean))].slice(0, 15)
       : []
