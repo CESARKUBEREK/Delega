@@ -57,8 +57,8 @@ export async function WhatsAppCard({ workspaceId, isAdmin }: { workspaceId: stri
   const sandbox = (integration?.config as { sandbox?: boolean } | null)?.sandbox === true
 
   return (
-    <section className="border border-ink bg-sheet">
-      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">WhatsApp</h3>
           <p className="text-sm text-graphite">
@@ -67,7 +67,7 @@ export async function WhatsAppCard({ workspaceId, isAdmin }: { workspaceId: stri
           </p>
         </div>
         <Badge status={integration?.status} invalidLabel="Desconectado" />
-      </div>
+      </summary>
 
       <div className="flex flex-col gap-6 px-5 py-5">
         {integration ? (
@@ -108,7 +108,7 @@ export async function WhatsAppCard({ workspaceId, isAdmin }: { workspaceId: stri
           <p className="text-sm text-graphite">Solo un administrador puede conectar WhatsApp.</p>
         )}
       </div>
-    </section>
+    </details>
   )
 }
 
@@ -123,8 +123,8 @@ export async function TelegramCard({ workspaceId, isAdmin }: { workspaceId: stri
   const username = integration?.account_email?.replace(/^@/, "")
 
   return (
-    <section className="border border-ink bg-sheet">
-      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Telegram</h3>
           <p className="text-sm text-graphite">
@@ -132,7 +132,7 @@ export async function TelegramCard({ workspaceId, isAdmin }: { workspaceId: stri
           </p>
         </div>
         <Badge status={integration?.status} invalidLabel="Desconectado" />
-      </div>
+      </summary>
 
       <div className="flex flex-col gap-6 px-5 py-5">
         {integration ? (
@@ -172,7 +172,7 @@ export async function TelegramCard({ workspaceId, isAdmin }: { workspaceId: stri
           <p className="text-sm text-graphite">Solo un administrador puede conectar el bot.</p>
         )}
       </div>
-    </section>
+    </details>
   )
 }
 
@@ -192,8 +192,8 @@ export async function ImapCard({ workspaceId, isAdmin }: { workspaceId: string; 
   }
 
   return (
-    <section className="border border-ink bg-sheet">
-      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Correo IMAP/SMTP</h3>
           <p className="text-sm text-graphite">
@@ -202,7 +202,7 @@ export async function ImapCard({ workspaceId, isAdmin }: { workspaceId: string; 
           </p>
         </div>
         <Badge status={integration?.status} invalidLabel="Contraseña rechazada" />
-      </div>
+      </summary>
 
       <div className="flex flex-col gap-6 px-5 py-5">
         {integration ? (
@@ -257,6 +257,6 @@ export async function ImapCard({ workspaceId, isAdmin }: { workspaceId: string; 
           <p className="text-sm text-graphite">Solo un administrador puede conectar el correo.</p>
         )}
       </div>
-    </section>
+    </details>
   )
 }
