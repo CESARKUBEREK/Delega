@@ -56,7 +56,7 @@ function Category({ id, title, description, children }: { id: string; title: str
         </h2>
         <p className="text-sm text-graphite">{description}</p>
       </div>
-      <div className="grid items-start gap-6 xl:grid-cols-2">{children}</div>
+      <div className="integration-grid">{children}</div>
     </section>
   )
 }
@@ -64,15 +64,15 @@ function Category({ id, title, description, children }: { id: string; title: str
 // Integraciones previstas que aún no se pueden conectar.
 function ComingSoon({ title, description }: { title: string; description: string }) {
   return (
-    <section className="border border-dashed border-rule bg-sheet/60">
-      <div className="flex items-start justify-between gap-4 px-5 py-4">
+    <details name="integrations" className="integration-accordion border border-dashed border-rule bg-sheet/60">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg text-graphite">{title}</h3>
           <p className="text-sm text-graphite">{description}</p>
         </div>
         <span className="shrink-0 border border-rule px-2 py-0.5 text-xs text-graphite">Próximamente</span>
-      </div>
-    </section>
+      </summary>
+    </details>
   )
 }
 
@@ -201,8 +201,8 @@ async function AiCard({ workspaceId, isAdmin, provider }: { workspaceId: string;
   const help = AI_HELP[provider]
 
   return (
-    <section className="border border-ink bg-sheet">
-      <div className="flex items-start justify-between gap-4 border-b border-ink px-5 py-4">
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">{p.label}</h3>
           <p className="text-sm text-graphite">{help.description}</p>
@@ -211,7 +211,7 @@ async function AiCard({ workspaceId, isAdmin, provider }: { workspaceId: string;
           <StatusBadge status={connection ? connection.status : null} />
           {connection?.is_default ? <span className="border border-stroke px-2 py-0.5 text-xs text-ink">Principal</span> : null}
         </div>
-      </div>
+      </summary>
 
       <div className="flex flex-col gap-6 px-5 py-5">
         {connection ? (
@@ -246,7 +246,7 @@ async function AiCard({ workspaceId, isAdmin, provider }: { workspaceId: string;
           </p>
         </details>
       </div>
-    </section>
+    </details>
   )
 }
 
