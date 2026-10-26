@@ -3,27 +3,29 @@ import { cache, Suspense } from "react"
 import { KIND_LABEL, ROLE_LABEL } from "@/lib/labels"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
+import { Logo } from "@/components/logo"
 import { InstallPrompt } from "./install-prompt"
 import { MobileTabBar, PanelNav } from "./panel-nav"
 
 export default function PanelLayout({ children, params }: LayoutProps<"/w/[workspaceId]">) {
   return (
-    // En el móvil deja sitio a la barra inferior.
-    <div className="pb-24 lg:pb-0">
-      <Suspense fallback={<div className="h-16" aria-busy="true" />}>
+    <div className="app-shell pb-24 lg:pb-0">
+      <Suspense fallback={<div className="app-topbar h-20" aria-busy="true" />}>
         <WorkspaceHeading params={params} />
       </Suspense>
-      <div className="mt-4 grid gap-6 lg:mt-6 lg:grid-cols-[12rem_1fr] lg:gap-8">
-        <aside className="hidden lg:sticky lg:top-6 lg:block lg:h-fit">
-          <Suspense fallback={<div className="h-64 border border-rule bg-sheet" />}>
-            <Navigation params={params} variant="side" />
-          </Suspense>
-        </aside>
-        <div className="min-w-0">
-          <InstallPrompt />
-          {children}
+      <main className="app-frame">
+        <div className="app-layout-grid">
+          <aside className="app-sidebar hidden lg:sticky lg:top-24 lg:block lg:h-fit">
+            <Suspense fallback={<div className="h-64" aria-busy="true" />}>
+              <Navigation params={params} variant="side" />
+            </Suspense>
+          </aside>
+          <div className="panel-content">
+            <InstallPrompt />
+            {children}
+          </div>
         </div>
-      </div>
+      </main>
       <Suspense fallback={null}>
         <Navigation params={params} variant="bottom" />
       </Suspense>
@@ -54,17 +56,22 @@ async function WorkspaceHeading({ params }: { params: LayoutProps<"/w/[workspace
   const { workspaceId } = await params
   const { workspace, role } = await getWorkspace(workspaceId)
   return (
-    <div>
-      <p className="text-sm">
-        <Link href="/w" className="text-link underline underline-offset-4">
-          Tus espacios
+    <header className="app-topbar">
+      <div className="app-topbar-inner">
+        <Link href="/w" aria-label="Orkesta, tus espacios" className="app-brand-link">
+          <Logo size={34} id="orkesta-workspace" />
         </Link>
-      </p>
-      <p className="rotulo mt-2 text-xl text-ink lg:text-2xl">{workspace.name}</p>
-      <p className="text-sm text-graphite">
-        {KIND_LABEL[workspace.kind]}
-        {role ? `, eres ${ROLE_LABEL[role].toLowerCase()}` : ""}
-      </p>
-    </div>
+        <span className="app-topbar-divider" aria-hidden="true" />
+        <div className="app-current-workspace">
+          <span>ESPACIO ACTUAL</span>
+          <strong>{workspace.name}</strong>
+        </div>
+        <div className="app-topbar-spacer" />
+        <span className="app-workspace-role">
+          {KIND_LABEL[workspace.kind]}{role ? ` · ${ROLE_LABEL[role]}` : ""}
+        </span>
+        <Link href="/w" className="app-switch-link">Cambiar espacio <span aria-hidden="true">↗</span></Link>
+      </div>
+    </header>
   )
 }
