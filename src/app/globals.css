@@ -542,3 +542,14 @@ a.flow-node:hover { border-color:var(--stroke); }
 .app-account-exit:hover { background: #14283b; color: #d2c9ff; }
 @media (max-width: 1100px) { .app-account-email { display: none; } }
 @media (max-width: 700px) { .app-account-avatar { display: none; } .app-account-exit { padding: 0 6px; } }
+
+/* Chat: ejemplos plegados en un acordeón (cerrado al empezar). */
+.chat-examples { overflow: hidden; border-radius: 12px; }
+.chat-examples-summary { list-style: none; }
+.chat-examples-summary::-webkit-details-marker { display: none; }
+.chat-examples-summary::marker { content: ""; }
+.chat-examples-summary::after { width: 7px; height: 7px; flex: 0 0 7px; transform: rotate(45deg); border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; content: ""; opacity: .7; transition: transform .16s ease; }
+.chat-examples[open] > .chat-examples-summary::after { transform: rotate(225deg); }
+.chat-examples-summary:hover { background: rgb(255 255 255 / 3%); }
+.chat-examples ul button { border-radius: 10px; }
+@media (prefers-reduced-motion: reduce) { .chat-examples-summary::after { transition: none; } }

@@ -121,19 +121,27 @@ export function Chat({
             Te propondrá un plan. Puedes ejecutarlo al momento o guardarlo como automatización. Lo que tenga que escribir o
             enviar espera siempre tu aprobación.
           </p>
-          <ul className="mt-4 flex flex-col gap-2">
-            {EXAMPLES.map((e) => (
-              <li key={e}>
-                <button
-                  type="button"
-                  onClick={() => setDraft(e)}
-                  className="w-full border border-rule px-3 py-2 text-left text-sm text-ink hover:border-stroke hover:bg-paper"
-                >
-                  {e}
-                </button>
-              </li>
-            ))}
-          </ul>
+          <details className="chat-examples mt-4 border border-rule">
+            <summary className="chat-examples-summary flex min-h-11 cursor-pointer items-center justify-between gap-3 px-3 text-sm font-semibold text-ink">
+              Ejemplos de lo que puedes pedir
+            </summary>
+            <ul className="flex flex-col gap-2 border-t border-rule p-3">
+              {EXAMPLES.map((e) => (
+                <li key={e}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDraft(e)
+                      inputRef.current?.focus()
+                    }}
+                    className="w-full border border-rule px-3 py-2 text-left text-sm text-ink hover:border-stroke hover:bg-paper"
+                  >
+                    {e}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </details>
         </div>
       ) : (
         <ol className="flex flex-col gap-4" aria-label="Conversación">
