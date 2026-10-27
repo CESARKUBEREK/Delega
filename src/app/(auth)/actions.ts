@@ -112,7 +112,7 @@ export async function updatePassword(_prev: FormState, formData: FormData): Prom
   const { error } = await supabase.auth.updateUser({ password: pass })
   if (error) return { error: authErrorMessage(error.code) }
 
-  redirect("/w")
+  redirect("/abrir")
 }
 
 export async function signOut(): Promise<void> {

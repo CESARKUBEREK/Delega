@@ -71,15 +71,15 @@ export function FlowMap({
         </ol>
         <figcaption className="flow-map-legend">
           <span>
-            <i aria-hidden="true" style={{ background: "linear-gradient(135deg, #1b3150, #12233a)", boxShadow: "0 0 0 2px var(--stroke)" }} />
+            <i aria-hidden="true" style={{ background: "#0b1f3b" }} />
             Cuándo empieza
           </span>
           <span>
-            <i aria-hidden="true" style={{ border: "2px solid var(--stroke)" }} />
+            <i aria-hidden="true" style={{ border: "2px solid #00c2a8" }} />
             Lo decide la IA
           </span>
           <span>
-            <i aria-hidden="true" style={{ border: "1px dashed #f2b350", background: "rgb(242 179 80 / 8%)" }} />
+            <i aria-hidden="true" style={{ border: "1px dashed #c77d0a", background: "#fff6e5" }} />
             Espera tu aprobación
           </span>
         </figcaption>
