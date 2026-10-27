@@ -25,8 +25,9 @@ async function Assistant({
   searchParams,
 }: Pick<PageProps<"/w/[workspaceId]/asistente">, "params" | "searchParams">) {
   const { workspaceId } = await params
-  const { c } = await searchParams
+  const { c, q } = await searchParams
   const requested = typeof c === "string" && UUID_RE.test(c) ? c : null
+  const initialDraft = typeof q === "string" ? q.trim().slice(0, 2000) : ""
   const base = `/w/${workspaceId}`
 
   const { isAdmin } = await getWorkspace(workspaceId, `${base}/asistente`)
@@ -152,6 +153,7 @@ async function Assistant({
           runs={runs}
           files={files}
           aiReady={aiActive}
+          initialDraft={initialDraft}
         />
       </section>
 

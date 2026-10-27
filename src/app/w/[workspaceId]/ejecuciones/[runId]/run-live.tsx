@@ -208,7 +208,7 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
             {error}
           </p>
         ) : null}
-        <div className="flex flex-wrap gap-3">
+        <div className="approval-actions flex flex-wrap gap-3">
           <button
             type="button"
             disabled={busy}

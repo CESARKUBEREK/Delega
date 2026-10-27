@@ -52,6 +52,7 @@ export function Chat({
   runs,
   files,
   aiReady,
+  initialDraft = "",
 }: {
   workspaceId: string
   conversationId: string | null
@@ -59,10 +60,13 @@ export function Chat({
   runs: Record<number, ChatRun>
   files: ChatFile[]
   aiReady: boolean
+  // Petición escrita en «Pide algo a Orkesta» (pantalla Hoy). Se deja en el
+  // cuadro para revisarla: no se envía sola.
+  initialDraft?: string
 }) {
   const router = useRouter()
   const [messages, setMessages] = useState(initialMessages)
-  const [draft, setDraft] = useState("")
+  const [draft, setDraft] = useState(initialDraft)
   const [error, setError] = useState<{ code: string; text: string } | null>(null)
   const [pending, startTransition] = useTransition()
   const autoRead = useAutoRead()

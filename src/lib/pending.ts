@@ -163,3 +163,34 @@ function when(value: string): string {
   const date = `${Number(m[3])} ${months[Number(m[2]) - 1]} ${m[1]}`
   return m[4] ? `${date}, ${m[4]}:${m[5]}` : date
 }
+
+// Frase corta de lo que espera aprobación, para listas (pantalla Hoy).
+export function pendingTitle(p: Pending): string {
+  switch (p.tool) {
+    case "append_rows":
+      return `Añadir ${p.values.length === 1 ? "1 fila" : `${p.values.length} filas`} a «${p.fileName}»`
+    case "update_range":
+      return `Cambiar celdas de «${p.fileName}»`
+    case "append_to_document":
+      return `Añadir texto a «${p.fileName}»`
+    case "create_document":
+      return `Crear el documento «${p.title}»`
+    case "send_email":
+      return `Enviar un correo a ${p.to || p.address}`
+    case "send_telegram":
+      return `Enviar un Telegram a ${p.to}`
+    case "send_whatsapp":
+      return `Enviar un WhatsApp a ${p.to || p.phone}`
+    case "generic":
+      return p.description.replace(/\.$/, "")
+  }
+}
+
+// Qué tipo de acción es, para el icono de la tarjeta.
+export function pendingKind(p: Pending): "email" | "sheet" | "doc" | "message" | "other" {
+  if (p.tool === "send_email") return "email"
+  if (p.tool === "append_rows" || p.tool === "update_range") return "sheet"
+  if (p.tool === "append_to_document" || p.tool === "create_document") return "doc"
+  if (p.tool === "send_telegram" || p.tool === "send_whatsapp") return "message"
+  return "other"
+}

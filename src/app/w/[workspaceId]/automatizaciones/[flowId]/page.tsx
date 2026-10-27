@@ -1,12 +1,12 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
-import { PlanView } from "@/components/plan-view"
-import { asPlan, AUTO_TRIGGERS, fileKindLabel, FLOW_STATUS_LABEL, modelLabel, RUN_STATUS_LABEL } from "@/lib/plan"
+import { FlowMap } from "@/components/flow-map"
+import { asPlan, AUTO_TRIGGERS, fileKindLabel, FLOW_STATUS_LABEL, modelLabel, RUN_STATUS_LABEL, scheduleOf } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { deleteFlow } from "../../ai-actions"
-import { formatDateTime, formatLong } from "../../format"
+import { formatDateTime, formatLong, formatWhen } from "../../format"
 import { ActivationPanel, type EmailFilterInput, FlowModelForm, RunPanel, type ScheduleInput } from "./run-panel"
 
 export const metadata = { title: "Automatización" }
@@ -76,7 +76,12 @@ async function Flow({
   const timezone = String(
     ws?.timezone || ((channels ?? []).find((c) => c.provider === "calendar")?.config as { timezone?: string } | null)?.timezone || "Europe/Madrid",
   )
-  const schedule = readSchedule((flow.settings as { schedule?: unknown } | null)?.schedule)
+  const rawSchedule = (flow.settings as { schedule?: unknown } | null)?.schedule
+  const schedule = readSchedule(rawSchedule)
+  // Lo que dibuja el mapa: la programación guardada o, si aún no hay, la que
+  // propuso el asistente.
+  const mapSchedule = rawSchedule && typeof rawSchedule === "object" ? schedule : scheduleOf(flow.definition)
+  const lastRun = (runs ?? [])[0]
   const savedFileIds = Array.isArray((flow.settings as { file_ids?: unknown } | null)?.file_ids)
     ? ((flow.settings as { file_ids: unknown[] }).file_ids.filter((x) => typeof x === "string") as string[])
     : []
@@ -91,8 +96,19 @@ async function Flow({
           </Link>
         </p>
         <h1 className="rotulo mt-2 text-2xl">{flow.name}</h1>
-        <p className="mt-1 text-sm text-graphite">
-          {FLOW_STATUS_LABEL[flow.status] ?? flow.status}, guardado el {formatDateTime(flow.created_at)}
+        {plan?.summary ? <p className="mt-2 max-w-3xl text-base text-graphite">{plan.summary}</p> : null}
+        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-graphite">
+          <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${flow.status === "active" ? "border-ok text-ok" : "border-rule"}`}>
+            {FLOW_STATUS_LABEL[flow.status] ?? flow.status}
+            {flow.status === "active" && flow.next_run_at ? ` · próxima: ${formatWhen(flow.next_run_at, timezone)}` : ""}
+          </span>
+          {lastRun ? (
+            <Link href={`${base}/ejecuciones/${lastRun.id}`} className="underline-offset-4 hover:underline">
+              Última ejecución: {formatWhen(lastRun.started_at, timezone)} · {RUN_STATUS_LABEL[lastRun.status] ?? lastRun.status}
+            </Link>
+          ) : (
+            <span>Guardada el {formatDateTime(flow.created_at)}</span>
+          )}
         </p>
       </div>
 
@@ -102,7 +118,11 @@ async function Flow({
         </p>
       ) : null}
 
-      {plan ? <PlanView plan={plan} /> : <p className="text-graphite">Este flujo no tiene un plan legible.</p>}
+      {plan ? (
+        <FlowMap plan={plan} schedule={mapSchedule} editHref={canDelete ? `${base}/automatizaciones/${flow.id}/editar` : null} />
+      ) : (
+        <p className="text-graphite">Este flujo no tiene un plan legible.</p>
+      )}
       {canDelete ? (
         <Link
           href={`${base}/automatizaciones/${flow.id}/editar`}

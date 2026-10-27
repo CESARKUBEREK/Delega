@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { runOrigin } from "@/lib/labels"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { RUN_STATUS_LABEL } from "@/lib/plan"
@@ -74,7 +75,7 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
         </p>
         <h1 className="rotulo mt-2 text-2xl">Ejecución del {formatDateTime(run.started_at)}</h1>
         <p className="mt-1 text-sm text-graphite">
-          {RUN_STATUS_LABEL[run.status] ?? run.status} · {run.tool_calls} acciones · {formatNumber(run.input_tokens + run.output_tokens)} tokens
+          {RUN_STATUS_LABEL[run.status] ?? run.status} · {runOrigin(run.trigger)} · {run.tool_calls} acciones · {formatNumber(run.input_tokens + run.output_tokens)} tokens
         </p>
       </div>
 
