@@ -4,6 +4,8 @@ import { KIND_LABEL, ROLE_LABEL } from "@/lib/labels"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { Logo } from "@/components/logo"
+import { AccountMenu } from "../account-menu"
+import { PendingInviteNotice } from "../pending-invite-notice"
 import { InstallPrompt } from "./install-prompt"
 import { MobileTabBar, PanelNav } from "./panel-nav"
 
@@ -21,6 +23,7 @@ export default function PanelLayout({ children, params }: LayoutProps<"/w/[works
             </Suspense>
           </aside>
           <div className="panel-content">
+            <PendingInviteNotice />
             <InstallPrompt />
             {children}
           </div>
@@ -58,7 +61,7 @@ async function WorkspaceHeading({ params }: { params: LayoutProps<"/w/[workspace
   return (
     <header className="app-topbar">
       <div className="app-topbar-inner">
-        <Link href="/w" aria-label="Orkesta, tus espacios" className="app-brand-link">
+        <Link href={`/w/${workspace.id}`} aria-label="Orkesta, Hoy" className="app-brand-link">
           <Logo size={34} id="orkesta-workspace" />
         </Link>
         <span className="app-topbar-divider" aria-hidden="true" />
@@ -70,7 +73,10 @@ async function WorkspaceHeading({ params }: { params: LayoutProps<"/w/[workspace
         <span className="app-workspace-role">
           {KIND_LABEL[workspace.kind]}{role ? ` · ${ROLE_LABEL[role]}` : ""}
         </span>
-        <Link href="/w" className="app-switch-link">Cambiar espacio <span aria-hidden="true">↗</span></Link>
+        <Link href="/w" className="app-switch-link">Cambiar espacio</Link>
+        <Suspense fallback={<span className="h-9 w-9" />}>
+          <AccountMenu />
+        </Suspense>
       </div>
     </header>
   )

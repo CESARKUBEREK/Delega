@@ -1,13 +1,38 @@
 import Link from "next/link"
 import { Suspense } from "react"
+import { Logo } from "@/components/logo"
 import { requireUser } from "@/lib/auth"
 import { KIND_LABEL, ROLE_LABEL } from "@/lib/labels"
 import { createClient } from "@/lib/supabase/server"
+import { AccountMenu } from "./account-menu"
 import { CreateOrganization } from "./create-organization"
+import { PendingInviteNotice } from "./pending-invite-notice"
 
 export const metadata = { title: "Tus espacios" }
 
 export default function WorkspacesPage() {
+  return (
+    <div className="app-shell min-h-dvh">
+      <header className="app-topbar">
+        <div className="app-topbar-inner">
+          <Link href="/abrir" aria-label="Orkesta, Hoy" className="app-brand-link">
+            <Logo size={30} id="orkesta-header" />
+          </Link>
+          <div className="app-topbar-spacer" />
+          <Suspense fallback={<span className="h-9 w-40" />}>
+            <AccountMenu />
+          </Suspense>
+        </div>
+      </header>
+      <main className="app-frame app-workspaces-page">
+        <PendingInviteNotice />
+        <Workspaces />
+      </main>
+    </div>
+  )
+}
+
+function Workspaces() {
   return (
     <div className="workspaces-grid grid gap-10 lg:grid-cols-[1fr_22rem]">
       <section>

@@ -47,7 +47,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (pathname === "/") {
-    return redirectTo(signedIn ? "/w" : "/login")
+    return redirectTo(signedIn ? "/abrir" : "/login")
   }
 
   if (!signedIn && matches(pathname, PROTECTED_PREFIXES)) {
@@ -59,7 +59,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (signedIn && matches(pathname, GUEST_ONLY)) {
-    return redirectTo("/w")
+    return redirectTo("/abrir")
   }
 
   const workspace = signedIn ? pathname.match(WORKSPACE_PATH)?.[1] : undefined
