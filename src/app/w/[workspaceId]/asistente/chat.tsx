@@ -115,8 +115,9 @@ export function Chat({
   return (
     <div className="flex flex-col gap-4">
       {messages.length === 0 ? (
-        <div className="border border-ink bg-sheet p-5">
-          <p className="text-ink">Pídele al asistente lo que necesites, escribiendo o por voz.</p>
+        <div className="chat-welcome border border-ink bg-sheet p-5 sm:p-7">
+          <p className="rotulo text-2xl text-ink sm:text-3xl">¿Qué necesitas hoy?</p>
+          <p className="mt-2 text-base text-ink">Escríbelo o díctalo abajo: Orkesta se encarga.</p>
           <p className="mt-1 text-sm text-graphite">
             Te propondrá un plan. Puedes ejecutarlo al momento o guardarlo como automatización. Lo que tenga que escribir o
             enviar espera siempre tu aprobación.
@@ -199,7 +200,7 @@ export function Chat({
           send(draft)
         }}
         // En el móvil el cuadro queda fijo encima de la barra inferior.
-        className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 flex items-end gap-2 border border-ink bg-sheet p-2 lg:static"
+        className="chat-composer sticky z-10 flex items-end gap-2 p-2"
       >
         <DictateButton
           workspaceId={workspaceId}
@@ -227,14 +228,21 @@ export function Chat({
           rows={1}
           maxLength={4000}
           placeholder={messages.length ? "Pide cambios o algo nuevo…" : "Escribe o dicta lo que necesitas…"}
-          className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-1 py-2 text-base leading-6 text-ink placeholder:text-graphite/70 focus:outline-none"
+          className="chat-composer-input max-h-48 min-h-12 flex-1 resize-none bg-transparent px-2 py-3 text-base leading-6 text-ink placeholder:text-graphite/80 focus:outline-none"
         />
         <button
           type="submit"
           disabled={pending || !draft.trim()}
-          className="h-10 shrink-0 bg-stroke px-4 text-sm font-semibold text-stroke-ink hover:opacity-90 disabled:opacity-50"
+          aria-label={pending ? "Enviando" : "Enviar"}
+          className="chat-send grid h-12 w-12 shrink-0 place-items-center rounded-full bg-stroke text-stroke-ink hover:opacity-90 disabled:opacity-40"
         >
-          {pending ? "…" : "Enviar"}
+          {pending ? (
+            <span aria-hidden="true">…</span>
+          ) : (
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" />
+            </svg>
+          )}
         </button>
       </form>
       <div ref={endRef} className="-mt-2 flex flex-wrap items-center justify-between gap-2">
