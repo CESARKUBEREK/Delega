@@ -17,7 +17,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f3f6fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#f3f6fa" },
+    { media: "(prefers-color-scheme: dark)", color: "#071528" },
   ],
 }
 
