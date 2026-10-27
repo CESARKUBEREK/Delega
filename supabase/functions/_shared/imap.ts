@@ -449,6 +449,10 @@ const BATCH = 25
 // Supabase limita el tiempo de CPU por petición (2 s): como mucho 100 correos
 // por llamada (unos 0,5 s de CPU medidos); el resto, en la siguiente.
 const MAX_PER_CALL = 100
+// Primera lectura: como mucho los 400 correos más recientes de los últimos N
+// días, para no llenar la bandeja (ni gastar la IA al clasificar) con el
+// histórico. El correo que llega después se sigue leyendo entero.
+export const MAX_INITIAL = 400
 
 // fresh: correos recibidos nuevos (ni el histórico de la primera lectura ni
 // los de más de 48 h), para el disparador «al llegar un correo».
@@ -485,6 +489,7 @@ export async function syncImap(
         // Primera vez (o el servidor renumeró la carpeta): los últimos N días.
         const since = new Date(Date.now() - (config.sync_days ?? 30) * 86_400_000)
         uids = ((await client.search({ since }, { uid: true })) || []) as number[]
+        uids = uids.sort((a, b) => a - b).slice(-MAX_INITIAL)
         next.uid_validity = validity
         next.last_uid = 0
         next.history_uid = Math.max(0, box.uidNext - 1)
