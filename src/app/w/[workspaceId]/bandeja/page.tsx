@@ -207,7 +207,7 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
         <p className="text-sm text-graphite">
           {(all ?? []).length === 0
             ? mailActive
-              ? "Aún no hay conversaciones. Pulsa «Traer correo» para importar los últimos 30 días."
+              ? "Aún no hay conversaciones. Pulsa «Traer correo» para importar los 400 correos más recientes de los últimos 30 días."
               : "Aún no ha llegado ningún mensaje a tu bot."
             : "Ninguna conversación coincide con los filtros."}
         </p>

@@ -238,7 +238,7 @@ export async function ImapCard({ workspaceId, isAdmin }: { workspaceId: string; 
             <details className="text-sm text-graphite">
               <summary className="cursor-pointer text-ink">Qué hace Orkesta con tu correo</summary>
               <ul className="mt-2 list-disc pl-5">
-                <li>Lee la bandeja de entrada (los últimos 30 días la primera vez) y la ordena. No borra, no mueve ni marca nada como leído.</li>
+                <li>Lee la bandeja de entrada (la primera vez, los 400 correos más recientes de los últimos 30 días) y la ordena. No borra, no mueve ni marca nada como leído.</li>
                 <li>Envía solo lo que apruebes, por SMTP con conexión cifrada (puerto 465), y guarda una copia en tu carpeta de enviados.</li>
                 <li>Si tu proveedor solo admite el puerto 587, Orkesta no puede enviar por él: la comprobación te lo dirá.</li>
                 <li>Outlook y Microsoft 365 no admiten este método: tendrán su propia conexión.</li>
