@@ -7,7 +7,7 @@ import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { formatDateTime } from "../format"
 import { Chat, type ChatMessage, type ChatRun } from "./chat"
 
-export const metadata = { title: "Asistente" }
+export const metadata = { title: "Chat" }
 // La respuesta del modelo y cada tramo de una ejecución pueden tardar: las
 // acciones esperan a la Edge Function.
 export const maxDuration = 120
@@ -118,7 +118,7 @@ async function Assistant({
     <div className="grid gap-6 xl:grid-cols-[1fr_15rem]">
       <section className="min-w-0">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-          <h1 className="rotulo text-2xl">Asistente</h1>
+          <h1 className="rotulo text-2xl">Chat</h1>
           {conversationId ? (
             <Link href={`${base}/asistente`} className="text-sm text-link underline underline-offset-4">
               Nueva conversación

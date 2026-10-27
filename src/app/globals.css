@@ -553,3 +553,16 @@ a.flow-node:hover { border-color:var(--stroke); }
 .chat-examples-summary:hover { background: rgb(255 255 255 / 3%); }
 .chat-examples ul button { border-radius: 10px; }
 @media (prefers-reduced-motion: reduce) { .chat-examples-summary::after { transition: none; } }
+
+/* Chat bien visible: cuadro grande y destacado, fijo abajo mientras se lee
+   la conversación, y un acceso directo arriba de la barra lateral. */
+.chat-composer { bottom: calc(5.25rem + env(safe-area-inset-bottom)); border: 1.5px solid rgb(82 215 238 / 55%); border-radius: 20px; background: #0e1b2b; box-shadow: 0 0 0 4px rgb(82 215 238 / 8%), 0 18px 40px rgb(0 0 0 / 30%); }
+.chat-composer:focus-within { border-color: #52d7ee; box-shadow: 0 0 0 4px rgb(82 215 238 / 18%), 0 18px 40px rgb(0 0 0 / 30%); }
+.app-shell .panel-content .chat-composer textarea.chat-composer-input { border: 0; border-radius: 0; background: transparent; box-shadow: none; font-size: 16px; }
+.chat-composer > button:first-child { border-radius: 999px; }
+.chat-send { box-shadow: 0 6px 18px rgb(82 215 238 / 25%); }
+.chat-welcome { border-radius: 18px; }
+@media (min-width: 1024px) { .chat-composer { bottom: 20px; } }
+.app-sidebar-cta { display: flex; min-height: 46px; align-items: center; gap: 10px; margin: 0 0 16px; padding: 10px 14px; border: 1px solid rgb(82 215 238 / 45%); border-radius: 14px; background: linear-gradient(100deg, rgb(117 85 255 / 22%), rgb(82 215 238 / 14%)); color: #edf4ff; font-size: 13px; font-weight: 700; text-decoration: none; box-shadow: 0 10px 26px rgb(82 215 238 / 10%); transition: border-color .16s ease, box-shadow .16s ease; }
+.app-sidebar-cta:hover, .app-sidebar-cta[aria-current="page"] { border-color: #52d7ee; box-shadow: 0 12px 30px rgb(82 215 238 / 20%); }
+.app-sidebar-cta svg { width: 20px; height: 20px; color: #6de0ee; }
