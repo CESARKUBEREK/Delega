@@ -5,7 +5,7 @@ import { useParams, usePathname } from "next/navigation"
 import { useState } from "react"
 
 const SECTIONS = [
-  { slug: "", label: "Inicio" },
+  { slug: "", label: "Hoy" },
   { slug: "asistente", label: "Asistente" },
   { slug: "aprobaciones", label: "Aprobaciones" },
   { slug: "bandeja", label: "Bandeja" },
@@ -51,9 +51,9 @@ export function PanelNav({ pending = 0 }: { pending?: number }) {
                 aria-current={active ? "page" : undefined}
                 className="app-sidebar-link"
               >
-                <span className="app-nav-icon"><Icon name={slug || "inicio"} /></span>
+                <span className="app-nav-icon"><Icon name={slug || "hoy"} /></span>
                 <span className="app-nav-label">{label}</span>
-                {slug === "aprobaciones" ? <Badge count={pending} /> : null}
+                {slug === "aprobaciones" || slug === "" ? <Badge count={pending} /> : null}
               </Link>
             </li>
           )
@@ -64,7 +64,7 @@ export function PanelNav({ pending = 0 }: { pending?: number }) {
 }
 
 const ICONS: Record<string, React.ReactNode> = {
-  inicio: <><path d="m3 10 9-7 9 7" /><path d="M5 9v11h14V9M9 20v-6h6v6" /></>,
+  hoy: <><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
   asistente: <path d="M4 5.5h16v10H9l-5 4v-14Z" />,
   aprobaciones: <><circle cx="12" cy="12" r="8.5" /><path d="m8.2 12.3 2.6 2.6 5-5.4" /></>,
   bandeja: <path d="M3.5 13.5 6 5h12l2.5 8.5M3.5 13.5V19h17v-5.5M3.5 13.5H9a3 3 0 0 0 6 0h5.5" />,
@@ -83,9 +83,11 @@ function Icon({ name }: { name: string }) {
   )
 }
 
+// Móvil: lo que te necesita (Hoy, con las aprobaciones pendientes), pedir
+// algo (Chat) y la bandeja. Aprobaciones y el resto quedan en «Más».
 const TABS = [
+  { slug: "", label: "Hoy" },
   { slug: "asistente", label: "Chat" },
-  { slug: "aprobaciones", label: "Aprobaciones" },
   { slug: "bandeja", label: "Bandeja" },
 ]
 const MORE = SECTIONS.filter((s) => !TABS.some((t) => t.slug === s.slug))
@@ -127,14 +129,14 @@ export function MobileTabBar({ pending = 0 }: { pending?: number }) {
           return (
             <li key={slug}>
               <Link
-                href={`${base}/${slug}`}
+                href={slug ? `${base}/${slug}` : base}
                 onClick={() => setOpen(false)}
                 aria-current={active ? "page" : undefined}
                 className={`app-mobile-tab-link relative flex h-16 flex-col items-center justify-center gap-0.5 text-xs ${active ? "font-semibold text-link" : "text-graphite"}`}
               >
-                <Icon name={slug} />
+                <Icon name={slug || "hoy"} />
                 {label}
-                {slug === "aprobaciones" && pending ? (
+                {slug === "" && pending ? (
                   <span className="absolute top-1.5 left-1/2 ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-stroke px-1 text-[11px] font-bold text-stroke-ink">
                     <span className="sr-only">, pendientes: </span>
                     {pending > 99 ? "99+" : pending}

@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
+import { runOrigin } from "@/lib/labels"
 import { asPending } from "@/lib/pending"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
@@ -17,17 +18,6 @@ export default function ApprovalsPage({ params }: PageProps<"/w/[workspaceId]/ap
       <Approvals params={params} />
     </Suspense>
   )
-}
-
-function origin(trigger: unknown): string {
-  const type = (trigger as { type?: string } | null)?.type
-  if (type === "chat") return "Pedida en el chat"
-  if (type === "telegram_message") return "Lanzada por un mensaje de Telegram"
-  if (type === "whatsapp_message") return "Lanzada por un WhatsApp"
-  if (type === "telegram_chat") return "Pedida desde tu Telegram"
-  if (type === "email_message") return "Lanzada por un correo"
-  if (type === "schedule") return "Ejecución programada"
-  return "Automatización"
 }
 
 async function Approvals({ params }: { params: PageProps<"/w/[workspaceId]/aprobaciones">["params"] }) {
@@ -71,7 +61,7 @@ async function Approvals({ params }: { params: PageProps<"/w/[workspaceId]/aprob
               <Link href={`${base}/ejecuciones/${run.id}`} className="font-medium text-link underline underline-offset-4">
                 {run.flow_name}
               </Link>{" "}
-              · {origin(run.trigger)} · {formatDateTime(run.started_at)}
+              · {runOrigin(run.trigger)} · {formatDateTime(run.started_at)}
             </p>
             {pending ? (
               <ApprovalCard runId={run.id} pending={pending} />
