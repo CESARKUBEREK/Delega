@@ -1,49 +1,37 @@
-import Image from "next/image"
+// Marca de MarchaSolo: un robot de cuerda (azul) con su llave (coral) y el
+// nombre en Montserrat. Paleta del logo: azul #2457D6, marino #17233E,
+// coral #E85A45, fondo #F7F8FC y blanco.
 
-// Marca de Orkesta: anillo fluido (verde → turquesa → azul) y logotipo.
-// Paleta: azul marino #0B1F3B, turquesa #00C2A8, verde #34D399, gris #F3F6FA, blanco.
-
-export function LogoMark({ size = 32, id = "orkesta", className }: { size?: number; id?: string; className?: string }) {
+export function LogoMark({ size = 32, className }: { size?: number; id?: string; className?: string }) {
+  // Proporción del dibujo: 372 × 288.
+  const width = Math.round((size * 376) / 288)
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <defs>
-        <linearGradient id={`${id}-a`} x1="8" y1="54" x2="56" y2="8" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#1B5E9E" />
-          <stop offset="0.45" stopColor="#0A9FB0" />
-          <stop offset="1" stopColor="#34D399" />
-        </linearGradient>
-        <linearGradient id={`${id}-b`} x1="10" y1="10" x2="50" y2="56" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#34D399" />
-          <stop offset="1" stopColor="#00C2A8" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path
-        fill={`url(#${id}-a)`}
-        fillRule="evenodd"
-        d="M22 8.5C31 3.5 48 4.5 55 13.5 61.5 22 58 35.5 49 46.5 41.5 55.5 26 61 15.5 55.5 6 50.5 5 37 9 26 11 19.5 15.5 12 22 8.5ZM41.6 18.4C37.4 14.2 29.2 17 24.2 23.7 19.2 30.4 18.5 39.4 22.7 43.6 26.9 47.8 35.1 45 40.1 38.3 45.1 31.6 45.8 22.6 41.6 18.4Z"
-      />
-      <path
-        fill={`url(#${id}-b)`}
-        opacity="0.85"
-        d="M22 8.5C15.5 12 11 19.5 9 26 7.6 30 7 34.3 7.4 38.2 11.4 30.2 17.6 22.6 24.2 18.8 29.6 15.7 36.4 14.6 41.6 18.4 39.6 12.6 31 6.8 22 8.5Z"
-      />
+    <svg width={width} height={size} viewBox="56 56 376 288" aria-hidden="true" className={className}>
+      <rect x="189" y="62" width="34" height="22" rx="8" fill="#2457D6" />
+      <rect x="198" y="80" width="16" height="30" fill="#2457D6" />
+      <rect x="63" y="186" width="34" height="65" rx="10" fill="#2457D6" />
+      <rect x="315" y="186" width="34" height="65" rx="10" fill="#2457D6" />
+      <rect x="84" y="103" width="244" height="232" rx="56" fill="#2457D6" />
+      <circle cx="152" cy="221" r="20" fill="none" stroke="#FFFFFF" strokeWidth="16" />
+      <circle cx="260" cy="221" r="20" fill="none" stroke="#FFFFFF" strokeWidth="16" />
+      <rect x="340" y="209" width="58" height="19" fill="#E85A45" />
+      <circle cx="398.5" cy="197" r="16" fill="none" stroke="#E85A45" strokeWidth="11" />
+      <circle cx="398.5" cy="241" r="16" fill="none" stroke="#E85A45" strokeWidth="11" />
     </svg>
   )
 }
 
-// Logotipo completo: usa el archivo de marca enviado, incluida su leyenda.
-export function Logo({ size = 28, tagline = false, id }: { size?: number; tagline?: boolean; id?: string }) {
-  const width = Math.round(size * 749 / 223)
+// Logotipo completo: el robot y «Marcha Solo» en dos líneas, como el logo.
+// size es la altura del robot; el nombre toma el color del texto (currentColor).
+export function Logo({ size = 28, tagline = false }: { size?: number; tagline?: boolean; id?: string }) {
   return (
-    <Image
-      src="/orkesta-logo-azul.png"
-      alt="ORKESTA.ME. Tu asistente. Tu negocio."
-      width={width}
-      height={size}
-      sizes={`${width}px`}
-      className="orkesta-logo-image"
-      id={id}
-      data-tagline={tagline ? "included" : undefined}
-    />
+    <span className="brand-logo" style={{ gap: Math.round(size * 0.28) }} data-tagline={tagline ? "included" : undefined}>
+      <LogoMark size={size} />
+      <span className="brand-wordmark" aria-hidden="true" style={{ fontSize: Math.round(size * 0.47) }}>
+        <span>Marcha</span>
+        <span>Solo</span>
+      </span>
+      <span className="sr-only">MarchaSolo</span>
+    </span>
   )
 }

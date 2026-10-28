@@ -8,7 +8,7 @@ export const metadata = { title: "Entrar" }
 export default function LoginPage() {
   return (
     <Sheet
-      title="Entra en Orkesta"
+      title="Entra en MarchaSolo"
       sheetName="Acceso"
       footer={
         <>

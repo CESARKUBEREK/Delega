@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
   if (body?.action === "test") {
     if (!(await pushConfigured())) return fail(409, "not_configured", "Los avisos aún no están configurados en el servidor.")
     const result = await sendPush(ctx.admin, [ctx.userId], {
-      title: "Orkesta",
+      title: "MarchaSolo",
       body: "Los avisos funcionan en este dispositivo.",
       url: "/abrir",
       tag: "prueba",

@@ -22,7 +22,7 @@ const EXTENSIONS: Record<string, string> = {
   "audio/x-wav": "wav",
 }
 // Vocabulario de la app: ayuda a escribir bien los nombres propios.
-const PROMPT = "Dictado en español para Orkesta: planillas, Google Drive, Google Docs, Gmail, Outlook, Calendar, HubSpot, Telegram, facturas, presupuestos, obras."
+const PROMPT = "Dictado en español para MarchaSolo: planillas, Google Drive, Google Docs, Gmail, Outlook, Calendar, HubSpot, Telegram, facturas, presupuestos, obras."
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return fail(405, "method_not_allowed", "Método no permitido.")

@@ -1,4 +1,4 @@
-// Agente de ejecución de Orkesta. Lo usan run-flow (ejecuciones lanzadas por
+// Agente de ejecución de MarchaSolo. Lo usan run-flow (ejecuciones lanzadas por
 // una persona, desde una automatización o desde el chat) y telegram-webhook
 // (ejecuciones lanzadas por un mensaje).
 //
@@ -321,7 +321,7 @@ function toolDefs(r: Resources): ToolDef[] {
   if (folders.length) {
     const folder = { type: "string", enum: folders, description: "Alias de la carpeta." }
     tools.push(
-      fn("list_folder", "Lista los archivos de una carpeta de Drive a los que Orkesta tiene acceso (id, nombre, tipo, fecha).", { folder }),
+      fn("list_folder", "Lista los archivos de una carpeta de Drive a los que MarchaSolo tiene acceso (id, nombre, tipo, fecha).", { folder }),
       fn("read_folder_file", "Devuelve el texto de un archivo de esa carpeta (usa el id que dio list_folder).", {
         folder,
         file_id: { type: "string" },
@@ -473,7 +473,7 @@ function toolDefs(r: Resources): ToolDef[] {
   return tools
 }
 
-const INSTRUCTIONS = `Eres el agente de ejecución de Orkesta. Ejecutas una automatización ya aprobada por el usuario
+const INSTRUCTIONS = `Eres el agente de ejecución de MarchaSolo. Ejecutas una automatización ya aprobada por el usuario
 siguiendo su plan, con las herramientas disponibles.
 
 Reglas:
@@ -1434,7 +1434,7 @@ export async function createRun(
   }
   if (input.trigger.type === "telegram_chat") {
     parts.push(
-      "Esta petición la ha escrito el propio usuario en su chat privado de Telegram con Orkesta" +
+      "Esta petición la ha escrito el propio usuario en su chat privado de Telegram con MarchaSolo" +
         (input.trigger.voice ? " (es la transcripción de una nota de voz; puede tener errores de transcripción)" : "") +
         ". Atiéndela con las herramientas disponibles: consulta lo que haga falta y, si pide escribir o enviar algo, " +
         "prepáralo (esperará su aprobación, que puede dar desde el mismo chat). Si la petición no está clara, termina " +

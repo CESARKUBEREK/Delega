@@ -53,7 +53,7 @@ export default function InvitePage() {
   }
 
   return (
-    <Sheet title="Te han invitado a Orkesta" sheetName="Invitación">
+    <Sheet title="Te han invitado a MarchaSolo" sheetName="Invitación">
       {token === undefined ? (
         <div className="h-24" aria-busy="true" />
       ) : token === null ? (

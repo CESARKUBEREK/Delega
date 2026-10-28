@@ -195,7 +195,7 @@ export async function createLead(key: string, lead: LeadInput): Promise<void> {
       phone: lead.phone,
       text: lead.text,
       properties: lead.property_ids,
-      tags: ["Orkesta"],
+      tags: ["MarchaSolo"],
     }),
   })
 }
