@@ -30,7 +30,7 @@ export default function IntegrationsPage({ params, searchParams }: PageProps<"/w
       <div>
         <h1 className="rotulo text-2xl">Integraciones</h1>
         <p className="mt-1 max-w-prose text-graphite">
-          Las conexiones son de este espacio. Orkesta usa tu propia cuenta de cada servicio y no guarda tus datos más de lo necesario.
+          Las conexiones son de este espacio. MarchaSolo usa tu propia cuenta de cada servicio y no guarda tus datos más de lo necesario.
         </p>
       </div>
       <nav aria-label="Categorías" className="flex flex-wrap gap-2">
@@ -95,7 +95,7 @@ async function Integrations({
         <ComingSoon title="Kimi" description="Modelos Kimi de Moonshot AI con tu propia clave de API." />
       </Category>
 
-      <Category id="drives" title="Drives" description="Carpetas y archivos que Orkesta puede leer y donde puede guardar.">
+      <Category id="drives" title="Drives" description="Carpetas y archivos que MarchaSolo puede leer y donde puede guardar.">
         <DriveCard workspaceId={workspaceId} isAdmin={isAdmin} notice={notice} />
       </Category>
 
@@ -167,15 +167,15 @@ const AI_HELP: Record<AiProvider, { description: string; steps: string[]; note: 
     description: "Modelos GPT. Es también la que transcribe el dictado por voz.",
     steps: [
       "Entra en platform.openai.com con tu cuenta y abre «API keys».",
-      "Crea una clave nueva para Orkesta y cópiala. Tu cuenta de OpenAI necesita saldo o un método de pago.",
+      "Crea una clave nueva para MarchaSolo y cópiala. Tu cuenta de OpenAI necesita saldo o un método de pago.",
     ],
-    note: "Orkesta pide a OpenAI que no conserve las conversaciones (store: false).",
+    note: "MarchaSolo pide a OpenAI que no conserve las conversaciones (store: false).",
   },
   anthropic: {
     description: "Modelos Claude, de Anthropic.",
     steps: [
       "Entra en platform.claude.com con tu cuenta y abre «API Keys».",
-      "Crea una clave nueva para Orkesta y cópiala (empieza por sk-ant-). Tu cuenta necesita créditos.",
+      "Crea una clave nueva para MarchaSolo y cópiala (empieza por sk-ant-). Tu cuenta necesita créditos.",
     ],
     note: "Anthropic no usa los datos de la API para entrenar sus modelos.",
   },
@@ -183,7 +183,7 @@ const AI_HELP: Record<AiProvider, { description: string; steps: string[]; note: 
     description: "Modelos DeepSeek: muy económicos.",
     steps: [
       "Entra en platform.deepseek.com con tu cuenta y abre «API keys».",
-      "Crea una clave nueva para Orkesta y cópiala. Tu cuenta necesita saldo.",
+      "Crea una clave nueva para MarchaSolo y cópiala. Tu cuenta necesita saldo.",
     ],
     note: "DeepSeek procesa los datos en servidores fuera de la UE: tenlo en cuenta con datos sensibles de clientes.",
   },
@@ -239,10 +239,10 @@ async function AiCard({ workspaceId, isAdmin, provider }: { workspaceId: string;
             {help.steps.map((step) => (
               <li key={step}>{step}</li>
             ))}
-            <li>Pégala aquí. Orkesta la comprueba con {p.label} y la guarda cifrada; nadie, ni siquiera tú, puede volver a verla.</li>
+            <li>Pégala aquí. MarchaSolo la comprueba con {p.label} y la guarda cifrada; nadie, ni siquiera tú, puede volver a verla.</li>
           </ol>
           <p className="mt-2">
-            El consumo se factura en tu cuenta de {p.label}, y Orkesta anota cuántos tokens usa cada petición en Historial. {help.note}
+            El consumo se factura en tu cuenta de {p.label}, y MarchaSolo anota cuántos tokens usa cada petición en Historial. {help.note}
           </p>
         </details>
       </div>

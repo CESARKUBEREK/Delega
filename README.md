@@ -1,4 +1,4 @@
-# Orkesta (antes Delega)
+# MarchaSolo (antes Delega)
 
 Plataforma de automatización con IA, en español, para profesionales y pequeños despachos. El usuario describe una tarea, la IA propone un flujo y el usuario lo aprueba antes de ejecutarlo.
 
@@ -309,7 +309,7 @@ Despliegue: la migración `20261025090000_schedules.sql` y `supabase functions d
     - `tokko_search` recorre la cartera (hasta 600 propiedades) y filtra por operación, tipo, zona o texto, precio, moneda y ambientes.
     - `tokko_property` devuelve la ficha completa.
     - `tokko_developments` devuelve los emprendimientos.
-  - Con aprobación: `tokko_register_lead`, que registra la consulta en el CRM de Tokko (`POST /api/v1/webcontact/`) con la etiqueta «Orkesta» y las propiedades.
+  - Con aprobación: `tokko_register_lead`, que registra la consulta en el CRM de Tokko (`POST /api/v1/webcontact/`) con la etiqueta «MarchaSolo» y las propiedades.
 - **Xubio** (`xubio-connection`, `_shared/xubio.ts`, categoría Contabilidad): Client ID y Secret ID (Configuración → Integraciones → API de Xubio), en Vault como JSON.
   - Token OAuth2 `client_credentials` (1 hora), que se pide al usarlo.
   - **Solo lectura:** `xubio_list` (clientes, proveedores, productos, facturas de venta y de compra con rango de fechas) y `xubio_get`.
@@ -348,9 +348,9 @@ supabase functions deploy run-flow assistant
 supabase functions deploy telegram-webhook runs-cron mail-cron --no-verify-jwt
 ```
 
-## Tu chat con Orkesta por Telegram (25 oct)
+## Tu chat con MarchaSolo por Telegram (25 oct)
 
-El chat privado que cada persona vincula (Configuración → Mis avisos) es también su chat con Orkesta. Sus mensajes no entran en la bandeja; cualquier otro chat sigue igual (bandeja y automatizaciones `telegram_message`). Código: `_shared/telegram-chat.ts`, `_shared/telegram-notice.ts`, `_shared/decide.ts`, `_shared/transcribe.ts`.
+El chat privado que cada persona vincula (Configuración → Mis avisos) es también su chat con MarchaSolo. Sus mensajes no entran en la bandeja; cualquier otro chat sigue igual (bandeja y automatizaciones `telegram_message`). Código: `_shared/telegram-chat.ts`, `_shared/telegram-notice.ts`, `_shared/decide.ts`, `_shared/transcribe.ts`.
 
 - **Peticiones:** texto o nota de voz (transcrita con la clave de OpenAI del espacio, máx. 150 s). Crea una ejecución con disparador `telegram_chat`, con los permisos de esa persona y los 5 archivos elegidos más recientes. Lleva como contexto los 3 últimos intercambios de la última hora (`/nuevo` lo corta: `user_channels.telegram_chat_since`). La respuesta (el resumen de `finish`) vuelve al chat; si tarda, sigue `runs-cron`. Máx. 30 peticiones por hora y persona.
 - **Aprobaciones con botones:** cuando una ejecución espera aprobación, además del push se envía el detalle al chat de quien decide (quien la lanzó o, si no, los admins), si tiene Telegram vinculado y activado en Mis avisos. Cada botón lleva el id de la ejecución y una huella de la acción concreta (`ap|re:<run>:<sha256(call_id)[0..12]>`): un botón viejo nunca decide otra acción. Caducan a las 24 h. Solo cuenta si lo pulsa la persona dueña del chat privado. `update_range` (sobrescribir celdas) solo se aprueba en la app. La decisión usa la misma lógica que la app (`decideRun`) y queda en la ejecución como «Decisión tomada desde Telegram».
@@ -377,12 +377,12 @@ WhatsApp entra como canal de clientes a través de **Twilio** (proveedor oficial
 - **Recepción** (`whatsapp-webhook`, sin `verify_jwt`): exige la firma `X-Twilio-Signature` (HMAC-SHA1 con el Auth Token sobre la URL pública y los parámetros ordenados) y que el `AccountSid` sea el conectado. Registra el mensaje en la bandeja (canal `whatsapp`, conversación = número del cliente) y lanza las automatizaciones activas con inicio `whatsapp_message` creadas por un owner o admin (máx. 3 por mensaje y 30 por hora). Responde TwiML vacío.
 - **Respuesta:** `send_whatsapp` (a quien escribió) y `reply_whatsapp` (a una conversación de la bandeja), siempre con aprobación (app o botones de Telegram). Solo dentro de la **ventana de 24 h** desde el último mensaje del cliente: se comprueba al proponer y otra vez al aprobar. Máx. 1600 caracteres. También desde la Bandeja (`inbox-reply`).
 - **Plantillas:** «Atender WhatsApp de clientes» y «Contactos de WhatsApp a HubSpot».
-- **Pendiente:** plantillas de Meta para escribir fuera de las 24 h; adjuntos (ahora se anotan como «[archivo adjunto]»); alta de clientes con un clic cuando Orkesta sea proveedor tecnológico de Meta.
+- **Pendiente:** plantillas de Meta para escribir fuera de las 24 h; adjuntos (ahora se anotan como «[archivo adjunto]»); alta de clientes con un clic cuando MarchaSolo sea proveedor tecnológico de Meta.
 - Migración `20261026100000_whatsapp.sql`, test pgTAP `016_whatsapp.test.sql`, `supabase/functions/_shared/whatsapp.test.ts` (firma de Twilio contra una implementación de referencia).
 
 ## Despliegue automático de las funciones (desde el 25 oct)
 
-- **Proyecto:** Supabase **DOrkesta** (`xgbmpziocflgsszzgyeb`).
+- **Proyecto:** Supabase **DMarchaSolo** (`xgbmpziocflgsszzgyeb`).
 - **GitHub Actions** (`.github/workflows/deploy-functions.yml`): despliega las 19 Edge Functions cada vez que cambian en `main`, o a mano desde Actions → «Desplegar funciones de Supabase» → Run workflow. Usa `--use-api`, así que no necesita Docker.
 - **Requisito único:** el secreto del repositorio `SUPABASE_ACCESS_TOKEN`, un token personal de https://supabase.com/dashboard/account/tokens.
 - **Secreto de las tareas periódicas:** `mail-cron` y `runs-cron` leen el secreto de Vault (`orkesta_mail_cron_secret`) con la RPC `cron_secret` (migración 13, solo `service_role`). La variable `MAIL_CRON_SECRET` ya no es necesaria; si existe, tiene prioridad.

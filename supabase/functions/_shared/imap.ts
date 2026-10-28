@@ -105,7 +105,7 @@ function describe(e: unknown, kind: "imap" | "smtp"): MailError {
   if (/timeout|ETIMEDOUT|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENOTFOUND/i.test(msg + (err?.code ?? ""))) {
     return new MailError("connect", kind === "imap"
       ? "No se pudo conectar con el servidor IMAP en el puerto 993."
-      : "No se pudo conectar con el servidor SMTP en el puerto 465. Si tu proveedor solo admite el 587, Orkesta no puede usarlo.")
+      : "No se pudo conectar con el servidor SMTP en el puerto 465. Si tu proveedor solo admite el 587, MarchaSolo no puede usarlo.")
   }
   return new MailError("unavailable", `El servidor de correo devolvió un error${kind === "smtp" ? " al enviar" : ""}.`)
 }

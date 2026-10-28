@@ -370,7 +370,7 @@ export async function readDriveText(token: string, file: { id: string; mimeType:
     const res = await rawFetch(token, `${DRIVE}/files/${encodeURIComponent(file.id)}?alt=media&supportsAllDrives=true`)
     return (await res.text()).slice(0, MAX_DOWNLOAD)
   }
-  throw new GoogleError("bad_request", "Orkesta aún no sabe leer este tipo de archivo (imágenes, vídeos, planos CAD…).")
+  throw new GoogleError("bad_request", "MarchaSolo aún no sabe leer este tipo de archivo (imágenes, vídeos, planos CAD…).")
 }
 
 // Archivo de texto nuevo (txt o csv) dentro de una carpeta.

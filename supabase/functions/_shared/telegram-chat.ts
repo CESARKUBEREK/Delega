@@ -1,4 +1,4 @@
-// Chat propio con Orkesta por Telegram. Cuando escribe al bot del espacio una
+// Chat propio con MarchaSolo por Telegram. Cuando escribe al bot del espacio una
 // persona que vinculó ese chat privado (Configuración → Mis avisos), el
 // mensaje no va a la bandeja: es una orden suya.
 //
@@ -42,7 +42,7 @@ export type TgCallback = {
 }
 
 const HELP = [
-  "Soy Orkesta. Escríbeme o mándame una nota de voz con lo que necesites, por ejemplo:",
+  "Soy MarchaSolo. Escríbeme o mándame una nota de voz con lo que necesites, por ejemplo:",
   "• ¿Qué tengo mañana?",
   "• Busca el último correo de García y prepárale una respuesta",
   "• Crea en HubSpot el contacto de Ana López, ana@ejemplo.com",
@@ -170,7 +170,7 @@ async function recentContext(admin: SupabaseClient, workspaceId: string, userId:
   const lines = runs.reverse().map((r) => {
     const asked = String((r.trigger as { text?: string }).text ?? "").slice(0, 600)
     const answered = String((r.status === "succeeded" ? r.summary : r.error) ?? "").slice(0, 1200)
-    return `Usuario: ${asked}\nOrkesta: ${answered}`
+    return `Usuario: ${asked}\nMarchaSolo: ${answered}`
   })
   return `Conversación reciente en Telegram (contexto; lo nuevo es el mensaje de arriba):\n${lines.join("\n\n")}`
 }
@@ -320,7 +320,7 @@ export async function handleCallback(admin: SupabaseClient, workspaceId: string,
   if (!chat?.id || chat.type !== "private" || cq.from?.id !== chat.id || !msg?.message_id) return answer("No autorizado.")
   const chatId = String(chat.id)
   const userId = await chatOwner(admin, workspaceId, chatId)
-  if (!userId) return answer("Este chat no está vinculado a Orkesta.")
+  if (!userId) return answer("Este chat no está vinculado a MarchaSolo.")
   const data = cq.data ?? ""
 
   const decision = data.match(/^(ap|re):([0-9a-f-]{36}):([0-9a-f]{12})$/)

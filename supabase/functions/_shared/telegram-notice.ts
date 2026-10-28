@@ -1,4 +1,4 @@
-// Mensajes de Orkesta al chat privado de Telegram de cada persona (el que
+// Mensajes de MarchaSolo al chat privado de Telegram de cada persona (el que
 // vinculó con «/vincular CÓDIGO»):
 //
 // - Aprobaciones: cuando una ejecución espera aprobación, se envía el detalle

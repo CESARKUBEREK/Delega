@@ -89,11 +89,11 @@ export async function notifyMe(
       if (email) {
         const { secret, config } = await imapAccount(admin, run.workspace_id)
         await sendViaSmtp(config.smtp_host, secret, {
-          fromName: "Orkesta",
+          fromName: "MarchaSolo",
           from: config.email,
           to: email,
           subject,
-          text: `${text}\n\n— Aviso de la automatización «${run.flow_name}» de Orkesta.`,
+          text: `${text}\n\n— Aviso de la automatización «${run.flow_name}» de MarchaSolo.`,
         })
         channels.push("correo")
       }

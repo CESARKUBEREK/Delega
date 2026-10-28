@@ -6,7 +6,7 @@
 // la aprobación de una persona.
 //
 // Excepción: el chat privado que una persona vinculó a su cuenta es su chat
-// con Orkesta (peticiones, notas de voz, comandos y botones de aprobación; ver
+// con MarchaSolo (peticiones, notas de voz, comandos y botones de aprobación; ver
 // _shared/telegram-chat.ts). Sus mensajes no van a la bandeja.
 import { createClient } from "npm:@supabase/supabase-js@2.118.0"
 import { advance, claim, createRun, type RunRow } from "../_shared/agent.ts"
@@ -125,7 +125,7 @@ async function launchFlows(workspaceId: string, chatId: string, name: string | n
 }
 
 // «/vincular CÓDIGO» (o «/start CÓDIGO» desde un enlace t.me) en un chat
-// privado: vincula ese chat a la persona que pidió el código en Orkesta, para
+// privado: vincula ese chat a la persona que pidió el código en MarchaSolo, para
 // recibir sus avisos. No se guarda en la bandeja ni lanza flujos.
 const LINK_RE = /^\/(?:vincular|start)(?:@\w+)?\s+([A-Za-z0-9]{8})\s*$/
 
@@ -140,8 +140,8 @@ async function handleLink(workspaceId: string, botToken: string, m: TgMessage): 
     p_name: displayName(m.from) ?? "",
   })
   const text = data
-    ? "Listo: este chat recibirá tus avisos de Orkesta. Puedes desactivarlo en Configuración → Mis avisos."
-    : "El código no es válido o ha caducado. Pide uno nuevo en Orkesta (Configuración → Mis avisos)."
+    ? "Listo: este chat recibirá tus avisos de MarchaSolo. Puedes desactivarlo en Configuración → Mis avisos."
+    : "El código no es válido o ha caducado. Pide uno nuevo en MarchaSolo (Configuración → Mis avisos)."
   await sendTelegram(botToken, chatId, text).catch(() => undefined)
   return true
 }
@@ -152,7 +152,7 @@ async function handleUpdate(workspaceId: string, integrationId: string, botToken
   if (!m?.chat?.id || !m.message_id || m.from?.is_bot) return
   if (update.message && (await handleLink(workspaceId, botToken, m))) return
   const chatId = String(m.chat.id)
-  // Chat privado vinculado: es la persona hablando con Orkesta.
+  // Chat privado vinculado: es la persona hablando con MarchaSolo.
   if (m.chat.type === "private" && m.from?.id === m.chat.id) {
     const owner = await chatOwner(admin, workspaceId, chatId)
     if (owner) {

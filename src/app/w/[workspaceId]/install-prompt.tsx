@@ -32,7 +32,7 @@ function useInstallEvent() {
   )
 }
 
-// Aviso discreto, solo en el móvil, para instalar Orkesta en la pantalla de inicio.
+// Aviso discreto, solo en el móvil, para instalar MarchaSolo en la pantalla de inicio.
 export function InstallPrompt() {
   const device = useDevice()
   const event = useInstallEvent()
@@ -45,7 +45,7 @@ export function InstallPrompt() {
   return (
     <div className="mb-4 flex items-start gap-3 border border-ink bg-sheet px-4 py-3 lg:hidden" role="note">
       <div className="min-w-0 flex-1 text-sm">
-        <p className="font-semibold text-ink">Instala Orkesta en tu móvil</p>
+        <p className="font-semibold text-ink">Instala MarchaSolo en tu móvil</p>
         <p className="mt-0.5 text-graphite">
           {iosHint
             ? "Toca Compartir y luego «Añadir a pantalla de inicio». Así se abre como una app y puede avisarte."

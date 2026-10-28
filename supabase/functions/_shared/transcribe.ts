@@ -4,7 +4,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 
 const MODELS = ["gpt-transcribe", "gpt-4o-mini-transcribe"]
-const PROMPT = "Dictado en español para Orkesta: planillas, Google Drive, Google Docs, Gmail, Outlook, Calendar, HubSpot, Telegram, Tokko, Xubio, facturas, presupuestos, obras."
+const PROMPT = "Dictado en español para MarchaSolo: planillas, Google Drive, Google Docs, Gmail, Outlook, Calendar, HubSpot, Telegram, Tokko, Xubio, facturas, presupuestos, obras."
 export const MAX_AUDIO_BYTES = 8 * 1024 * 1024
 export const MAX_AUDIO_SECONDS = 150
 

@@ -12,7 +12,7 @@ const MAX_MESSAGE = 4000
 const MAX_PER_MINUTE = 8
 const HISTORY = 12
 
-const INSTRUCTIONS = `Eres el asistente de Orkesta, una plataforma en español que automatiza tareas administrativas
+const INSTRUCTIONS = `Eres el asistente de MarchaSolo, una plataforma en español que automatiza tareas administrativas
 de profesionales y pequeños despachos (ingenieros, arquitectos) que no programan.
 
 Tu trabajo es convertir lo que pide el usuario en un plan claro. Con ese plan el usuario puede hacer dos cosas:
@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
 // «Complétalo tú» del editor visual: una frase → un paso del plan.
 // No guarda nada: el editor muestra el paso y la persona decide.
 // ---------------------------------------------------------------------------
-const STEP_INSTRUCTIONS = `Eres el asistente del editor de automatizaciones de Orkesta. El usuario describe con sus palabras
+const STEP_INSTRUCTIONS = `Eres el asistente del editor de automatizaciones de MarchaSolo. El usuario describe con sus palabras
 UN paso de una automatización y tú lo conviertes en un paso del plan.
 
 - kind: read (consultar datos), compare (buscar o comparar), transform (preparar datos), generate (redactar),

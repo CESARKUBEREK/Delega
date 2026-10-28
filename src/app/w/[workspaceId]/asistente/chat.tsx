@@ -60,7 +60,7 @@ export function Chat({
   runs: Record<number, ChatRun>
   files: ChatFile[]
   aiReady: boolean
-  // Petición escrita en «Pide algo a Orkesta» (pantalla Hoy). Se deja en el
+  // Petición escrita en «Pide algo a MarchaSolo» (pantalla Hoy). Se deja en el
   // cuadro para revisarla: no se envía sola.
   initialDraft?: string
 }) {
@@ -117,7 +117,7 @@ export function Chat({
       {messages.length === 0 ? (
         <div className="chat-welcome border border-ink bg-sheet p-5 sm:p-7">
           <p className="rotulo text-2xl text-ink sm:text-3xl">¿Qué necesitas hoy?</p>
-          <p className="mt-2 text-base text-ink">Escríbelo o díctalo abajo: Orkesta se encarga.</p>
+          <p className="mt-2 text-base text-ink">Escríbelo o díctalo abajo: MarchaSolo se encarga.</p>
           <p className="mt-1 text-sm text-graphite">
             Te propondrá un plan. Puedes ejecutarlo al momento o guardarlo como automatización. Lo que tenga que escribir o
             enviar espera siempre tu aprobación.

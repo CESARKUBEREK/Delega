@@ -78,14 +78,14 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
         <p className="today-callout rounded-2xl border border-rule bg-sheet px-5 py-4 text-sm text-graphite">
           {isAdmin ? (
             <>
-              Para que Orkesta pueda trabajar, conecta la clave de una IA en{" "}
+              Para que MarchaSolo pueda trabajar, conecta la clave de una IA en{" "}
               <Link href={`${base}/integraciones`} className="font-semibold text-link underline underline-offset-4">
                 Integraciones
               </Link>
               .
             </>
           ) : (
-            "Un administrador tiene que conectar la clave de una IA para que Orkesta pueda trabajar."
+            "Un administrador tiene que conectar la clave de una IA para que MarchaSolo pueda trabajar."
           )}
         </p>
       ) : null}
@@ -105,7 +105,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
 
         {(waiting ?? []).length === 0 ? (
           <p className="rounded-2xl border border-rule bg-sheet px-5 py-4 text-sm text-graphite">
-            Nada pendiente. Cuando Orkesta quiera escribir o enviar algo, te lo pedirá aquí.
+            Nada pendiente. Cuando MarchaSolo quiera escribir o enviar algo, te lo pedirá aquí.
           </p>
         ) : (
           <ul className="flex flex-col gap-2.5">
@@ -179,11 +179,11 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
         )}
       </section>
 
-      <form action={`${base}/asistente`} method="get" role="search" aria-label="Pide algo a Orkesta" className="today-ask">
+      <form action={`${base}/asistente`} method="get" role="search" aria-label="Pide algo a MarchaSolo" className="today-ask">
         <label htmlFor="hoy-pedir" className="sr-only">
-          Pide algo a Orkesta
+          Pide algo a MarchaSolo
         </label>
-        <input id="hoy-pedir" name="q" type="text" autoComplete="off" maxLength={2000} placeholder="Pide algo a Orkesta…" className="today-ask-input" />
+        <input id="hoy-pedir" name="q" type="text" autoComplete="off" maxLength={2000} placeholder="Pide algo a MarchaSolo…" className="today-ask-input" />
         <button type="submit" aria-label="Seguir en el chat" className="today-ask-button">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M5 12h14M13 6l6 6-6 6" />

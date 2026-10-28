@@ -200,7 +200,7 @@ export async function xlsxWrite(
   const bytes = await downloadXlsx(token, fileId)
   const blocked = await unsupportedParts(bytes)
   if (blocked.length) {
-    throw new GoogleError("bad_request", `Este Excel tiene ${blocked.join(" y ")}, que se perderían al guardarlo desde Orkesta. Pásalo a Google Sheets para que Orkesta pueda escribir en él.`)
+    throw new GoogleError("bad_request", `Este Excel tiene ${blocked.join(" y ")}, que se perderían al guardarlo desde MarchaSolo. Pásalo a Google Sheets para que MarchaSolo pueda escribir en él.`)
   }
   const wb = await load(bytes)
   const a = parseRange(wb, range)
