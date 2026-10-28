@@ -441,9 +441,9 @@ a.flow-node-trigger:hover { border-color:#17233e; box-shadow:0 0 0 3px rgb(36 87
 .panel-content h1.rotulo + p { max-width: 64ch; color: #4a5b73; font-size: 15px; line-height: 1.55; }
 
 /* Barra lateral: lo activo, en azul con una marca a la izquierda. */
-.app-sidebar-link[aria-current="page"] { background: #e8eefc; color: #17233e; box-shadow: inset 3px 0 #2457d6; }
+.app-sidebar-link[aria-current="page"] { background: #e8eefc; color: #17233e; box-shadow: inset 3px 0 #e85a45; }
 .app-sidebar-link[aria-current="page"] .app-nav-icon { color: #2457d6; }
-.app-sidebar-link .bg-stroke { background: #2457d6; color: #17233e; }
+
 
 /* Barra inferior del móvil: pestaña activa con una píldora detrás del icono. */
 .mobile-tab-list { border-color: #dfe7ee; background: rgb(255 255 255 / 95%); }
@@ -462,7 +462,8 @@ a.flow-node-trigger:hover { border-color:#17233e; box-shadow:0 0 0 3px rgb(36 87
 .panel-content table th { color: #4a5b73; }
 .panel-content .text-link { color: #2457d6; }
 .panel-content .border-stroke { border-color: #2457d6; }
-.panel-content button.bg-stroke, .panel-content a.bg-stroke { background: #2457d6; color: #17233e; font-weight: 700; }
+.panel-content button.bg-stroke, .panel-content a.bg-stroke { background: #2457d6; color: #fff; font-weight: 700; }
+.panel-content button.bg-stroke:hover, .panel-content a.bg-stroke:hover { background: #1b45ad; }
 .panel-content [role="alert"].border-l-2 { border-radius: 0 10px 10px 0; }
 .panel-content p.border.border-rule.bg-sheet { border-radius: 14px; }
 
@@ -499,3 +500,51 @@ a.flow-node-trigger:hover { border-color:#17233e; box-shadow:0 0 0 3px rgb(36 87
 .app-sidebar-cta { display: flex; min-height: 46px; align-items: center; gap: 10px; margin: 0 0 16px; padding: 10px 14px; border-radius: 14px; background: #2457d6; color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; box-shadow: 0 10px 24px rgb(36 87 214 / 25%); transition: background-color .16s ease, box-shadow .16s ease; }
 .app-sidebar-cta:hover, .app-sidebar-cta[aria-current="page"] { background: #1b45ad; box-shadow: 0 12px 28px rgb(36 87 214 / 32%); }
 .app-sidebar-cta svg { width: 20px; height: 20px; color: #fff; }
+
+/* Botones azules: siempre con letra blanca (6,2:1). El marino sobre azul
+   no llega al contraste mínimo. */
+button.bg-stroke, a.bg-stroke, .auth-form-content button.bg-stroke { color: #fff; }
+button.bg-stroke:disabled { color: #fff; }
+
+/* Más coral (el color de la llave del logo). Sobre blanco, el coral solo
+   como relleno o detalle; para texto pequeño, su tono oscuro #B93A27
+   (5,7:1). Encima de un relleno coral, la letra es marina (4,4:1, en
+   negrita) o blanca solo en tamaños grandes. */
+:root { --coral-ink: #b93a27; --coral-soft: #fdeeeb; }
+.app-topbar { border-bottom: 0; box-shadow: inset 0 -3px 0 #e85a45, 0 5px 22px rgb(23 35 62 / 4%); }
+.app-eyebrow, .auth-form-kicker { color: var(--coral-ink); }
+.panel-content h1.rotulo::after { display: block; width: 44px; height: 4px; margin-top: 10px; border-radius: 999px; background: #e85a45; content: ""; }
+.dashboard-intro h1.rotulo::after, .flow-map h1::after { display: none; }
+.app-nav-heading { color: var(--coral-ink); }
+.app-sidebar-link[aria-current="page"] .app-nav-icon { color: #e85a45; }
+.app-sidebar-cta svg { color: #ffd2ca; }
+.app-mobile-tab-link[aria-current="page"]::after { position: absolute; bottom: 7px; left: 50%; width: 18px; height: 3px; transform: translateX(-50%); border-radius: 999px; background: #e85a45; content: ""; }
+.app-mobile-tab-link[aria-current="page"] > svg { color: #2457d6; }
+
+/* Lo que espera tu aprobación: acento coral (tarjetas, avisos, Hoy). */
+.panel-content section.border-2.border-stroke { overflow: hidden; border-color: #e85a45; border-radius: 16px; box-shadow: 0 0 0 4px var(--coral-soft); }
+.panel-content section.border-2.border-stroke > div.border-b { border-color: #f6c7bf; background: var(--coral-soft); }
+.panel-content section.border-2.border-stroke > div.border-b h2 { color: var(--coral-ink); }
+.dashboard-approval { border-color: #e85a45 !important; border-radius: 13px; background: var(--coral-soft) !important; color: #17233e !important; }
+.today-card-icon { background: var(--coral-soft); color: var(--coral-ink); }
+.today-card:hover { border-color: #e85a45; box-shadow: 0 10px 24px rgb(232 90 69 / 14%); }
+.today-summary::before { border-color: rgb(232 90 69 / 30%); }
+.today-ask-button { background: #e85a45; color: #17233e; }
+.today-ask-button:hover { background: #d94c37; }
+.today-ask:focus-within { border-color: #e85a45; box-shadow: 0 0 0 3px rgb(232 90 69 / 18%), 0 12px 30px rgb(23 35 62 / 10%); }
+
+/* Cabeceras de tarjeta con una marca coral a la izquierda. */
+.panel-content section > h2.border-b { position: relative; padding-left: 1.6rem; }
+.panel-content section > h2.border-b::before { position: absolute; top: 50%; left: 1rem; width: 4px; height: 16px; transform: translateY(-50%); border-radius: 999px; background: #e85a45; content: ""; }
+
+/* Mapa: el número de paso y el disparador con el coral de la llave. */
+.flow-node-number { border-color: #f6c7bf; background: var(--coral-soft); color: var(--coral-ink); }
+.flow-node-trigger .flow-node-icon { color: #ff9c8c; }
+
+/* Chat: el botón de dictar, en coral. */
+.chat-composer > button:first-child:not([aria-pressed="true"]) { border-color: #f6c7bf; background: var(--coral-soft); color: var(--coral-ink); }
+.chat-composer > button:first-child:not([aria-pressed="true"]):hover { background: #fbdcd5; }
+
+/* Enlaces: azul; al pasar por encima, subrayado coral. */
+.panel-content a.underline:hover, .panel-content a.text-link:hover { text-decoration-color: #e85a45; }
+::selection { background: rgb(232 90 69 / 22%); }
