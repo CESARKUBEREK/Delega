@@ -1,6 +1,10 @@
+import { fileKindLabel } from "@/lib/plan"
+import { supabaseUrl } from "@/lib/supabase/env"
 import { createClient } from "@/lib/supabase/server"
+import { playbook, readVoiceConfig } from "@/lib/voice"
 import { connectGoogle } from "../run-actions"
 import { BufferForm, DisconnectInboxForm, HubSpotForm, TokkoForm, XubioForm } from "./inbox-client"
+import { DisconnectVoiceForm, VoiceAccess, VoicePlaybook, VoiceSettingsForm } from "./voice-client"
 
 function Badge({ status, invalidLabel }: { status: string | null | undefined; invalidLabel: string }) {
   if (status === "active") return <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">Conectado</span>
@@ -280,6 +284,83 @@ export async function BufferCard({ workspaceId, isAdmin }: { workspaceId: string
           </>
         ) : (
           <p className="text-sm text-graphite">Solo un administrador puede conectar Buffer.</p>
+        )}
+      </div>
+    </details>
+  )
+}
+
+export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
+  const supabase = await createClient()
+  const [{ data: integration }, { data: calendar }, { data: rawFiles }, { data: ws }] = await Promise.all([
+    supabase.from("integrations").select("status, config").eq("workspace_id", workspaceId).eq("provider", "grok_voice").maybeSingle(),
+    supabase.from("integrations").select("status").eq("workspace_id", workspaceId).eq("provider", "calendar").maybeSingle(),
+    supabase.from("integration_files").select("id, name, mime_type").eq("workspace_id", workspaceId).order("name").limit(100),
+    supabase.from("workspaces").select("name").eq("id", workspaceId).maybeSingle(),
+  ])
+  const config = readVoiceConfig(integration?.config)
+  const files = (rawFiles ?? [])
+    .filter((f) => f.mime_type !== "application/vnd.google-apps.folder")
+    .map((f) => ({ id: f.id, name: f.name, kind: fileKindLabel(f.mime_type).toLowerCase() }))
+  const url = `${supabaseUrl}/functions/v1/voice-mcp?w=${workspaceId}`
+  const connected = Boolean(integration)
+
+  return (
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
+        <div>
+          <h3 className="rotulo text-lg">Grok Voice</h3>
+          <p className="text-sm text-graphite">
+            Un agente de voz de xAI atiende las llamadas de tu negocio: consulta tu agenda y deja la cita reservada, toma recados y responde con
+            tus documentos. Cada cita y cada recado llegan a la Bandeja y te avisan.
+          </p>
+        </div>
+        <Badge status={integration?.status} invalidLabel="Desactivado" />
+      </summary>
+      <div className="flex flex-col gap-6 px-5 py-5">
+        {!isAdmin ? (
+          <p className="text-sm text-graphite">Solo un administrador puede configurar la atención telefónica.</p>
+        ) : (
+          <>
+            {calendar?.status !== "active" ? (
+              <p className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+                Conecta Google Calendar (más abajo, en Calendar) para que el agente pueda ver huecos y reservar citas. Sin él, solo toma
+                recados.
+              </p>
+            ) : null}
+            <section className="flex flex-col gap-3">
+              <h4 className="text-sm font-semibold text-ink">1. Acceso para el agente de voz</h4>
+              <VoiceAccess workspaceId={workspaceId} url={url} connected={connected} />
+            </section>
+            {connected ? (
+              <>
+                <section className="flex flex-col gap-3">
+                  <h4 className="text-sm font-semibold text-ink">2. Horario de citas y documentos</h4>
+                  <p className="text-xs text-graphite">
+                    Las citas quedan confirmadas en tu calendario, sin aprobación, solo dentro de este horario y si la hora está libre.
+                  </p>
+                  <VoiceSettingsForm workspaceId={workspaceId} config={config} files={files} />
+                </section>
+                <section className="flex flex-col gap-3">
+                  <h4 className="text-sm font-semibold text-ink">3. Crea el agente en xAI</h4>
+                  <ol className="list-decimal pl-5 text-sm text-graphite">
+                    <li>Entra en console.x.ai → Voice Agents y crea un agente con la plantilla «Custom».</li>
+                    <li>Pega estas instrucciones como guion del agente y elige una voz.</li>
+                    <li>
+                      En herramientas, añade un servidor MCP remoto con la URL de arriba y la cabecera Authorization con tu clave (si no la
+                      copiaste, crea una nueva).
+                    </li>
+                    <li>Asigna el número de teléfono que te da xAI (o el tuyo por SIP), pruébalo desde el navegador y llama para comprobarlo.</li>
+                  </ol>
+                  <VoicePlaybook text={playbook(ws?.name ?? "tu negocio", config)} />
+                  <p className="text-xs text-graphite">
+                    Coste en tu cuenta de xAI: unos 0,08 $ por minuto de conversación, más 0,01 $/min si usas el número de xAI.
+                  </p>
+                </section>
+                <DisconnectVoiceForm workspaceId={workspaceId} />
+              </>
+            ) : null}
+          </>
         )}
       </div>
     </details>
