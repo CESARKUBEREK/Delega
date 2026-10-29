@@ -40,6 +40,19 @@ export function asPending(value: Json | null): Pending | null {
       return { tool: "send_telegram", to: t(v.to_label), text: t(v.text) }
     case "send_whatsapp":
       return { tool: "send_whatsapp", to: t(v.to_label), phone: t(v.phone), text: t(v.text) }
+    case "api_request":
+      return {
+        tool: "generic",
+        description: `Enviar una petición ${t(v.method)} a ${t(v.connection_name)}.`,
+        verb: "Aprobar petición",
+        fields: [
+          { label: "Método", value: t(v.method) },
+          { label: "Ruta", value: t(v.path) },
+          ...(t(v.query) ? [{ label: "Parámetros", value: t(v.query) }] : []),
+        ],
+        text: t(v.body) || null,
+        textCaption: "Cuerpo JSON",
+      }
     case "tokko_lead": {
       const ids = Array.isArray(v.property_ids) ? v.property_ids.filter((x) => typeof x === "number").map((x) => `#${x}`).join(", ") : ""
       return {
