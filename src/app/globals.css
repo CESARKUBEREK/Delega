@@ -643,3 +643,60 @@ button.bg-stroke:disabled { color: #fff; }
 @media (prefers-reduced-motion: reduce) {
   .integration-category-link, .integration-category-heading, .automation-action-primary, .automation-action-secondary, .automation-row, .automation-row::before { transition: none; }
 }
+
+
+/* Bandeja: filtros visibles, agrupados y con acento coral. */
+.inbox-page-intro {
+  position: relative;
+  padding: 18px 20px 18px 22px;
+  border: 1px solid #f1d5d0;
+  border-left: 5px solid #e85a45;
+  border-radius: 14px;
+  background: linear-gradient(110deg, #fff3f0 0%, #fff 72%);
+  box-shadow: 0 8px 24px rgb(23 35 62 / 4%);
+}
+.inbox-page-intro .app-eyebrow { margin-bottom: 7px; color: #b93a27; }
+.inbox-page-intro h1.rotulo { margin: 0; color: #17233e; font-size: clamp(30px, 3.4vw, 38px); }
+.inbox-page-intro h1.rotulo::after { width: 54px; height: 5px; margin-top: 12px; }
+.inbox-page-intro > p:last-child { margin-top: 12px; color: #4b5872; line-height: 1.65; }
+.inbox-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  padding: 14px;
+  border: 1px solid #f1d5d0;
+  border-radius: 16px;
+  background: linear-gradient(120deg, #fff7f5, #fff);
+  box-shadow: 0 8px 22px rgb(23 35 62 / 4%);
+}
+.inbox-filter-chip {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #f0d5d0;
+  border-radius: 999px;
+  background: #fff;
+  padding: 6px 12px;
+  color: #71372f;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.25;
+  text-decoration: none;
+  transition: border-color .15s ease, background-color .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.inbox-filter-chip:hover { transform: translateY(-1px); border-color: #e85a45; background: #fff0ec; color: #8b3023; }
+.inbox-filter-chip.is-active { border-color: #b93a27; background: #b93a27; color: #fff; box-shadow: 0 3px 10px rgb(185 58 39 / 22%); }
+.inbox-filter-chip.is-active:hover { border-color: #9f3020; background: #9f3020; color: #fff; }
+.inbox-filter-chip:focus-visible { outline: 3px solid rgb(232 90 69 / 35%); outline-offset: 2px; }
+.inbox-filters > span[aria-hidden="true"] { height: 24px; margin-inline: 3px; }
+@media (max-width: 640px) {
+  .inbox-page-intro { padding: 16px; }
+  .inbox-filters { gap: 7px; padding: 10px; }
+  .inbox-filter-chip { min-height: 38px; padding-inline: 11px; }
+  .inbox-filters > span[aria-hidden="true"] { height: 1px; width: 100%; margin-block: 2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .inbox-filter-chip { transition: none; }
+}
