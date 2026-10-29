@@ -35,7 +35,7 @@ así que **no** hace falta la auditoría de seguridad de terceros.
    - Términos de uso: `https://TU-DOMINIO/terminos`
 4. **URL de vuelta de OAuth** con el dominio nuevo:
    `https://TU-DOMINIO/integraciones/google/callback` (en el cliente OAuth de
-   Google Cloud y en el secreto `SITE_URL` de las Edge Functions de Supabase,
+   Google Cloud y en el secreto `DELEGA_SITE_URL` de las Edge Functions de Supabase,
    que es de donde sale esa dirección).
 
 ## En Google Cloud Console
