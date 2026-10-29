@@ -61,7 +61,7 @@ jobs:
           supabase functions deploy \
             ai-connection assistant run-flow voice-transcribe push api-connection \
             google-connection hubspot-connection telegram-connection imap-connection \
-            inbox-sync inbox-reply inbox-classify tokko-connection xubio-connection whatsapp-connection buffer-connection \
+            inbox-sync inbox-reply inbox-classify tokko-connection xubio-connection whatsapp-connection buffer-connection voice-connection \
             --project-ref "$PROJECT_REF" --use-api 2>&1 | tee /tmp/deploy1.txt || {
               echo "::error::$(tail -n 8 /tmp/deploy1.txt | tr '\n' ' ' | cut -c1-900)"
               exit 1
@@ -70,7 +70,7 @@ jobs:
       - name: Funciones sin verificación de JWT (webhook y tareas periódicas)
         run: |
           set -o pipefail
-          supabase functions deploy telegram-webhook whatsapp-webhook mail-cron runs-cron \
+          supabase functions deploy telegram-webhook whatsapp-webhook mail-cron runs-cron voice-mcp \
             --no-verify-jwt --project-ref "$PROJECT_REF" --use-api 2>&1 | tee /tmp/deploy2.txt || {
               echo "::error::$(tail -n 8 /tmp/deploy2.txt | tr '\n' ' ' | cut -c1-900)"
               exit 1

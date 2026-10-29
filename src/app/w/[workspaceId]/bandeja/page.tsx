@@ -9,7 +9,7 @@ export const metadata = { title: "Bandeja" }
 export const maxDuration = 120
 
 const DEFAULT_CATEGORIES = ["Cliente", "Proveedor", "Obra o proyecto", "Administración", "Personal", "Publicidad", "Otros"]
-const CHANNEL_LABEL: Record<string, string> = { email: "Correo", telegram: "Telegram", whatsapp: "WhatsApp" }
+const CHANNEL_LABEL: Record<string, string> = { email: "Correo", telegram: "Telegram", whatsapp: "WhatsApp", phone: "Teléfono" }
 
 const URGENCY_STYLE: Record<string, string> = {
   alta: "border-alert text-alert",
@@ -67,7 +67,7 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
 
   const one = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "")
   const cat = one("cat")
-  const ch = ["email", "telegram", "whatsapp"].includes(one("ch")) ? one("ch") : ""
+  const ch = ["email", "telegram", "whatsapp", "phone"].includes(one("ch")) ? one("ch") : ""
   const urg = one("urg")
   const reply = one("reply") === "1"
   const archived = one("arch") === "1"
@@ -149,7 +149,7 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
       </form>
 
       <nav aria-label="Filtros de la bandeja" className="inbox-filters">
-        {(["email", "whatsapp", "telegram"] as const).map((c) => (
+        {(["email", "whatsapp", "telegram", "phone"] as const).map((c) => (
           <Link key={c} href={filterHref({ ch: ch === c ? "" : c })} className={chip(ch === c)} aria-current={ch === c ? "page" : undefined}>
             {CHANNEL_LABEL[c]}
           </Link>

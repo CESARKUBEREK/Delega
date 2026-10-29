@@ -18,7 +18,7 @@ export async function recordMessage(
   m: {
     workspaceId: string
     integrationId: string | null
-    channel: "email" | "telegram" | "whatsapp"
+    channel: "email" | "telegram" | "whatsapp" | "phone"
     threadExternalId: string
     externalId: string
     direction: "in" | "out"
