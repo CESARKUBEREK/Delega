@@ -3,6 +3,7 @@ import { Suspense } from "react"
 import { runOrigin } from "@/lib/labels"
 import { asPending, pendingKind, pendingTitle } from "@/lib/pending"
 import { createClient } from "@/lib/supabase/server"
+import { setupStatus } from "@/lib/setup"
 import { getWorkspace } from "@/lib/workspace"
 import { formatToday, formatWhen, greeting } from "./format"
 
@@ -62,6 +63,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
   const timezone = ws?.timezone || "Europe/Madrid"
   const firstName = (profile?.display_name ?? "").trim().split(/\s+/)[0]
   const aiActive = (connections ?? []).some((c) => c.status === "active")
+  const setup = await setupStatus(workspaceId)
   const pendingTotal = waitingCount ?? (waiting ?? []).length
 
   return (
@@ -85,19 +87,22 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
         </aside>
       </header>
 
-      {!aiActive ? (
+      {isAdmin && !setup.complete ? (
+        <Link href={`${base}/bienvenida`} className="setup-banner">
+          <span className="setup-banner-ring" aria-hidden="true" style={{ ["--pct" as string]: `${Math.round((setup.done / setup.total) * 100)}%` }}>
+            {setup.done}/{setup.total}
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="font-semibold text-ink">{setup.ia ? "Termina de configurar MarchaSolo" : "Pon MarchaSolo en marcha"}</span>
+            <span className="text-sm text-graphite">
+              {setup.ia ? "Conecta tus cuentas paso a paso: correo, Drive, calendario y mensajería." : "Empieza conectando tu IA: sin ella, MarchaSolo no puede trabajar."}
+            </span>
+          </span>
+          <span className="setup-banner-cta">Continuar →</span>
+        </Link>
+      ) : !aiActive && !isAdmin ? (
         <p className="today-callout rounded-2xl border border-rule bg-sheet px-5 py-4 text-sm text-graphite">
-          {isAdmin ? (
-            <>
-              Para que MarchaSolo pueda trabajar, conecta la clave de una IA en{" "}
-              <Link href={`${base}/integraciones`} className="font-semibold text-link underline underline-offset-4">
-                Integraciones
-              </Link>
-              .
-            </>
-          ) : (
-            "Un administrador tiene que conectar la clave de una IA para que MarchaSolo pueda trabajar."
-          )}
+          Un administrador tiene que conectar la clave de una IA para que MarchaSolo pueda trabajar.
         </p>
       ) : null}
 
