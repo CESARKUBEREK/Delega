@@ -70,7 +70,7 @@ export async function apiRequest(
   if (query.length > 1200 || query.includes("#")) throw new Error("La consulta API es demasiado larga o no válida.")
   if (query) {
     const qs = new URLSearchParams(query.startsWith("?") ? query.slice(1) : query)
-    qs.forEach((value, key) => target.searchParams.set(key, value))
+    qs.forEach((value, key) => target.searchParams.append(key, value))
   }
   if (method !== "GET") {
     if (body.length > 30_000) throw new Error("El cuerpo de la petición supera el límite de 30 KB.")
