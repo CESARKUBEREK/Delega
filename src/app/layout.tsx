@@ -1,14 +1,15 @@
 import type { Metadata, Viewport } from "next"
 import { PwaRegister } from "@/components/pwa-register"
+import "@fontsource-variable/montserrat/wght.css"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: { default: "MarchaSolo", template: "%s · MarchaSolo" },
-  description: "Tu negocio, en automático. Describe una tarea y MarchaSolo la convierte en un flujo que revisas y apruebas.",
-  applicationName: "MarchaSolo",
+  title: { default: "Marcha Solo", template: "%s · Marcha Solo" },
+  description: "Tu negocio, en automático. Describe una tarea y Marcha Solo la convierte en un flujo que revisas y apruebas.",
+  applicationName: "Marcha Solo",
   robots: { index: false, follow: false },
   // App instalable en el iPhone: el manifiesto lo genera app/manifest.ts.
-  appleWebApp: { capable: true, title: "MarchaSolo", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Marcha Solo", statusBarStyle: "default" },
   formatDetection: { telephone: false },
 }
 

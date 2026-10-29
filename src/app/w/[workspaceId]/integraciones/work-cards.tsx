@@ -120,11 +120,11 @@ export async function HubSpotCard({ workspaceId, isAdmin }: { workspaceId: strin
               <ol className="mt-2 list-decimal pl-5">
                 <li>En HubSpot, abre Desarrollo → Claves → Claves de servicio y pulsa «Crear clave de servicio».</li>
                 <li>
-                  Ponle de nombre «MarchaSolo» y añade estos permisos: <span className="font-mono text-xs">crm.objects.contacts</span>,{" "}
+                  Ponle de nombre «Marcha Solo» y añade estos permisos: <span className="font-mono text-xs">crm.objects.contacts</span>,{" "}
                   <span className="font-mono text-xs">crm.objects.companies</span> y <span className="font-mono text-xs">crm.objects.deals</span>, cada uno
                   de lectura y escritura.
                 </li>
-                <li>Crea la clave, cópiala y pégala aquí. Solo la ve quien la crea; en MarchaSolo queda cifrada.</li>
+                <li>Crea la clave, cópiala y pégala aquí. Solo la ve quien la crea; en Marcha Solo queda cifrada.</li>
               </ol>
               <p className="mt-2">
                 Si tu cuenta aún permite apps privadas (hasta el 26 de octubre de 2026 en cuentas existentes), su token también sirve.
@@ -203,7 +203,7 @@ export async function XubioCard({ workspaceId, isAdmin }: { workspaceId: string;
         <div>
           <h3 className="rotulo text-lg">Xubio</h3>
           <p className="text-sm text-graphite">
-            Tu contabilidad: clientes, proveedores, productos y facturas de venta y de compra. Por ahora solo lectura: MarchaSolo no crea
+            Tu contabilidad: clientes, proveedores, productos y facturas de venta y de compra. Por ahora solo lectura: Marcha Solo no crea
             facturas ni cobros.
           </p>
         </div>
@@ -222,7 +222,7 @@ export async function XubioCard({ workspaceId, isAdmin }: { workspaceId: string;
               <summary className="cursor-pointer text-ink">Cómo consigo las credenciales</summary>
               <ol className="mt-2 list-decimal pl-5">
                 <li>En Xubio, abre «Configuración» → «Integraciones» → «API de Xubio».</li>
-                <li>Pulsa «Nueva App Cliente», ponle de nombre «MarchaSolo» y guarda.</li>
+                <li>Pulsa «Nueva App Cliente», ponle de nombre «Marcha Solo» y guarda.</li>
                 <li>Copia el Client ID y el Secret ID y pégalos aquí.</li>
               </ol>
               <p className="mt-2">La API solo está en los planes de Xubio que la incluyen (emprendedores y empresas).</p>

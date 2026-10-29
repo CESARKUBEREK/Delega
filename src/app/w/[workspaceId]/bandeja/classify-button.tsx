@@ -118,7 +118,7 @@ export function InboxSettingsForm({
           placeholder="Sin límite"
           className="h-11 w-40 border border-rule bg-sheet px-3 text-sm text-ink focus:border-link focus:outline-none"
         />
-        <p className="text-xs text-graphite">Los mensajes más antiguos se borran de MarchaSolo, no de tu buzón ni de Telegram.</p>
+        <p className="text-xs text-graphite">Los mensajes más antiguos se borran de Marcha Solo, no de tu buzón ni de Telegram.</p>
       </div>
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-48">

@@ -58,7 +58,7 @@ export function PushToggle({ vapidPublicKey }: { vapidPublicKey: string | null }
     return (
       <p className="text-sm text-graphite">
         {device.ios && !device.standalone
-          ? "En iPhone y iPad los avisos solo funcionan con MarchaSolo instalada: toca Compartir y luego «Añadir a pantalla de inicio», y abre la app desde ese icono."
+          ? "En iPhone y iPad los avisos solo funcionan con Marcha Solo instalada: toca Compartir y luego «Añadir a pantalla de inicio», y abre la app desde ese icono."
           : "Este navegador no admite avisos."}
       </p>
     )
@@ -129,7 +129,7 @@ export function PushToggle({ vapidPublicKey }: { vapidPublicKey: string | null }
           : "Recibe un aviso en este dispositivo cuando una tarea necesite tu aprobación. El aviso no muestra datos de tus clientes."}
       </p>
       {denied && status !== "on" ? (
-        <p className="text-sm text-alert">Los avisos están bloqueados para MarchaSolo en este navegador. Desbloquéalos en sus ajustes.</p>
+        <p className="text-sm text-alert">Los avisos están bloqueados para Marcha Solo en este navegador. Desbloquéalos en sus ajustes.</p>
       ) : null}
       <div className="flex flex-wrap gap-3">
         {status === "on" ? (
