@@ -8,6 +8,7 @@ import { DOC_MIMES, DriveCard, EXCEL_MIMES, FilesCard, SHEET_MIMES } from "./goo
 import { ImapCard, TelegramCard, WhatsAppCard } from "./inbox-cards"
 import { ConnectKeyForm, DefaultForm, DisconnectForm, ModelForm } from "./openai-forms"
 import { CalendarCard, HubSpotCard, TokkoCard, XubioCard } from "./work-cards"
+import { ApiIntegrationCard } from "./api-integrations"
 
 export const metadata = { title: "Integraciones" }
 
@@ -18,6 +19,7 @@ const CATEGORIES = [
   { id: "calculos", label: "Cálculos" },
   { id: "textos", label: "Textos" },
   { id: "bases-de-datos", label: "Bases de datos" },
+  { id: "apis", label: "APIs a medida" },
   { id: "calendar", label: "Calendar" },
   { id: "crm", label: "CRM" },
   { id: "inmobiliaria", label: "Inmobiliaria" },
@@ -90,6 +92,9 @@ async function Integrations({
   const notice = sp.google === "conectado" ? "connected" : typeof sp.google_error === "string" ? sp.google_error : null
   const calendarNotice = sp.calendar === "conectado"
   const { isAdmin } = await getWorkspace(workspaceId, `/w/${workspaceId}/integraciones`)
+  const supabase = await createClient()
+  const { data: apiConnections } = await supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["supabase", "custom_1", "custom_2"])
+  const connection = (provider: string) => apiConnections?.find((item) => item.provider === provider) ?? null
 
   return (
     <div className="flex flex-col gap-10">
@@ -145,7 +150,12 @@ async function Integrations({
       </Category>
 
       <Category id="bases-de-datos" title="Bases de datos" description="Tablas de tus propias bases de datos.">
-        <ComingSoon title="Supabase" description="Consultar y actualizar tablas de tu propio proyecto de Supabase." />
+        <ApiIntegrationCard workspaceId={workspaceId} provider="supabase" connection={connection("supabase")} isAdmin={isAdmin} />
+      </Category>
+
+      <Category id="apis" title="APIs a medida" description="Conecta dos sistemas REST con sus propias credenciales. Las consultas leen datos; las escrituras esperan tu aprobación.">
+        <ApiIntegrationCard workspaceId={workspaceId} provider="custom_1" connection={connection("custom_1")} isAdmin={isAdmin} />
+        <ApiIntegrationCard workspaceId={workspaceId} provider="custom_2" connection={connection("custom_2")} isAdmin={isAdmin} />
       </Category>
 
       <Category id="calendar" title="Calendar" description="Tu agenda: consultar y proponer eventos.">
