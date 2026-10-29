@@ -52,6 +52,9 @@ export default function PrivacyPage() {
                 lo apruebas.
               </li>
               <li>
+                <strong>Redes sociales (Buffer):</strong> la lista de tus canales y las publicaciones que apruebas.
+              </li>
+              <li>
                 <strong>Telegram y WhatsApp:</strong> los mensajes que recibe tu bot o tu número conectado, y los que envías con tu
                 aprobación.
               </li>
@@ -118,8 +121,9 @@ export default function PrivacyPage() {
         <h2>5. Con quién se comparten</h2>
         <ul>
           <li>
-            <strong>El proveedor de IA que tú conectas</strong> con tu propia clave (OpenAI, Anthropic o DeepSeek). Recibe el contenido
-            necesario para cada tarea, bajo sus condiciones de uso de API. A OpenAI le pedimos que no conserve las conversaciones. Anthropic
+            <strong>El proveedor de IA que tú conectas</strong> con tu propia clave (OpenAI, Anthropic, DeepSeek o xAI/Grok). Recibe el
+            contenido necesario para cada tarea, bajo sus condiciones de uso de API. A OpenAI y a xAI les pedimos que no conserven las
+            conversaciones. Anthropic
             no usa los datos de su API para entrenar modelos. DeepSeek procesa los datos fuera de la Unión Europea. El dictado por voz se
             transcribe con OpenAI.
           </li>
@@ -128,8 +132,8 @@ export default function PrivacyPage() {
             Unidos) y Vercel (alojamiento de la web). Tratan los datos por cuenta nuestra y solo para prestar el servicio.
           </li>
           <li>
-            <strong>Los servicios que conectas</strong> (Google, tu proveedor de correo, Telegram, Twilio para WhatsApp, tu CRM…), para leer
-            o enviar lo que pides.
+            <strong>Los servicios que conectas</strong> (Google, tu proveedor de correo, Telegram, Twilio para WhatsApp, Buffer para tus
+            redes sociales, tu CRM…), para leer o enviar lo que pides.
           </li>
         </ul>
         <p>
