@@ -55,7 +55,7 @@ export function VoiceAccess({ workspaceId, url, connected }: { workspaceId: stri
       <CopyField label="URL del servidor MCP" value={result?.url ?? url} />
       {result ? (
         <>
-          <CopyField label="Clave (cabecera Authorization)" value={`Bearer ${result.token}`} secret />
+          <CopyField label="Clave (campo Authorization o token del servidor MCP)" value={result.token} secret />
           <p role="status" className="border-l-2 border-ok bg-ok-bg px-3 py-2 text-sm text-ok">
             Copia la clave ahora: MarchaSolo la guarda cifrada y no volverá a mostrarla.
           </p>
