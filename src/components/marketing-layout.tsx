@@ -23,6 +23,8 @@ export function MarketingLayout({ children }: { children: ReactNode }) {
           <Link href="/para-que-sirve">Qué puedes hacer</Link>
           <Link href="/como-empezar">Cómo empezar</Link>
           <Link href="/login">Entrar</Link>
+          <Link href="/privacidad">Privacidad</Link>
+          <Link href="/terminos">Términos</Link>
         </nav>
         <span>Automatiza lo repetitivo. Conserva las decisiones.</span>
       </footer>

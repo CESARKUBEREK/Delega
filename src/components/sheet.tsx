@@ -51,7 +51,7 @@ export function Sheet({
           <div className="auth-form-content">{children}</div>
           <div className="auth-form-footer">{footer}</div>
         </div>
-        <p className="auth-privacy"><span>⌑</span> Tus datos y tus conexiones permanecen bajo tu control.</p>
+        <p className="auth-privacy"><span>⌑</span> Tus datos y tus conexiones permanecen bajo tu control. <Link href="/privacidad">Privacidad</Link> · <Link href="/terminos">Términos</Link></p>
       </section>
     </main>
   )
