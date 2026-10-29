@@ -13,7 +13,7 @@ const steps = [
     number: "01",
     eyebrow: "PRIMERO, LA IA",
     title: "Conecta un proveedor de IA",
-    body: "En tu espacio, abre Integraciones → LLMs. Añade una clave de OpenAI, Anthropic o DeepSeek y elige el proveedor principal. Puedes empezar con una sola conexión.",
+    body: "En tu espacio, abre Integraciones → LLMs. Añade una clave de OpenAI, Anthropic, DeepSeek o Grok y elige el proveedor principal. Puedes empezar con una sola conexión.",
     tip: "El dictado por voz utiliza OpenAI.",
   },
   {

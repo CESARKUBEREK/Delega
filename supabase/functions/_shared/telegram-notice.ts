@@ -34,6 +34,7 @@ const TELEGRAM_APPROVABLE = new Set<PendingAction["tool"]>([
   "crm_note",
   "crm_task",
   "tokko_lead",
+  "buffer_post",
 ])
 
 export function approvableFromTelegram(tool: string): boolean {
@@ -98,6 +99,10 @@ export function proposalDetail(p: PendingAction): string {
       return `${p.subject}${p.due_date ? ` (vence ${p.due_date})` : ""}\n\n${clip(p.text, 1200)}`
     case "tokko_lead":
       return [p.name, p.email, p.phone].filter(Boolean).join(" · ") + (p.text ? `\n\n${clip(p.text, 1200)}` : "")
+    case "api_request":
+      return `${p.method} ${p.path}${p.query ? `?${clip(p.query, 300)}` : ""} en ${p.connection_name}${p.body ? `\n\n${clip(p.body, 1500)}` : ""}`
+    case "buffer_post":
+      return `En: ${p.channels.map((c) => `${c.name} (${c.service})`).join(", ")}\nCuándo: ${p.when_label}\n\n${clip(p.text, 1800)}`
   }
 }
 

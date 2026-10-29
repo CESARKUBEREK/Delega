@@ -33,7 +33,7 @@ export function RunPanel({
   if (!aiReady) {
     return (
       <p className="text-sm text-graphite">
-        Para ejecutar hace falta una IA conectada (OpenAI, Anthropic o DeepSeek).{" "}
+        Para ejecutar hace falta una IA conectada (OpenAI, Anthropic, DeepSeek o Grok).{" "}
         <Link href={`${base}/integraciones`} className="text-link underline underline-offset-4">
           Ir a Integraciones
         </Link>

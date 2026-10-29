@@ -1,5 +1,6 @@
-// Capa común para los proveedores de IA (BYOK): OpenAI (Responses API),
-// Anthropic (Messages API) y DeepSeek (Chat Completions, formato OpenAI).
+// Capa común para los proveedores de IA (BYOK): OpenAI y xAI/Grok (Responses
+// API, mismo formato), Anthropic (Messages API) y DeepSeek (Chat Completions,
+// formato OpenAI).
 //
 // - Conversación en un formato neutro (Msg). Cada adaptador la traduce al de su
 //   proveedor y guarda en `native` lo que devolvió, para reenviarlo tal cual en
@@ -8,19 +9,21 @@
 // - Errores normalizados en LlmError; una clave rechazada se marca como inválida.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 
-export type Provider = "openai" | "anthropic" | "deepseek"
-export const PROVIDERS: Provider[] = ["openai", "anthropic", "deepseek"]
-export const PROVIDER_LABEL: Record<Provider, string> = { openai: "OpenAI", anthropic: "Anthropic", deepseek: "DeepSeek" }
+export type Provider = "openai" | "anthropic" | "deepseek" | "xai"
+export const PROVIDERS: Provider[] = ["openai", "anthropic", "deepseek", "xai"]
+export const PROVIDER_LABEL: Record<Provider, string> = { openai: "OpenAI", anthropic: "Anthropic", deepseek: "DeepSeek", xai: "Grok (xAI)" }
 
 export const AI_MODELS: Record<Provider, string[]> = {
   openai: ["gpt-6.1-sol", "gpt-6-astra", "gpt-6-luna"],
   anthropic: ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5", "claude-fable-5-1"],
   deepseek: ["deepseek-flash", "deepseek-v4-pro"],
+  xai: ["grok-4.7"],
 }
 export const DEFAULT_MODELS: Record<Provider, string> = {
   openai: "gpt-6.1-sol",
   anthropic: "claude-sonnet-5-5",
   deepseek: "deepseek-flash",
+  xai: "grok-4.7",
 }
 
 export function isProvider(v: unknown): v is Provider {
@@ -62,7 +65,7 @@ export async function resolveAi(admin: SupabaseClient, workspaceId: string, pref
 }
 
 // Mensaje claro cuando no hay ninguna IA conectada.
-export const NO_AI_MESSAGE = "Conecta una IA (OpenAI, Anthropic o DeepSeek) en Integraciones."
+export const NO_AI_MESSAGE = "Conecta una IA (OpenAI, Anthropic, DeepSeek o Grok) en Integraciones."
 
 // ---------------------------------------------------------------------------
 // Formato neutro
@@ -114,10 +117,17 @@ async function post(url: string, headers: Record<string, string>, body: unknown,
 }
 
 // ---------------------------------------------------------------------------
-// OpenAI (Responses API)
+// OpenAI y xAI/Grok (Responses API, mismo formato)
 // ---------------------------------------------------------------------------
 type OaItem = { type: string; call_id?: string; name?: string; arguments?: string; content?: { type: string; text?: string; refusal?: string }[] }
 
+const RESPONSES_URL: Partial<Record<Provider, string>> = {
+  openai: "https://api.openai.com/v1/responses",
+  xai: "https://api.x.ai/v1/responses",
+}
+
+// Con store: false, los razonamientos que devuelve el modelo (cifrados) se
+// reenvían tal cual en la siguiente vuelta, dentro de `native`.
 async function openai(ai: Ai, r: Request): Promise<Completion> {
   const input: unknown[] = []
   for (const m of r.messages) {
@@ -130,7 +140,7 @@ async function openai(ai: Ai, r: Request): Promise<Completion> {
     }
   }
   const data = await post(
-    "https://api.openai.com/v1/responses",
+    RESPONSES_URL[ai.provider] ?? RESPONSES_URL.openai!,
     { Authorization: `Bearer ${ai.apiKey}` },
     {
       model: ai.model,
@@ -144,7 +154,7 @@ async function openai(ai: Ai, r: Request): Promise<Completion> {
       ...(r.schema ? { text: { format: { type: "json_schema", name: r.schema.name, schema: r.schema.schema, strict: true } } } : {}),
     },
     r.timeoutMs,
-    "openai",
+    ai.provider,
   )
   const output = (data.output ?? []) as OaItem[]
   const parts = output.filter((o) => o.type === "message").flatMap((o) => o.content ?? [])

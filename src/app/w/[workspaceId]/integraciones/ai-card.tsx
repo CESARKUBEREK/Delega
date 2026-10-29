@@ -30,6 +30,14 @@ const AI_HELP: Record<AiProvider, { description: string; steps: string[]; note: 
     ],
     note: "DeepSeek procesa los datos en servidores fuera de la UE: tenlo en cuenta con datos sensibles de clientes.",
   },
+  xai: {
+    description: "Modelos Grok, de xAI.",
+    steps: [
+      "Entra en console.x.ai con tu cuenta y abre «API Keys».",
+      "Crea una clave nueva para MarchaSolo y cópiala (empieza por xai-). Tu cuenta necesita créditos.",
+    ],
+    note: "MarchaSolo pide a xAI que no guarde las conversaciones (store: false). xAI procesa los datos en Estados Unidos.",
+  },
 }
 
 export async function AiCard({ workspaceId, isAdmin, provider }: { workspaceId: string; isAdmin: boolean; provider: AiProvider }) {

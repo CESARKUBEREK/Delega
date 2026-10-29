@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { connectGoogle } from "../run-actions"
-import { DisconnectInboxForm, HubSpotForm, TokkoForm, XubioForm } from "./inbox-client"
+import { BufferForm, DisconnectInboxForm, HubSpotForm, TokkoForm, XubioForm } from "./inbox-client"
 
 function Badge({ status, invalidLabel }: { status: string | null | undefined; invalidLabel: string }) {
   if (status === "active") return <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">Conectado</span>
@@ -231,6 +231,55 @@ export async function XubioCard({ workspaceId, isAdmin }: { workspaceId: string;
           </>
         ) : (
           <p className="text-sm text-graphite">Solo un administrador puede conectar Xubio.</p>
+        )}
+      </div>
+    </details>
+  )
+}
+
+export async function BufferCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
+  const supabase = await createClient()
+  const { data: integration } = await supabase
+    .from("integrations")
+    .select("account_email, status")
+    .eq("workspace_id", workspaceId)
+    .eq("provider", "buffer")
+    .maybeSingle()
+
+  return (
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
+        <div>
+          <h3 className="rotulo text-lg">Buffer</h3>
+          <p className="text-sm text-graphite">
+            Tus redes sociales (Instagram, Facebook, LinkedIn, X, TikTok…) a través de Buffer. MarchaSolo redacta publicaciones y las
+            añade a la cola o las programa; cada publicación espera tu aprobación.
+          </p>
+        </div>
+        <Badge status={integration?.status} invalidLabel="Clave rechazada" />
+      </summary>
+      <div className="flex flex-col gap-5 px-5 py-5">
+        {integration ? (
+          <p className="text-sm text-graphite">
+            <span className="font-medium text-ink">{integration.account_email}</span> conectado.
+          </p>
+        ) : null}
+        {isAdmin ? (
+          <>
+            <BufferForm workspaceId={workspaceId} replacing={Boolean(integration)} />
+            <details className="text-sm text-graphite" open={!integration}>
+              <summary className="cursor-pointer text-ink">Cómo consigo la clave</summary>
+              <ol className="mt-2 list-decimal pl-5">
+                <li>Entra en buffer.com con tu cuenta. Conecta allí tus redes sociales si aún no lo has hecho.</li>
+                <li>Abre «Settings» → «API» y crea una clave para MarchaSolo. Cópiala.</li>
+                <li>Pégala aquí. Da acceso a todos los canales de tu cuenta de Buffer. El plan gratuito de Buffer incluye la API.</li>
+              </ol>
+              <p className="mt-2">Por ahora, MarchaSolo publica solo texto: las imágenes y los vídeos se añaden desde Buffer.</p>
+            </details>
+            {integration ? <DisconnectInboxForm workspaceId={workspaceId} kind="buffer" /> : null}
+          </>
+        ) : (
+          <p className="text-sm text-graphite">Solo un administrador puede conectar Buffer.</p>
         )}
       </div>
     </details>

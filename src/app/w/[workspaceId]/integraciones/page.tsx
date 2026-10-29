@@ -7,7 +7,7 @@ import { getWorkspace } from "@/lib/workspace"
 import { DOC_MIMES, DriveCard, EXCEL_MIMES, FilesCard, SHEET_MIMES } from "./google-card"
 import { ImapCard, TelegramCard, WhatsAppCard } from "./inbox-cards"
 import { AiCard } from "./ai-card"
-import { CalendarCard, HubSpotCard, TokkoCard, XubioCard } from "./work-cards"
+import { BufferCard, CalendarCard, HubSpotCard, TokkoCard, XubioCard } from "./work-cards"
 import { ApiIntegrationCard } from "./api-integrations"
 
 export const metadata = { title: "Integraciones" }
@@ -16,6 +16,8 @@ const CATEGORIES = [
   { id: "llms", label: "LLMs" },
   { id: "drives", label: "Drives" },
   { id: "comunicaciones", label: "Comunicaciones" },
+  { id: "redes-sociales", label: "Redes sociales" },
+  { id: "telefono", label: "Atención telefónica" },
   { id: "calculos", label: "Cálculos" },
   { id: "textos", label: "Textos" },
   { id: "bases-de-datos", label: "Bases de datos" },
@@ -120,6 +122,14 @@ async function Integrations({
         <WhatsAppCard workspaceId={workspaceId} isAdmin={isAdmin} />
         <TelegramCard workspaceId={workspaceId} isAdmin={isAdmin} />
         <ComingSoon title="Outlook y Microsoft 365" description="Tu correo de Outlook o de Microsoft 365, con tu cuenta de Microsoft." />
+      </Category>
+
+      <Category id="redes-sociales" title="Redes sociales" description="Publicaciones en tus redes, redactadas por MarchaSolo y aprobadas por ti.">
+        <BufferCard workspaceId={workspaceId} isAdmin={isAdmin} />
+      </Category>
+
+      <Category id="telefono" title="Atención telefónica" description="Un agente de voz que atiende las llamadas de tu negocio.">
+        <ComingSoon title="Grok Voice" description="Atiende llamadas con la voz de Grok (xAI): responde dudas, toma datos y deja la cita o el aviso en MarchaSolo." />
       </Category>
 
       <Category id="calculos" title="Cálculos" description="Planillas que las automatizaciones leen y actualizan.">

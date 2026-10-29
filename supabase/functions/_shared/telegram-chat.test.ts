@@ -26,6 +26,7 @@ const SAMPLES: PendingAction[] = [
   { call_id: "call_l", tool: "crm_note", object: "contacts", id: "9", label: "Ana", text: "nota" },
   { call_id: "call_m", tool: "crm_task", object: "contacts", id: "9", label: "Ana", subject: "Llamar", text: "", due_date: "2026-10-30" },
   { call_id: "call_n", tool: "tokko_lead", name: "Eva", email: "eva@x.es", phone: "", text: "Me interesa", property_ids: [1] },
+  { call_id: "call_o", tool: "buffer_post", channels: [{ id: "c1", name: "Inmobiliaria Sur", service: "instagram" }], text: "Nuevo piso en venta", due_at: null, when_label: "A la cola del canal" },
 ]
 
 Deno.test("cada acción tiene detalle y botones dentro del límite de Telegram", async () => {
