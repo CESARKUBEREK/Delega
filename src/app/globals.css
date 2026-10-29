@@ -588,3 +588,58 @@ button.bg-stroke:disabled { color: #fff; }
   .today-hero-pending strong { font-size: 22px; line-height: 1.1; }
   .today-hero-pending span { font-size: 9px; }
 }
+
+ 
+/* Integraciones y automatizaciones: coral visible, jerarquía y estados claros. */
+.integration-page-intro, .automation-page-intro {
+  position: relative; overflow: hidden; padding: clamp(20px, 3vw, 30px); border: 1px solid #f3d3cd; border-left: 5px solid #e85a45; border-radius: 18px;
+  background: radial-gradient(ellipse at 100% 0%, rgb(232 90 69 / 12%), transparent 42%), linear-gradient(105deg, #fdeeeb, #fff 74%);
+  box-shadow: 0 12px 30px rgb(23 35 62 / 5%);
+}
+.integration-page-intro .app-eyebrow, .automation-page-intro .app-eyebrow { margin-bottom: 8px; color: #b93a27; }
+.integration-page-intro h1.rotulo, .automation-page-intro h1.rotulo { margin: 0; color: #17233e; font-size: clamp(30px, 3.4vw, 38px); }
+.integration-page-intro h1.rotulo::after, .automation-page-intro h1.rotulo::after { width: 54px; height: 5px; margin-top: 12px; }
+.integration-page-intro > p:last-child, .automation-page-intro > p:last-child { margin-top: 12px; color: #4b5872; line-height: 1.65; }
+.integration-category-nav { padding: 14px; border: 1px solid #f1d5d0; border-radius: 16px; background: linear-gradient(120deg, #fff7f5, #fff); box-shadow: 0 8px 22px rgb(23 35 62 / 4%); }
+.integration-category-nav-label { display: block; margin: 0 0 10px 3px; color: #b93a27; font-size: 9px; font-weight: 800; letter-spacing: .15em; }
+.integration-category-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.integration-category-link { display: inline-flex; min-height: 38px; align-items: center; gap: 8px; padding: 5px 11px 5px 6px; border: 1px solid #f1d0c9; border-radius: 999px; background: #fff; color: #17233e; font-size: 12px; font-weight: 650; text-decoration: none; box-shadow: 0 2px 5px rgb(23 35 62 / 3%); transition: border-color .16s ease, background-color .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease; }
+.integration-category-index { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 50%; background: #fdeeeb; color: #b93a27; font-size: 9px; font-weight: 800; }
+.integration-category-link:hover { transform: translateY(-1px); border-color: #b93a27; background: #b93a27; color: #fff; box-shadow: 0 6px 15px rgb(185 58 39 / 18%); }
+.integration-category-link:hover .integration-category-index { background: rgb(255 255 255 / 18%); color: #fff; }
+.integration-category-link:focus-visible { outline: 3px solid rgb(232 90 69 / 38%); outline-offset: 2px; }
+.integration-category { scroll-margin-top: 7.5rem; }
+.integration-category-heading { position: relative; display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; padding: 13px 16px 13px 20px; border: 1px solid #f2d8d3; border-left: 4px solid #e85a45; border-radius: 12px; background: linear-gradient(100deg, #fff2ef, #fff 78%); transition: box-shadow .2s ease, background-color .2s ease; }
+.integration-category-heading h2 { margin: 0; color: #17233e; font-size: 19px; }
+.integration-category-heading p { margin: 0; color: #4b5872; font-size: 12px; line-height: 1.5; }
+.integration-category:target .integration-category-heading { border-color: #e85a45; border-left-width: 6px; background: linear-gradient(100deg, #fdeeeb, #fff 90%); box-shadow: 0 0 0 4px rgb(232 90 69 / 12%), 0 12px 26px rgb(23 35 62 / 6%); }
+
+.automation-page-intro { border-left-color: #b93a27; }
+.automation-empty-state { position: relative; overflow: hidden; padding: 22px 24px 22px 27px; border: 1px solid #f1d5d0; border-left: 5px solid #e85a45; border-radius: 16px; background: linear-gradient(110deg, #fff5f2, #fff 70%); box-shadow: 0 10px 26px rgb(23 35 62 / 5%); }
+.automation-empty-state > p:first-child { font-size: 16px; font-weight: 700; }
+.automation-empty-link { color: #a93222; text-decoration-color: #e85a45; text-underline-offset: 4px; }
+.automation-empty-link:hover { color: #762719; text-decoration-thickness: 2px; }
+.automation-action-primary, .automation-action-secondary { border-radius: 11px; text-decoration: none; transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease; }
+.automation-action-primary { background: #b93a27; color: #fff; box-shadow: 0 8px 20px rgb(185 58 39 / 20%); }
+.automation-action-primary:hover { transform: translateY(-1px); background: #962e1f; box-shadow: 0 11px 25px rgb(185 58 39 / 26%); }
+.automation-action-secondary { border: 1px solid #efc6be; background: #fdeeeb; color: #8b3023; }
+.automation-action-secondary:hover { transform: translateY(-1px); border-color: #e85a45; background: #fbdcd5; }
+.automation-list { overflow: hidden; border-color: #ead8d4; border-radius: 16px; background: #fff; box-shadow: 0 12px 30px rgb(23 35 62 / 5%); }
+.automation-row { position: relative; min-height: 74px; padding-left: 24px; background: #fff; text-decoration: none; transition: background-color .16s ease; }
+.automation-row::before { position: absolute; top: 0; bottom: 0; left: 0; width: 4px; background: #e85a45; content: ""; transition: width .16s ease; }
+.automation-row:hover { background: #fff7f5; }
+.automation-row:hover::before { width: 6px; }
+.automation-row-status { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 4px; padding: 3px 9px; border: 1px solid #f1d0c9; border-radius: 999px; background: #fff5f2; color: #8b3023; font-size: 11px; font-weight: 700; }
+.automation-row-status::before { width: 6px; height: 6px; border-radius: 50%; background: #e85a45; content: ""; }
+@media (max-width: 700px) {
+  .integration-category-links { flex-wrap: nowrap; overflow-x: auto; margin: 0 -2px; padding: 0 2px 6px; scrollbar-width: thin; }
+  .integration-category-link { flex: 0 0 auto; }
+  .integration-category-heading { padding: 12px 13px 12px 16px; }
+  .integration-category-heading h2 { font-size: 17px; }
+  .integration-category-heading p { font-size: 11px; }
+  .automation-empty-state { padding: 18px 17px 18px 20px; }
+  .automation-row { min-height: 82px; padding-left: 17px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .integration-category-link, .integration-category-heading, .automation-action-primary, .automation-action-secondary, .automation-row, .automation-row::before { transition: none; }
+}
