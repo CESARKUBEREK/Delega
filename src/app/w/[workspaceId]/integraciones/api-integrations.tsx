@@ -43,7 +43,7 @@ export function ApiIntegrationCard({
   const badge = active ? "Conectado" : connection?.status === "invalid" ? "Revisar conexión" : "Sin conectar"
 
   return (
-    <details name="integrations" className="integration-accordion border border-rule bg-sheet" open={!active}>
+    <details name="integrations" className="integration-accordion border border-rule bg-sheet" defaultOpen={!active}>
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">{title}</h3>
