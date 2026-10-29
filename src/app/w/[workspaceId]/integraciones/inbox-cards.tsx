@@ -197,7 +197,7 @@ export async function ImapCard({ workspaceId, isAdmin }: { workspaceId: string; 
         <div>
           <h3 className="rotulo text-lg">Correo IMAP/SMTP</h3>
           <p className="text-sm text-graphite">
-            El correo de tu dominio, de tu hosting (OVH, IONOS, Hostinger…) o de Gmail. Llega a la bandeja y puedes responder desde Marcha Solo, siempre
+            El correo de tu dominio, de tu hosting (OVH, IONOS, Hostinger…) o de Gmail. Llega a la bandeja y puedes responder desde MarchaSolo, siempre
             revisando antes.
           </p>
         </div>
@@ -236,11 +236,11 @@ export async function ImapCard({ workspaceId, isAdmin }: { workspaceId: string; 
               }
             />
             <details className="text-sm text-graphite">
-              <summary className="cursor-pointer text-ink">Qué hace Marcha Solo con tu correo</summary>
+              <summary className="cursor-pointer text-ink">Qué hace MarchaSolo con tu correo</summary>
               <ul className="mt-2 list-disc pl-5">
                 <li>Lee la bandeja de entrada (la primera vez, los 400 correos más recientes de los últimos 30 días) y la ordena. No borra, no mueve ni marca nada como leído.</li>
                 <li>Envía solo lo que apruebes, por SMTP con conexión cifrada (puerto 465), y guarda una copia en tu carpeta de enviados.</li>
-                <li>Si tu proveedor solo admite el puerto 587, Marcha Solo no puede enviar por él: la comprobación te lo dirá.</li>
+                <li>Si tu proveedor solo admite el puerto 587, MarchaSolo no puede enviar por él: la comprobación te lo dirá.</li>
                 <li>Outlook y Microsoft 365 no admiten este método: tendrán su propia conexión.</li>
               </ul>
             </details>

@@ -104,7 +104,7 @@ function SupabaseForm({ workspaceId }: { workspaceId: string }) {
         spellCheck={false}
         required
         maxLength={1000}
-        hint="No uses service_role. Marcha Solo opera como anon y tu RLS decide qué filas y acciones permite."
+        hint="No uses service_role. MarchaSolo opera como anon y tu RLS decide qué filas y acciones permite."
       />
       <p className="border-l-2 border-coral bg-alert-bg px-3 py-2 text-xs text-ink">
         Para que funcione, habilita Data API para las tablas y configura políticas RLS para el rol anon. Las escrituras pedirán aprobación y también deben estar permitidas por RLS.
@@ -158,7 +158,7 @@ function CustomApiForm({
       ) : authType === "bearer" ? (
         <Field id={`custom-api-${slot}-token`} name="token" type="password" label="Bearer token" autoComplete="off" required maxLength={1500} />
       ) : null}
-      <p className="text-xs text-graphite">Solo se permiten direcciones HTTPS públicas. Marcha Solo limita cada petición a esta URL base y bloquea redirecciones.</p>
+      <p className="text-xs text-graphite">Solo se permiten direcciones HTTPS públicas. MarchaSolo limita cada petición a esta URL base y bloquea redirecciones.</p>
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-60"><SubmitButton pendingLabel="Guardando…">Guardar conexión API</SubmitButton></div>
     </form>
@@ -169,7 +169,7 @@ function DisconnectForm({ workspaceId, provider, title }: { workspaceId: string;
   const [state, action, pending] = useActionState<ApiConnectionState, FormData>(disconnectApiConnection, {})
   return (
     <form action={action} className="flex flex-col gap-2 border-t border-rule pt-4" onSubmit={(event) => {
-      if (!window.confirm(`¿Desconectar ${title}? Se borrará el secreto guardado en Marcha Solo.`)) event.preventDefault()
+      if (!window.confirm(`¿Desconectar ${title}? Se borrará el secreto guardado en MarchaSolo.`)) event.preventDefault()
     }}>
       <input type="hidden" name="workspace_id" value={workspaceId} />
       <input type="hidden" name="provider" value={provider} />

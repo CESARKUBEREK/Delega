@@ -1,37 +1,38 @@
-// Marca de Marcha Solo: un robot de cuerda (azul) con su llave (coral) y el
-// nombre en Montserrat. Paleta del logo: azul #2457D6, marino #17233E,
-// coral #E85A45, fondo #F7F8FC y blanco.
+// Marca de MarchaSolo: cuadrado turquesa con la flecha en marcha (marino) y
+// el nombre en Outfit, «Marcha» en el color del texto y «Solo» en turquesa.
+// Paleta del logo: marino #0B1F3B, turquesa #00C2A8, gris claro #F3F6FA y blanco.
 
 export function LogoMark({ size = 32, className }: { size?: number; id?: string; className?: string }) {
-  // Proporción del dibujo: 372 × 288.
-  const width = Math.round((size * 376) / 288)
   return (
-    <svg width={width} height={size} viewBox="56 56 376 288" aria-hidden="true" className={className}>
-      <rect x="189" y="62" width="34" height="22" rx="8" fill="#2457D6" />
-      <rect x="198" y="80" width="16" height="30" fill="#2457D6" />
-      <rect x="63" y="186" width="34" height="65" rx="10" fill="#2457D6" />
-      <rect x="315" y="186" width="34" height="65" rx="10" fill="#2457D6" />
-      <rect x="84" y="103" width="244" height="232" rx="56" fill="#2457D6" />
-      <circle cx="152" cy="221" r="20" fill="none" stroke="#FFFFFF" strokeWidth="16" />
-      <circle cx="260" cy="221" r="20" fill="none" stroke="#FFFFFF" strokeWidth="16" />
-      <rect x="340" y="209" width="58" height="19" fill="#E85A45" />
-      <circle cx="398.5" cy="197" r="16" fill="none" stroke="#E85A45" strokeWidth="11" />
-      <circle cx="398.5" cy="241" r="16" fill="none" stroke="#E85A45" strokeWidth="11" />
+    <svg width={size} height={size} viewBox="0 0 264 264" aria-hidden="true" className={className}>
+      <rect width="264" height="264" rx="58" fill="#00C2A8" />
+      <g fill="none" stroke="#0B1F3B" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M116 76 L180 132 L116 188" strokeWidth="31" />
+        <path d="M50 99 H80 M43 132 H80 M50 165 H80" strokeWidth="22" />
+      </g>
     </svg>
   )
 }
 
-// Logotipo completo: el robot y «Marcha Solo» en dos líneas, como el logo.
-// size es la altura del robot; el nombre toma el color del texto (currentColor).
+// Logotipo completo: icono y «MarchaSolo» en una línea, como el logo.
+// size es la altura del icono. «Marcha» toma el color del texto (blanco sobre
+// marino, marino sobre claro); «Solo» va siempre en turquesa.
+// tagline añade «Tu negocio, en automático.» debajo.
 export function Logo({ size = 28, tagline = false }: { size?: number; tagline?: boolean; id?: string }) {
   return (
-    <span className="brand-logo" style={{ gap: Math.round(size * 0.28) }} data-tagline={tagline ? "included" : undefined}>
+    <span className="brand-logo" style={{ gap: Math.round(size * 0.3) }}>
       <LogoMark size={size} />
-      <span className="brand-wordmark" aria-hidden="true" style={{ fontSize: Math.round(size * 0.47) }}>
-        <span>Marcha</span>
-        <span>Solo</span>
+      <span className="brand-text" aria-hidden="true">
+        <span className="brand-wordmark" style={{ fontSize: Math.round(size * 0.72) }}>
+          Marcha<span className="brand-wordmark-accent">Solo</span>
+        </span>
+        {tagline ? (
+          <span className="brand-tagline" style={{ fontSize: Math.max(11, Math.round(size * 0.3)) }}>
+            Tu negocio, en automático.
+          </span>
+        ) : null}
       </span>
-      <span className="sr-only">Marcha Solo</span>
+      <span className="sr-only">MarchaSolo</span>
     </span>
   )
 }

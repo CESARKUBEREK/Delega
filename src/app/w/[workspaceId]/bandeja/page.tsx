@@ -25,7 +25,7 @@ export default function InboxPage({ params, searchParams }: PageProps<"/w/[works
         <h1 className="rotulo text-2xl">Bandeja</h1>
         <p className="mt-1 max-w-prose text-graphite">
           Tu correo, tus WhatsApp y los mensajes de tu bot de Telegram, clasificados por la IA. Puedes corregir cualquier
-          clasificación; Marcha Solo no envía nada sin que lo revises.
+          clasificación; MarchaSolo no envía nada sin que lo revises.
         </p>
       </div>
       <Suspense fallback={<div className="h-64 border border-rule bg-sheet" aria-busy="true" />}>

@@ -6,7 +6,7 @@ export function MarketingLayout({ children }: { children: ReactNode }) {
   return (
     <div className="marketing-site">
       <header className="marketing-header">
-        <Link href="/para-que-sirve" aria-label="Marcha Solo, inicio" className="marketing-brand">
+        <Link href="/para-que-sirve" aria-label="MarchaSolo, inicio" className="marketing-brand">
           <Logo size={32} />
         </Link>
         <nav aria-label="Navegación principal" className="marketing-nav">
@@ -14,11 +14,11 @@ export function MarketingLayout({ children }: { children: ReactNode }) {
           <Link href="/como-empezar">Cómo empezar</Link>
         </nav>
         <Link href="/login" className="marketing-login">Entrar</Link>
-        <Link href="/signup" className="marketing-header-cta">Probar Marcha Solo <span aria-hidden="true">→</span></Link>
+        <Link href="/signup" className="marketing-header-cta">Probar MarchaSolo <span aria-hidden="true">→</span></Link>
       </header>
       {children}
       <footer className="marketing-footer">
-        <Link href="/para-que-sirve" aria-label="Marcha Solo, inicio"><Logo size={26} /></Link>
+        <Link href="/para-que-sirve" aria-label="MarchaSolo, inicio"><Logo size={26} /></Link>
         <nav aria-label="Información">
           <Link href="/para-que-sirve">Qué puedes hacer</Link>
           <Link href="/como-empezar">Cómo empezar</Link>
