@@ -1,3 +1,4 @@
+import Link from "next/link"
 import type { ReactNode } from "react"
 import { Logo, LogoMark } from "./logo"
 
@@ -41,6 +42,10 @@ export function Sheet({
       <section className="auth-form-side">
         <div className="auth-form-brand"><Logo size={34} tagline id="orkesta-auth-mobile" /></div>
         <div className="auth-form-card">
+          <nav className="auth-info-links" aria-label="Conoce Marcha Solo">
+            <Link href="/para-que-sirve">Qué puedes hacer</Link>
+            <Link href="/como-empezar">Cómo empezar</Link>
+          </nav>
           <div className="auth-form-kicker">{sheetName.toUpperCase()}</div>
           <h1 className="rotulo text-[1.8rem] text-ink">{title}</h1>
           <div className="auth-form-content">{children}</div>
