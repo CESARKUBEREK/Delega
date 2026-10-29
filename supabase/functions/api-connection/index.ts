@@ -1,6 +1,6 @@
 // Guarda las credenciales de Supabase y de las dos APIs personalizadas en Vault.
 // Solo owners/admins pueden conectarlas o desconectarlas.
-import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
+import { authenticate, fail, isUuid, json, membershipRole, type AuthContext } from "../_shared/core.ts"
 
 const PROVIDERS = new Set(["supabase", "custom_1", "custom_2"])
 const HEADER_RE = /^[!#$%&'*+.^_`|~0-9A-Za-z-]{1,80}$/
@@ -26,7 +26,7 @@ function text(value: unknown, max: number): string {
   return typeof value === "string" ? value.trim().slice(0, max) : ""
 }
 
-async function save(ctx: Awaited<ReturnType<typeof authenticate>> & object, body: Record<string, unknown>) {
+async function save(ctx: AuthContext, body: Record<string, unknown>) {
   // Type narrowing is handled at the call site; this guard keeps secrets in Vault only.
   const workspaceId = body.workspace_id
   const provider = body.provider
