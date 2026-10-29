@@ -33,7 +33,8 @@ Deno.serve(async (req) => {
     })
     if (error) return fail(500, "save_failed", "No se pudo crear el acceso.")
     await admin.rpc("integration_set_config", { p_workspace_id: workspaceId, p_provider: VOICE_PROVIDER, p_config: readVoiceConfig(current?.config) })
-    const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/voice-mcp?w=${workspaceId}`
+    // URL completa con la clave: es la que se pega en xAI (trátala como una contraseña).
+    const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/voice-mcp?w=${workspaceId}&k=${token}`
     return json({ ok: true, url, token })
   }
 

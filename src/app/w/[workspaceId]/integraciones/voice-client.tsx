@@ -52,14 +52,24 @@ export function VoiceAccess({ workspaceId, url, connected }: { workspaceId: stri
 
   return (
     <div className="flex flex-col gap-3">
-      <CopyField label="URL del servidor MCP" value={result?.url ?? url} />
       {result ? (
         <>
-          <CopyField label="Clave (campo Authorization o token del servidor MCP)" value={result.token} secret />
+          <CopyField label="URL del servidor MCP (con la clave incluida): pégala en xAI" value={result.url} secret />
           <p role="status" className="border-l-2 border-ok bg-ok-bg px-3 py-2 text-sm text-ok">
-            Copia la clave ahora: MarchaSolo la guarda cifrada y no volverá a mostrarla.
+            Cópiala ahora: lleva la clave dentro y MarchaSolo no volverá a mostrarla. Trátala como una contraseña.
           </p>
+          <details className="text-sm text-graphite">
+            <summary className="cursor-pointer text-ink">Si tu cliente MCP pide la clave aparte</summary>
+            <div className="mt-2 flex flex-col gap-2">
+              <CopyField label="URL sin clave" value={url} />
+              <CopyField label="Clave (cabecera Authorization)" value={result.token} secret />
+            </div>
+          </details>
         </>
+      ) : connected ? (
+        <p className="text-sm text-graphite">
+          La URL con la clave solo se muestra al crearla. Si no la guardaste, crea una clave nueva y cámbiala en xAI.
+        </p>
       ) : null}
       {error ? <FormMessage error={error} /> : null}
       <button
