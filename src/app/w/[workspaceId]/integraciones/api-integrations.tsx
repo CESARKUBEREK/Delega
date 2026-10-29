@@ -33,6 +33,7 @@ export function ApiIntegrationCard({
   isAdmin: boolean
 }) {
   const active = connection?.status === "active"
+  const [open, setOpen] = useState(!active)
   const config = configOf(connection?.config)
   const supabase = provider === "supabase"
   const slot = provider === "custom_1" ? "1" : "2"
@@ -43,7 +44,7 @@ export function ApiIntegrationCard({
   const badge = active ? "Conectado" : connection?.status === "invalid" ? "Revisar conexión" : "Sin conectar"
 
   return (
-    <details name="integrations" className="integration-accordion border border-rule bg-sheet" defaultOpen={!active}>
+    <details name="integrations" className="integration-accordion border border-rule bg-sheet" open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">{title}</h3>
