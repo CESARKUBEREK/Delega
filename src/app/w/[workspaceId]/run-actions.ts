@@ -244,6 +244,26 @@ export async function disconnectTokko(_prev: ActionResult | null, formData: Form
   return { ok: true }
 }
 
+export async function saveBuffer(_prev: KeyState, formData: FormData): Promise<KeyState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  const key = String(formData.get("key") ?? "").trim()
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  if (!/^[A-Za-z0-9._-]{20,400}$/.test(key)) return { error: "La clave no tiene el formato esperado." }
+  const result = await callEdgeFunction<{ channels: number }>("buffer-connection", { action: "save", workspace_id: workspaceId, key }, 40_000)
+  if (result.error) return { error: result.error.message }
+  refresh()
+  return { message: `Buffer conectado: ${result.data.channels} ${result.data.channels === 1 ? "canal" : "canales"}.` }
+}
+
+export async function disconnectBuffer(_prev: ActionResult | null, formData: FormData): Promise<ActionResult | null> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const result = await callEdgeFunction("buffer-connection", { action: "disconnect", workspace_id: workspaceId }, 20_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  refresh()
+  return { ok: true }
+}
+
 export async function saveXubio(_prev: KeyState, formData: FormData): Promise<KeyState> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
   const clientId = String(formData.get("clientId") ?? "").trim()

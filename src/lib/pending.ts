@@ -69,6 +69,22 @@ export function asPending(value: Json | null): Pending | null {
         textCaption: "Consulta",
       }
     }
+    case "buffer_post": {
+      const channels = Array.isArray(v.channels)
+        ? v.channels.map((c) => `${t(obj(c).name)}${t(obj(c).service) ? ` (${t(obj(c).service)})` : ""}`).join(", ")
+        : ""
+      return {
+        tool: "generic",
+        description: v.due_at ? "Programar esta publicación en tus redes sociales con Buffer." : "Añadir esta publicación a la cola de tus redes sociales en Buffer.",
+        verb: "Aprobar y publicar",
+        fields: [
+          { label: "Canales", value: channels },
+          { label: "Cuándo", value: t(v.when_label) },
+        ],
+        text: t(v.text),
+        textCaption: "Publicación",
+      }
+    }
     case "save_file": {
       const ext = v.format === "documento" ? "documento de Google" : v.format === "csv" ? "CSV" : "texto"
       return {

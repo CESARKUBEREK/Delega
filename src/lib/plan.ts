@@ -84,11 +84,12 @@ export const CONNECTION_LABEL: Record<string, string> = {
   crm: "HubSpot",
   properties: "Tokko",
   accounting: "Xubio",
+  social: "Buffer",
   none: "",
 }
 
 // Conexiones que ya funcionan en esta versión.
-export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet", "documents", "drive", "email", "telegram", "whatsapp", "calendar", "crm", "properties", "accounting"])
+export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet", "documents", "drive", "email", "telegram", "whatsapp", "calendar", "crm", "properties", "accounting", "social"])
 
 // Tipo legible de un archivo elegido en Drive.
 export function fileKindLabel(mime: string | null): string {
@@ -128,7 +129,7 @@ export const FLOW_STATUS_LABEL: Record<string, string> = {
   paused: "En pausa",
 }
 
-export type AiProvider = "openai" | "anthropic" | "deepseek"
+export type AiProvider = "openai" | "anthropic" | "deepseek" | "xai"
 export type AiModel = { id: string; label: string; hint: string }
 
 // Proveedores de IA (BYOK) y sus modelos. Debe coincidir con
@@ -166,6 +167,13 @@ export const AI_PROVIDERS: { id: AiProvider; label: string; keyPrefix: string; c
       { id: "deepseek-flash", label: "DeepSeek V4.1 Flash", hint: "Rápido y muy económico. Recomendado." },
       { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro", hint: "Más capaz." },
     ],
+  },
+  {
+    id: "xai",
+    label: "Grok (xAI)",
+    keyPrefix: "xai-",
+    console: "console.x.ai → API Keys",
+    models: [{ id: "grok-4.7", label: "Grok 4.7", hint: "El modelo más capaz de xAI. Recomendado." }],
   },
 ]
 

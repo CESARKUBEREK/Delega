@@ -1,5 +1,5 @@
 // ai-connection: conecta, cambia de modelo, marca como principal o desconecta
-// la clave de un proveedor de IA (OpenAI, Anthropic o DeepSeek) de un espacio
+// la clave de un proveedor de IA (OpenAI, Anthropic, DeepSeek o Grok) de un espacio
 // (BYOK). Solo owners y admins. La clave se valida contra el proveedor y se
 // guarda cifrada en Vault; nunca se devuelve ni se registra.
 import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
@@ -9,17 +9,20 @@ const KEY_RE: Record<Provider, RegExp> = {
   openai: /^sk-[A-Za-z0-9_-]{20,300}$/,
   anthropic: /^sk-ant-[A-Za-z0-9_-]{20,300}$/,
   deepseek: /^sk-[A-Za-z0-9_-]{20,300}$/,
+  xai: /^xai-[A-Za-z0-9_-]{20,300}$/,
 }
 const KEY_HINT: Record<Provider, string> = {
   openai: "La clave no tiene el formato de una clave de OpenAI (empieza por sk-).",
   anthropic: "La clave no tiene el formato de una clave de Anthropic (empieza por sk-ant-).",
   deepseek: "La clave no tiene el formato de una clave de DeepSeek (empieza por sk-).",
+  xai: "La clave no tiene el formato de una clave de xAI (empieza por xai-).",
 }
 
 // Validación con una llamada sin coste: listar los modelos disponibles.
 function checkRequest(provider: Provider, apiKey: string): [string, Record<string, string>] {
   if (provider === "anthropic") return ["https://api.anthropic.com/v1/models", { "x-api-key": apiKey, "anthropic-version": "2023-06-01" }]
   if (provider === "deepseek") return ["https://api.deepseek.com/models", { Authorization: `Bearer ${apiKey}` }]
+  if (provider === "xai") return ["https://api.x.ai/v1/models", { Authorization: `Bearer ${apiKey}` }]
   return ["https://api.openai.com/v1/models", { Authorization: `Bearer ${apiKey}` }]
 }
 

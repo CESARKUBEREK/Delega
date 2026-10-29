@@ -169,6 +169,7 @@ function iconFor(step: PlanStep): IconName {
       return "calendar"
     case "telegram":
     case "whatsapp":
+    case "social":
       return "chat"
     case "crm":
     case "properties":

@@ -1,5 +1,5 @@
 // assistant: convierte una petición en lenguaje natural en un plan de flujo,
-// con la IA principal del espacio (OpenAI, Anthropic o DeepSeek).
+// con la IA principal del espacio (OpenAI, Anthropic, DeepSeek o Grok).
 // No ejecuta nada: el usuario decide si lo ejecuta ahora (run-flow,
 // start_from_message) o lo guarda como automatización. Usa la clave BYOK del espacio (descifrada solo aquí),
 // guarda la conversación, el plan y el consumo, y pide a OpenAI que no
@@ -34,7 +34,8 @@ Reglas:
   hosting o Gmail, conectado por IMAP/SMTP; enviar correos a contactos autorizados; la bandeja clasifica los recibidos), Telegram (telegram: responder por el bot a quien
   escribió), WhatsApp (whatsapp: leer los mensajes de clientes y responder a quien escribió), Tokko Broker (properties: buscar propiedades y emprendimientos de la inmobiliaria y registrar consultas
   de interesados en su CRM) y Xubio (accounting: consultar clientes, proveedores, productos y facturas de venta y de
-  compra; solo lectura, no emite facturas). Bases de datos aún no: si el flujo las necesita, inclúyelas y dilo en "reply" como pendiente.
+  compra; solo lectura, no emite facturas) y Buffer (social: publicar en las redes sociales del usuario —Instagram,
+  Facebook, LinkedIn, X…— a la cola del canal o en una fecha y hora; solo texto, con aprobación). Bases de datos aún no: si el flujo las necesita, inclúyelas y dilo en "reply" como pendiente.
 - Si el flujo debe arrancar cuando llegue un mensaje al bot de Telegram, usa el disparador "telegram_message"; si
   debe arrancar cuando un cliente escriba por WhatsApp, usa "whatsapp_message" (WhatsApp, conectado a través de
   Twilio: contestar a quien escribió, con aprobación, solo en las 24 h siguientes a su mensaje; connection "whatsapp").
@@ -200,12 +201,14 @@ const STEP_INSTRUCTIONS = `Eres el asistente del editor de automatizaciones de M
 UN paso de una automatización y tú lo conviertes en un paso del plan.
 
 - kind: read (consultar datos), compare (buscar o comparar), transform (preparar datos), generate (redactar),
-  condition (seguir solo si se cumple algo), write (escribir o crear algo: filas, documentos, eventos, CRM, Tokko),
+  condition (seguir solo si se cumple algo), write (escribir o crear algo: filas, documentos, eventos, CRM, Tokko,
+  publicaciones en redes sociales),
   notify (avisar al propio usuario con connection "none", o enviar a otras personas con "email" o "telegram").
 - connection: la aplicación que usa ese paso, o "none". spreadsheet = planillas (Google Sheets o Excel en Drive),
   documents = Google Docs, drive = archivos o carpetas de Drive, email = correo, telegram, whatsapp = responder por
   WhatsApp a quien escribió, calendar = Google Calendar,
-  crm = HubSpot, properties = Tokko Broker, accounting = Xubio (solo lectura).
+  crm = HubSpot, properties = Tokko Broker, accounting = Xubio (solo lectura), social = Buffer (publicar en redes
+  sociales; es un paso write).
 - title: corto, en imperativo («Leer la planilla de cobros»). description: qué hacer exactamente, con los datos que
   dio el usuario (nombres, columnas, plazos, condiciones), en una o dos frases. En español.
 - Si pide escribir en Xubio, usa read (Xubio es solo lectura) y dilo en la descripción.

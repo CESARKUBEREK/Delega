@@ -61,7 +61,7 @@ jobs:
           supabase functions deploy \
             ai-connection assistant run-flow voice-transcribe push api-connection \
             google-connection hubspot-connection telegram-connection imap-connection \
-            inbox-sync inbox-reply inbox-classify tokko-connection xubio-connection whatsapp-connection \
+            inbox-sync inbox-reply inbox-classify tokko-connection xubio-connection whatsapp-connection buffer-connection \
             --project-ref "$PROJECT_REF" --use-api 2>&1 | tee /tmp/deploy1.txt || {
               echo "::error::$(tail -n 8 /tmp/deploy1.txt | tr '\n' ' ' | cut -c1-900)"
               exit 1
