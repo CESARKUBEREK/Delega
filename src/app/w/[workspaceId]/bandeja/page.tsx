@@ -19,8 +19,9 @@ const URGENCY_STYLE: Record<string, string> = {
 
 export default function InboxPage({ params, searchParams }: PageProps<"/w/[workspaceId]/bandeja">) {
   return (
-    <div className="flex flex-col gap-6">
-      <div>
+    <div className="inbox-page flex flex-col gap-6">
+      <div className="inbox-page-intro">
+        <p className="app-eyebrow">MENSAJES Y SEGUIMIENTO</p>
         <h1 className="rotulo text-2xl">Bandeja</h1>
         <p className="mt-1 max-w-prose text-graphite">
           Tu correo, tus WhatsApp y los mensajes de tu bot de Telegram, clasificados por la IA. Puedes corregir cualquier
@@ -103,8 +104,7 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
     const s = next.toString()
     return s ? `${base}?${s}` : base
   }
-  const chip = (active: boolean) =>
-    `border px-2.5 py-1 text-xs ${active ? "border-ink bg-ink text-sheet" : "border-rule text-ink hover:bg-paper"}`
+  const chip = (active: boolean) => "inbox-filter-chip" + (active ? " is-active" : "")
 
   return (
     <div className="flex flex-col gap-4">
@@ -148,31 +148,31 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
         </button>
       </form>
 
-      <nav aria-label="Filtros" className="flex flex-wrap gap-2">
+      <nav aria-label="Filtros de la bandeja" className="inbox-filters">
         {(["email", "whatsapp", "telegram"] as const).map((c) => (
-          <Link key={c} href={filterHref({ ch: ch === c ? "" : c })} className={chip(ch === c)}>
+          <Link key={c} href={filterHref({ ch: ch === c ? "" : c })} className={chip(ch === c)} aria-current={ch === c ? "page" : undefined}>
             {CHANNEL_LABEL[c]}
           </Link>
         ))}
         <span className="mx-1 w-px bg-rule" aria-hidden="true" />
-        <Link href={filterHref({ cat: "" })} className={chip(!cat)}>
+        <Link href={filterHref({ cat: "" })} className={chip(!cat)} aria-current={!cat ? "page" : undefined}>
           Todas
         </Link>
         {categories.map((c) => (
-          <Link key={c} href={filterHref({ cat: c })} className={chip(cat === c)}>
+          <Link key={c} href={filterHref({ cat: c })} className={chip(cat === c)} aria-current={cat === c ? "page" : undefined}>
             {c}
           </Link>
         ))}
         <span className="mx-1 w-px bg-rule" aria-hidden="true" />
         {(["alta", "media", "baja"] as const).map((u) => (
-          <Link key={u} href={filterHref({ urg: urg === u ? "" : u })} className={chip(urg === u)}>
+          <Link key={u} href={filterHref({ urg: urg === u ? "" : u })} className={chip(urg === u)} aria-current={urg === u ? "page" : undefined}>
             Urgencia {u}
           </Link>
         ))}
-        <Link href={filterHref({ reply: reply ? "" : "1" })} className={chip(reply)}>
+        <Link href={filterHref({ reply: reply ? "" : "1" })} className={chip(reply)} aria-current={reply ? "page" : undefined}>
           Necesita respuesta
         </Link>
-        <Link href={filterHref({ arch: archived ? "" : "1" })} className={chip(archived)}>
+        <Link href={filterHref({ arch: archived ? "" : "1" })} className={chip(archived)} aria-current={archived ? "page" : undefined}>
           Archivadas
         </Link>
       </nav>
