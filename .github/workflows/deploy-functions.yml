@@ -59,7 +59,7 @@ jobs:
         run: |
           set -o pipefail
           supabase functions deploy \
-            ai-connection assistant run-flow voice-transcribe push \
+            ai-connection assistant run-flow voice-transcribe push api-connection \
             google-connection hubspot-connection telegram-connection imap-connection \
             inbox-sync inbox-reply inbox-classify tokko-connection xubio-connection whatsapp-connection \
             --project-ref "$PROJECT_REF" --use-api 2>&1 | tee /tmp/deploy1.txt || {

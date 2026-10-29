@@ -26,6 +26,7 @@ import {
   updateRange,
 } from "./google.ts"
 import { recordMessage } from "./inbox.ts"
+import { apiRequest } from "./api-integrations.ts"
 import { MailError, replyHeaders, sendAndRecord } from "./imap.ts"
 import { inboxList, inboxRead, loadThread } from "./inbox-read.ts"
 import { notifyMe } from "./notify.ts"
@@ -130,6 +131,7 @@ export type PendingAction =
   | { call_id: string; tool: "crm_update"; object: CrmObject; id: string; label: string; properties: Props; before: Record<string, string | null> }
   | { call_id: string; tool: "crm_note"; object: CrmObject; id: string; label: string; text: string }
   | { call_id: string; tool: "crm_task"; object: CrmObject; id: string; label: string; subject: string; text: string; due_date: string | null }
+  | { call_id: string; tool: "api_request"; provider: "supabase" | "custom_1" | "custom_2"; connection_name: string; method: "POST" | "PATCH" | "DELETE"; path: string; query: string; body: string }
   | TokkoLeadPending
 
 export class RunError extends Error {}
@@ -153,6 +155,7 @@ type Resources = {
   hubspot: { token: string; portalId: number | null } | null
   tokko: string | null
   xubio: XubioCredentials | null
+  apiProviders: ("supabase" | "custom_1" | "custom_2")[]
 }
 
 function kindOf(mime: string | null): FileKind {
@@ -191,6 +194,7 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
   })
 
   const find = (p: string) => (integrations ?? []).find((i) => i.provider === p)
+  const apiProviders = (["supabase", "custom_1", "custom_2"] as const).filter((p) => find(p)?.status === "active")
   const google = find("google")
   const tg = find("telegram")
   let telegram: Resources["telegram"] = null
@@ -249,6 +253,7 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
     tokko: find("tokko")?.status === "active" ? await tokkoKey(admin, run.workspace_id) : null,
     // Contabilidad: solo en ejecuciones de administradores.
     xubio: starterIsAdmin && find("xubio")?.status === "active" ? await xubioCredentials(admin, run.workspace_id) : null,
+    apiProviders,
   }
 }
 
@@ -369,6 +374,15 @@ function toolDefs(r: Resources): ToolDef[] {
         location: nullable("Nuevo lugar o null."),
       }),
     )
+  }
+  if (r.apiProviders.length) {
+    tools.push(fn("api_request", "Consulta una tabla de Supabase o una API REST configurada. GET lee sin aprobación; POST, PATCH y DELETE esperan aprobación. Para PATCH y DELETE en Supabase, query debe incluir un filtro PostgREST. Usa un JSON en body para POST/PATCH. En Supabase usa el nombre de tabla y filtros PostgREST en query; en otras APIs usa una ruta relativa a la URL base.", {
+      provider: { type: "string", enum: r.apiProviders },
+      method: { type: "string", enum: ["GET", "POST", "PATCH", "DELETE"] },
+      path: { type: "string", description: "Supabase: nombre de tabla. API propia: ruta relativa, p. ej. contactos." },
+      query: { type: "string", description: "Parámetros de URL sin ?; en Supabase usa filtros PostgREST. Cadena vacía si no hay." },
+      body: { type: "string", description: "JSON para POST/PATCH. Cadena vacía si no hay." },
+    }))
   }
   if (r.hubspot) {
     const object = { type: "string", enum: [...CRM_OBJECTS], description: "contacts, companies o deals." }
@@ -805,6 +819,8 @@ export function proposalTitle(p: PendingAction): string {
       return `Propone añadir una nota a «${p.label}» en HubSpot`
     case "crm_task":
       return `Propone crear la tarea «${p.subject}» en HubSpot`
+    case "api_request":
+      return `Propone ${p.method} en ${p.connection_name}: ${p.path}`
     case "tokko_lead":
       return `Propone registrar la consulta de ${p.name} en Tokko`
   }
@@ -904,6 +920,22 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       return finishRun(admin, run, "succeeded", str(args.summary, 8000) || "Ejecución terminada.")
     }
 
+    if (call.name === "api_request" && args.method === "GET") {
+      const provider = args.provider
+      try {
+        if (typeof provider !== "string" || !res.apiProviders.includes(provider as "supabase" | "custom_1" | "custom_2")) throw new Error("Conecta esta integración en Integraciones.")
+        const result = await apiRequest(admin, run.workspace_id, provider as "supabase" | "custom_1" | "custom_2", "GET", str(args.path, 300), str(args.query, 1200), "")
+        respond(result)
+        await addEvent(admin, run, "tool", `Consultó ${provider === "supabase" ? "Supabase" : "una API a medida"} (${result.status})`, { tool: "api_request", provider, method: "GET", status: result.status })
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "No se pudo consultar la API."
+        respond({ error: message })
+        await addEvent(admin, run, "tool", `Falló la consulta API: ${message}`, { tool: "api_request", provider, method: "GET" })
+      }
+      await save(admin, run, {})
+      continue
+    }
+
     // Lecturas: sin aprobación.
     if (call.name === "list_sheets" || call.name === "read_range" || call.name === "read_document") {
       const out = await readTool(token, file, call.name, args)
@@ -977,7 +1009,21 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
     // Escrituras y envíos: se preparan y esperan aprobación.
     let pending: PendingAction | null = null
     let invalid = "Acción no válida."
-    if (call.name === "append_rows" || call.name === "update_range") {
+    if (call.name === "api_request") {
+      const provider = args.provider
+      const method = args.method
+      const path = str(args.path, 300).trim()
+      const query = str(args.query, 1200)
+      const body = str(args.body, 30_000)
+      const names: Record<string, string> = { supabase: "Supabase", custom_1: "API a medida 1", custom_2: "API a medida 2" }
+      if (typeof provider !== "string" || !res.apiProviders.includes(provider as "supabase" | "custom_1" | "custom_2")) invalid = "Conecta esta integración en Integraciones."
+      else if (!(["POST", "PATCH", "DELETE"] as unknown[]).includes(method) || !path || query.includes("#") || (provider === "supabase" && (method === "PATCH" || method === "DELETE") && !query.trim()) || ((method === "POST" || method === "PATCH") && !body.trim())) invalid = "Petición REST no válida: revisa método, ruta, filtro y cuerpo JSON."
+      else if (body.length > 30_000) invalid = "El cuerpo supera el límite de 30 KB."
+      else {
+        if (body) { try { JSON.parse(body) } catch { invalid = "El cuerpo debe ser JSON válido." } }
+        if (invalid === "Acción no válida.") pending = { call_id: call.call_id!, tool: "api_request", provider: provider as "supabase" | "custom_1" | "custom_2", connection_name: names[provider] ?? "API", method: method as "POST" | "PATCH" | "DELETE", path, query, body }
+      }
+    } else if (call.name === "append_rows" || call.name === "update_range") {
       const values = normalizeValues(call.name === "append_rows" ? args.rows : args.values)
       const range = str(args.range, 200)
       if (token && (file?.kind === "sheet" || file?.kind === "xlsx") && values && range) {
@@ -1173,6 +1219,12 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
 export async function executePending(admin: Admin, run: RunRow, pending: PendingAction, decidedBy: string | null): Promise<string> {
   const res = await loadResources(admin, run)
   try {
+    if (pending.tool === "api_request") {
+      const result = await apiRequest(admin, run.workspace_id, pending.provider, pending.method, pending.path, pending.query, pending.body)
+      if (result.status < 200 || result.status >= 300) throw new RunError(`La API respondió con HTTP ${result.status}.`)
+      await addEvent(admin, run, "approved", `Aprobado: ${pending.method} en ${pending.connection_name} (${result.status})`, { tool: pending.tool, provider: pending.provider, method: pending.method, status: result.status, decided_by: decidedBy })
+      return JSON.stringify(result)
+    }
     if (pending.tool === "send_email") {
       // Respuesta al remitente de un correo: en el mismo hilo.
       let thread: { external_id: string } | null = null
