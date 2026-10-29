@@ -16,6 +16,8 @@ import {
   type ImapState,
   type KeyState,
   saveTokko,
+  saveBuffer,
+  disconnectBuffer,
   saveXubio,
   saveImap,
   type HubSpotState,
@@ -193,6 +195,7 @@ const DISCONNECT: Record<string, { label: string; confirm: string }> = {
   imap: { label: "el correo", confirm: "¿Desconectar este correo? MarchaSolo borra la contraseña; las conversaciones ya guardadas siguen en la bandeja." },
   tokko: { label: "Tokko", confirm: "¿Desconectar Tokko? MarchaSolo borra la clave; las automatizaciones dejarán de ver tus propiedades." },
   xubio: { label: "Xubio", confirm: "¿Desconectar Xubio? MarchaSolo borra las credenciales; bórralas también en Xubio si ya no las usas." },
+  buffer: { label: "Buffer", confirm: "¿Desconectar Buffer? MarchaSolo borra la clave; las automatizaciones dejarán de publicar en tus redes." },
 }
 
 export function DisconnectInboxForm({
@@ -200,7 +203,7 @@ export function DisconnectInboxForm({
   kind,
 }: {
   workspaceId: string
-  kind: "telegram" | "whatsapp" | "calendar" | "hubspot" | "imap" | "tokko" | "xubio"
+  kind: "telegram" | "whatsapp" | "calendar" | "hubspot" | "imap" | "tokko" | "xubio" | "buffer"
 }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(
     kind === "calendar"
@@ -213,6 +216,8 @@ export function DisconnectInboxForm({
             ? disconnectTokko
             : kind === "xubio"
               ? disconnectXubio
+              : kind === "buffer"
+                ? disconnectBuffer
               : kind === "whatsapp"
                 ? disconnectWhatsApp
                 : disconnectTelegram,
@@ -394,6 +399,34 @@ export function TokkoForm({ workspaceId, replacing }: { workspaceId: string; rep
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-56">
         <SubmitButton pendingLabel="Comprobando con Tokko…">{replacing ? "Cambiar clave" : "Conectar Tokko"}</SubmitButton>
+      </div>
+    </form>
+  )
+}
+
+export function BufferForm({ workspaceId, replacing }: { workspaceId: string; replacing: boolean }) {
+  const formRef = useRef<HTMLFormElement>(null)
+  const [state, action] = useActionState<KeyState, FormData>(async (prev, fd) => {
+    const result = await saveBuffer(prev, fd)
+    formRef.current?.reset()
+    return result
+  }, {})
+  return (
+    <form ref={formRef} action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="workspaceId" value={workspaceId} />
+      <Input
+        id="buffer-key"
+        name="key"
+        type="password"
+        label={replacing ? "Nueva clave de API de Buffer" : "Clave de API de Buffer"}
+        autoComplete="off"
+        spellCheck={false}
+        required
+        hint="MarchaSolo la guarda cifrada y no vuelve a mostrarla."
+      />
+      <FormMessage error={state.error} message={state.message} />
+      <div className="sm:max-w-56">
+        <SubmitButton pendingLabel="Comprobando con Buffer…">{replacing ? "Cambiar clave" : "Conectar Buffer"}</SubmitButton>
       </div>
     </form>
   )

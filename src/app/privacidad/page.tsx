@@ -55,6 +55,12 @@ export default function PrivacyPage() {
                 <strong>Redes sociales (Buffer):</strong> la lista de tus canales y las publicaciones que apruebas.
               </li>
               <li>
+                <strong>Atención telefónica (Grok Voice):</strong> si la activas, el agente de voz de xAI que configuras atiende las
+                llamadas de tu negocio. MarchaSolo recibe y guarda solo lo que el agente anota: nombre, teléfono, motivo y mensaje de quien
+                llama, y las citas que reserva en tu calendario. No recibe ni guarda el audio de las llamadas; eso lo trata xAI según sus
+                condiciones.
+              </li>
+              <li>
                 <strong>Telegram y WhatsApp:</strong> los mensajes que recibe tu bot o tu número conectado, y los que envías con tu
                 aprobación.
               </li>

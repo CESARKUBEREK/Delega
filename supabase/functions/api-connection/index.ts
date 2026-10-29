@@ -22,6 +22,17 @@ function baseUrl(value: unknown): string | null {
   }
 }
 
+// Parte central de un JWT (las claves anon y service_role antiguas lo son), para detectar claves secretas.
+function jwtPayload(key: string): string {
+  const part = key.split(".")[1]
+  if (!part) return ""
+  try {
+    return atob(part.replace(/-/g, "+").replace(/_/g, "/"))
+  } catch {
+    return ""
+  }
+}
+
 function text(value: unknown, max: number): string {
   return typeof value === "string" ? value.trim().slice(0, max) : ""
 }
@@ -35,20 +46,30 @@ async function save(ctx: AuthContext, body: Record<string, unknown>) {
   }
 
   if (provider === "supabase") {
-    const projectUrl = baseUrl(body.project_url)
+    // Se admite la URL tal cual se copia (con /rest/v1 o una barra al final).
+    const projectUrl = baseUrl(typeof body.project_url === "string" ? body.project_url.trim().replace(/\/+$/, "").replace(/\/rest\/v1$/i, "") : "")
     const anonKey = text(body.anon_key, 1000)
     if (!projectUrl || !anonKey || anonKey.length < 10) {
-      return fail(400, "invalid_format", "Revisa la URL del proyecto y la clave anon/public.")
+      return fail(400, "invalid_format", "Revisa la URL del proyecto (https://….supabase.co) y la clave publishable o anon.")
     }
+    if (anonKey.startsWith("sb_secret_") || /"role"\s*:\s*"service_role"/.test(jwtPayload(anonKey))) {
+      return fail(400, "secret_key", "Esa es una clave secreta: no la pegues aquí. Usa la clave publishable (sb_publishable_…) o la anon.")
+    }
+    // Supabase ya no deja leer la raíz de la Data API (/rest/v1/) con claves
+    // públicas (desde 2026). Se comprueba la URL y la clave con /auth/v1/settings,
+    // que es público y responde 401 si la clave no es de ese proyecto.
     try {
-      const response = await fetch(`${projectUrl}/rest/v1/`, {
+      const response = await fetch(`${projectUrl}/auth/v1/settings`, {
         headers: { apikey: anonKey, Accept: "application/json" },
         redirect: "error",
         signal: AbortSignal.timeout(10000),
       })
-      if (!response.ok) return fail(400, "connection_failed", "Supabase no aceptó la conexión. Comprueba la URL, la clave y que la Data API esté habilitada.")
+      if (response.status === 401 || response.status === 403) {
+        return fail(400, "invalid_key", "Supabase no reconoce la clave. Copia la clave publishable (o la anon) de Project Settings → API Keys de ese proyecto.")
+      }
+      if (!response.ok) return fail(400, "connection_failed", "No se encontró el proyecto de Supabase en esa URL. Cópiala de Project Settings → Data API (https://….supabase.co).")
     } catch {
-      return fail(400, "connection_failed", "No se pudo comprobar el proyecto. Revisa la URL y prueba de nuevo.")
+      return fail(400, "connection_failed", "No se pudo contactar con el proyecto. Revisa la URL (https://….supabase.co) y que el proyecto no esté en pausa.")
     }
     const { error } = await ctx.admin.rpc("integration_save", {
       p_workspace_id: workspaceId,

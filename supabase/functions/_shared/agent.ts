@@ -33,6 +33,7 @@ import { notifyMe } from "./notify.ts"
 import { isWorkspaceAdmin, workspaceTimezone } from "./core.ts"
 import { BUSINESS_READS, businessRead, businessTools, type TokkoLeadPending, tokkoLeadPending } from "./business-tools.ts"
 import { createLead, TokkoError, tokkoKey } from "./tokko.ts"
+import { BufferError, bufferKey, createPost, listChannels, MAX_POST_CHARS } from "./buffer.ts"
 import { type XubioCredentials, xubioCredentials } from "./xubio.ts"
 import { parseTelegramSecret, sendTelegram, TelegramError } from "./telegram.ts"
 import { insideWindow, MAX_WHATSAPP_CHARS, PHONE_RE, sendWhatsApp, WhatsAppError, type WhatsAppSecret, whatsappSecret } from "./whatsapp.ts"
@@ -133,6 +134,7 @@ export type PendingAction =
   | { call_id: string; tool: "crm_task"; object: CrmObject; id: string; label: string; subject: string; text: string; due_date: string | null }
   | { call_id: string; tool: "api_request"; provider: "supabase" | "custom_1" | "custom_2"; connection_name: string; method: "POST" | "PATCH" | "DELETE"; path: string; query: string; body: string }
   | TokkoLeadPending
+  | { call_id: string; tool: "buffer_post"; channels: { id: string; name: string; service: string }[]; text: string; due_at: string | null; when_label: string }
 
 export class RunError extends Error {}
 
@@ -154,6 +156,7 @@ type Resources = {
   whatsapp: { secret: WhatsAppSecret; integrationId: string } | null
   hubspot: { token: string; portalId: number | null } | null
   tokko: string | null
+  buffer: string | null
   xubio: XubioCredentials | null
   apiProviders: ("supabase" | "custom_1" | "custom_2")[]
 }
@@ -251,6 +254,7 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
     whatsapp,
     hubspot,
     tokko: find("tokko")?.status === "active" ? await tokkoKey(admin, run.workspace_id) : null,
+    buffer: find("buffer")?.status === "active" ? await bufferKey(admin, run.workspace_id) : null,
     // Contabilidad: solo en ejecuciones de administradores.
     xubio: starterIsAdmin && find("xubio")?.status === "active" ? await xubioCredentials(admin, run.workspace_id) : null,
     apiProviders,
@@ -439,6 +443,23 @@ function toolDefs(r: Resources): ToolDef[] {
     )
   }
   tools.push(...businessTools(r))
+  if (r.buffer) {
+    tools.push(
+      fn("buffer_channels", "Lista los canales de redes sociales conectados en Buffer (id, nombre y red).", {}),
+      fn(
+        "buffer_post",
+        "Prepara una publicación en redes sociales a través de Buffer, en uno o varios canales: a la cola del canal o programada. Requiere aprobación.",
+        {
+          channel_ids: { type: "array", items: { type: "string" }, description: "Ids de canales de buffer_channels (1 a 5)." },
+          text: { type: "string", description: "Texto de la publicación, listo para publicar." },
+          when: {
+            anyOf: [{ type: "string" }, { type: "null" }],
+            description: "Fecha y hora AAAA-MM-DDTHH:MM en la zona del usuario, o null para añadirla a la cola del canal.",
+          },
+        },
+      ),
+    )
+  }
   if (r.inboxActive) {
     tools.push(
       fn("inbox_list", "Lista conversaciones de la bandeja (correo, Telegram y WhatsApp), de la más reciente a la más antigua, con su clasificación.", {
@@ -509,6 +530,8 @@ Reglas:
 - Tokko Broker: busca con tokko_search antes de responder sobre propiedades y no inventes precios ni características;
   usa los datos y el enlace de la ficha. Registra al interesado con tokko_register_lead (requiere aprobación).
 - Xubio es contabilidad: solo puedes consultar (xubio_list, xubio_get). No digas que creaste facturas ni cobros.
+- Redes sociales (Buffer): mira los canales con buffer_channels y prepara la publicación con buffer_post (requiere
+  aprobación). Adapta el texto a la red (más corto en X, sin enlaces en el texto de Instagram). Sin imágenes por ahora.
 - Cuando acabes, llama a finish con un resumen en español: qué hiciste, resultados clave y qué quedó pendiente.`
 
 // ---------------------------------------------------------------------------
@@ -823,6 +846,8 @@ export function proposalTitle(p: PendingAction): string {
       return `Propone ${p.method} en ${p.connection_name}: ${p.path}`
     case "tokko_lead":
       return `Propone registrar la consulta de ${p.name} en Tokko`
+    case "buffer_post":
+      return `Propone publicar en ${p.channels.map((c) => c.name).join(", ")} (Buffer)`
   }
 }
 
@@ -989,6 +1014,25 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       continue
     }
 
+    if (call.name === "buffer_channels") {
+      let out: unknown
+      let title: string
+      try {
+        if (!res.buffer) throw new BufferError("bad_request", "Buffer no está conectado.")
+        const channels = await listChannels(res.buffer)
+        out = { channels: channels.map((c) => ({ id: c.id, name: c.name, service: c.service, organization: c.organization, paused: c.paused })) }
+        title = `Revisó ${channels.length} canales de Buffer`
+      } catch (e) {
+        const msg = e instanceof BufferError ? e.message : "No se pudo consultar Buffer."
+        out = { error: msg }
+        title = msg
+      }
+      respond(out)
+      await addEvent(admin, run, (out as { error?: string }).error ? "error" : "tool", title, { tool: call.name })
+      await save(admin, run, {})
+      continue
+    }
+
     if (BUSINESS_READS.has(call.name ?? "")) {
       const { out, title } = await businessRead(call.name!, args, res, business)
       respond(out)
@@ -1058,6 +1102,29 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       else {
         pending = { call_id: call.call_id!, tool: "send_email", to_label: to.label, address: to.address, subject, body }
         if (to.thread) pending.thread_id = to.thread
+      }
+    } else if (call.name === "buffer_post") {
+      try {
+        if (!res.buffer) throw new RunError("Buffer no está conectado.")
+        const text = str(args.text, MAX_POST_CHARS + 1).trim()
+        if (!text) throw new RunError("Falta el texto de la publicación.")
+        if (text.length > MAX_POST_CHARS) throw new RunError(`La publicación pasa de ${MAX_POST_CHARS} caracteres: acórtala.`)
+        const ids = (Array.isArray(args.channel_ids) ? args.channel_ids : []).filter((x): x is string => typeof x === "string").slice(0, 5)
+        const all = await listChannels(res.buffer)
+        const channels = all.filter((c) => ids.includes(c.id)).map((c) => ({ id: c.id, name: c.name, service: c.service }))
+        if (!channels.length) throw new RunError("Ningún canal válido: usa los ids de buffer_channels.")
+        const when = nstr(args.when, 40)
+        let dueAt: string | null = null
+        let whenLabel = "A la cola del canal (siguiente hueco de su horario)"
+        if (when) {
+          if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(when)) throw new RunError("Fecha no válida: usa AAAA-MM-DDTHH:MM.")
+          dueAt = new Date(toRfc3339(when, res.timezone)).toISOString()
+          if (new Date(dueAt).getTime() < Date.now() + 60_000) throw new RunError("Esa fecha ya ha pasado: elige una futura o usa la cola (null).")
+          whenLabel = `${when.replace("T", " a las ")} (${res.timezone})`
+        }
+        pending = { call_id: call.call_id!, tool: "buffer_post", channels, text, due_at: dueAt, when_label: whenLabel }
+      } catch (e) {
+        invalid = e instanceof RunError || e instanceof BufferError ? e.message : "No se pudo preparar la publicación."
       }
     } else if (call.name === "tokko_register_lead") {
       const p = tokkoLeadPending(call.call_id!, args, res)
@@ -1314,6 +1381,26 @@ export async function executePending(admin: Admin, run: RunRow, pending: Pending
         decided_by: decidedBy,
       })
       return JSON.stringify({ ok: true, event: ev })
+    }
+
+    if (pending.tool === "buffer_post") {
+      if (!res.buffer) throw new RunError("Buffer no está conectado.")
+      const done: string[] = []
+      for (const c of pending.channels) {
+        try {
+          await createPost(res.buffer, { channelId: c.id, text: pending.text, dueAt: pending.due_at })
+          done.push(c.name)
+        } catch (e) {
+          const msg = e instanceof BufferError ? e.message : "Buffer no respondió."
+          if (done.length) await addEvent(admin, run, "approved", `Aprobado: publicación creada en ${done.join(", ")} (Buffer)`, { tool: pending.tool, decided_by: decidedBy })
+          throw new RunError(`No se pudo publicar en ${c.name}: ${msg}`)
+        }
+      }
+      await addEvent(admin, run, "approved", `Aprobado: publicación ${pending.due_at ? "programada" : "en cola"} en ${done.join(", ")} (Buffer)`, {
+        tool: pending.tool,
+        decided_by: decidedBy,
+      })
+      return JSON.stringify({ ok: true, channels: done, when: pending.when_label })
     }
 
     if (pending.tool === "tokko_lead") {

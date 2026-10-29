@@ -1,6 +1,10 @@
+import { fileKindLabel } from "@/lib/plan"
+import { supabaseUrl } from "@/lib/supabase/env"
 import { createClient } from "@/lib/supabase/server"
+import { playbook, readVoiceConfig } from "@/lib/voice"
 import { connectGoogle } from "../run-actions"
-import { DisconnectInboxForm, HubSpotForm, TokkoForm, XubioForm } from "./inbox-client"
+import { BufferForm, DisconnectInboxForm, HubSpotForm, TokkoForm, XubioForm } from "./inbox-client"
+import { DisconnectVoiceForm, VoiceAccess, VoicePlaybook, VoiceSettingsForm } from "./voice-client"
 
 function Badge({ status, invalidLabel }: { status: string | null | undefined; invalidLabel: string }) {
   if (status === "active") return <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">Conectado</span>
@@ -231,6 +235,132 @@ export async function XubioCard({ workspaceId, isAdmin }: { workspaceId: string;
           </>
         ) : (
           <p className="text-sm text-graphite">Solo un administrador puede conectar Xubio.</p>
+        )}
+      </div>
+    </details>
+  )
+}
+
+export async function BufferCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
+  const supabase = await createClient()
+  const { data: integration } = await supabase
+    .from("integrations")
+    .select("account_email, status")
+    .eq("workspace_id", workspaceId)
+    .eq("provider", "buffer")
+    .maybeSingle()
+
+  return (
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
+        <div>
+          <h3 className="rotulo text-lg">Buffer</h3>
+          <p className="text-sm text-graphite">
+            Tus redes sociales (Instagram, Facebook, LinkedIn, X, TikTok…) a través de Buffer. MarchaSolo redacta publicaciones y las
+            añade a la cola o las programa; cada publicación espera tu aprobación.
+          </p>
+        </div>
+        <Badge status={integration?.status} invalidLabel="Clave rechazada" />
+      </summary>
+      <div className="flex flex-col gap-5 px-5 py-5">
+        {integration ? (
+          <p className="text-sm text-graphite">
+            <span className="font-medium text-ink">{integration.account_email}</span> conectado.
+          </p>
+        ) : null}
+        {isAdmin ? (
+          <>
+            <BufferForm workspaceId={workspaceId} replacing={Boolean(integration)} />
+            <details className="text-sm text-graphite" open={!integration}>
+              <summary className="cursor-pointer text-ink">Cómo consigo la clave</summary>
+              <ol className="mt-2 list-decimal pl-5">
+                <li>Entra en buffer.com con tu cuenta. Conecta allí tus redes sociales si aún no lo has hecho.</li>
+                <li>Abre «Settings» → «API» y crea una clave para MarchaSolo. Cópiala.</li>
+                <li>Pégala aquí. Da acceso a todos los canales de tu cuenta de Buffer. El plan gratuito de Buffer incluye la API.</li>
+              </ol>
+              <p className="mt-2">Por ahora, MarchaSolo publica solo texto: las imágenes y los vídeos se añaden desde Buffer.</p>
+            </details>
+            {integration ? <DisconnectInboxForm workspaceId={workspaceId} kind="buffer" /> : null}
+          </>
+        ) : (
+          <p className="text-sm text-graphite">Solo un administrador puede conectar Buffer.</p>
+        )}
+      </div>
+    </details>
+  )
+}
+
+export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
+  const supabase = await createClient()
+  const [{ data: integration }, { data: calendar }, { data: rawFiles }, { data: ws }] = await Promise.all([
+    supabase.from("integrations").select("status, config").eq("workspace_id", workspaceId).eq("provider", "grok_voice").maybeSingle(),
+    supabase.from("integrations").select("status").eq("workspace_id", workspaceId).eq("provider", "calendar").maybeSingle(),
+    supabase.from("integration_files").select("id, name, mime_type").eq("workspace_id", workspaceId).order("name").limit(100),
+    supabase.from("workspaces").select("name").eq("id", workspaceId).maybeSingle(),
+  ])
+  const config = readVoiceConfig(integration?.config)
+  const files = (rawFiles ?? [])
+    .filter((f) => f.mime_type !== "application/vnd.google-apps.folder")
+    .map((f) => ({ id: f.id, name: f.name, kind: fileKindLabel(f.mime_type).toLowerCase() }))
+  const url = `${supabaseUrl}/functions/v1/voice-mcp?w=${workspaceId}`
+  const connected = Boolean(integration)
+
+  return (
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
+        <div>
+          <h3 className="rotulo text-lg">Grok Voice</h3>
+          <p className="text-sm text-graphite">
+            Un agente de voz de xAI atiende las llamadas de tu negocio: consulta tu agenda y deja la cita reservada, toma recados y responde con
+            tus documentos. Cada cita y cada recado llegan a la Bandeja y te avisan.
+          </p>
+        </div>
+        <Badge status={integration?.status} invalidLabel="Desactivado" />
+      </summary>
+      <div className="flex flex-col gap-6 px-5 py-5">
+        {!isAdmin ? (
+          <p className="text-sm text-graphite">Solo un administrador puede configurar la atención telefónica.</p>
+        ) : (
+          <>
+            {calendar?.status !== "active" ? (
+              <p className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+                Conecta Google Calendar (más abajo, en Calendar) para que el agente pueda ver huecos y reservar citas. Sin él, solo toma
+                recados.
+              </p>
+            ) : null}
+            <section className="flex flex-col gap-3">
+              <h4 className="text-sm font-semibold text-ink">1. Acceso para el agente de voz</h4>
+              <VoiceAccess workspaceId={workspaceId} url={url} connected={connected} />
+            </section>
+            {connected ? (
+              <>
+                <section className="flex flex-col gap-3">
+                  <h4 className="text-sm font-semibold text-ink">2. Horario de citas y documentos</h4>
+                  <p className="text-xs text-graphite">
+                    Las citas quedan confirmadas en tu calendario, sin aprobación, solo dentro de este horario y si la hora está libre.
+                  </p>
+                  <VoiceSettingsForm workspaceId={workspaceId} config={config} files={files} />
+                </section>
+                <section className="flex flex-col gap-3">
+                  <h4 className="text-sm font-semibold text-ink">3. Crea el agente en xAI</h4>
+                  <ol className="list-decimal pl-5 text-sm text-graphite">
+                    <li>Entra en console.x.ai → Voice Agents y crea un agente con la plantilla «Custom».</li>
+                    <li>Pega estas instrucciones como guion del agente y elige una voz.</li>
+                    <li>
+                      En herramientas, añade un servidor MCP remoto y pega la URL con la clave incluida. No hace falta OAuth ni rellenar
+                      credenciales. Si no la copiaste, crea una clave nueva.
+                    </li>
+                    <li>Asigna el número de teléfono que te da xAI (o el tuyo por SIP), pruébalo desde el navegador y llama para comprobarlo.</li>
+                  </ol>
+                  <VoicePlaybook text={playbook(ws?.name ?? "tu negocio", config)} />
+                  <p className="text-xs text-graphite">
+                    Coste en tu cuenta de xAI: unos 0,08 $ por minuto de conversación, más 0,01 $/min si usas el número de xAI.
+                  </p>
+                </section>
+                <DisconnectVoiceForm workspaceId={workspaceId} />
+              </>
+            ) : null}
+          </>
         )}
       </div>
     </details>

@@ -116,7 +116,7 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
                 ))}
               </tbody>
             </table>
-            <p className="px-5 py-3 text-xs text-graphite">El importe lo factura cada proveedor (OpenAI, Anthropic o DeepSeek) en tu cuenta según su tarifa.</p>
+            <p className="px-5 py-3 text-xs text-graphite">El importe lo factura cada proveedor (OpenAI, Anthropic, DeepSeek o xAI) en tu cuenta según su tarifa.</p>
           </div>
         ) : (
           <p className="px-5 py-4 text-sm text-graphite">Sin consumo este mes.</p>

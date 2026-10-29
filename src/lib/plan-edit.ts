@@ -21,7 +21,7 @@ export const MAX_FILES = 5
 export const STEP_KINDS = ["read", "compare", "transform", "generate", "condition", "write", "notify"] as const
 export type StepKind = (typeof STEP_KINDS)[number]
 
-export const CONNECTION_KINDS = ["spreadsheet", "documents", "drive", "email", "telegram", "whatsapp", "calendar", "crm", "properties", "accounting"] as const
+export const CONNECTION_KINDS = ["spreadsheet", "documents", "drive", "email", "telegram", "whatsapp", "calendar", "crm", "properties", "accounting", "social"] as const
 export type ConnectionKind = (typeof CONNECTION_KINDS)[number]
 
 export const TRIGGERS: TriggerType[] = ["manual", "schedule", "email_message", "whatsapp_message", "telegram_message"]
@@ -33,7 +33,7 @@ export const KIND_INFO: Record<StepKind, { label: string; hint: string }> = {
   transform: { label: "Preparar datos", hint: "Ordenar, calcular o sacar los datos de un texto." },
   generate: { label: "Redactar", hint: "Escribir un resumen, una respuesta o un informe." },
   condition: { label: "Solo si…", hint: "Seguir solo si se cumple algo (p. ej. «si no hay nada, terminar»)." },
-  write: { label: "Escribir o crear", hint: "Añadir filas, crear un documento o un evento, actualizar el CRM. Necesita tu aprobación." },
+  write: { label: "Escribir o crear", hint: "Añadir filas, crear un documento o un evento, actualizar el CRM o publicar en redes. Necesita tu aprobación." },
   notify: { label: "Avisar o enviar", hint: "Avisarte a ti (sin aprobación) o escribir a otras personas (con aprobación)." },
 }
 
@@ -44,7 +44,7 @@ export const KIND_CONNECTIONS: Record<StepKind, ("none" | ConnectionKind)[]> = {
   transform: ["none", "spreadsheet", "documents", "email", "whatsapp", "telegram"],
   generate: ["none", "documents"],
   condition: ["none"],
-  write: ["spreadsheet", "documents", "drive", "calendar", "crm", "properties"],
+  write: ["spreadsheet", "documents", "drive", "calendar", "crm", "properties", "social"],
   notify: ["none", "email", "whatsapp", "telegram"],
 }
 
@@ -60,6 +60,7 @@ export const CONNECTION_PROVIDER: Record<ConnectionKind, string> = {
   crm: "hubspot",
   properties: "tokko",
   accounting: "xubio",
+  social: "buffer",
 }
 
 export const CONNECTION_NAME: Record<"none" | ConnectionKind, string> = {
@@ -74,6 +75,7 @@ export const CONNECTION_NAME: Record<"none" | ConnectionKind, string> = {
   crm: "HubSpot",
   properties: "Tokko Broker",
   accounting: "Xubio (solo lectura)",
+  social: "Redes sociales (Buffer)",
 }
 
 // En «Avisar o enviar», qué significa cada opción.
