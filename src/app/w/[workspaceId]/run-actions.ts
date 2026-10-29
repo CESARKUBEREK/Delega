@@ -582,3 +582,48 @@ export async function disconnectImap(_prev: ActionResult | null, formData: FormD
   refresh()
   return { ok: true }
 }
+
+// ---------------------------------------------------------------------------
+// Atención telefónica (Grok Voice)
+// ---------------------------------------------------------------------------
+export type VoiceAccess = { ok: true; url: string; token: string } | { ok: false; error: string }
+
+export async function createVoiceAccess(workspaceId: string): Promise<VoiceAccess> {
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const result = await callEdgeFunction<{ url: string; token: string }>("voice-connection", { action: "create", workspace_id: workspaceId }, 20_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  refresh()
+  return { ok: true, url: result.data.url, token: result.data.token }
+}
+
+export async function saveVoiceSettings(_prev: KeyState, formData: FormData): Promise<KeyState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(workspaceId)) return { error: "Espacio no válido." }
+  const days = formData.getAll("days").map(Number).filter((d) => Number.isInteger(d) && d >= 1 && d <= 7)
+  if (!days.length) return { error: "Elige al menos un día de citas." }
+  const ranges = [1, 2]
+    .map((i) => ({ from: String(formData.get(`from${i}`) ?? ""), to: String(formData.get(`to${i}`) ?? "") }))
+    .filter((r) => r.from && r.to)
+  if (!ranges.length) return { error: "Indica al menos un tramo de horario." }
+  if (ranges.some((r) => r.from >= r.to)) return { error: "En cada tramo, la hora de fin tiene que ser posterior a la de inicio." }
+  const config = {
+    days,
+    ranges,
+    slot_minutes: Number(formData.get("slot") ?? 30),
+    default_minutes: Number(formData.get("duration") ?? 30),
+    file_ids: formData.getAll("files").map(String).filter((id) => UUID_RE.test(id)).slice(0, 10),
+  }
+  const result = await callEdgeFunction("voice-connection", { action: "settings", workspace_id: workspaceId, config }, 20_000)
+  if (result.error) return { error: result.error.message }
+  refresh()
+  return { message: "Ajustes guardados. Copia de nuevo las instrucciones si cambiaste el horario." }
+}
+
+export async function disconnectVoice(_prev: ActionResult | null, formData: FormData): Promise<ActionResult | null> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const result = await callEdgeFunction("voice-connection", { action: "disconnect", workspace_id: workspaceId }, 20_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  refresh()
+  return { ok: true }
+}

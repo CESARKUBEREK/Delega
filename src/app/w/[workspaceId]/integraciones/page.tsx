@@ -7,7 +7,7 @@ import { getWorkspace } from "@/lib/workspace"
 import { DOC_MIMES, DriveCard, EXCEL_MIMES, FilesCard, SHEET_MIMES } from "./google-card"
 import { ImapCard, TelegramCard, WhatsAppCard } from "./inbox-cards"
 import { AiCard } from "./ai-card"
-import { BufferCard, CalendarCard, HubSpotCard, TokkoCard, XubioCard } from "./work-cards"
+import { BufferCard, CalendarCard, HubSpotCard, TokkoCard, VoiceCard, XubioCard } from "./work-cards"
 import { ApiIntegrationCard } from "./api-integrations"
 
 export const metadata = { title: "Integraciones" }
@@ -129,7 +129,7 @@ async function Integrations({
       </Category>
 
       <Category id="telefono" title="Atención telefónica" description="Un agente de voz que atiende las llamadas de tu negocio.">
-        <ComingSoon title="Grok Voice" description="Atiende llamadas con la voz de Grok (xAI): responde dudas, toma datos y deja la cita o el aviso en MarchaSolo." />
+        <VoiceCard workspaceId={workspaceId} isAdmin={isAdmin} />
       </Category>
 
       <Category id="calculos" title="Cálculos" description="Planillas que las automatizaciones leen y actualizan.">
