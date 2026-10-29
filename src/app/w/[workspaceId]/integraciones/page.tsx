@@ -27,18 +27,23 @@ const CATEGORIES = [
 export default function IntegrationsPage({ params, searchParams }: PageProps<"/w/[workspaceId]/integraciones">) {
   return (
     <div className="flex flex-col gap-6">
-      <div>
+      <header className="integration-page-intro">
+        <p className="app-eyebrow">CONECTA TU ESPACIO</p>
         <h1 className="rotulo text-2xl">Integraciones</h1>
         <p className="mt-1 max-w-prose text-graphite">
           Las conexiones son de este espacio. Marcha Solo usa tu propia cuenta de cada servicio y no guarda tus datos más de lo necesario.
         </p>
-      </div>
-      <nav aria-label="Categorías" className="flex flex-wrap gap-2">
-        {CATEGORIES.map((c) => (
-          <a key={c.id} href={`#${c.id}`} className="border border-rule bg-sheet px-3 py-1 text-sm text-ink hover:border-link">
-            {c.label}
-          </a>
-        ))}
+      </header>
+      <nav aria-label="Categorías de integraciones" className="integration-category-nav">
+        <span className="integration-category-nav-label">EXPLORA POR CATEGORÍA</span>
+        <div className="integration-category-links">
+          {CATEGORIES.map((c, index) => (
+            <a key={c.id} href={`#${c.id}`} className="integration-category-link">
+              <span className="integration-category-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              {c.label}
+            </a>
+          ))}
+        </div>
       </nav>
       <Suspense fallback={<div className="h-64 border border-rule bg-sheet" aria-busy="true" />}>
         <Integrations params={params} searchParams={searchParams} />
@@ -49,8 +54,8 @@ export default function IntegrationsPage({ params, searchParams }: PageProps<"/w
 
 function Category({ id, title, description, children }: { id: string; title: string; description: string; children: ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-6">
-      <div className="mb-3 flex items-baseline gap-3 border-b border-rule pb-2">
+    <section id={id} aria-labelledby={`${id}-title`} className="integration-category scroll-mt-28">
+      <div className="integration-category-heading">
         <h2 id={`${id}-title`} className="rotulo text-xl">
           {title}
         </h2>
