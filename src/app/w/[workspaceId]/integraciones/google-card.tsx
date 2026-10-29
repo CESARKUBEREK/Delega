@@ -4,7 +4,7 @@ import { connectGoogle, removeSheet } from "../run-actions"
 import { DisconnectGoogleForm, PickSheetsButton } from "./google-client"
 
 const NOTICES: Record<string, string> = {
-  connected: "Google Drive conectado. Ahora elige los archivos y carpetas que Marcha Solo puede usar.",
+  connected: "Google Drive conectado. Ahora elige los archivos y carpetas que MarchaSolo puede usar.",
   not_configured: "La conexión con Google aún no está configurada en el servidor.",
   forbidden: "Solo un administrador puede conectar Google.",
 }
@@ -102,12 +102,12 @@ export async function DriveCard({ workspaceId, isAdmin, notice }: { workspaceId:
           <p className="text-sm text-graphite">
             Cuenta <span className="font-medium text-ink">{integration.account_email ?? "de Google"}</span>.{" "}
             {integration.status === "active"
-              ? "Marcha Solo solo abre lo que elijas y lo que cree. En una carpeta ve los archivos que Google le permite; si falta alguno, elígelo también."
+              ? "MarchaSolo solo abre lo que elijas y lo que cree. En una carpeta ve los archivos que Google le permite; si falta alguno, elígelo también."
               : "Google retiró el acceso: vuelve a conectar la cuenta."}
           </p>
         ) : (
           <p className="text-sm text-graphite">
-            Conecta una cuenta de Google y elige qué archivos y carpetas puede usar Marcha Solo. No tendrá acceso al resto de tu Drive.
+            Conecta una cuenta de Google y elige qué archivos y carpetas puede usar MarchaSolo. No tendrá acceso al resto de tu Drive.
           </p>
         )}
 

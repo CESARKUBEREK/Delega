@@ -4,7 +4,7 @@ import { MarketingLayout } from "@/components/marketing-layout"
 
 export const metadata: Metadata = {
   title: "Cómo empezar",
-  description: "Conecta tus herramientas paso a paso y crea tu primera automatización con Marcha Solo.",
+  description: "Conecta tus herramientas paso a paso y crea tu primera automatización con MarchaSolo.",
   robots: { index: true, follow: true },
 }
 
@@ -20,7 +20,7 @@ const steps = [
     number: "02",
     eyebrow: "TUS ARCHIVOS",
     title: "Elige los documentos y las planillas",
-    body: "Conecta Google Drive y selecciona los archivos que Marcha Solo puede consultar o actualizar. Añade solo los documentos y planillas que te ayuden con tus tareas.",
+    body: "Conecta Google Drive y selecciona los archivos que MarchaSolo puede consultar o actualizar. Añade solo los documentos y planillas que te ayuden con tus tareas.",
     tip: "Por ejemplo: pedidos, presupuestos, clientes o procedimientos.",
   },
   {
@@ -41,7 +41,7 @@ const steps = [
     number: "05",
     eyebrow: "TU PRIMER PLAN",
     title: "Describe una tarea cotidiana",
-    body: "Abre el Asistente y explica qué necesitas con tus propias palabras. Marcha Solo preparará una propuesta de flujo. También puedes empezar desde una plantilla.",
+    body: "Abre el Asistente y explica qué necesitas con tus propias palabras. MarchaSolo preparará una propuesta de flujo. También puedes empezar desde una plantilla.",
     tip: "Cuanto más concreto sea el objetivo, más fácil será revisar el plan.",
   },
   {
@@ -71,7 +71,7 @@ export default function GettingStartedPage() {
           <p><b>¿Dónde se configuran?</b> Dentro de tu espacio, abre <strong>Integraciones</strong>. Puedes volver aquí cuando quieras para seguir con el próximo paso.</p>
         </section>
 
-        <section className="marketing-steps" aria-label="Pasos para empezar con Marcha Solo">
+        <section className="marketing-steps" aria-label="Pasos para empezar con MarchaSolo">
           {steps.map((step) => (
             <article className="marketing-step" key={step.number}>
               <div className="marketing-step-index">{step.number}</div>

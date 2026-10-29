@@ -1,4 +1,4 @@
-// Service worker de Marcha Solo.
+// Service worker de MarchaSolo.
 // - Sin conexión: si una navegación falla, muestra la página /offline.
 // - No guarda en caché páginas ni datos de clientes: solo /offline y los iconos.
 // - Avisos: muestra los avisos Web Push y abre la app al tocarlos.
@@ -42,7 +42,7 @@ self.addEventListener("push", (event) => {
   } catch {
     data = {}
   }
-  const title = typeof data.title === "string" ? data.title : "Marcha Solo"
+  const title = typeof data.title === "string" ? data.title : "MarchaSolo"
   const url = typeof data.url === "string" && data.url.startsWith("/") ? data.url : "/abrir"
   event.waitUntil(
     self.registration.showNotification(title, {

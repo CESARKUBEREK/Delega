@@ -5,8 +5,8 @@ import type { MetadataRoute } from "next"
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/abrir",
-    name: "Marcha Solo",
-    short_name: "Marcha Solo",
+    name: "MarchaSolo",
+    short_name: "MarchaSolo",
     description: "Tu negocio, en automático. Pide tareas por texto o voz y aprueba lo que se escribe o se envía.",
     lang: "es",
     dir: "ltr",
@@ -14,8 +14,8 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#F7F8FC",
-    theme_color: "#F7F8FC",
+    background_color: "#0B1F3B",
+    theme_color: "#0B1F3B",
     categories: ["business", "productivity"],
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },

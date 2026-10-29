@@ -35,5 +35,5 @@ export async function disconnectApiConnection(_previous: ApiConnectionState, for
   const result = await callEdgeFunction<{ ok: true }>("api-connection", { action: "disconnect", workspace_id: workspaceId, provider }, 20_000)
   if (result.error) return { error: result.error.message }
   revalidatePath(`/w/${workspaceId}/integraciones`)
-  return { ok: true, message: "Integración desconectada. Su secreto se eliminó de Marcha Solo." }
+  return { ok: true, message: "Integración desconectada. Su secreto se eliminó de MarchaSolo." }
 }

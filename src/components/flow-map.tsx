@@ -71,11 +71,11 @@ export function FlowMap({
         </ol>
         <figcaption className="flow-map-legend">
           <span>
-            <i aria-hidden="true" style={{ background: "#17233e" }} />
+            <i aria-hidden="true" style={{ background: "#0b1f3b" }} />
             Cuándo empieza
           </span>
           <span>
-            <i aria-hidden="true" style={{ border: "2px solid #2457d6" }} />
+            <i aria-hidden="true" style={{ border: "2px solid #00c2a8" }} />
             Lo decide la IA
           </span>
           <span>

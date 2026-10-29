@@ -62,7 +62,7 @@ export function TelegramForm({ workspaceId, replacing }: { workspaceId: string; 
         autoComplete="off"
         spellCheck={false}
         required
-        hint="Te lo da @BotFather al crear el bot. Marcha Solo lo guarda cifrado y no vuelve a mostrarlo."
+        hint="Te lo da @BotFather al crear el bot. MarchaSolo lo guarda cifrado y no vuelve a mostrarlo."
       />
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-56">
@@ -92,7 +92,7 @@ export function WhatsAppForm({ workspaceId, replacing }: { workspaceId: string; 
         autoComplete="off"
         spellCheck={false}
         required
-        hint="Justo debajo del Account SID. Marcha Solo lo guarda cifrado y no vuelve a mostrarlo."
+        hint="Justo debajo del Account SID. MarchaSolo lo guarda cifrado y no vuelve a mostrarlo."
       />
       <Input
         id="wa-from"
@@ -175,7 +175,7 @@ export function HubSpotForm({ workspaceId, replacing }: { workspaceId: string; r
         autoComplete="off"
         spellCheck={false}
         required
-        hint="Clave de servicio o token de app privada. Marcha Solo la guarda cifrada y no vuelve a mostrarla."
+        hint="Clave de servicio o token de app privada. MarchaSolo la guarda cifrada y no vuelve a mostrarla."
       />
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-56">
@@ -187,12 +187,12 @@ export function HubSpotForm({ workspaceId, replacing }: { workspaceId: string; r
 
 const DISCONNECT: Record<string, { label: string; confirm: string }> = {
   telegram: { label: "el bot de Telegram", confirm: "¿Desconectar el bot de Telegram? Dejarán de llegar mensajes a la bandeja." },
-  whatsapp: { label: "WhatsApp", confirm: "¿Desconectar WhatsApp? Marcha Solo borra las credenciales de Twilio; las conversaciones ya guardadas siguen en la bandeja." },
+  whatsapp: { label: "WhatsApp", confirm: "¿Desconectar WhatsApp? MarchaSolo borra las credenciales de Twilio; las conversaciones ya guardadas siguen en la bandeja." },
   calendar: { label: "Google Calendar", confirm: "¿Desconectar Google Calendar? Las automatizaciones dejarán de ver y crear eventos." },
-  hubspot: { label: "HubSpot", confirm: "¿Desconectar HubSpot? Marcha Solo borra la clave; revócala también en HubSpot si ya no la usas." },
-  imap: { label: "el correo", confirm: "¿Desconectar este correo? Marcha Solo borra la contraseña; las conversaciones ya guardadas siguen en la bandeja." },
-  tokko: { label: "Tokko", confirm: "¿Desconectar Tokko? Marcha Solo borra la clave; las automatizaciones dejarán de ver tus propiedades." },
-  xubio: { label: "Xubio", confirm: "¿Desconectar Xubio? Marcha Solo borra las credenciales; bórralas también en Xubio si ya no las usas." },
+  hubspot: { label: "HubSpot", confirm: "¿Desconectar HubSpot? MarchaSolo borra la clave; revócala también en HubSpot si ya no la usas." },
+  imap: { label: "el correo", confirm: "¿Desconectar este correo? MarchaSolo borra la contraseña; las conversaciones ya guardadas siguen en la bandeja." },
+  tokko: { label: "Tokko", confirm: "¿Desconectar Tokko? MarchaSolo borra la clave; las automatizaciones dejarán de ver tus propiedades." },
+  xubio: { label: "Xubio", confirm: "¿Desconectar Xubio? MarchaSolo borra las credenciales; bórralas también en Xubio si ya no las usas." },
 }
 
 export function DisconnectInboxForm({
@@ -324,7 +324,7 @@ export function ImapForm({ workspaceId, current }: { workspaceId: string; curren
         label={current ? "Contraseña (vuelve a escribirla para guardar cambios)" : "Contraseña"}
         autoComplete="off"
         required
-        hint="Si tu proveedor ofrece «contraseñas de aplicación», crea una para Marcha Solo y úsala aquí. Se guarda cifrada y no se vuelve a mostrar."
+        hint="Si tu proveedor ofrece «contraseñas de aplicación», crea una para MarchaSolo y úsala aquí. Se guarda cifrada y no se vuelve a mostrar."
       />
       {provider === "gmail" ? (
         <p className="border-l-2 border-stroke pl-3 text-xs text-graphite">
@@ -389,7 +389,7 @@ export function TokkoForm({ workspaceId, replacing }: { workspaceId: string; rep
         autoComplete="off"
         spellCheck={false}
         required
-        hint="Marcha Solo la guarda cifrada y no vuelve a mostrarla."
+        hint="MarchaSolo la guarda cifrada y no vuelve a mostrarla."
       />
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-56">
@@ -418,7 +418,7 @@ export function XubioForm({ workspaceId, replacing }: { workspaceId: string; rep
         autoComplete="off"
         spellCheck={false}
         required
-        hint="Marcha Solo guarda las dos cifradas y no vuelve a mostrarlas."
+        hint="MarchaSolo guarda las dos cifradas y no vuelve a mostrarlas."
       />
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-56">

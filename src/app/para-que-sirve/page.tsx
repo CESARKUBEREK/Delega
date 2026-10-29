@@ -4,7 +4,7 @@ import { MarketingLayout } from "@/components/marketing-layout"
 
 export const metadata: Metadata = {
   title: "Qué puedes hacer",
-  description: "Descubre cómo Marcha Solo convierte tareas repetitivas en flujos de trabajo que puedes revisar, ajustar y poner en marcha.",
+  description: "Descubre cómo MarchaSolo convierte tareas repetitivas en flujos de trabajo que puedes revisar, ajustar y poner en marcha.",
   robots: { index: true, follow: true },
 }
 
@@ -38,11 +38,11 @@ export default function WhatIsMarchaSoloPage() {
             <p className="marketing-eyebrow"><span /> TU NEGOCIO, CON MÁS IMPULSO</p>
             <h1>Menos tareas que se repiten.<br /><em>Más tiempo para avanzar.</em></h1>
             <p className="marketing-lead">
-              Marcha Solo convierte instrucciones cotidianas en planes de trabajo que puedes revisar, adaptar y poner en marcha.
+              MarchaSolo convierte instrucciones cotidianas en planes de trabajo que puedes revisar, adaptar y poner en marcha.
               Conecta tus herramientas y deja que la IA te ayude con el trabajo repetitivo.
             </p>
             <div className="marketing-actions">
-              <Link href="/signup" className="marketing-primary-button">Prueba Marcha Solo <span aria-hidden="true">→</span></Link>
+              <Link href="/signup" className="marketing-primary-button">Prueba MarchaSolo <span aria-hidden="true">→</span></Link>
               <Link href="/como-empezar" className="marketing-text-link">Descubre cómo funciona <span aria-hidden="true">↗</span></Link>
             </div>
             <p className="marketing-reassurance">Tú marcas el objetivo. Tú revisas el plan. Tú decides cómo avanzar.</p>
@@ -107,8 +107,8 @@ export default function WhatIsMarchaSoloPage() {
         <section className="marketing-final-cta">
           <p className="marketing-eyebrow">DA EL PRIMER PASO</p>
           <h2>Cuéntale una tarea.<br /><em>Empieza a recuperar tiempo.</em></h2>
-          <p>Describe algo que haces a menudo. Marcha Solo te ayudará a convertirlo en un plan claro.</p>
-          <Link href="/signup" className="marketing-primary-button">Probar Marcha Solo <span aria-hidden="true">→</span></Link>
+          <p>Describe algo que haces a menudo. MarchaSolo te ayudará a convertirlo en un plan claro.</p>
+          <Link href="/signup" className="marketing-primary-button">Probar MarchaSolo <span aria-hidden="true">→</span></Link>
         </section>
       </main>
     </MarketingLayout>

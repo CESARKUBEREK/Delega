@@ -92,7 +92,7 @@ export function TelegramLink({
           Tu Telegram{linkedName ? ` (${linkedName})` : ""} está vinculado con @{botUsername}.
         </p>
         <p className="text-sm text-graphite">
-          Además de tus avisos, en ese chat puedes pedirle cosas a Marcha Solo (por escrito o con notas de voz), aprobar o
+          Además de tus avisos, en ese chat puedes pedirle cosas a MarchaSolo (por escrito o con notas de voz), aprobar o
           rechazar con botones lo que espera tu aprobación y lanzar o pausar tus automatizaciones. Escribe /ayuda en el
           chat para ver los comandos.
         </p>
