@@ -5,8 +5,8 @@ import type { MetadataRoute } from "next"
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/abrir",
-    name: "MarchaSolo",
-    short_name: "MarchaSolo",
+    name: "Marcha Solo",
+    short_name: "Marcha Solo",
     description: "Tu negocio, en automático. Pide tareas por texto o voz y aprueba lo que se escribe o se envía.",
     lang: "es",
     dir: "ltr",

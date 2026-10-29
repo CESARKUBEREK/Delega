@@ -16,19 +16,19 @@ export function Sheet({
 }) {
   return (
     <main className="auth-shell">
-      <section className="auth-story" aria-label="Qué puedes hacer con MarchaSolo">
+      <section className="auth-story" aria-label="Qué puedes hacer con Marcha Solo">
         <header className="auth-brand"><Logo size={38} id="orkesta-auth" /></header>
         <div className="auth-copy">
           <span className="auth-eyebrow"><span className="auth-live-dot" /> AUTOMATIZACIÓN CON IA</span>
           <h2>Las tareas avanzan.<br /><span>Tú decides.</span></h2>
-          <p>Conecta tus herramientas, describe lo que necesitas y deja que MarchaSolo prepare el trabajo.</p>
+          <p>Conecta tus herramientas, describe lo que necesitas y deja que Marcha Solo prepare el trabajo.</p>
         </div>
-        <div className="workflow-card" aria-label="Ejemplo de automatización: correo, MarchaSolo y aprobación">
+        <div className="workflow-card" aria-label="Ejemplo de automatización: correo, Marcha Solo y aprobación">
           <div className="workflow-top"><span>FLUJO DE TRABAJO</span><span className="workflow-status"><i /> LISTO PARA REVISAR</span></div>
           <div className="workflow-lane">
             <div className="workflow-node"><span className="workflow-icon inbox-icon">✉</span><span><b>Nuevo correo</b><small>Solicitud recibida</small></span></div>
             <span className="workflow-link" aria-hidden="true"><i /></span>
-            <div className="workflow-node brand-node"><span className="workflow-icon brand-icon"><LogoMark size={22} id="orkesta-flow" /></span><span><b>MarchaSolo prepara</b><small>Clasifica y propone</small></span></div>
+            <div className="workflow-node brand-node"><span className="workflow-icon brand-icon"><LogoMark size={22} id="orkesta-flow" /></span><span><b>Marcha Solo prepara</b><small>Clasifica y propone</small></span></div>
             <span className="workflow-link" aria-hidden="true"><i /></span>
             <div className="workflow-node"><span className="workflow-icon check-icon">✓</span><span><b>Tu aprobación</b><small>Antes de ejecutar</small></span></div>
           </div>

@@ -484,7 +484,7 @@ export async function savePushSubscription(input: {
     return { ok: false, error: "Este navegador devolvió una suscripción no válida." }
   }
   if (url.protocol !== "https:" || url.port || !PUSH_HOSTS.some((re) => re.test(url.hostname)) || input.endpoint.length > 1000) {
-    return { ok: false, error: "Este navegador usa un servicio de avisos que MarchaSolo no admite." }
+    return { ok: false, error: "Este navegador usa un servicio de avisos que Marcha Solo no admite." }
   }
   const p256dh = input.p256dh.replace(/=+$/, "")
   const auth = input.auth.replace(/=+$/, "")

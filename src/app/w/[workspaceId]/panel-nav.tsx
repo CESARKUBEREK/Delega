@@ -42,7 +42,7 @@ export function PanelNav({ pending = 0 }: { pending?: number }) {
     <nav aria-label="Secciones del espacio" className="app-sidebar-nav">
       <Link href={`${base}/asistente`} className="app-sidebar-cta" aria-current={isActive("asistente") ? "page" : undefined}>
         <Icon name="asistente" />
-        <span>Pide algo a MarchaSolo</span>
+        <span>Pide algo a Marcha Solo</span>
       </Link>
       <p className="app-nav-heading">TU ESPACIO</p>
       <ul className="app-sidebar-list flex flex-col divide-y divide-rule border border-ink bg-sheet">

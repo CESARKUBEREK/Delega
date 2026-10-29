@@ -15,7 +15,7 @@ export default function WorkspacesPage() {
     <div className="app-shell min-h-dvh">
       <header className="app-topbar">
         <div className="app-topbar-inner">
-          <Link href="/abrir" aria-label="MarchaSolo, Hoy" className="app-brand-link">
+          <Link href="/abrir" aria-label="Marcha Solo, Hoy" className="app-brand-link">
             <Logo size={30} id="orkesta-header" />
           </Link>
           <div className="app-topbar-spacer" />

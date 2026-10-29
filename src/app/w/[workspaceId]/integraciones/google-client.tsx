@@ -85,7 +85,7 @@ export function PickSheetsButton({
         .setDeveloperKey(apiKey)
         .setAppId(appId)
         .setLocale("es")
-        .setTitle("Elige los archivos y carpetas que MarchaSolo puede usar")
+        .setTitle("Elige los archivos y carpetas que Marcha Solo puede usar")
         .setCallback(async (data) => {
           if (data.action === picker.Action.CANCEL) {
             setBusy(false)
@@ -98,7 +98,7 @@ export function PickSheetsButton({
             const added = result.added?.length ?? 0
             const skipped = result.skipped?.length ?? 0
             setMessage({
-              message: `${added} elemento(s) añadido(s).${skipped ? ` ${skipped} se omitieron (formularios, dibujos u otros tipos que MarchaSolo no sabe leer).` : ""}`,
+              message: `${added} elemento(s) añadido(s).${skipped ? ` ${skipped} se omitieron (formularios, dibujos u otros tipos que Marcha Solo no sabe leer).` : ""}`,
             })
           }
           setBusy(false)
@@ -133,7 +133,7 @@ export function DisconnectGoogleForm({ workspaceId }: { workspaceId: string }) {
       action={action}
       className="flex flex-col gap-2 border-t border-rule pt-4"
       onSubmit={(e) => {
-        if (!window.confirm("¿Desconectar Google Drive? MarchaSolo pierde el acceso y se olvidan los archivos y carpetas elegidos.")) e.preventDefault()
+        if (!window.confirm("¿Desconectar Google Drive? Marcha Solo pierde el acceso y se olvidan los archivos y carpetas elegidos.")) e.preventDefault()
       }}
     >
       <input type="hidden" name="workspaceId" value={workspaceId} />

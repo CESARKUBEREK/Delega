@@ -61,7 +61,7 @@ async function WorkspaceHeading({ params }: { params: LayoutProps<"/w/[workspace
   return (
     <header className="app-topbar">
       <div className="app-topbar-inner">
-        <Link href={`/w/${workspace.id}`} aria-label="MarchaSolo, Hoy" className="app-brand-link">
+        <Link href={`/w/${workspace.id}`} aria-label="Marcha Solo, Hoy" className="app-brand-link">
           <Logo size={34} id="orkesta-workspace" />
         </Link>
         <span className="app-topbar-divider" aria-hidden="true" />

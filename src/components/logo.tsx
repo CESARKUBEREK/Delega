@@ -1,4 +1,4 @@
-// Marca de MarchaSolo: un robot de cuerda (azul) con su llave (coral) y el
+// Marca de Marcha Solo: un robot de cuerda (azul) con su llave (coral) y el
 // nombre en Montserrat. Paleta del logo: azul #2457D6, marino #17233E,
 // coral #E85A45, fondo #F7F8FC y blanco.
 
@@ -31,7 +31,7 @@ export function Logo({ size = 28, tagline = false }: { size?: number; tagline?: 
         <span>Marcha</span>
         <span>Solo</span>
       </span>
-      <span className="sr-only">MarchaSolo</span>
+      <span className="sr-only">Marcha Solo</span>
     </span>
   )
 }

@@ -66,26 +66,37 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
 
   return (
     <div className="today flex flex-col gap-7">
-      <header className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-graphite">{formatToday(timezone)}</p>
-        <h1 className="rotulo text-3xl">
-          {greeting(timezone)}
-          {firstName ? `, ${firstName}` : ""}
-        </h1>
+      <header className="today-hero">
+        <div className="today-hero-main">
+          <p className="today-hero-kicker"><span aria-hidden="true" /> CENTRO DE CONTROL</p>
+          <p className="today-hero-date">{formatToday(timezone)}</p>
+          <h1 className="rotulo">
+            {greeting(timezone)}
+            {firstName ? `, ${firstName}` : ""}
+          </h1>
+          <p className="today-hero-description">Tus aprobaciones, actividad y próximas automatizaciones, en un solo lugar.</p>
+        </div>
+        <aside className="today-hero-status" aria-label="Estado del espacio">
+          <span className="today-hero-status-label">ESTADO DEL ASISTENTE</span>
+          <span className={`today-hero-state ${aiActive ? "is-ready" : "is-setup"}`}>
+            <i aria-hidden="true" /> {aiActive ? "IA conectada" : "IA por conectar"}
+          </span>
+          <span className="today-hero-pending"><strong>{pendingTotal}</strong><span>{pendingTotal === 1 ? "aprobación pendiente" : "aprobaciones pendientes"}</span></span>
+        </aside>
       </header>
 
       {!aiActive ? (
         <p className="today-callout rounded-2xl border border-rule bg-sheet px-5 py-4 text-sm text-graphite">
           {isAdmin ? (
             <>
-              Para que MarchaSolo pueda trabajar, conecta la clave de una IA en{" "}
+              Para que Marcha Solo pueda trabajar, conecta la clave de una IA en{" "}
               <Link href={`${base}/integraciones`} className="font-semibold text-link underline underline-offset-4">
                 Integraciones
               </Link>
               .
             </>
           ) : (
-            "Un administrador tiene que conectar la clave de una IA para que MarchaSolo pueda trabajar."
+            "Un administrador tiene que conectar la clave de una IA para que Marcha Solo pueda trabajar."
           )}
         </p>
       ) : null}
@@ -105,7 +116,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
 
         {(waiting ?? []).length === 0 ? (
           <p className="rounded-2xl border border-rule bg-sheet px-5 py-4 text-sm text-graphite">
-            Nada pendiente. Cuando MarchaSolo quiera escribir o enviar algo, te lo pedirá aquí.
+            Nada pendiente. Cuando Marcha Solo quiera escribir o enviar algo, te lo pedirá aquí.
           </p>
         ) : (
           <ul className="flex flex-col gap-2.5">
@@ -179,11 +190,11 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
         )}
       </section>
 
-      <form action={`${base}/asistente`} method="get" role="search" aria-label="Pide algo a MarchaSolo" className="today-ask">
+      <form action={`${base}/asistente`} method="get" role="search" aria-label="Pide algo a Marcha Solo" className="today-ask">
         <label htmlFor="hoy-pedir" className="sr-only">
-          Pide algo a MarchaSolo
+          Pide algo a Marcha Solo
         </label>
-        <input id="hoy-pedir" name="q" type="text" autoComplete="off" maxLength={2000} placeholder="Pide algo a MarchaSolo…" className="today-ask-input" />
+        <input id="hoy-pedir" name="q" type="text" autoComplete="off" maxLength={2000} placeholder="Pide algo a Marcha Solo…" className="today-ask-input" />
         <button type="submit" aria-label="Seguir en el chat" className="today-ask-button">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M5 12h14M13 6l6 6-6 6" />

@@ -1,7 +1,6 @@
 @import "tailwindcss";
-@import "@fontsource-variable/montserrat/wght.css";
 
-/* MarchaSolo · tokens (colores y letra del logo)
+/* Marcha Solo · tokens (colores y letra del logo)
    Azul #2457D6 (acción y lo activo), marino #17233E (texto y títulos),
    coral #E85A45 (acento de la llave: avisos y detalles), fondo #F7F8FC y
    blanco. El coral solo se usa en rellenos con texto marino o en detalles:
@@ -421,7 +420,7 @@ a.flow-node-trigger:hover { border-color:#17233e; box-shadow:0 0 0 3px rgb(36 87
   .approval-actions > button { flex:1 1 140px; }
 }
 
-/* Tema claro de MarchaSolo (todas las vistas autenticadas): fondo gris
+/* Tema claro de Marcha Solo (todas las vistas autenticadas): fondo gris
    claro, marino para el texto, azul para lo activo, coral en los detalles y
    verde para lo que ha ido bien. Sin tema oscuro. */
 .app-shell { background: radial-gradient(ellipse at 10% -10%, rgb(36 87 214 / 7%), transparent 30rem), #f7f8fc; }
@@ -548,3 +547,44 @@ button.bg-stroke:disabled { color: #fff; }
 /* Enlaces: azul; al pasar por encima, subrayado coral. */
 .panel-content a.underline:hover, .panel-content a.text-link:hover { text-decoration-color: #e85a45; }
 ::selection { background: rgb(232 90 69 / 22%); }
+
+/* Marcha Solo · AI Command Center: más jerarquía en el espacio de trabajo. */
+.app-sidebar-list { border-color: rgb(255 255 255 / 8%); background: linear-gradient(155deg, #17233e, #101a30); box-shadow: 0 18px 42px rgb(23 35 62 / 16%); }
+.app-sidebar-list > li { border-color: rgb(255 255 255 / 7%); }
+.app-sidebar-list .app-sidebar-link { color: #c1cbda; }
+.app-sidebar-list .app-sidebar-link:hover { background: rgb(255 255 255 / 8%); color: #fff; }
+.app-sidebar-list .app-sidebar-link[aria-current="page"] { background: #2457d6; box-shadow: inset 3px 0 #e85a45, 0 7px 18px rgb(0 0 0 / 14%); color: #fff; }
+.app-sidebar-list .app-sidebar-link[aria-current="page"] .app-nav-icon { color: #ffd0c8; }
+.app-nav-heading { color: #b93a27; }
+.app-sidebar-nav .app-nav-heading { color: #f19b8d; }
+
+.today-hero {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 28px;
+  overflow: hidden; padding: clamp(24px, 3.5vw, 40px); border: 1px solid rgb(255 255 255 / 10%); border-radius: 22px;
+  background: radial-gradient(ellipse at 86% 5%, rgb(36 87 214 / 35%), transparent 37%), linear-gradient(120deg, #101b32 0%, #17233e 64%, #1b2b4b 100%);
+  box-shadow: 0 20px 48px rgb(23 35 62 / 19%); color: #fff; isolation: isolate;
+}
+.today-hero::after { position: absolute; z-index: -1; right: -46px; bottom: -154px; width: 300px; height: 300px; border: 1px solid rgb(255 255 255 / 9%); border-radius: 50%; box-shadow: 0 0 0 24px rgb(255 255 255 / 2%), 0 0 0 54px rgb(232 90 69 / 5%); content: ""; }
+.today-hero-main { min-width: 0; }
+.today-hero-kicker { display: flex; align-items: center; gap: 9px; margin: 0 0 14px; color: #b9c6d8; font-size: 10px; font-weight: 750; letter-spacing: .15em; }
+.today-hero-kicker span { width: 7px; height: 7px; border-radius: 50%; background: #e85a45; box-shadow: 0 0 14px rgb(232 90 69 / 70%); }
+.today-hero-date { margin: 0 0 7px; color: #aebbd0; font-size: 13px; font-weight: 550; }
+.panel-content .today-hero h1.rotulo { margin: 0; color: #fff; font-size: clamp(32px, 4vw, 48px); letter-spacing: -.045em; }
+.today-hero h1.rotulo::after { display: none; }
+.today-hero-description { max-width: 55ch; margin: 12px 0 0; color: #c3cedc; font-size: 14px; line-height: 1.6; }
+.today-hero-status { position: relative; display: flex; min-width: 220px; flex-direction: column; gap: 13px; padding: 18px; border: 1px solid rgb(255 255 255 / 12%); border-radius: 15px; background: rgb(255 255 255 / 7%); box-shadow: inset 0 1px rgb(255 255 255 / 5%); backdrop-filter: blur(10px); }
+.today-hero-status-label { color: #aebbd0; font-size: 9px; font-weight: 750; letter-spacing: .13em; }
+.today-hero-state { display: inline-flex; width: fit-content; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid rgb(255 255 255 / 13%); border-radius: 999px; color: #e9f1fb; font-size: 12px; font-weight: 650; }
+.today-hero-state i { width: 7px; height: 7px; border-radius: 50%; background: #55d6a5; box-shadow: 0 0 12px rgb(85 214 165 / 60%); }
+.today-hero-state.is-setup i { background: #ff9b8c; box-shadow: 0 0 12px rgb(255 155 140 / 50%); }
+.today-hero-pending { display: flex; align-items: baseline; gap: 8px; color: #c3cedc; font-size: 11px; }
+.today-hero-pending strong { color: #fff; font-size: 27px; font-weight: 750; letter-spacing: -.04em; }
+.today .today-hero + .today-callout { border-left: 3px solid #e85a45; }
+@media (max-width: 700px) {
+  .today-hero { grid-template-columns: minmax(0, 1fr); gap: 20px; padding: 22px 20px; border-radius: 17px; }
+  .today-hero-status { min-width: 0; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; }
+  .today-hero-status-label { max-width: 80px; line-height: 1.35; }
+  .today-hero-pending { flex-direction: column; gap: 0; align-items: flex-end; text-align: right; }
+  .today-hero-pending strong { font-size: 22px; line-height: 1.1; }
+  .today-hero-pending span { font-size: 9px; }
+}
