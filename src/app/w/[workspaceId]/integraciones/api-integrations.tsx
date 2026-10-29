@@ -92,7 +92,7 @@ function SupabaseForm({ workspaceId }: { workspaceId: string }) {
         autoComplete="url"
         required
         maxLength={500}
-        hint="En Supabase, copia el Project URL desde Connect."
+        hint="En Supabase: Project Settings → Data API → Project URL (https://….supabase.co)."
       />
       <Field
         id="supabase-anon-key"
@@ -104,11 +104,23 @@ function SupabaseForm({ workspaceId }: { workspaceId: string }) {
         spellCheck={false}
         required
         maxLength={1000}
-        hint="No uses service_role. MarchaSolo opera como anon y tu RLS decide qué filas y acciones permite."
+        hint="Project Settings → API Keys → la publishable (o la anon). Nunca la secret ni la service_role: MarchaSolo trabaja como anon y tus reglas RLS deciden qué puede ver y cambiar."
       />
-      <p className="border-l-2 border-coral bg-alert-bg px-3 py-2 text-xs text-ink">
-        Para que funcione, habilita Data API para las tablas y configura políticas RLS para el rol anon. Las escrituras pedirán aprobación y también deben estar permitidas por RLS.
-      </p>
+      <details className="rounded-lg border border-rule px-3 py-2 text-xs text-graphite">
+        <summary className="cursor-pointer text-sm font-medium text-ink">Después de conectar: qué tablas puede usar</summary>
+        <p className="mt-2">
+          MarchaSolo solo ve las tablas que tus reglas RLS permiten al rol <code>anon</code>. Por ejemplo, para que pueda leer la tabla{" "}
+          <code>clientes</code>, ejecuta esto en el SQL Editor de tu proyecto:
+        </p>
+        <pre className="mt-2 overflow-x-auto rounded bg-paper p-2 text-[11px] text-ink">{`alter table public.clientes enable row level security;
+grant select on public.clientes to anon;
+create policy "MarchaSolo lee clientes" on public.clientes
+  for select to anon using (true);`}</pre>
+        <p className="mt-2">
+          Para que pueda añadir o cambiar filas, haz lo mismo con <code>insert</code> o <code>update</code>. Cada escritura espera tu aprobación en MarchaSolo.
+          La tabla tiene que estar en el esquema <code>public</code> (o en uno expuesto en Data API).
+        </p>
+      </details>
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-60"><SubmitButton pendingLabel="Comprobando proyecto…">Conectar Supabase</SubmitButton></div>
     </form>
