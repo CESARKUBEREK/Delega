@@ -2,7 +2,7 @@
 // de voz de Grok (xAI) para atender las llamadas de un espacio.
 //
 //   URL:   …/functions/v1/voice-mcp?w=<espacio>
-//   Clave: Authorization: Bearer msv_…  (la genera el administrador en
+//   Clave: Authorization: Bearer msv_… (o msv_… a secas). La genera el administrador en
 //          Integraciones → Atención telefónica; se guarda en Vault).
 //
 // Sin JWT de Supabase: la autenticación es la clave del espacio, comparada en
@@ -44,8 +44,10 @@ Deno.serve(async (req) => {
 
   // Autenticación: espacio en la URL y su clave.
   const workspaceId = new URL(req.url).searchParams.get("w")
-  const auth = req.headers.get("authorization") ?? ""
-  const token = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : (req.headers.get("x-marchasolo-key") ?? "").trim()
+  // La clave puede llegar como «Bearer msv_…», como «msv_…» a secas (según
+  // cómo la envíe el cliente MCP) o en la cabecera x-marchasolo-key.
+  const auth = (req.headers.get("authorization") ?? "").trim()
+  const token = (auth.toLowerCase().startsWith("bearer ") ? auth.slice(7) : auth || (req.headers.get("x-marchasolo-key") ?? "")).trim()
   if (!isUuid(workspaceId) || !VOICE_TOKEN_RE.test(token)) return send(rpcError(null, -32001, "No autorizado."), 401)
   const [{ data: secretRows }, { data: integ }] = await Promise.all([
     admin.rpc("integration_secret", { p_workspace_id: workspaceId, p_provider: VOICE_PROVIDER }),

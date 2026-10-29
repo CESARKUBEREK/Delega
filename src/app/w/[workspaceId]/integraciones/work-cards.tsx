@@ -347,8 +347,9 @@ export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string;
                     <li>Entra en console.x.ai → Voice Agents y crea un agente con la plantilla «Custom».</li>
                     <li>Pega estas instrucciones como guion del agente y elige una voz.</li>
                     <li>
-                      En herramientas, añade un servidor MCP remoto con la URL de arriba y la cabecera Authorization con tu clave (si no la
-                      copiaste, crea una nueva).
+                      En herramientas, añade un servidor MCP remoto: pega la URL de arriba como dirección del servidor y la clave en el
+                      campo Authorization (si te pide una cabecera completa, escribe «Bearer » delante). Si no copiaste la clave, crea una
+                      nueva.
                     </li>
                     <li>Asigna el número de teléfono que te da xAI (o el tuyo por SIP), pruébalo desde el navegador y llama para comprobarlo.</li>
                   </ol>
