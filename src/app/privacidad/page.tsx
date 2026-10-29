@@ -81,6 +81,12 @@ export default function PrivacyPage() {
           con ellos.
         </p>
 
+        <p>
+          Base legal: tratamos tus datos para prestarte el servicio que contratas al crear la cuenta (ejecución del contrato), para
+          mantenerlo seguro y evitar abusos (interés legítimo) y, cuando la ley lo exige, con tu consentimiento, que puedes retirar en
+          cualquier momento desconectando el servicio correspondiente.
+        </p>
+
         <h2 id="google">4. Datos de las API de Google</h2>
         <p>
           El uso y la transferencia a cualquier otra aplicación de la información recibida de las API de Google se ajustan a la{" "}
@@ -155,7 +161,8 @@ export default function PrivacyPage() {
         <p>
           Puedes pedir acceder a tus datos, corregirlos, borrarlos, llevártelos a otro servicio, limitar su uso u oponerte a él escribiendo
           a <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>. Te responderemos en un plazo máximo de un mes. También puedes reclamar ante
-          la autoridad de protección de datos de tu país.
+          la CNIL (Commission nationale de l&apos;informatique et des libertés, en Francia) o ante la autoridad de protección de datos de
+          tu país.
         </p>
 
         <h2>9. Menores</h2>

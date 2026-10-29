@@ -22,8 +22,9 @@ así que **no** hace falta la auditoría de seguridad de terceros.
 
 ## Antes de enviar
 
-1. **Rellenar los datos del responsable** en `src/lib/legal.ts` (nombre o
-   razón social, correo de contacto y país) y desplegar.
+1. **Datos del responsable** (ya en `src/lib/legal.ts`): Cyrano SAS, Francia,
+   legal@marchasolo.com. Ese buzón tiene que existir y recibir correo:
+   Google escribe ahí durante la verificación.
 2. **Dominio propio verificado.** La web, la política de privacidad y los
    términos tienen que estar en un dominio que controles (no
    `*.vercel.app`). Verifícalo en
