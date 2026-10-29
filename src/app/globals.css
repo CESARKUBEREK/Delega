@@ -909,3 +909,20 @@ button.bg-stroke:disabled { color: #fff; }
 @media (prefers-reduced-motion: reduce) {
   .marketing-header-cta, .marketing-primary-button { transition: none; }
 }
+
+/* Fondo común del sitio: la retícula clara y los reflejos coral/azul de la portada. */
+body {
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(ellipse at 9% 0%, rgb(232 90 69 / 7%), transparent 32rem),
+    radial-gradient(ellipse at 92% 3%, rgb(36 87 214 / 6%), transparent 34rem),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: auto, auto, 40px 40px, 40px 40px;
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+  background-attachment: fixed;
+}
+.app-shell, .auth-shell, .marketing-site {
+  min-height: 100dvh;
+  background: transparent;
+}
