@@ -376,7 +376,7 @@ function toolDefs(r: Resources): ToolDef[] {
     )
   }
   if (r.apiProviders.length) {
-    tools.push(fn("api_request", "Consulta una tabla de Supabase o una API REST configurada. GET lee sin aprobación; POST, PATCH y DELETE esperan aprobación. En Supabase usa el nombre de tabla y filtros PostgREST en query; en otras APIs usa una ruta relativa a la URL base.", {
+    tools.push(fn("api_request", "Consulta una tabla de Supabase o una API REST configurada. GET lee sin aprobación; POST, PATCH y DELETE esperan aprobación. Para PATCH y DELETE en Supabase, query debe incluir un filtro PostgREST. Usa un JSON en body para POST/PATCH. En Supabase usa el nombre de tabla y filtros PostgREST en query; en otras APIs usa una ruta relativa a la URL base.", {
       provider: { type: "string", enum: r.apiProviders },
       method: { type: "string", enum: ["GET", "POST", "PATCH", "DELETE"] },
       path: { type: "string", description: "Supabase: nombre de tabla. API propia: ruta relativa, p. ej. contactos." },
@@ -1017,7 +1017,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       const body = str(args.body, 30_000)
       const names: Record<string, string> = { supabase: "Supabase", custom_1: "API a medida 1", custom_2: "API a medida 2" }
       if (typeof provider !== "string" || !res.apiProviders.includes(provider as "supabase" | "custom_1" | "custom_2")) invalid = "Conecta esta integración en Integraciones."
-      else if (!(["POST", "PATCH", "DELETE"] as unknown[]).includes(method) || !path || query.includes("#")) invalid = "Petición REST de escritura no válida."
+      else if (!(["POST", "PATCH", "DELETE"] as unknown[]).includes(method) || !path || query.includes("#") || (provider === "supabase" && (method === "PATCH" || method === "DELETE") && !query.trim()) || ((method === "POST" || method === "PATCH") && !body.trim())) invalid = "Petición REST no válida: revisa método, ruta, filtro y cuerpo JSON."
       else if (body.length > 30_000) invalid = "El cuerpo supera el límite de 30 KB."
       else {
         if (body) { try { JSON.parse(body) } catch { invalid = "El cuerpo debe ser JSON válido." } }
