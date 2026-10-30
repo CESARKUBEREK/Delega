@@ -39,7 +39,7 @@ export const KIND_INFO: Record<StepKind, { label: string; hint: string }> = {
 
 // Aplicaciones que tiene sentido elegir en cada tipo de paso. "none" = sin aplicación.
 export const KIND_CONNECTIONS: Record<StepKind, ("none" | ConnectionKind)[]> = {
-  read: ["spreadsheet", "documents", "drive", "email", "whatsapp", "telegram", "calendar", "crm", "properties", "accounting"],
+  read: ["spreadsheet", "documents", "drive", "email", "whatsapp", "telegram", "calendar", "crm", "properties", "accounting", "social"],
   compare: ["none", "spreadsheet", "documents", "drive", "email", "calendar", "crm", "properties", "accounting"],
   transform: ["none", "spreadsheet", "documents", "email", "whatsapp", "telegram"],
   generate: ["none", "documents"],

@@ -45,7 +45,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
         </Link>{" "}
         <span className="text-sm text-graphite">o</span>{" "}
         <Link href={`${base}/automatizaciones/plantillas`} className="automation-empty-link text-sm font-semibold underline underline-offset-4">
-          usa una plantilla
+          elige una de las 10 rutinas
         </Link>{" "}
         <span className="text-sm text-graphite">o</span>{" "}
         <Link href={`${base}/automatizaciones/nueva`} className="text-sm text-link underline underline-offset-4">
@@ -62,7 +62,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
           href={`${base}/automatizaciones/plantillas`}
           className="automation-action-secondary inline-flex h-11 items-center justify-center px-5 text-base font-semibold"
         >
-          Empezar con una plantilla
+          Ver las 10 rutinas
         </Link>
         <Link
           href={`${base}/automatizaciones/nueva`}

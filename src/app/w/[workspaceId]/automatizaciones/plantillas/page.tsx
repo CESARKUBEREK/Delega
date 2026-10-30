@@ -1,31 +1,44 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { TRIGGER_LABEL } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
-import { NEED_LABEL, TEMPLATES, type TemplateNeed } from "@/lib/templates"
+import { findTemplate, ROUTINES, type RoutineTier, SECTOR_TEMPLATES, TIER_INFO, type TemplateNeed } from "@/lib/templates"
 import { getWorkspace } from "@/lib/workspace"
-import { createFlowFromTemplate } from "../../ai-actions"
+import { RoutineCard, TemplateRow } from "./routine-card"
 
-export const metadata = { title: "Plantillas" }
+export const metadata = { title: "Rutinas" }
+
+const PROVIDER_NEED: Record<string, TemplateNeed> = {
+  imap: "imap",
+  telegram: "telegram",
+  whatsapp: "whatsapp",
+  google: "google",
+  calendar: "calendar",
+  hubspot: "hubspot",
+  tokko: "tokko",
+  xubio: "xubio",
+  buffer: "buffer",
+  grok_voice: "voice",
+}
 
 export default function TemplatesPage({ params }: PageProps<"/w/[workspaceId]/automatizaciones/plantillas">) {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="rotulo text-2xl">Plantillas</h1>
+        <p className="app-eyebrow">TU NEGOCIO, EN AUTOMÁTICO</p>
+        <h1 className="rotulo text-2xl">Rutinas</h1>
         <p className="mt-1 max-w-prose text-graphite">
-          Automatizaciones listas para usar. Al elegir una se crea un borrador: después eliges tus archivos, ajustas los filtros y la
-          activas. Todo lo que escriba o envíe espera tu aprobación.
+          Diez rutinas para el día a día de un negocio. Cada una agrupa plantillas listas para usar: al elegir una se crea un borrador que
+          ajustas (archivos, horario, filtros) o cambias hablando con el chat. Lo que escriba o envíe a otros espera tu aprobación.
         </p>
       </div>
-      <Suspense fallback={<div className="h-96 border border-rule bg-sheet" aria-busy="true" />}>
-        <TemplateList params={params} />
+      <Suspense fallback={<div className="h-96 rounded-2xl border border-rule bg-sheet" aria-busy="true" />}>
+        <RoutineList params={params} />
       </Suspense>
     </div>
   )
 }
 
-async function TemplateList({ params }: { params: PageProps<"/w/[workspaceId]/automatizaciones/plantillas">["params"] }) {
+async function RoutineList({ params }: { params: PageProps<"/w/[workspaceId]/automatizaciones/plantillas">["params"] }) {
   const { workspaceId } = await params
   await getWorkspace(workspaceId, `/w/${workspaceId}/automatizaciones/plantillas`)
   const supabase = await createClient()
@@ -36,65 +49,53 @@ async function TemplateList({ params }: { params: PageProps<"/w/[workspaceId]/au
   const ready = new Set<TemplateNeed>()
   if ((ai ?? []).some((c) => c.status === "active")) ready.add("ai")
   for (const i of integrations ?? []) {
-    if (i.status !== "active") continue
-    if (i.provider === "imap") ready.add("imap")
-    if (i.provider === "telegram") ready.add("telegram")
-    if (i.provider === "whatsapp") ready.add("whatsapp")
-    if (i.provider === "google") ready.add("google")
-    if (i.provider === "calendar") ready.add("calendar")
-    if (i.provider === "hubspot") ready.add("hubspot")
-    if (i.provider === "tokko") ready.add("tokko")
-    if (i.provider === "xubio") ready.add("xubio")
+    const need = PROVIDER_NEED[i.provider]
+    if (i.status === "active" && need) ready.add(need)
   }
+  const base = `/w/${workspaceId}`
+  const tiers: RoutineTier[] = ["personal", "negocio", "avanzado"]
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-10">
       <p className="text-sm">
-        <Link href={`/w/${workspaceId}/automatizaciones`} className="text-link underline underline-offset-4">
+        <Link href={`${base}/automatizaciones`} className="text-link underline underline-offset-4">
           Volver a automatizaciones
         </Link>
       </p>
-      <ul className="grid gap-4 md:grid-cols-2">
-        {TEMPLATES.map((t) => {
-          const missing = t.needs.filter((n) => !ready.has(n))
-          return (
-            <li key={t.id} className="flex flex-col gap-3 border border-ink bg-sheet p-5">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-graphite">{t.category}</p>
-                <h2 className="mt-1 font-semibold text-ink">{t.plan.name}</h2>
-                <p className="mt-1 text-sm text-graphite">{t.plan.summary}</p>
-              </div>
-              <p className="text-sm text-ink">
-                <span className="text-graphite">Arranca: </span>
-                {t.plan.trigger.type === "schedule" ? t.plan.trigger.description : (TRIGGER_LABEL[t.plan.trigger.type] ?? t.plan.trigger.type)}
-              </p>
-              <ul className="flex flex-wrap gap-2" aria-label="Necesita">
-                {t.needs.map((n) => (
-                  <li key={n} className={`border px-2 py-0.5 text-xs ${ready.has(n) ? "border-rule text-ink" : "border-alert text-alert"}`}>
-                    {NEED_LABEL[n]}
-                    {ready.has(n) ? "" : " (falta)"}
-                  </li>
-                ))}
-              </ul>
-              <p className="text-xs text-graphite">{t.setup}</p>
-              <div className="mt-auto flex flex-wrap items-center gap-3 pt-1">
-                <form action={createFlowFromTemplate}>
-                  <input type="hidden" name="workspaceId" value={workspaceId} />
-                  <input type="hidden" name="templateId" value={t.id} />
-                  <button type="submit" className="h-11 bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90">
-                    Usar esta plantilla
-                  </button>
-                </form>
-                {missing.length > 0 ? (
-                  <Link href={`/w/${workspaceId}/integraciones`} className="text-sm text-link underline underline-offset-4">
-                    Conectar lo que falta
-                  </Link>
-                ) : null}
-              </div>
-            </li>
-          )
-        })}
-      </ul>
+
+      {tiers.map((tier) => (
+        <section key={tier} aria-labelledby={`tier-${tier}`} className="flex flex-col gap-4">
+          <div>
+            <h2 id={`tier-${tier}`} className="rotulo text-xl">
+              {TIER_INFO[tier].title}
+            </h2>
+            <p className="text-sm text-graphite">{TIER_INFO[tier].promise}</p>
+          </div>
+          <ul className="routine-grid">
+            {ROUTINES.filter((r) => r.tier === tier).map((r) => (
+              <li key={r.id}>
+                <RoutineCard routine={r} ready={ready} base={base} workspaceId={workspaceId} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+
+      {SECTOR_TEMPLATES.map((sector) => (
+        <section key={sector.title} className="flex flex-col gap-3">
+          <h2 className="rotulo text-xl">Plantillas del sector: {sector.title}</h2>
+          <ul className="flex flex-col gap-3">
+            {sector.templates.map((id) => {
+              const t = findTemplate(id)
+              return t ? (
+                <li key={id}>
+                  <TemplateRow template={t} ready={ready} workspaceId={workspaceId} base={base} />
+                </li>
+              ) : null
+            })}
+          </ul>
+        </section>
+      ))}
     </div>
   )
 }
