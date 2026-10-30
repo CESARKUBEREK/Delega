@@ -188,7 +188,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
           <p className="rounded-2xl border border-rule bg-sheet px-5 py-4 text-sm text-graphite">
             {flowCount ? "Ninguna automatización programada está activa." : "Todavía no tienes automatizaciones."}{" "}
             <Link href={`${base}/automatizaciones/plantillas`} className="font-semibold text-link underline underline-offset-4">
-              Empieza con una plantilla
+              Empieza con una de las 10 rutinas
             </Link>
             .
           </p>
