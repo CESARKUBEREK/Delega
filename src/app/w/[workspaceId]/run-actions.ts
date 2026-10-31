@@ -396,6 +396,8 @@ export async function saveInboxSettings(_prev: SettingsState, formData: FormData
     .filter(Boolean)
     .slice(0, 15)
   const days = Number(formData.get("retentionDays"))
+  const drafts = Number(formData.get("draftsPerDay"))
+  const draftsPerDay = Number.isFinite(drafts) && drafts >= 0 ? Math.min(200, Math.trunc(drafts)) : 30
   const result = await callEdgeFunction(
     "inbox-classify",
     {
@@ -403,6 +405,7 @@ export async function saveInboxSettings(_prev: SettingsState, formData: FormData
       workspace_id: workspaceId,
       categories,
       retention_days: Number.isFinite(days) && days >= 1 ? Math.trunc(days) : null,
+      drafts_per_day: draftsPerDay,
     },
     30_000,
   )
@@ -470,6 +473,8 @@ export async function updateThread(_prev: SettingsState, formData: FormData): Pr
       needs_reply: formData.get("needsReply") === "on",
       archived: formData.get("archived") === "on",
       manually_edited: true,
+      category_source: "user",
+      automatic: (text("category", 60) ?? "").toLowerCase() === "publicidad",
     })
     .eq("id", threadId)
     .eq("workspace_id", workspaceId)

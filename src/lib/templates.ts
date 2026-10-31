@@ -416,7 +416,7 @@ export const TEMPLATES: FlowTemplate[] = [
         { kind: "read", title: "Revisar la bandeja", description: "Conversaciones de correo, WhatsApp y Telegram de las últimas 24 horas; marcar las urgentes y las de clientes que esperan respuesta hace más de 24 horas.", connection: "email", requires_approval: false },
         { kind: "read", title: "Mirar la agenda", description: "Citas de hoy con hora, con quién y dónde.", connection: "calendar", requires_approval: false },
         { kind: "read", title: "Tareas y clientes", description: "Si HubSpot está conectado: tareas vencidas o de hoy y negocios sin movimiento desde hace más de 14 días.", connection: "crm", requires_approval: false },
-        { kind: "generate", title: "Preparar el día", description: "En este orden: lo urgente, citas de hoy, clientes que esperan respuesta, tareas y, al final, 3 acciones recomendadas. Pocas líneas.", connection: "none", requires_approval: false },
+        { kind: "generate", title: "Preparar el día", description: "En este orden: lo urgente, citas de hoy, clientes que esperan respuesta, tareas, 3 acciones recomendadas y, al final, en tres líneas como mucho, lo que importe de los boletines y avisos automáticos. Pocas líneas.", connection: "none", requires_approval: false },
         { kind: "notify", title: "Enviártelo", description: "Mandarte el resumen.", connection: "none", requires_approval: false },
       ]),
       open_questions: [],

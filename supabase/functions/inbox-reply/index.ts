@@ -8,6 +8,8 @@ import { generateText, LlmError, markInvalidIfNeeded, NO_AI_MESSAGE, recordUsage
 import { parseTelegramSecret, sendTelegram, TelegramError } from "../_shared/telegram.ts"
 import { insideWindow, PHONE_RE, sendWhatsApp, WhatsAppError, whatsappSecret } from "../_shared/whatsapp.ts"
 import { MailError, replyHeaders, sendAndRecord } from "../_shared/imap.ts"
+import { PrepareError, prepareThread } from "../_shared/inbox-prepare.ts"
+import { senderProfile } from "../_shared/inbox-profile.ts"
 
 const DRAFT_INSTRUCTIONS = `Redactas respuestas para un profesional (ingeniero, arquitecto) a partir de una conversación.
 Escribe en el idioma de la conversación, en su tono (cordial y concreto), sin inventar datos, fechas ni compromisos que
@@ -34,6 +36,24 @@ Deno.serve(async (req) => {
     .eq("workspace_id", workspaceId)
     .maybeSingle()
   if (!thread) return fail(404, "not_found", "No se encontró la conversación.")
+
+  // ---------------------------------------------------------------------------
+  // Preparar respuesta o recordatorio (tarjetas de «Para hoy»): crea una
+  // ejecución del agente; lo que quiera enviar espera aprobación.
+  if (body?.action === "prepare") {
+    try {
+      const run = await prepareThread(admin, workspaceId, thread.id, { mode: body.mode === "followup" ? "followup" : "reply", startedBy: ctx.userId })
+      return json({ ok: true, run_id: run.id })
+    } catch (e) {
+      if (e instanceof PrepareError) return fail(e.code === "not_found" ? 404 : 409, e.code, e.message)
+      throw e
+    }
+  }
+
+  // Ficha del remitente: HubSpot y Xubio (lecturas libres, sin IA).
+  if (body?.action === "profile") {
+    return json({ ok: true, profile: await senderProfile(admin, workspaceId, thread.contact_address, role) })
+  }
 
   const { data: rows } = await admin
     .from("inbox_messages")

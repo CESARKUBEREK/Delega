@@ -4,7 +4,8 @@ import { useActionState, useState, useTransition } from "react"
 import { FormMessage, SubmitButton } from "@/components/form"
 import { classifyThreads, saveInboxSettings, type SettingsState, syncInbox } from "../run-actions"
 
-// Clasifica por tandas (8 conversaciones por petición) hasta terminar.
+// Vuelve a clasificar una conversación (la bandeja se clasifica sola cada
+// minuto; ver supabase/functions/_shared/inbox-classify.ts).
 export function ClassifyButton({ workspaceId, pending, threadId }: { workspaceId: string; pending: number; threadId?: string }) {
   const [busy, start] = useTransition()
   const [status, setStatus] = useState<string | null>(null)
@@ -83,10 +84,12 @@ export function InboxSettingsForm({
   workspaceId,
   categories,
   retentionDays,
+  draftsPerDay,
 }: {
   workspaceId: string
   categories: string[]
   retentionDays: number | null
+  draftsPerDay: number
 }) {
   const [state, action] = useActionState<SettingsState, FormData>(saveInboxSettings, {})
   return (
@@ -119,6 +122,23 @@ export function InboxSettingsForm({
           className="h-11 w-40 border border-rule bg-sheet px-3 text-sm text-ink focus:border-link focus:outline-none"
         />
         <p className="text-xs text-graphite">Los mensajes más antiguos se borran de MarchaSolo, no de tu buzón ni de Telegram.</p>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="inbox-drafts" className="text-sm font-medium text-ink">
+          Respuestas preparadas solas, como mucho al día
+        </label>
+        <input
+          id="inbox-drafts"
+          name="draftsPerDay"
+          type="number"
+          min={0}
+          max={200}
+          defaultValue={draftsPerDay}
+          className="h-11 w-40 border border-rule bg-sheet px-3 text-sm text-ink focus:border-link focus:outline-none"
+        />
+        <p className="text-xs text-graphite">
+          Solo para lo urgente y para tus contactos; el resto se prepara al tocar «Preparar respuesta». Cada una gasta tu clave de IA. Con 0 no se preparan solas.
+        </p>
       </div>
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-48">

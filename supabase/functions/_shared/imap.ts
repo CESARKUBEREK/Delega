@@ -199,6 +199,9 @@ export type ImapMail = {
   body: string
   outgoing: boolean
   references: string | null
+  // Boletín o aviso automático (List-Unsubscribe, List-Id, Precedence: bulk,
+  // Auto-Submitted): va a la bandeja sin pasar por la IA.
+  bulk: boolean
 }
 
 const addr = (a: { name?: string; address?: string } | undefined) => ({
@@ -233,7 +236,7 @@ export async function readMails(client: ImapFlow, uids: number[], myAddress: str
   }
   // imapflow no admite otros comandos mientras dura un fetch: primero se recoge todo.
   const fetched: Fetched[] = []
-  for await (const m of client.fetch(uids.join(","), { uid: true, envelope: true, bodyStructure: true, internalDate: true, headers: ["references"] }, { uid: true })) {
+  for await (const m of client.fetch(uids.join(","), { uid: true, envelope: true, bodyStructure: true, internalDate: true, headers: ["references", "list-unsubscribe", "list-id", "precedence", "auto-submitted"] }, { uid: true })) {
     fetched.push(m as Fetched)
   }
 
@@ -262,7 +265,12 @@ export async function readMails(client: ImapFlow, uids: number[], myAddress: str
 
     const env = m.envelope ?? {}
     const from = addr(env.from?.[0])
-    const references = headerValue(new TextDecoder().decode(m.headers ?? new Uint8Array()), "references")
+    const rawHeaders = new TextDecoder().decode(m.headers ?? new Uint8Array())
+    const references = headerValue(rawHeaders, "references")
+    const precedence = (headerValue(rawHeaders, "precedence") ?? "").toLowerCase()
+    const autoSubmitted = (headerValue(rawHeaders, "auto-submitted") ?? "no").toLowerCase()
+    const bulk = Boolean(headerValue(rawHeaders, "list-unsubscribe") || headerValue(rawHeaders, "list-id")) ||
+      ["bulk", "list", "junk"].includes(precedence) || (autoSubmitted !== "" && autoSubmitted !== "no")
     const refs = references?.match(MSGID_RE) ?? []
     const messageId = env.messageId?.match(MSGID_RE)?.[0] ?? null
     const parent = env.inReplyTo?.match(MSGID_RE)?.[0] ?? null
@@ -280,6 +288,7 @@ export async function readMails(client: ImapFlow, uids: number[], myAddress: str
       body,
       outgoing: from.address === myAddress.toLowerCase(),
       references,
+      bulk,
     })
   }
   return mails
@@ -477,6 +486,7 @@ export async function syncImap(
   let added = 0
   let more = false
   const fresh: FreshMail[] = []
+  const bulkIds: number[] = []
   const next: ImapConfig = { ...config }
   try {
     const lock = await client.getMailboxLock("INBOX", { readOnly: true })
@@ -523,6 +533,7 @@ export async function syncImap(
           })
           if (recorded) {
             added++
+            if (mail.bulk && !mail.outgoing) bulkIds.push(recorded)
             const time = Date.parse(mail.date)
             const historic = initial || mail.uid <= (next.history_uid ?? 0)
             if (!historic && !mail.outgoing && mail.from.address && Number.isFinite(time) && time > Date.now() - 48 * 3_600_000) {
@@ -541,6 +552,7 @@ export async function syncImap(
     await closeImap(client)
   }
 
+  await markAutomatic(admin, workspaceId, bulkIds)
   await admin.rpc("integration_set_config", {
     p_workspace_id: workspaceId,
     p_provider: "imap",
@@ -563,4 +575,13 @@ export async function replyHeaders(admin: SupabaseClient, workspaceId: string, t
   const ids = rows.map((r) => r.external_id.slice(5))
   const lastIn = [...rows].reverse().find((r) => r.direction === "in")
   return { inReplyTo: lastIn ? lastIn.external_id.slice(5) : ids.at(-1) ?? null, references: ids.slice(-10).join(" ") || null }
+}
+
+// Marca como automáticas las conversaciones de los boletines y avisos leídos.
+async function markAutomatic(admin: SupabaseClient, workspaceId: string, messageIds: number[]) {
+  for (let i = 0; i < messageIds.length; i += 200) {
+    const { data } = await admin.from("inbox_messages").select("thread_id").eq("workspace_id", workspaceId).in("id", messageIds.slice(i, i + 200))
+    const threads = [...new Set((data ?? []).map((r) => r.thread_id as string))]
+    if (threads.length) await admin.from("inbox_threads").update({ automatic: true }).eq("workspace_id", workspaceId).in("id", threads)
+  }
 }

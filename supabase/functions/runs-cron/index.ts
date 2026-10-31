@@ -15,9 +15,14 @@ import { launchScheduled } from "../_shared/schedule.ts"
 import { runInBackground } from "../_shared/background.ts"
 import { cronAuthorized } from "../_shared/cron.ts"
 import { upgradeTelegramWebhooks } from "../_shared/telegram-notice.ts"
+import { classifyPending } from "../_shared/inbox-classify.ts"
+import { autoPrepare } from "../_shared/inbox-prepare.ts"
 
 const PER_CALL = 3
 const SLICE_MS = 50_000
+// Bandeja: clasificar y preparar respuestas, en paralelo con las ejecuciones.
+const INBOX_MS = 45_000
+const INBOX_WORKSPACES = 3
 
 function serviceKey(): string {
   const raw = Deno.env.get("SUPABASE_SECRET_KEYS")
@@ -56,6 +61,10 @@ async function tick(admin: SupabaseClient) {
     .order("updated_at")
     .limit(PER_CALL)
 
+  const inbox = inboxTick(admin).catch((e) => {
+    console.error("runs-cron inbox", e instanceof Error ? e.name : "error")
+    return null
+  })
   const results = await Promise.all(
     (due ?? []).map(async ({ id }) => {
       try {
@@ -68,7 +77,38 @@ async function tick(admin: SupabaseClient) {
       }
     }),
   )
-  return { scheduled, stale, webhooks, runs: results }
+  return { scheduled, stale, webhooks, runs: results, inbox: await inbox }
+}
+
+// Clasifica lo que ha llegado (sin pulsar nada) y prepara las respuestas que
+// lo merecen. Primero los espacios que más esperan.
+async function inboxTick(admin: SupabaseClient) {
+  const deadline = Date.now() + INBOX_MS
+  const { data } = await admin.rpc("inbox_workspaces_pending", { p_limit: INBOX_WORKSPACES })
+  const pending = ((data ?? []) as { workspace_id: string }[]).map((r) => r.workspace_id)
+  let classified = 0
+  for (const workspaceId of pending) {
+    if (Date.now() > deadline - 10_000) break
+    const r = await classifyPending(admin, workspaceId, { deadline: Math.min(deadline, Date.now() + 25_000) })
+    classified += r.classified
+  }
+  // Preparar respuestas: en los espacios con correo conectado y algo que responder.
+  const { data: ws } = await admin
+    .from("inbox_threads")
+    .select("workspace_id")
+    .eq("needs_reply", true)
+    .eq("last_direction", "in")
+    .is("prepare_run_id", null)
+    .is("prepare_dismissed_at", null)
+    .eq("archived", false)
+    .gte("last_message_at", new Date(Date.now() - 3 * 86_400_000).toISOString())
+    .limit(50)
+  let prepared = 0
+  for (const workspaceId of [...new Set((ws ?? []).map((r) => r.workspace_id as string))].slice(0, 5)) {
+    if (Date.now() > deadline) break
+    prepared += await autoPrepare(admin, workspaceId).catch(() => 0)
+  }
+  return { classified, prepared }
 }
 
 // Ejecuciones «en marcha» de hace más de 24 h que ya no avanzan: se dan por

@@ -4,14 +4,16 @@ import { Suspense } from "react"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { formatDateTime } from "../../format"
+import { DEFAULT_CATEGORIES } from "@/lib/inbox"
+import { CategoryChip } from "../category-chip"
 import { ClassifyButton } from "../classify-button"
 import { ReplyComposer } from "./reply-composer"
+import { SenderProfileCard } from "./sender-profile"
 import { ThreadForm } from "./thread-form"
 
 export const metadata = { title: "Conversación" }
 export const maxDuration = 120
 
-const DEFAULT_CATEGORIES = ["Cliente", "Proveedor", "Obra o proyecto", "Administración", "Personal", "Publicidad", "Otros"]
 const CHANNEL_LABEL: Record<string, string> = { email: "Correo", telegram: "Telegram", whatsapp: "WhatsApp", phone: "Teléfono" }
 
 export default function ThreadPage({ params }: PageProps<"/w/[workspaceId]/bandeja/[threadId]">) {
@@ -33,7 +35,7 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
   const [{ data: thread }, { data: messages }, { data: integration }] = await Promise.all([
     supabase
       .from("inbox_threads")
-      .select("id, channel, external_id, subject, contact_name, contact_address, category, client, project, urgency, needs_reply, summary, archived, manually_edited, classified_at, message_count")
+      .select("id, channel, external_id, subject, contact_name, contact_address, category, category_source, client, project, urgency, needs_reply, summary, archived, manually_edited, classified_at, message_count")
       .eq("id", threadId)
       .eq("workspace_id", workspaceId)
       .maybeSingle(),
@@ -47,6 +49,18 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
     supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["imap", "telegram", "whatsapp"]),
   ])
   if (!thread) notFound()
+  // Últimos intercambios con la misma persona (otras conversaciones).
+  const { data: recentRows } = thread.contact_address
+    ? await supabase
+        .from("inbox_threads")
+        .select("id, subject, last_message_at")
+        .eq("workspace_id", workspaceId)
+        .eq("contact_address", thread.contact_address)
+        .neq("id", thread.id)
+        .order("last_message_at", { ascending: false, nullsFirst: false })
+        .limit(3)
+    : { data: [] }
+  const recent = recentRows ?? []
   const integrations = integration ?? []
   const settings = (integrations.find((i) => i.provider === "imap") ?? integrations[0])
     ?.config as { categories?: string[] } | undefined
@@ -66,6 +80,9 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
             Bandeja
           </Link>
         </p>
+        <div className="mt-2">
+          <CategoryChip workspaceId={workspaceId} threadId={thread.id} category={thread.category} categories={categories} source={thread.category_source} />
+        </div>
         <h1 className="rotulo mt-2 text-2xl">{thread.subject || who}</h1>
         <p className="mt-1 text-sm text-graphite">
           {CHANNEL_LABEL[thread.channel]} · {who}
@@ -114,7 +131,31 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
         </ol>
       </section>
 
-      <aside className="h-fit border border-ink bg-sheet p-5">
+      <aside className="flex h-fit flex-col gap-4">
+        {thread.contact_address && thread.channel === "email" ? (
+          <section className="border border-ink bg-sheet p-5" aria-labelledby="ficha">
+            <h2 id="ficha" className="rotulo mb-3 text-lg">
+              {who}
+            </h2>
+            <SenderProfileCard workspaceId={workspaceId} threadId={thread.id} />
+            {recent.length ? (
+              <div className="mt-4 border-t border-rule pt-3">
+                <h3 className="mb-2 text-sm font-semibold text-ink">Otras conversaciones</h3>
+                <ul className="flex flex-col gap-1 text-sm">
+                  {recent.map((r) => (
+                    <li key={r.id}>
+                      <Link href={`${base}/${r.id}`} className="text-link underline underline-offset-4">
+                        {r.subject || "(sin asunto)"}
+                      </Link>
+                      <span className="text-xs text-graphite"> · {r.last_message_at ? formatDateTime(r.last_message_at) : ""}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+      <div className="border border-ink bg-sheet p-5">
         <h2 className="rotulo text-lg">Clasificación</h2>
         <p className="mt-1 mb-4 text-xs text-graphite">
           {thread.manually_edited
@@ -139,6 +180,7 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
         <div className="mt-4 border-t border-rule pt-4">
           <ClassifyButton workspaceId={workspaceId} pending={1} threadId={thread.id} />
         </div>
+      </div>
       </aside>
     </div>
   )
