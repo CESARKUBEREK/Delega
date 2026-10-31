@@ -690,6 +690,37 @@ button.bg-stroke:disabled { color:#0b1f3b; }
 .inbox-filter-chip:hover { transform:translateY(-1px); border-color:#00c2a8; background:#e9f8f5; color:#005a50; }
 .inbox-filter-chip.is-active { border-color:#007a6c; background:#007a6c; color:#fff; box-shadow:0 3px 10px rgb(0 122 108 / 22%); }
 .inbox-filter-chip.is-active:hover { border-color:#006b5f; background:#006b5f; color:#fff; }
+
+/* Bandeja de acciones (fase 6G): pestañas, tarjetas de «Para hoy», categoría con un toque. */
+.inbox-tabs { display:flex; gap:4px; border-bottom:1px solid #dfe7ee; }
+.inbox-tabs a { min-height:44px; display:inline-flex; align-items:center; padding:0 16px; border-bottom:3px solid transparent; color:#4a5b73; font-weight:600; text-decoration:none; }
+.inbox-tabs a:hover { color:#0b1f3b; }
+.inbox-tabs a.is-active { border-bottom-color:#00c2a8; color:#0b1f3b; }
+.inbox-progress { display:inline-block; width:80px; height:6px; margin-right:8px; overflow:hidden; border-radius:999px; background:#e3eaf0; vertical-align:middle; }
+.inbox-progress > span { display:block; height:100%; background:#00c2a8; }
+.today-card { display:flex; flex-direction:column; gap:10px; padding:14px 16px; border:1px solid #dfe7ee; border-left:4px solid #00c2a8; border-radius:14px; background:#fff; }
+.today-card.is-urgent { border-left-color:#d64b3c; }
+.today-badge { padding:2px 8px; border-radius:999px; background:#fdecea; color:#a93222; font-size:11px; font-weight:700; }
+.today-badge.is-known { background:#e3f8f4; color:#005a50; }
+.today-card-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.today-card-actions button { min-height:44px; padding:0 16px; border:1px solid #c3cedc; border-radius:10px; background:#fff; color:#0b1f3b; font-size:14px; font-weight:600; }
+.today-card-actions button.is-primary { border-color:#007a6c; background:#007a6c; color:#fff; }
+.today-card-actions button:disabled { opacity:.6; }
+.today-empty { padding:22px 20px; border:1px dashed #b8ece3; border-radius:14px; background:#f2faf8; }
+.today-noise { display:flex; min-height:44px; align-items:center; justify-content:space-between; padding:0 16px; border:1px solid #e6ecf1; border-radius:12px; background:#f8fafc; color:#4a5b73; font-size:14px; text-decoration:none; }
+.today-noise:hover { background:#eef3f7; color:#0b1f3b; }
+.inbox-category { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.inbox-category-select select { min-height:36px; padding:0 10px; border:1px solid #00c2a8; border-radius:999px; background:#e3f8f4; color:#005a50; font-size:13px; font-weight:700; }
+.inbox-category.is-compact .inbox-category-select select { min-height:30px; font-size:12px; }
+.inbox-category-pill { min-height:28px; padding:0 10px; border:1px solid #b8ece3; border-radius:999px; background:#effaf8; color:#005a50; font-size:12px; font-weight:700; }
+.inbox-rule-offer { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:6px 10px; border-radius:10px; background:#fff8e6; color:#0b1f3b; font-size:13px; }
+.inbox-rule-offer button { min-height:32px; padding:0 10px; border:1px solid #007a6c; border-radius:8px; background:#fff; color:#005a50; font-weight:600; }
+.inbox-rule-offer button.is-quiet, .inbox-bulk-bar button.is-quiet { border-color:transparent; background:transparent; color:#4a5b73; }
+.inbox-bulk-bar { position:sticky; top:0; z-index:5; display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:8px 12px; border:1px solid #007a6c; border-radius:12px; background:#f2faf8; }
+.inbox-bulk-bar button, .inbox-bulk-bar select { min-height:40px; padding:0 12px; border:1px solid #007a6c; border-radius:9px; background:#fff; color:#005a50; font-size:14px; font-weight:600; }
+.inbox-row { background:#fff; transition:transform .12s ease; touch-action:pan-y; }
+.inbox-row.is-selected { background:#f2faf8; }
+@media (prefers-reduced-motion:reduce) { .inbox-row { transition:none; } }
 .inbox-filter-chip:focus-visible { outline:3px solid rgb(0 194 168 / 35%); outline-offset:2px; }
 .inbox-filters > span[aria-hidden="true"] { height:24px; margin-inline:3px; }
 @media (max-width:640px) {

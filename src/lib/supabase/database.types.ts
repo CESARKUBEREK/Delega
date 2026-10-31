@@ -395,8 +395,46 @@ export type Database = {
         }
         Relationships: []
       }
+      inbox_rules: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          match_type: string
+          value: string
+          workspace_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          match_type: string
+          value: string
+          workspace_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          match_type?: string
+          value?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       inbox_threads: {
         Row: {
+          automatic: boolean
+          category_source: string | null
+          followup_muted: boolean
+          known_contact: boolean
+          last_direction: string | null
+          last_direction_at: string | null
+          prepare_dismissed_at: string | null
+          prepare_run_id: string | null
           archived: boolean
           category: string | null
           channel: string
@@ -421,6 +459,14 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          automatic?: boolean
+          category_source?: string | null
+          followup_muted?: boolean
+          known_contact?: boolean
+          last_direction?: string | null
+          last_direction_at?: string | null
+          prepare_dismissed_at?: string | null
+          prepare_run_id?: string | null
           archived?: boolean
           category?: string | null
           channel: string
@@ -445,6 +491,14 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          automatic?: boolean
+          category_source?: string | null
+          followup_muted?: boolean
+          known_contact?: boolean
+          last_direction?: string | null
+          last_direction_at?: string | null
+          prepare_dismissed_at?: string | null
+          prepare_run_id?: string | null
           archived?: boolean
           category?: string | null
           channel?: string

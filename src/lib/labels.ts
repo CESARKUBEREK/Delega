@@ -20,6 +20,7 @@ export function runOrigin(trigger: unknown): string {
   if (type === "whatsapp_message") return "Lanzada por un WhatsApp"
   if (type === "telegram_chat") return "Pedida desde tu Telegram"
   if (type === "email_message") return "Lanzada por un correo"
+  if (type === "inbox_prepare") return (trigger as { mode?: string }).mode === "followup" ? "Recordatorio desde la bandeja" : "Respuesta desde la bandeja"
   if (type === "schedule") return "Ejecución programada"
   return "Automatización"
 }
