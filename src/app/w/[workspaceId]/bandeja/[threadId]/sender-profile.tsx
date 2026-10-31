@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { type SenderProfile, senderProfile } from "../inbox-actions"
 
-// Ficha del remitente (fase 6G-3): HubSpot y Xubio. Se carga al abrir la
+// Ficha del remitente (fase 6G-3): HubSpot, Google Contacts y Xubio. Se carga al abrir la
 // conversación, sin bloquear el resto de la página.
 export function SenderProfileCard({ workspaceId, threadId }: { workspaceId: string; threadId: string }) {
   const [profile, setProfile] = useState<SenderProfile | null | undefined>(undefined)
@@ -23,9 +23,10 @@ export function SenderProfileCard({ workspaceId, threadId }: { workspaceId: stri
   }, [workspaceId, threadId])
 
   if (profile === undefined) return <p className="text-sm text-graphite" aria-busy="true">Buscando en tus aplicaciones…</p>
-  if (!profile || (!profile.hubspotConnected && !profile.xubioConnected)) {
-    return <p className="text-sm text-graphite">Conecta HubSpot o Xubio para ver aquí lo que ya sabes de esta persona.</p>
+  if (!profile || (!profile.hubspotConnected && !profile.googleConnected && !profile.xubioConnected)) {
+    return <p className="text-sm text-graphite">Conecta HubSpot o Google Contacts (y Xubio) para ver aquí lo que ya sabes de esta persona.</p>
   }
+  const gc = profile.google
   const hs = profile.hubspot
   return (
     <div className="flex flex-col gap-3 text-sm">
@@ -62,6 +63,18 @@ export function SenderProfileCard({ workspaceId, threadId }: { workspaceId: stri
           </div>
         ) : (
           <p className="text-graphite">No está en HubSpot.</p>
+        )
+      ) : null}
+      {profile.googleConnected ? (
+        gc ? (
+          <div className="flex flex-col gap-1">
+            <p className="font-semibold text-ink">Google Contacts: {gc.name ?? "sin nombre"}</p>
+            {gc.company ? <p className="text-graphite">{gc.company}</p> : null}
+            {gc.phones.length ? <p className="text-graphite">Teléfono: {gc.phones.join(", ")}</p> : null}
+            {gc.notes ? <p className="text-graphite">{gc.notes}</p> : null}
+          </div>
+        ) : (
+          <p className="text-graphite">No está en tus contactos de Google.</p>
         )
       ) : null}
       {profile.xubioConnected ? <p className="text-graphite">{profile.xubio ? `Xubio: cliente «${profile.xubio.name}».` : "No está entre tus clientes de Xubio."}</p> : null}

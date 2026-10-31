@@ -49,3 +49,15 @@ test("cada automatización se agrupa en su rutina, también las de plantillas fu
   assert.equal(routineOfFlow({ name: "Otro nombre", settings: { template: "negocios-parados" } })?.id, "seguimiento")
   assert.equal(routineOfFlow({ name: "Algo mío", settings: {} }), undefined)
 })
+
+test("las verticales recomiendan rutinas que existen y sus plantillas son de sector", async () => {
+  const { VERTICALS, verticalOfFlow } = await import("../src/lib/templates.ts")
+  assert.deepEqual(VERTICALS.map((v) => v.id), ["inmobiliarias", "clinicas", "profesionales"])
+  const routineIds = new Set(ROUTINES.map((r) => r.id))
+  for (const v of VERTICALS) {
+    for (const r of v.routines) assert.ok(routineIds.has(r), `${v.id}: no existe la rutina ${r}`)
+    assert.ok(v.templates.length > 0, v.id)
+  }
+  assert.equal(verticalOfFlow({ name: "Recordatorio de citas", settings: {} })?.id, "clinicas")
+  assert.equal(verticalOfFlow({ name: "x", settings: { template: "alta-cliente" } })?.id, "profesionales")
+})

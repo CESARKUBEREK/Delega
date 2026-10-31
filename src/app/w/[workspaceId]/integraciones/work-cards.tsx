@@ -74,6 +74,67 @@ export async function CalendarCard({ workspaceId, isAdmin, notice }: { workspace
   )
 }
 
+export async function ContactsCard({ workspaceId, isAdmin, notice }: { workspaceId: string; isAdmin: boolean; notice: boolean }) {
+  const supabase = await createClient()
+  const { data: integration } = await supabase
+    .from("integrations")
+    .select("account_email, status")
+    .eq("workspace_id", workspaceId)
+    .eq("provider", "contacts")
+    .maybeSingle()
+
+  return (
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
+        <div>
+          <h3 className="rotulo text-lg">Google Contacts</h3>
+          <p className="text-sm text-graphite">
+            Para quien no usa un CRM: las automatizaciones buscan a tus clientes en tus contactos de Google y proponen dar de alta a los nuevos. Nada se crea sin tu
+            aprobación.
+          </p>
+        </div>
+        <Badge status={integration?.status} invalidLabel="Acceso retirado" />
+      </summary>
+
+      <div className="flex flex-col gap-5 px-5 py-5">
+        {notice ? (
+          <p role="status" className="border-l-2 border-ok bg-ok-bg px-3 py-2 text-sm text-ok">
+            Google Contacts conectado.
+          </p>
+        ) : null}
+
+        {integration ? (
+          <p className="text-sm text-graphite">
+            Contactos de <span className="font-medium text-ink">{integration.account_email ?? "tu cuenta"}</span>.{" "}
+            {integration.status === "active"
+              ? "La bandeja reconoce a estas personas como contactos y les prepara la respuesta al llegar su correo."
+              : "Google retiró el acceso (en modo pruebas ocurre cada 7 días): vuelve a conectar."}
+          </p>
+        ) : (
+          <p className="text-sm text-graphite">Google te pedirá permiso para ver y crear contactos en tu cuenta.</p>
+        )}
+
+        {isAdmin ? (
+          <>
+            {integration?.status !== "active" ? (
+              <form action={connectGoogle}>
+                <input type="hidden" name="workspaceId" value={workspaceId} />
+                <input type="hidden" name="product" value="contacts" />
+                <button type="submit" className="h-11 bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90">
+                  {integration ? "Volver a conectar Contacts" : "Conectar Google Contacts"}
+                </button>
+              </form>
+            ) : null}
+            {integration ? <DisconnectInboxForm workspaceId={workspaceId} kind="contacts" /> : null}
+          </>
+        ) : (
+          <p className="text-sm text-graphite">Solo un administrador puede conectar Google Contacts.</p>
+        )}
+      </div>
+    </details>
+  )
+}
+
 export async function HubSpotCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
   const supabase = await createClient()
   const { data: integration } = await supabase

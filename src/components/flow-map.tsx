@@ -172,6 +172,7 @@ function iconFor(step: PlanStep): IconName {
     case "social":
       return "chat"
     case "crm":
+    case "contacts":
     case "properties":
     case "accounting":
       return "crm"

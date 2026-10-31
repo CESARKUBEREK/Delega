@@ -2,7 +2,7 @@
 //
 // - Al llegar el correo (runs-cron): solo los de prioridad alta y los de
 //   contactos conocidos (autorizados, a quien ya escribiste o que están en
-//   HubSpot). Como mucho 30 al día por espacio (ajustable en la bandeja) y 3
+//   HubSpot o en Google Contacts). Como mucho 30 al día por espacio (ajustable en la bandeja) y 3
 //   por vuelta.
 // - Al tocar «Preparar respuesta» o «Preparar recordatorio» en una tarjeta.
 //
@@ -12,6 +12,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { createRun, type RunRow } from "./agent.ts"
 import { isWorkspaceAdmin } from "./core.ts"
+import { contactsToken, findContactByEmail } from "./contacts.ts"
 import { hubspotToken, search as hubspotSearch } from "./hubspot.ts"
 import type { InboxConfig } from "./inbox.ts"
 import { resolveAi } from "./llm.ts"
@@ -176,8 +177,9 @@ export async function autoPrepare(admin: SupabaseClient, workspaceId: string): P
     .order("last_message_at", { ascending: false })
     .limit(20)
 
-  // Contactos de HubSpot: se consultan unos pocos por vuelta.
+  // Contactos de HubSpot y de Google Contacts: se consultan unos pocos por vuelta.
   let hubspot: { token: string } | null = null
+  let google: { token: string } | null | undefined
   let lookups = 0
   let prepared = 0
   for (const c of candidates ?? []) {
@@ -185,15 +187,18 @@ export async function autoPrepare(admin: SupabaseClient, workspaceId: string): P
     if (c.classified_count < c.message_count) continue
     let worth = c.urgency === "alta" || c.known_contact
     if (!worth && c.contact_address && lookups < HUBSPOT_LOOKUPS_PER_TICK) {
+      lookups++
+      const address = c.contact_address.toLowerCase()
       hubspot ??= await hubspotToken(admin, workspaceId).catch(() => null)
       if (hubspot) {
-        lookups++
-        const found = await hubspotSearch(hubspot.token, "contacts", c.contact_address, 1).catch(() => [])
-        if (found.some((r) => (r.properties.email ?? "").toLowerCase() === c.contact_address!.toLowerCase())) {
-          worth = true
-          await admin.from("inbox_threads").update({ known_contact: true }).eq("id", c.id).eq("workspace_id", workspaceId)
-        }
+        const found = await hubspotSearch(hubspot.token, "contacts", address, 1).catch(() => [])
+        worth = found.some((r) => (r.properties.email ?? "").toLowerCase() === address)
       }
+      if (!worth) {
+        if (google === undefined) google = await contactsToken(admin, workspaceId).catch(() => null)
+        if (google) worth = Boolean(await findContactByEmail(google.token, address).catch(() => null))
+      }
+      if (worth) await admin.from("inbox_threads").update({ known_contact: true }).eq("id", c.id).eq("workspace_id", workspaceId)
     }
     if (!worth) continue
     try {

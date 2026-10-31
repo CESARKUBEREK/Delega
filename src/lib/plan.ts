@@ -82,6 +82,7 @@ export const CONNECTION_LABEL: Record<string, string> = {
   whatsapp: "WhatsApp",
   drive: "Drive",
   crm: "HubSpot",
+  contacts: "Google Contacts",
   properties: "Tokko",
   accounting: "Xubio",
   social: "Buffer",
@@ -89,7 +90,7 @@ export const CONNECTION_LABEL: Record<string, string> = {
 }
 
 // Conexiones que ya funcionan en esta versión.
-export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet", "documents", "drive", "email", "telegram", "whatsapp", "calendar", "crm", "properties", "accounting", "social"])
+export const AVAILABLE_CONNECTIONS = new Set(["spreadsheet", "documents", "drive", "email", "telegram", "whatsapp", "calendar", "crm", "contacts", "properties", "accounting", "social"])
 
 // Tipo legible de un archivo elegido en Drive.
 export function fileKindLabel(mime: string | null): string {

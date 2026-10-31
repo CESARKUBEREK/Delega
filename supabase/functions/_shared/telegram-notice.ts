@@ -33,6 +33,7 @@ const TELEGRAM_APPROVABLE = new Set<PendingAction["tool"]>([
   "crm_update",
   "crm_note",
   "crm_task",
+  "contacts_create",
   "tokko_lead",
   "buffer_post",
 ])
@@ -97,6 +98,8 @@ export function proposalDetail(p: PendingAction): string {
       return clip(p.text, 1500)
     case "crm_task":
       return `${p.subject}${p.due_date ? ` (vence ${p.due_date})` : ""}\n\n${clip(p.text, 1200)}`
+    case "contacts_create":
+      return [p.name, p.email, p.phone, p.company, p.notes].filter(Boolean).join("\n")
     case "tokko_lead":
       return [p.name, p.email, p.phone].filter(Boolean).join(" · ") + (p.text ? `\n\n${clip(p.text, 1200)}` : "")
     case "api_request":

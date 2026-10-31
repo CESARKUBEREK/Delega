@@ -16,7 +16,7 @@ export async function connectGoogle(formData: FormData): Promise<void> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
   if (!UUID_RE.test(workspaceId)) return
   const p = formData.get("product")
-  const product = p === "calendar" ? p : "drive"
+  const product = p === "calendar" || p === "contacts" ? p : "drive"
   const result = await callEdgeFunction<{ url: string }>("google-connection", { action: "start", workspace_id: workspaceId, product }, 20_000)
   if (result.error) redirect(`/w/${workspaceId}/integraciones?google_error=${encodeURIComponent(result.error.code)}`)
   // Solo se sigue una URL de consentimiento de Google.
@@ -60,7 +60,7 @@ export async function disconnectGoogle(_prev: ActionResult | null, formData: For
   const workspaceId = String(formData.get("workspaceId") ?? "")
   if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
   const p = formData.get("product")
-  const product = p === "calendar" ? p : "google"
+  const product = p === "calendar" || p === "contacts" ? p : "google"
   const result = await callEdgeFunction("google-connection", { action: "disconnect", workspace_id: workspaceId, product }, 20_000)
   if (result.error) return { ok: false, error: result.error.message }
   refresh()

@@ -53,6 +53,7 @@ import {
   search as crmSearch,
   updateRecord,
 } from "./hubspot.ts"
+import { contactsToken, createContact, searchContacts } from "./contacts.ts"
 import { notifyApproval } from "./push.ts"
 import { telegramApproval, telegramRunResult } from "./telegram-notice.ts"
 import { downloadXlsx, XLSX_MIME, xlsxInfo, xlsxRead, xlsxWrite } from "./excel.ts"
@@ -144,6 +145,7 @@ export type PendingAction =
   | { call_id: string; tool: "crm_update"; object: CrmObject; id: string; label: string; properties: Props; before: Record<string, string | null> }
   | { call_id: string; tool: "crm_note"; object: CrmObject; id: string; label: string; text: string }
   | { call_id: string; tool: "crm_task"; object: CrmObject; id: string; label: string; subject: string; text: string; due_date: string | null }
+  | { call_id: string; tool: "contacts_create"; name: string; email: string | null; phone: string | null; company: string | null; notes: string | null }
   | { call_id: string; tool: "api_request"; provider: "supabase" | "custom_1" | "custom_2"; connection_name: string; method: "POST" | "PATCH" | "DELETE"; path: string; query: string; body: string }
   | TokkoLeadPending
   | { call_id: string; tool: "buffer_post"; channels: { id: string; name: string; service: string }[]; text: string; due_at: string | null; when_label: string }
@@ -167,6 +169,8 @@ type Resources = {
   telegram: { token: string; integrationId: string } | null
   whatsapp: { secret: WhatsAppSecret; integrationId: string } | null
   hubspot: { token: string; portalId: number | null } | null
+  // Google Contacts, para quien no usa un CRM.
+  contactsActive: boolean
   tokko: string | null
   buffer: string | null
   xubio: XubioCredentials | null
@@ -265,6 +269,7 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
     telegram,
     whatsapp,
     hubspot,
+    contactsActive: find("contacts")?.status === "active",
     tokko: find("tokko")?.status === "active" ? await tokkoKey(admin, run.workspace_id) : null,
     buffer: find("buffer")?.status === "active" ? await bufferKey(admin, run.workspace_id) : null,
     // Contabilidad: solo en ejecuciones de administradores.
@@ -433,6 +438,21 @@ function toolDefs(r: Resources): ToolDef[] {
         subject: { type: "string" },
         text: { type: "string" },
         due_date: { anyOf: [{ type: "string" }, { type: "null" }], description: "Vencimiento AAAA-MM-DD o null." },
+      }),
+    )
+  }
+  if (r.contactsActive) {
+    tools.push(
+      fn("contacts_search", "Busca en los contactos de Google del usuario por nombre, correo, teléfono o empresa. Vacío para los más recientes.", {
+        query: { type: "string" },
+        limit: { type: "integer", description: "Máximo de resultados (1-30)." },
+      }),
+      fn("contacts_create", "Crea un contacto en Google Contacts (por ejemplo, un cliente nuevo). Requiere aprobación. Busca antes para no duplicarlo.", {
+        name: { type: "string" },
+        email: { anyOf: [{ type: "string" }, { type: "null" }] },
+        phone: { anyOf: [{ type: "string" }, { type: "null" }] },
+        company: { anyOf: [{ type: "string" }, { type: "null" }] },
+        notes: { anyOf: [{ type: "string" }, { type: "null" }], description: "Qué pide o de dónde viene, en una o dos frases." },
       }),
     )
   }
@@ -854,6 +874,8 @@ export function proposalTitle(p: PendingAction): string {
       return `Propone añadir una nota a «${p.label}» en HubSpot`
     case "crm_task":
       return `Propone crear la tarea «${p.subject}» en HubSpot`
+    case "contacts_create":
+      return `Propone añadir a ${p.name} a Google Contacts`
     case "api_request":
       return `Propone ${p.method} en ${p.connection_name}: ${p.path}`
     case "tokko_lead":
@@ -1022,6 +1044,27 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
             : `Leyó la conversación «${(out as { subject?: string | null; contact?: string | null }).subject ?? (out as { contact?: string | null }).contact ?? ""}»`,
         { tool: call.name },
       )
+      await save(admin, run, {})
+      continue
+    }
+
+    if (call.name === "contacts_search") {
+      let out: unknown
+      let title: string
+      try {
+        if (!res.contactsActive) throw new RunError("Google Contacts no está conectado.")
+        const { token: ct } = await contactsToken(admin, run.workspace_id)
+        const limit = typeof args.limit === "number" ? Math.min(30, Math.max(1, Math.trunc(args.limit))) : 10
+        const results = await searchContacts(ct, str(args.query, 100), limit)
+        out = { results }
+        title = `Buscó en Google Contacts (${results.length} contactos)`
+      } catch (e) {
+        const msg = e instanceof RunError || e instanceof GoogleError ? e.message : "No se pudo consultar Google Contacts."
+        out = { error: msg }
+        title = `Consulta fallida: ${msg}`
+      }
+      respond(out)
+      await addEvent(admin, run, "tool", title, { tool: call.name })
       await save(admin, run, {})
       continue
     }
@@ -1235,6 +1278,23 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       } catch (e) {
         invalid = e instanceof RunError || e instanceof GoogleError ? e.message : "No se pudo preparar el evento."
       }
+    } else if (call.name === "contacts_create") {
+      const name = str(args.name, 200).trim()
+      const email = nstr(args.email, 320)?.trim().toLowerCase() || null
+      if (!res.contactsActive) invalid = "Google Contacts no está conectado."
+      else if (!name) invalid = "Falta el nombre del contacto."
+      else if (email && !EMAIL_RE.test(email)) invalid = "Correo no válido."
+      else {
+        pending = {
+          call_id: call.call_id!,
+          tool: "contacts_create",
+          name,
+          email,
+          phone: nstr(args.phone, 40)?.trim() || null,
+          company: nstr(args.company, 200)?.trim() || null,
+          notes: nstr(args.notes, 2000)?.trim() || null,
+        }
+      }
     } else if (call.name?.startsWith("crm_")) {
       try {
         if (!res.hubspot) throw new RunError("HubSpot no está conectado.")
@@ -1420,6 +1480,14 @@ export async function executePending(admin: Admin, run: RunRow, pending: Pending
       await createLead(res.tokko, pending)
       await addEvent(admin, run, "approved", `Aprobado: consulta de ${pending.name} registrada en Tokko`, { tool: pending.tool, decided_by: decidedBy })
       return JSON.stringify({ ok: true })
+    }
+
+    if (pending.tool === "contacts_create") {
+      if (!res.contactsActive) throw new RunError("Google Contacts no está conectado.")
+      const { token: ct } = await contactsToken(admin, run.workspace_id)
+      const c = await createContact(ct, pending)
+      await addEvent(admin, run, "approved", `Aprobado: ${pending.name} añadido a Google Contacts`, { tool: pending.tool, decided_by: decidedBy })
+      return JSON.stringify({ ok: true, id: c.id })
     }
 
     if (pending.tool === "crm_create" || pending.tool === "crm_update" || pending.tool === "crm_note" || pending.tool === "crm_task") {

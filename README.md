@@ -166,6 +166,14 @@ supabase functions deploy hubspot-connection google-connection run-flow assistan
 supabase functions deploy telegram-webhook --no-verify-jwt
 ```
 
+## Google Contacts (31 oct)
+
+Para quien no usa un CRM. Conexión OAuth propia (`google-connection`, producto y provider `contacts`, migración `20261031220000_google_contacts.sql`) con el permiso `https://www.googleapis.com/auth/contacts` (People API; **hay que habilitar la People API en el proyecto de Google Cloud y añadir el permiso a la pantalla de consentimiento**). Cliente en `_shared/contacts.ts`.
+
+- **Agente:** `contacts_search` (lectura) y `contacts_create` (con aprobación). En los planes, la aplicación `contacts`.
+- **Bandeja:** quien está en Google Contacts cuenta como contacto conocido (su respuesta se prepara sola al llegar) y aparece en la ficha del remitente.
+- **Integraciones:** tarjeta «Google Contacts» en «CRM y contactos».
+
 ## Google Docs, Gmail, Telegram y bandeja
 
 - **Docs:** con el mismo permiso `drive.file`, el selector admite documentos. El agente puede `read_document`, `append_to_document` y `create_document` (los documentos creados se registran como archivos del espacio). Escrituras siempre con aprobación.
@@ -272,7 +280,7 @@ supabase functions deploy telegram-webhook mail-cron --no-verify-jwt
   - **Filtros sin IA** (`flows.settings.email_filter`, en la página de la automatización): remitente, asunto y asunto o texto. Cada casilla no vacía tiene que cumplirse (basta una de sus palabras), sin distinguir mayúsculas ni acentos. Por defecto se ignoran los remitentes automáticos (no-reply, boletines, avisos).
   - Máximo 3 automatizaciones por correo y 30 ejecuciones por hora y espacio.
   - El agente recibe el correo como dato y puede contestar al «remitente» en el mismo hilo (`In-Reply-To`/`References`), siempre con aprobación.
-- **Rutinas y plantillas** (`src/lib/templates.ts`): 10 rutinas que agrupan 21 plantillas listas para usar (más una de sector, Tokko). La página Automatizaciones muestra las automatizaciones del espacio dentro de su rutina (la plantilla de origen se guarda en `flows.settings.template`; las anteriores se reconocen por el nombre) y las demás en «Otras». El 31 oct se fusionaron «Resumen de la mañana» en «Mi secretaria digital», «Seguimiento de negocios parados» en «Seguimiento automático de clientes» e «Informe semanal del CRM» en «Informe de la semana».
+- **Rutinas y plantillas** (`src/lib/templates.ts`): 10 rutinas que agrupan 20 plantillas listas para usar, más 6 de sector en tres **verticales** (`VERTICALS`): Inmobiliarias (consultas de propiedades, seguimiento de visitas, propiedades nuevas para interesados), Clínicas (recordatorio de citas, seguimiento tras la consulta; sin datos de salud) y Profesionales (alta de cliente nuevo en Google Contacts). Cada vertical recomienda además 4 de las 10 rutinas. La página Automatizaciones muestra las automatizaciones del espacio dentro de su rutina (la plantilla de origen se guarda en `flows.settings.template`; las anteriores se reconocen por el nombre) y las demás en «Otras». El 31 oct se fusionaron «Resumen de la mañana» en «Mi secretaria digital», «Seguimiento de negocios parados» en «Seguimiento automático de clientes» e «Informe semanal del CRM» en «Informe de la semana».
 - **`runs-cron`** (sin `verify_jwt`, mismo secreto `MAIL_CRON_SECRET`): cada minuto avanza hasta 3 ejecuciones en marcha que nadie está mirando (lanzadas por correo o Telegram, o que se quedaron a medias), de las últimas 24 h, con tramos de 50 s. El lease impide avanzar dos veces la misma.
 
 ```bash

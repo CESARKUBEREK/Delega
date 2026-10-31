@@ -21,7 +21,7 @@ export const MAX_FILES = 5
 export const STEP_KINDS = ["read", "compare", "transform", "generate", "condition", "write", "notify"] as const
 export type StepKind = (typeof STEP_KINDS)[number]
 
-export const CONNECTION_KINDS = ["spreadsheet", "documents", "drive", "email", "telegram", "whatsapp", "calendar", "crm", "properties", "accounting", "social"] as const
+export const CONNECTION_KINDS = ["spreadsheet", "documents", "drive", "email", "telegram", "whatsapp", "calendar", "crm", "contacts", "properties", "accounting", "social"] as const
 export type ConnectionKind = (typeof CONNECTION_KINDS)[number]
 
 export const TRIGGERS: TriggerType[] = ["manual", "schedule", "email_message", "whatsapp_message", "telegram_message"]
@@ -39,12 +39,12 @@ export const KIND_INFO: Record<StepKind, { label: string; hint: string }> = {
 
 // Aplicaciones que tiene sentido elegir en cada tipo de paso. "none" = sin aplicación.
 export const KIND_CONNECTIONS: Record<StepKind, ("none" | ConnectionKind)[]> = {
-  read: ["spreadsheet", "documents", "drive", "email", "whatsapp", "telegram", "calendar", "crm", "properties", "accounting", "social"],
-  compare: ["none", "spreadsheet", "documents", "drive", "email", "calendar", "crm", "properties", "accounting"],
+  read: ["spreadsheet", "documents", "drive", "email", "whatsapp", "telegram", "calendar", "crm", "contacts", "properties", "accounting", "social"],
+  compare: ["none", "spreadsheet", "documents", "drive", "email", "calendar", "crm", "contacts", "properties", "accounting"],
   transform: ["none", "spreadsheet", "documents", "email", "whatsapp", "telegram"],
   generate: ["none", "documents"],
   condition: ["none"],
-  write: ["spreadsheet", "documents", "drive", "calendar", "crm", "properties", "social"],
+  write: ["spreadsheet", "documents", "drive", "calendar", "crm", "contacts", "properties", "social"],
   notify: ["none", "email", "whatsapp", "telegram"],
 }
 
@@ -58,6 +58,7 @@ export const CONNECTION_PROVIDER: Record<ConnectionKind, string> = {
   whatsapp: "whatsapp",
   calendar: "calendar",
   crm: "hubspot",
+  contacts: "contacts",
   properties: "tokko",
   accounting: "xubio",
   social: "buffer",
@@ -73,6 +74,7 @@ export const CONNECTION_NAME: Record<"none" | ConnectionKind, string> = {
   whatsapp: "WhatsApp",
   calendar: "Google Calendar",
   crm: "HubSpot",
+  contacts: "Google Contacts",
   properties: "Tokko Broker",
   accounting: "Xubio (solo lectura)",
   social: "Redes sociales (Buffer)",

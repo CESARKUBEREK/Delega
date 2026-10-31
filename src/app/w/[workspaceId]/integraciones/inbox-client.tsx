@@ -191,6 +191,7 @@ const DISCONNECT: Record<string, { label: string; confirm: string }> = {
   telegram: { label: "el bot de Telegram", confirm: "¿Desconectar el bot de Telegram? Dejarán de llegar mensajes a la bandeja." },
   whatsapp: { label: "WhatsApp", confirm: "¿Desconectar WhatsApp? MarchaSolo borra las credenciales de Twilio; las conversaciones ya guardadas siguen en la bandeja." },
   calendar: { label: "Google Calendar", confirm: "¿Desconectar Google Calendar? Las automatizaciones dejarán de ver y crear eventos." },
+  contacts: { label: "Google Contacts", confirm: "¿Desconectar Google Contacts? Las automatizaciones dejarán de buscar y crear contactos; tus contactos siguen en Google." },
   hubspot: { label: "HubSpot", confirm: "¿Desconectar HubSpot? MarchaSolo borra la clave; revócala también en HubSpot si ya no la usas." },
   imap: { label: "el correo", confirm: "¿Desconectar este correo? MarchaSolo borra la contraseña; las conversaciones ya guardadas siguen en la bandeja." },
   tokko: { label: "Tokko", confirm: "¿Desconectar Tokko? MarchaSolo borra la clave; las automatizaciones dejarán de ver tus propiedades." },
@@ -203,10 +204,10 @@ export function DisconnectInboxForm({
   kind,
 }: {
   workspaceId: string
-  kind: "telegram" | "whatsapp" | "calendar" | "hubspot" | "imap" | "tokko" | "xubio" | "buffer"
+  kind: "telegram" | "whatsapp" | "calendar" | "contacts" | "hubspot" | "imap" | "tokko" | "xubio" | "buffer"
 }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(
-    kind === "calendar"
+    kind === "calendar" || kind === "contacts"
       ? disconnectGoogle
       : kind === "hubspot"
         ? disconnectHubSpot
@@ -233,7 +234,7 @@ export function DisconnectInboxForm({
       }}
     >
       <input type="hidden" name="workspaceId" value={workspaceId} />
-      {kind === "calendar" ? <input type="hidden" name="product" value={kind} /> : null}
+      {kind === "calendar" || kind === "contacts" ? <input type="hidden" name="product" value={kind} /> : null}
       {state && !state.ok ? <FormMessage error={state.error} /> : null}
       <button type="submit" disabled={pending} className="w-fit text-sm text-alert underline underline-offset-4 disabled:opacity-60">
         {pending ? "Desconectando…" : `Desconectar ${label}`}

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   const result = await callEdgeFunction<{ workspace_id: string; provider?: string }>("google-connection", { action: "callback", code, state }, 30_000)
   if (result.error) return back(`/integraciones/google?e=${encodeURIComponent(result.error.code)}`)
-  const flag = result.data.provider === "calendar" ? "calendar=conectado" : "google=conectado"
+  const flag = result.data.provider === "calendar" ? "calendar=conectado" : result.data.provider === "contacts" ? "contacts=conectado" : "google=conectado"
   // Si se conectó desde el asistente de configuración, vuelve a su paso.
   const [setupWs, setupStep] = decodeURIComponent(request.cookies.get("ms_setup")?.value ?? "").split(":")
   if (setupWs === result.data.workspace_id && (setupStep === "drive" || setupStep === "calendario")) {
