@@ -138,30 +138,6 @@ export const TEMPLATES: FlowTemplate[] = [
     },
   },
   {
-    id: "resumen-manana",
-    category: "Avisos",
-    needs: ["ai", "imap", "calendar"],
-    settings: { schedule: { frequency: "weekdays", time: "08:00", weekday: 1, day_of_month: 1 } },
-    setup: "Te llega cada día laborable a las 8:00, al móvil y a tu correo, sin aprobación. Cambia la hora si quieres.",
-    plan: {
-      version: 1,
-      name: "Resumen de la mañana",
-      summary: "Cada mañana te avisa de lo importante: correos y mensajes de las últimas 24 horas, la agenda del día y lo que espera tu aprobación.",
-      trigger: { type: "schedule", description: "Días laborables a las 8:00" },
-      connections: [
-        { kind: "email", purpose: "Leer la bandeja de las últimas 24 horas" },
-        { kind: "calendar", purpose: "Ver la agenda de hoy" },
-      ],
-      steps: steps([
-        { kind: "read", title: "Revisar la bandeja", description: "Conversaciones con actividad en las últimas 24 horas, primero las urgentes y las que esperan respuesta.", connection: "email", requires_approval: false },
-        { kind: "read", title: "Mirar la agenda", description: "Eventos de hoy, con hora y asistentes.", connection: "calendar", requires_approval: false },
-        { kind: "generate", title: "Preparar el resumen", description: "Lo urgente arriba; después la agenda y el resto, en pocas líneas.", connection: "none", requires_approval: false },
-        { kind: "notify", title: "Avisarte", description: "Enviarte el resumen.", connection: "none", requires_approval: false },
-      ]),
-      open_questions: [],
-    },
-  },
-  {
     id: "correos-sin-responder",
     category: "Correo",
     needs: ["ai", "imap"],
@@ -201,27 +177,6 @@ export const TEMPLATES: FlowTemplate[] = [
         { kind: "read", title: "Reuniones de mañana", description: "Eventos del día siguiente con asistentes.", connection: "calendar", requires_approval: false },
         { kind: "read", title: "Fichas del CRM", description: "Para cada asistente externo: contacto, empresa, negocios abiertos y última nota.", connection: "crm", requires_approval: false },
         { kind: "notify", title: "Avisarte", description: "Para cada reunión: hora, con quién, en qué punto está y qué preparar. Si no hay reuniones, no avisar.", connection: "none", requires_approval: false },
-      ]),
-      open_questions: [],
-    },
-  },
-  {
-    id: "informe-crm",
-    category: "CRM",
-    needs: ["ai", "hubspot"],
-    settings: { schedule: { frequency: "weekly", time: "08:30", weekday: 1, day_of_month: 1 } },
-    setup: "Cada lunes a las 8:30 te avisa con el estado del CRM.",
-    plan: {
-      version: 1,
-      name: "Informe semanal del CRM",
-      summary: "Cada lunes te resume el CRM: negocios nuevos, los que cambiaron de etapa, los que llevan tiempo parados y las tareas vencidas.",
-      trigger: { type: "schedule", description: "Cada lunes a las 8:30" },
-      connections: [{ kind: "crm", purpose: "Leer negocios y tareas" }],
-      steps: steps([
-        { kind: "read", title: "Etapas", description: "Pipelines y etapas de los negocios.", connection: "crm", requires_approval: false },
-        { kind: "read", title: "Negocios", description: "Negocios abiertos con su etapa, importe y fecha de última modificación.", connection: "crm", requires_approval: false },
-        { kind: "generate", title: "Resumir", description: "Nuevos de la semana, cambios de etapa, parados más de 14 días e importe total abierto.", connection: "none", requires_approval: false },
-        { kind: "notify", title: "Avisarte", description: "Enviarte el informe.", connection: "none", requires_approval: false },
       ]),
       open_questions: [],
     },
@@ -415,40 +370,15 @@ export const TEMPLATES: FlowTemplate[] = [
     },
   },
   {
-    id: "negocios-parados",
-    category: "CRM",
-    needs: ["ai", "hubspot", "imap"],
-    settings: { schedule: { frequency: "weekly", time: "09:00", weekday: 1, day_of_month: 1 } },
-    setup: "Se ejecuta los lunes a las 9:00 (puedes cambiarlo) y te avisa con la lista. Solo puede escribir a tus contactos autorizados.",
-    plan: {
-      version: 1,
-      name: "Seguimiento de negocios parados",
-      summary: "Busca los negocios abiertos de HubSpot sin actividad reciente y prepara un correo de seguimiento y una tarea para cada uno.",
-      trigger: { type: "schedule", description: "Cada lunes a las 9:00" },
-      connections: [
-        { kind: "crm", purpose: "Buscar negocios sin actividad y crear tareas" },
-        { kind: "email", purpose: "Enviar el seguimiento" },
-      ],
-      steps: steps([
-        { kind: "read", title: "Buscar negocios abiertos", description: "Negocios que no están ganados ni perdidos, con su fecha de última modificación.", connection: "crm", requires_approval: false },
-        { kind: "condition", title: "Quedarse con los parados", description: "Los que llevan más de 14 días sin cambios (máximo 5).", connection: "none", requires_approval: false },
-        { kind: "notify", title: "Correo de seguimiento", description: "Un correo breve y cordial a su contacto, si es un contacto autorizado.", connection: "email", requires_approval: true },
-        { kind: "write", title: "Tarea en el CRM", description: "Tarea de seguimiento para dentro de 3 días.", connection: "crm", requires_approval: true },
-        { kind: "notify", title: "Avisarte", description: "Avisarte con la lista de negocios parados y lo que queda por aprobar.", connection: "none", requires_approval: false },
-      ]),
-      open_questions: [],
-    },
-  },
-  {
     id: "informe-semanal",
     category: "Informes",
     needs: ["ai", "calendar", "hubspot", "google"],
     settings: { schedule: { frequency: "weekly", time: "17:00", weekday: 5, day_of_month: 1 } },
-    setup: "Se ejecuta los viernes a las 17:00 (puedes cambiarlo). Crear el documento espera tu aprobación.",
+    setup: "Se ejecuta los viernes a las 17:00 (puedes cambiarlo). Te llega el informe; crear el documento espera tu aprobación.",
     plan: {
       version: 1,
       name: "Informe de la semana",
-      summary: "Resume la semana en un documento: reuniones hechas, negocios que avanzaron y tareas pendientes en el CRM.",
+      summary: "Resume la semana: reuniones hechas, negocios nuevos y los que cambiaron de etapa, los parados, el importe abierto y las tareas vencidas. Te lo envía y, si quieres, lo guarda en un documento.",
       trigger: { type: "schedule", description: "Cada viernes a las 17:00" },
       connections: [
         { kind: "calendar", purpose: "Reuniones de la semana" },
@@ -457,9 +387,11 @@ export const TEMPLATES: FlowTemplate[] = [
       ],
       steps: steps([
         { kind: "read", title: "Reuniones", description: "Eventos de lunes a viernes de esta semana.", connection: "calendar", requires_approval: false },
-        { kind: "read", title: "Negocios y tareas", description: "Negocios abiertos con su etapa y tareas pendientes.", connection: "crm", requires_approval: false },
-        { kind: "generate", title: "Redactar el informe", description: "Resumen breve: lo hecho, lo que avanzó y lo pendiente para la semana que viene.", connection: "none", requires_approval: false },
-        { kind: "write", title: "Crear el documento", description: "Crear «Informe semanal – fecha».", connection: "documents", requires_approval: true },
+        { kind: "read", title: "Etapas", description: "Pipelines y etapas de los negocios.", connection: "crm", requires_approval: false },
+        { kind: "read", title: "Negocios y tareas", description: "Negocios abiertos con su etapa, importe y fecha de última modificación, y tareas pendientes o vencidas.", connection: "crm", requires_approval: false },
+        { kind: "generate", title: "Redactar el informe", description: "Resumen breve: reuniones hechas, negocios nuevos de la semana, cambios de etapa, parados más de 14 días, importe total abierto, tareas vencidas y lo pendiente para la semana que viene.", connection: "none", requires_approval: false },
+        { kind: "notify", title: "Avisarte", description: "Enviarte el informe.", connection: "none", requires_approval: false },
+        { kind: "write", title: "Crear el documento", description: "Crear «Informe semanal – fecha». Si solo quieres el aviso, rechaza este paso.", connection: "documents", requires_approval: true },
       ]),
       open_questions: [],
     },
@@ -680,7 +612,7 @@ export const ROUTINES: Routine[] = [
     auto: "Cada mañana te envía el día ordenado con acciones recomendadas.",
     approval: "Nada: solo te avisa a ti.",
     saves: "Repasar correo, agenda y pendientes cada mañana.",
-    templates: ["secretaria-digital", "resumen-manana"],
+    templates: ["secretaria-digital"],
   },
   {
     id: "seguimiento",
@@ -693,7 +625,7 @@ export const ROUTINES: Routine[] = [
     auto: "Detecta oportunidades, consultas pendientes y negocios parados.",
     approval: "Crear contactos y tareas, y cada correo de seguimiento.",
     saves: "Repasar el CRM y escribir seguimientos uno a uno; y clientes que no se pierden.",
-    templates: ["seguimiento-clientes", "negocios-parados", "contacto-al-crm", "whatsapp-al-crm"],
+    templates: ["seguimiento-clientes", "contacto-al-crm", "whatsapp-al-crm"],
   },
   {
     id: "agenda",
@@ -732,7 +664,7 @@ export const ROUTINES: Routine[] = [
     auto: "Reúne los datos, detecta cambios y pendientes, y redacta el informe.",
     approval: "Crear el documento o añadir la fila de cifras.",
     saves: "Una o dos horas de preparar el informe cada semana.",
-    templates: ["informe-semanal", "informe-crm", "volcado-semanal"],
+    templates: ["informe-semanal", "volcado-semanal"],
   },
   {
     id: "recepcionista",
@@ -791,3 +723,36 @@ export const ROUTINES: Routine[] = [
 
 // Plantillas de un sector concreto, fuera de las 10 rutinas.
 export const SECTOR_TEMPLATES: { title: string; templates: string[] }[] = [{ title: "Inmobiliarias (Tokko Broker)", templates: ["consultas-propiedades"] }]
+
+// Plantillas que se fusionaron con otra (31 oct 2026). Las automatizaciones ya
+// creadas con ellas siguen funcionando; aquí solo se usan para agruparlas en
+// su rutina.
+const MERGED_TEMPLATES: Record<string, string> = {
+  "resumen-manana": "secretaria-digital",
+  "negocios-parados": "seguimiento-clientes",
+  "informe-crm": "informe-semanal",
+}
+
+// Nombres de las plantillas fusionadas, para reconocer las automatizaciones
+// creadas antes de que se guardara la plantilla de origen.
+const MERGED_NAMES: Record<string, string> = {
+  "Resumen de la mañana": "secretaria-digital",
+  "Seguimiento de negocios parados": "seguimiento-clientes",
+  "Informe semanal del CRM": "informe-semanal",
+}
+
+// Plantilla de origen de una automatización: la guardada al crearla
+// (settings.template) o, si no la hay, la que tiene su mismo nombre.
+export function templateIdOfFlow(flow: { name: string; settings?: unknown }): string | undefined {
+  const settings = flow.settings && typeof flow.settings === "object" ? (flow.settings as Record<string, unknown>) : {}
+  const saved = typeof settings.template === "string" ? settings.template : undefined
+  if (saved) return MERGED_TEMPLATES[saved] ?? saved
+  return MERGED_NAMES[flow.name] ?? TEMPLATES.find((t) => t.plan.name === flow.name)?.id
+}
+
+// Rutina a la que pertenece una automatización, si la hay.
+export function routineOfFlow(flow: { name: string; settings?: unknown }): Routine | undefined {
+  const id = templateIdOfFlow(flow)
+  if (!id) return undefined
+  return ROUTINES.find((r) => r.templates.includes(id))
+}

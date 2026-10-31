@@ -196,7 +196,7 @@ export async function createFlowFromTemplate(formData: FormData): Promise<void> 
       name: template.plan.name,
       summary: template.plan.summary,
       definition: template.plan,
-      settings: (template.settings ?? {}) as Json,
+      settings: { ...(template.settings ?? {}), template: template.id } as Json,
       created_by: userId,
     })
     .select("id")

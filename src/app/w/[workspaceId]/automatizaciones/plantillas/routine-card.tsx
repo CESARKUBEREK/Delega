@@ -21,7 +21,7 @@ function Needs({ needs, ready }: { needs: TemplateNeed[]; ready: Set<TemplateNee
 export function RoutineCard({ routine: r, ready, base, workspaceId }: { routine: Routine; ready: Set<TemplateNeed>; base: string; workspaceId: string }) {
   const templates = r.templates.map(findTemplate).filter((t): t is FlowTemplate => Boolean(t))
   return (
-    <article className="routine-card">
+    <article id={`rutina-${r.id}`} className="routine-card scroll-mt-24">
       <header className="flex items-start gap-3">
         <span className="routine-number" aria-hidden="true">
           {String(r.number).padStart(2, "0")}
