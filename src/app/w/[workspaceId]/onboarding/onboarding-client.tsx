@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore, useTransition } from "react"
+import { useCallback, useEffect, useState, useSyncExternalStore, useTransition } from "react"
 import { PlanView } from "@/components/plan-view"
 import {
   chatHref,
@@ -36,13 +36,33 @@ const Check = () => (
   </svg>
 )
 
+// Ejemplos de los tres sectores (inmobiliarias, clínicas, profesionales).
+// Cada uno cae en su plan sin IA (src/lib/onboarding-plans.ts).
 const SUGGESTIONS = [
-  "Clasificar y responder correos de clientes",
-  "Actualizar una planilla cuando llegue un pedido",
-  "Preparar un resumen semanal de ventas",
-  "Crear eventos en el calendario desde mensajes",
-  "Preparar borradores de respuesta a presupuestos",
+  "Responder las consultas de mis clientes",
+  "Recordar sus citas a mis clientes el día antes",
+  "Contestar a los interesados en una propiedad",
+  "Avisar a los clientes con pagos pendientes",
+  "Pasar los pedidos que llegan por correo a una planilla",
+  "Preparar un informe de ventas cada viernes",
 ]
+
+// Mientras el asistente prepara el plan (puede tardar unos segundos).
+const LOADING_MESSAGES = ["Leyendo tu tarea…", "Eligiendo las herramientas que hacen falta…", "Ordenando los pasos…", "Casi listo…"]
+
+function PlanLoading() {
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    const id = window.setInterval(() => setI((n) => Math.min(n + 1, LOADING_MESSAGES.length - 1)), 3500)
+    return () => window.clearInterval(id)
+  }, [])
+  return (
+    <p className="flex items-center gap-2 text-sm text-graphite" role="status" aria-live="polite">
+      <span aria-hidden="true" className="h-2 w-2 animate-pulse rounded-full bg-stroke" />
+      {LOADING_MESSAGES[i]}
+    </p>
+  )
+}
 
 
 type OnboardingProps = {
@@ -95,7 +115,6 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
   const needed = plan ? primaryConnection(plan) : "none"
 
   const currentIndex = STEP_ORDER.indexOf(step)
-  const progress = useMemo(() => ((currentIndex + 1) / STEP_ORDER.length) * 100, [currentIndex])
 
   // Los pasos ya hechos se pueden volver a abrir; hacia delante, no.
   const canGoTo = (target: Step) => {
@@ -155,11 +174,8 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
   const goToSupervised = () => setStep("supervised")
 
   const finish = () => {
-    if (!supervisedAccepted) {
-      setError("Debes confirmar que entiendes que las acciones se ejecutarán con tu supervisión.")
-      return
-    }
     setError(null)
+    setSupervisedAccepted(true)
     startTransition(async () => {
       const result = await completeOnboarding(workspaceId)
       if (!result.ok) {
@@ -224,16 +240,6 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
             })}
           </ol>
         </nav>
-        <div
-          className="setup-progress"
-          role="progressbar"
-          aria-valuenow={Math.round(progress)}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={`Paso ${currentIndex + 1} de ${STEP_ORDER.length}`}
-        >
-          <span style={{ width: `${progress}%` }} />
-        </div>
       </div>
 
       {/* Introducción: qué es MarchaSolo, antes del paso 1 */}
@@ -244,9 +250,10 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
         <section className="setup-panel flex flex-col gap-5">
           <div>
             <p className="text-sm font-semibold text-graphite">Paso 1 de 5</p>
-            <h2 className="rotulo text-xl mt-1">¿Qué te gustaría automatizar?</h2>
+            <h2 className="rotulo text-xl mt-1">¿Qué tarea te quita más tiempo?</h2>
             <p className="text-graphite mt-1">
-              Cuéntame una tarea que repites a menudo. No hace falta conectar nada todavía.
+              Cuéntamela con tus palabras, como se la explicarías a alguien de tu equipo, o elige un ejemplo. No hace falta conectar nada
+              todavía.
             </p>
           </div>
 
@@ -263,9 +270,8 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
               }}
               rows={4}
               maxLength={500}
-              placeholder="Ej: Cuando llega un correo de presupuesto, clasificarlo y preparar una respuesta para que la revise…"
+              placeholder="Ej.: cuando un cliente pide presupuesto por correo, prepárame la respuesta con nuestras tarifas para que la revise."
               className="w-full rounded-xl border border-rule bg-paper px-4 py-3 text-ink placeholder:text-graphite focus:border-stroke focus:outline-none"
-              autoFocus
             />
             {error && <p className="text-sm text-alert">{error}</p>}
 
@@ -290,8 +296,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
               disabled={pending}
               className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
             >
-              {pending ? "Preparando el plan…" : "Ver cómo lo resolvería →"}
+              {pending ? "Preparando el plan…" : "Ver cómo lo haría →"}
             </button>
+            {pending ? <PlanLoading /> : null}
           </form>
         </section>
       )}
@@ -356,12 +363,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
       {step === "supervised" && (
         <SupervisedStep
           plan={plan}
-          accepted={supervisedAccepted}
           error={error}
-          onAcceptChange={(v) => {
-            setSupervisedAccepted(v)
-            if (error) setError(null)
-          }}
           onBack={() => setStep(needed === "none" ? "plan" : "connect")}
           onContinue={finish}
           pending={pending}
@@ -534,17 +536,13 @@ function ConnectStep({
 // Paso 4: qué hará MarchaSolo con este plan y qué no hará sin permiso.
 function SupervisedStep({
   plan,
-  accepted,
   error,
-  onAcceptChange,
   onBack,
   onContinue,
   pending,
 }: {
   plan: FlowPlan | null
-  accepted: boolean
   error: string | null
-  onAcceptChange: (v: boolean) => void
   onBack: () => void
   onContinue: () => void
   pending: boolean
@@ -584,17 +582,6 @@ function SupervisedStep({
         )}
       </div>
 
-      <label className="flex items-start gap-3 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={accepted}
-          onChange={(e) => onAcceptChange(e.target.checked)}
-          className="mt-1 h-4 w-4 rounded border-rule"
-        />
-        <span className="text-sm text-ink">
-          Entiendo que las acciones que modifican datos o envían mensajes requerirán mi aprobación explícita.
-        </span>
-      </label>
       {error && <p className="text-sm text-alert">{error}</p>}
 
       <div className="flex flex-wrap gap-3">
@@ -604,7 +591,7 @@ function SupervisedStep({
           disabled={pending}
           className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
         >
-          {pending ? "Guardando…" : "Entendido, continuar →"}
+          {pending ? "Guardando…" : "Perfecto, continuar →"}
         </button>
         <button type="button" onClick={onBack} className="inline-flex h-11 items-center rounded-xl border border-ink px-5 font-medium text-ink">
           ← Volver
