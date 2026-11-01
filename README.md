@@ -166,6 +166,10 @@ supabase functions deploy hubspot-connection google-connection run-flow assistan
 supabase functions deploy telegram-webhook --no-verify-jwt
 ```
 
+## Agenda: citas con o sin aprobación (1 nov)
+
+En las automatizaciones con un paso que crea eventos (p. ej. «Proponer cita a quien la pide»), la sección «Citas en tu calendario» deja elegir (solo administradores): **pedir aprobación** (por defecto) o **reservar directamente**. Se guarda en `flows.settings.calendar` (`mode`, `days`, `ranges`). En modo directo, el agente (`autoBookingBlocked` en `_shared/agent.ts`) crea la cita sin aprobación solo si la ejecución la lanzó un administrador, la hora está libre, cae dentro del horario elegido, con al menos 30 min de antelación, dura entre 5 min y 4 h y no se han reservado ya 20 así en 24 h; si no, la propone para aprobar. Se puede invitar a quien escribió el correo (`remitente`). Cada reserva directa avisa por push y queda en la ejecución.
+
 ## Asistente de voz en la web del cliente (1 nov)
 
 Un botón que el negocio pega en su web (`public/widget-voz.js`, con `data-id="msw_…"`) abre `/hablar/<id>` en un panel. La página pide el micrófono, llama a `voice-web` (Edge Function pública, sin JWT) y habla con el Voice Agent API de xAI por WebSocket (`wss://api.x.ai/v1/realtime`, PCM 16 bits a 24 kHz).

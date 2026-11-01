@@ -34,9 +34,12 @@ export function FlowMap({
   plan,
   schedule,
   editHref,
+  autoCalendar = false,
 }: {
   plan: FlowPlan
   schedule?: FlowSchedule | null
+  // Agenda con reserva directa: los pasos de crear citas no esperan aprobación si la hora está libre.
+  autoCalendar?: boolean
   editHref?: string | null
 }) {
   const triggerText =
@@ -63,7 +66,15 @@ export function FlowMap({
                   icon={kind === "approval" ? "lock" : kind === "ai" ? "spark" : iconFor(step)}
                   title={step.title || STEP_LABEL[step.kind] || "Paso"}
                   meta={[STEP_LABEL[step.kind] ?? step.kind, connection].filter(Boolean).join(" · ")}
-                  flag={kind === "approval" ? "Espera tu aprobación" : step.kind === "notify" ? "Sin aprobación" : null}
+                  flag={
+                    kind === "approval"
+                      ? autoCalendar && step.kind === "write" && step.connection === "calendar"
+                        ? "Directa si la hora está libre"
+                        : "Espera tu aprobación"
+                      : step.kind === "notify"
+                        ? "Sin aprobación"
+                        : null
+                  }
                 />
               </li>
             )
