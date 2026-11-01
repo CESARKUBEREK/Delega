@@ -87,7 +87,7 @@ export type ConnectionStatusResult =
   | { ok: false; error: string }
 
 // ¿Ya está conectado lo que necesita el plan? Usa las mismas reglas que el
-// asistente de configuración (/bienvenida). Las planillas viven en Drive, así
+// aviso de Hoy (setupStatus). Las planillas viven en Drive, así
 // que basta con Drive conectado.
 export async function checkOnboardingConnection(input: {
   workspaceId: string
@@ -164,5 +164,21 @@ export async function getOnboardingResult(workspaceId: string): Promise<Onboardi
     urgent: urgent ?? 0,
     noise: noise ?? 0,
     drafts: drafts ?? 0,
+  }
+}
+
+// Embudo: apunta la primera llegada de quien usa el onboarding a cada paso.
+// Nunca falla hacia fuera (si la tabla aún no existe, no pasa nada).
+export async function trackOnboardingStep(
+  workspaceId: string,
+  step: "task" | "plan" | "connect" | "connected" | "supervised" | "done",
+  detail: { source?: string; plan?: string; needed?: string } = {},
+): Promise<void> {
+  if (!UUID_RE.test(workspaceId)) return
+  try {
+    const supabase = await createClient()
+    await supabase.rpc("onboarding_track", { p_workspace_id: workspaceId, p_step: step, p_detail: detail })
+  } catch {
+    // Medir no puede romper el onboarding.
   }
 }

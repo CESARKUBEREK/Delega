@@ -40,9 +40,9 @@ export default function IntegrationsPage({ params, searchParams }: PageProps<"/w
           Las conexiones son de este espacio. MarchaSolo usa tu propia cuenta de cada servicio y no guarda tus datos más de lo necesario.
         </p>
         <p className="mt-2 text-sm">
-          ¿Prefieres ir paso a paso?{" "}
-          <Link href="bienvenida" className="font-semibold text-link underline underline-offset-4">
-            Abre el asistente de configuración
+          ¿No sabes por dónde empezar?{" "}
+          <Link href="onboarding" className="font-semibold text-link underline underline-offset-4">
+            Cuéntanos una tarea y te decimos qué conectar
           </Link>
         </p>
       </header>

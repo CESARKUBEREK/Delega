@@ -102,7 +102,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
             {setup.done}/{setup.total}
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="font-semibold text-ink">{onboarded ? "Conecta una IA para que MarchaSolo pueda trabajar" : "Pon MarchaSolo en marcha"}</span>
+            <span className="font-semibold text-ink">{onboarded ? "Conecta una IA para que MarchaSolo pueda trabajar" : "¡Pongamos a rodar MarchaSolo!"}</span>
             <span className="text-sm text-graphite">
               {onboarded
                 ? "Falta la clave de OpenAI, Anthropic, DeepSeek o Grok. Con ella, tu plan ya puede ejecutarse."
@@ -112,15 +112,14 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
           <span className="setup-banner-cta">{onboarded ? "Conectar la IA →" : "Empezar →"}</span>
         </Link>
       ) : isAdmin && !setup.complete ? (
-        <Link href={`${base}/bienvenida`} className="setup-banner">
+        // Con IA y conexiones por hacer: a Integraciones.
+        <Link href={`${base}/integraciones`} className="setup-banner">
           <span className="setup-banner-ring" aria-hidden="true" style={{ ["--pct" as string]: `${Math.round((setup.done / setup.total) * 100)}%` }}>
             {setup.done}/{setup.total}
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="font-semibold text-ink">{setup.ia ? "Termina de configurar MarchaSolo" : "Pon MarchaSolo en marcha"}</span>
-            <span className="text-sm text-graphite">
-              {setup.ia ? "Conecta tus cuentas paso a paso: correo, Drive, calendario y mensajería." : "Empieza conectando tu IA: sin ella, MarchaSolo no puede trabajar."}
-            </span>
+            <span className="font-semibold text-ink">Saca más partido a MarchaSolo</span>
+            <span className="text-sm text-graphite">Conecta el resto de tus cuentas: correo, Drive, calendario y mensajería.</span>
           </span>
           <span className="setup-banner-cta">Continuar →</span>
         </Link>

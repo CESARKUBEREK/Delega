@@ -58,6 +58,11 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // El asistente de configuración /bienvenida se retiró (1 nov): lo sustituye
+  // el onboarding. Los enlaces antiguos llevan allí.
+  async redirects() {
+    return [{ source: "/w/:workspaceId/bienvenida", destination: "/w/:workspaceId/onboarding", permanent: false }]
+  },
   async headers() {
     return [
       { source: "/((?!hablar/).*)", headers: securityHeaders },

@@ -1,20 +1,26 @@
 import { Suspense } from "react"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
+import { DriveCard } from "../integraciones/google-card"
+import { ImapCard } from "../integraciones/inbox-cards"
+import { CalendarCard } from "../integraciones/work-cards"
 import { OnboardingClient } from "./onboarding-client"
 
 export const metadata = { title: "Empieza con MarchaSolo" }
 
-export default function OnboardingPage({ params }: PageProps<"/w/[workspaceId]/onboarding">) {
+export default function OnboardingPage({ params, searchParams }: PageProps<"/w/[workspaceId]/onboarding">) {
   return (
     <Suspense fallback={<div className="h-96 rounded-2xl border border-rule bg-sheet" aria-busy="true" />}>
-      <Onboarding params={params} />
+      <Onboarding params={params} searchParams={searchParams} />
     </Suspense>
   )
 }
 
-async function Onboarding({ params }: { params: PageProps<"/w/[workspaceId]/onboarding">["params"] }) {
+async function Onboarding({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/onboarding">, "params" | "searchParams">) {
   const { workspaceId } = await params
+  const sp = await searchParams
+  // Aviso de vuelta de Google (Drive o Calendar), como en Integraciones.
+  const googleNotice = sp.google === "conectado" ? "connected" : typeof sp.google_error === "string" ? sp.google_error : null
   const { isAdmin, workspace, user } = await getWorkspace(workspaceId, `/w/${workspaceId}/onboarding`)
   const supabase = await createClient()
   const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle()
@@ -26,6 +32,11 @@ async function Onboarding({ params }: { params: PageProps<"/w/[workspaceId]/onbo
       workspaceName={workspace.name}
       isAdmin={isAdmin}
       userName={firstName}
+      cards={{
+        email: <ImapCard workspaceId={workspaceId} isAdmin={isAdmin} />,
+        spreadsheet: <DriveCard workspaceId={workspaceId} isAdmin={isAdmin} notice={googleNotice} />,
+        calendar: <CalendarCard workspaceId={workspaceId} isAdmin={isAdmin} notice={sp.calendar === "conectado"} />,
+      }}
     />
   )
 }
