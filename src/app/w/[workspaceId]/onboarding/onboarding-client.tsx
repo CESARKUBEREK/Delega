@@ -3,8 +3,9 @@
 import Link from "next/link"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { PlanView } from "@/components/plan-view"
+import { primaryConnection, type OnboardingConnection } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
-import { generateOnboardingPlan, primaryConnection } from "./actions"
+import { generateOnboardingPlan } from "./actions"
 
 type Step = "task" | "plan" | "connect" | "supervised" | "done"
 
@@ -16,7 +17,7 @@ const SUGGESTIONS = [
   "Preparar borradores de respuesta a presupuestos",
 ]
 
-const CONNECTION_LABEL: Record<"email" | "spreadsheet" | "calendar" | "none", string> = {
+const CONNECTION_LABEL: Record<OnboardingConnection, string> = {
   email: "Correo (IMAP)",
   spreadsheet: "Google Drive / Planillas",
   calendar: "Google Calendar",
