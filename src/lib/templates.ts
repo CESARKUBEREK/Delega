@@ -743,7 +743,7 @@ export const ROUTINES: Routine[] = [
   },
   {
     id: "seguimiento",
-    number: 3,
+    number: 5,
     title: "Seguimiento automático de clientes",
     tier: "negocio",
     problem: "Consultas sin responder y clientes que se enfrían por falta de seguimiento.",
@@ -756,7 +756,7 @@ export const ROUTINES: Routine[] = [
   },
   {
     id: "agenda",
-    number: 4,
+    number: 3,
     title: "Agenda inteligente",
     tier: "personal",
     problem: "Idas y vueltas de mensajes para cuadrar una cita, y reuniones sin preparar.",
@@ -769,7 +769,7 @@ export const ROUTINES: Routine[] = [
   },
   {
     id: "presupuestos",
-    number: 5,
+    number: 6,
     title: "Presupuestos y propuestas",
     tier: "negocio",
     problem: "Tardar días en responder a una petición de presupuesto.",
@@ -782,7 +782,7 @@ export const ROUTINES: Routine[] = [
   },
   {
     id: "informes",
-    number: 6,
+    number: 7,
     title: "Informe semanal del negocio",
     tier: "negocio",
     problem: "Preparar informes a mano o no tener ninguno.",
@@ -795,7 +795,7 @@ export const ROUTINES: Routine[] = [
   },
   {
     id: "recepcionista",
-    number: 7,
+    number: 10,
     title: "Asistente de voz",
     tier: "avanzado",
     problem: "Llamadas perdidas y visitas de tu web que se van sin preguntar cuando estás ocupado o fuera del negocio.",
@@ -835,7 +835,7 @@ export const ROUTINES: Routine[] = [
   },
   {
     id: "tareas",
-    number: 10,
+    number: 4,
     title: "Coordinador de tareas",
     tier: "personal",
     problem: "Encargos y compromisos dispersos en mensajes que se olvidan.",
