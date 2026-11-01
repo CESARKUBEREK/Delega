@@ -1,9 +1,8 @@
 "use server"
 
-import { cookies } from "next/headers"
 
 import { callEdgeFunction } from "@/lib/edge-functions"
-import { addOnboarded, CONNECTION_LABEL, ONBOARDED_COOKIE, type OnboardingConnection } from "@/lib/onboarding"
+import { CONNECTION_LABEL, type OnboardingConnection } from "@/lib/onboarding"
 import { asPlan, type FlowPlan } from "@/lib/plan"
 import { setupStatus } from "@/lib/setup"
 import { createClient } from "@/lib/supabase/server"
@@ -173,17 +172,14 @@ export async function checkOnboardingConnection(input: {
   return { ok: true, connected, label }
 }
 
-// Marca el onboarding de este espacio como terminado en este navegador, para
-// que /abrir no vuelva a mandar aquí.
+// Marca el onboarding de este espacio como terminado (en la base, para todos
+// los dispositivos), para que /abrir no vuelva a mandar aquí. Si quien lo
+// termina no administra el espacio no se marca nada: /abrir solo manda aquí a
+// los administradores.
 export async function completeOnboarding(workspaceId: string): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
-  const jar = await cookies()
-  jar.set(ONBOARDED_COOKIE, addOnboarded(jar.get(ONBOARDED_COOKIE)?.value, workspaceId), {
-    path: "/",
-    maxAge: 60 * 60 * 24 * 400,
-    sameSite: "lax",
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-  })
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("workspace_complete_onboarding", { p_workspace_id: workspaceId })
+  if (error) return { ok: false, error: "No se pudo guardar. Inténtalo de nuevo." }
   return { ok: true }
 }
