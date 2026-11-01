@@ -11,6 +11,7 @@ import {
   loadOnboarding,
   primaryConnection,
   saveOnboarding,
+  supervisedPreview,
   type OnboardingConnection,
   type OnboardingStep,
 } from "@/lib/onboarding"
@@ -260,50 +261,19 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
         />
       )}
 
-      {/* PASO 4 — Supervisado */}
+      {/* PASO 4 — Supervisado, con el plan real */}
       {step === "supervised" && (
-        <section className="setup-panel flex flex-col gap-5">
-          <div>
-            <p className="text-sm font-semibold text-graphite">Paso 4 de 5</p>
-            <h2 className="rotulo text-xl mt-1">Modo supervisado</h2>
-            <p className="text-graphite mt-1">
-              En las primeras ejecuciones MarchaSolo te mostrará exactamente qué va a hacer antes de actuar.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-stroke bg-paper p-5">
-            <p className="font-medium text-ink mb-2">Ejemplo de lo que verás:</p>
-            <p className="text-sm text-graphite">
-              «Voy a procesar 8 correos y preparar borradores de respuesta.
-              <br />
-              <strong>No enviaré ningún correo.</strong>»
-            </p>
-            <p className="mt-3 text-sm text-graphite">Tú decides si autorizas cada acción.</p>
-          </div>
-
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={supervisedAccepted}
-              onChange={(e) => {
-                setSupervisedAccepted(e.target.checked)
-                if (error) setError(null)
-              }}
-              className="mt-1 h-4 w-4 rounded border-rule"
-            />
-            <span className="text-sm text-ink">
-              Entiendo que las acciones que modifican datos o envían mensajes requerirán mi aprobación explícita.
-            </span>
-          </label>
-          {error && <p className="text-sm text-alert">{error}</p>}
-
-          <button
-            onClick={finish}
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
-          >
-            Entendido, continuar →
-          </button>
-        </section>
+        <SupervisedStep
+          plan={plan}
+          accepted={supervisedAccepted}
+          error={error}
+          onAcceptChange={(v) => {
+            setSupervisedAccepted(v)
+            if (error) setError(null)
+          }}
+          onBack={() => setStep(needed === "none" ? "plan" : "connect")}
+          onContinue={finish}
+        />
       )}
 
       {/* PASO 5 — Listo */}
@@ -448,6 +418,86 @@ function ConnectStep({
         </button>
         <button onClick={onBack} className="text-sm text-graphite">
           ← Volver al plan
+        </button>
+      </div>
+    </section>
+  )
+}
+
+// Paso 4: qué hará MarchaSolo con este plan y qué no hará sin permiso.
+function SupervisedStep({
+  plan,
+  accepted,
+  error,
+  onAcceptChange,
+  onBack,
+  onContinue,
+}: {
+  plan: FlowPlan | null
+  accepted: boolean
+  error: string | null
+  onAcceptChange: (v: boolean) => void
+  onBack: () => void
+  onContinue: () => void
+}) {
+  const preview = supervisedPreview(plan)
+
+  return (
+    <section className="setup-panel flex flex-col gap-5">
+      <div>
+        <p className="text-sm font-semibold text-graphite">Paso 4 de 5</p>
+        <h2 className="rotulo text-xl mt-1">Tú apruebas cada acción</h2>
+        <p className="text-graphite mt-1">
+          MarchaSolo lee y prepara solo. Antes de escribir o enviar algo, te enseña exactamente qué va a hacer y espera tu aprobación. Siempre, no solo al principio.
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-stroke bg-paper p-5 flex flex-col gap-3">
+        <p className="font-medium text-ink">Con este plan, te dirá:</p>
+        <blockquote className="border-l-2 border-stroke pl-4 text-sm text-graphite">
+          <p>«{preview.will}</p>
+          <p className="mt-1">
+            <strong>{preview.wont}</strong>»
+          </p>
+        </blockquote>
+
+        {preview.approvals.length > 0 ? (
+          <div>
+            <p className="text-xs font-semibold text-ink">Pasos que esperarán tu aprobación</p>
+            <ul className="mt-1 list-disc pl-5 text-sm text-graphite">
+              {preview.approvals.map((a) => (
+                <li key={a.id}>{a.title}</li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="text-sm text-graphite">Este plan no escribe ni envía nada: solo tendrás que revisar el resultado.</p>
+        )}
+      </div>
+
+      <label className="flex items-start gap-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={accepted}
+          onChange={(e) => onAcceptChange(e.target.checked)}
+          className="mt-1 h-4 w-4 rounded border-rule"
+        />
+        <span className="text-sm text-ink">
+          Entiendo que las acciones que modifican datos o envían mensajes requerirán mi aprobación explícita.
+        </span>
+      </label>
+      {error && <p className="text-sm text-alert">{error}</p>}
+
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={onContinue}
+          className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
+        >
+          Entendido, continuar →
+        </button>
+        <button type="button" onClick={onBack} className="inline-flex h-11 items-center rounded-xl border border-ink px-5 font-medium text-ink">
+          ← Volver
         </button>
       </div>
     </section>
