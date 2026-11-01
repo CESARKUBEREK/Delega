@@ -187,7 +187,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
       <div className="flex flex-col gap-2">
         <p className="app-eyebrow">ONBOARDING · {workspaceName.toUpperCase()}</p>
         <h1 className="rotulo text-2xl">
-          {userName ? `Hola ${userName}, ` : ""}vamos a poner MarchaSolo en marcha
+          {userName ? `Hola ${userName}, ¡pongamos a rodar MarchaSolo!` : "¡Pongamos a rodar MarchaSolo!"}
         </h1>
         <nav aria-label="Pasos del onboarding" className="setup-steps">
           <ol className="onboarding-steps">
@@ -235,6 +235,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
           <span style={{ width: `${progress}%` }} />
         </div>
       </div>
+
+      {/* Introducción: qué es MarchaSolo, antes del paso 1 */}
+      {step === "task" && <Intro />}
 
       {/* PASO 1 */}
       {step === "task" && (
@@ -606,6 +609,68 @@ function SupervisedStep({
         <button type="button" onClick={onBack} className="inline-flex h-11 items-center rounded-xl border border-ink px-5 font-medium text-ink">
           ← Volver
         </button>
+      </div>
+    </section>
+  )
+}
+
+// Introducción antes de la primera tarea: qué hace MarchaSolo por el negocio
+// (solo cosas que ya hace hoy) y cuánto tiempo devuelve.
+const INTRO_AREAS = [
+  { title: "Atención al cliente", text: "Ordena tus correos y mensajes por urgencia y te deja las respuestas redactadas." },
+  { title: "Reservas y citas", text: "Su asistente de voz atiende por teléfono y en tu web, y agenda las citas en tu calendario." },
+  { title: "Gestión de clientes", text: "Reconoce a cada cliente y tiene a mano su ficha y sus conversaciones anteriores." },
+  { title: "Planillas y documentos", text: "Pasa los datos de correos y pedidos a tus planillas y completa tus documentos." },
+  { title: "Redes sociales", text: "Redacta tus publicaciones y las deja programadas." },
+  { title: "Tu día, resumido", text: "Cada mañana: lo urgente, tu agenda y lo que espera respuesta." },
+]
+
+function Intro() {
+  // En el móvil, el detalle va plegado para que la tarea quede a la vista.
+  const [open, setOpen] = useState(false)
+  return (
+    <section aria-labelledby="intro-title" className="rounded-2xl border border-rule bg-sheet p-5 flex flex-col gap-4">
+      <div>
+        <p className="app-eyebrow">TU NEGOCIO, EN AUTOMÁTICO</p>
+        <h2 id="intro-title" className="rotulo text-xl mt-1">
+          Menos rutina, más negocio
+        </h2>
+        <p className="mt-1 text-graphite">
+          MarchaSolo es el asistente que se ocupa del trabajo repetitivo de tu negocio, cada día y a cualquier hora. Tú te dedicas a vender y a
+          cuidar a tus clientes; él prepara todo lo demás.
+        </p>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-controls="intro-detail"
+          className="mt-3 text-sm font-semibold text-link underline underline-offset-4 sm:hidden"
+        >
+          {open ? "Ver menos" : "Ver qué puede hacer por ti"}
+        </button>
+      </div>
+
+      <div id="intro-detail" className={`${open ? "flex" : "hidden"} flex-col gap-4 sm:flex`}>
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {INTRO_AREAS.map((a) => (
+            <li key={a.title} className="flex gap-3 rounded-xl border border-rule bg-paper p-3">
+              <span aria-hidden="true" className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-stroke" />
+              <span className="flex flex-col gap-0.5">
+                <span className="text-sm font-semibold text-ink">{a.title}</span>
+                <span className="text-sm text-graphite">{a.text}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <p className="text-sm text-graphite">
+          <strong className="text-ink">Así de fácil:</strong> le cuentas la tarea con tus palabras, él hace el trabajo pesado y tú apruebas en un
+          toque. Nada se envía ni se cambia sin tu permiso.
+        </p>
+        <p className="rounded-xl bg-paper px-4 py-3 text-sm text-ink">
+          <strong>Más productividad desde el primer día.</strong> Lo que hoy te lleva horas cada semana (responder las mismas consultas, confirmar
+          citas, pasar datos, preparar informes) pasa a ser una revisión de minutos. Ese tiempo vuelve a ti, a tus clientes y a tu negocio.
+        </p>
       </div>
     </section>
   )
