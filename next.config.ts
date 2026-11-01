@@ -27,6 +27,12 @@ const csp = [
   .filter(Boolean)
   .join("; ")
 
+// Asistente de voz en la web del cliente (/hablar/<id>): se inserta en otras
+// webs (frame-ancestors *) y habla con xAI por WebSocket.
+const voiceCsp = csp
+  .replace("frame-ancestors 'none'", "frame-ancestors *")
+  .replace(`connect-src 'self' ${supabaseUrl} ${supabaseWs}`.trim(), `connect-src 'self' ${supabaseUrl} ${supabaseWs} wss://api.x.ai`.trim())
+
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },
   { key: "X-Frame-Options", value: "DENY" },
@@ -53,7 +59,18 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: "/(.*)", headers: securityHeaders },
+      { source: "/((?!hablar/).*)", headers: securityHeaders },
+      {
+        source: "/hablar/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: voiceCsp },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=(), payment=()" },
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+        ],
+      },
+      { source: "/widget-voz.js", headers: [{ key: "Cache-Control", value: "public, max-age=3600" }] },
       // El service worker siempre se descarga de nuevo, para que las versiones nuevas lleguen enseguida.
       {
         source: "/sw.js",

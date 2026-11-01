@@ -5,7 +5,7 @@ import { FormMessage, SubmitButton } from "@/components/form"
 import { DAY_NAMES, type VoiceConfig } from "@/lib/voice"
 import { type ActionResult, createVoiceAccess, disconnectVoice, type KeyState, saveVoiceSettings } from "../run-actions"
 
-function CopyField({ label, value, secret = false }: { label: string; value: string; secret?: boolean }) {
+export function CopyField({ label, value, secret = false }: { label: string; value: string; secret?: boolean }) {
   const [copied, setCopied] = useState(false)
   return (
     <div className="flex flex-col gap-1">

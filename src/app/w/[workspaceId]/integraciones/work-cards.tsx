@@ -5,6 +5,7 @@ import { playbook, readVoiceConfig } from "@/lib/voice"
 import { connectGoogle } from "../run-actions"
 import { BufferForm, DisconnectInboxForm, HubSpotForm, TokkoForm, XubioForm } from "./inbox-client"
 import { DisconnectVoiceForm, VoiceAccess, VoicePlaybook, VoiceSettingsForm } from "./voice-client"
+import { VoiceWebPanel, type VoiceWebWidget } from "./voice-web-client"
 
 function Badge({ status, invalidLabel }: { status: string | null | undefined; invalidLabel: string }) {
   if (status === "active") return <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">Conectado</span>
@@ -353,11 +354,17 @@ export async function BufferCard({ workspaceId, isAdmin }: { workspaceId: string
 
 export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
   const supabase = await createClient()
-  const [{ data: integration }, { data: calendar }, { data: rawFiles }, { data: ws }] = await Promise.all([
+  const [{ data: integration }, { data: calendar }, { data: rawFiles }, { data: ws }, { data: widget }, { data: xai }] = await Promise.all([
     supabase.from("integrations").select("status, config").eq("workspace_id", workspaceId).eq("provider", "grok_voice").maybeSingle(),
     supabase.from("integrations").select("status").eq("workspace_id", workspaceId).eq("provider", "calendar").maybeSingle(),
     supabase.from("integration_files").select("id, name, mime_type").eq("workspace_id", workspaceId).order("name").limit(100),
     supabase.from("workspaces").select("name").eq("id", workspaceId).maybeSingle(),
+    supabase
+      .from("voice_web_widgets")
+      .select("public_id, enabled, title, sessions_per_day, minutes_per_session, allowed_domains")
+      .eq("workspace_id", workspaceId)
+      .maybeSingle(),
+    supabase.from("ai_connections").select("status").eq("workspace_id", workspaceId).eq("provider", "xai").maybeSingle(),
   ])
   const config = readVoiceConfig(integration?.config)
   const files = (rawFiles ?? [])
@@ -417,6 +424,14 @@ export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string;
                   <p className="text-xs text-graphite">
                     Coste en tu cuenta de xAI: unos 0,08 $ por minuto de conversación, más 0,01 $/min si usas el número de xAI.
                   </p>
+                </section>
+                <section className="flex flex-col gap-3 border-t border-rule pt-5">
+                  <h4 className="text-sm font-semibold text-ink">4. Asistente de voz en tu web (opcional)</h4>
+                  <p className="text-xs text-graphite">
+                    Un botón en tu web para que tus clientes hablen con el mismo agente desde el navegador, sin llamar: mismo horario de citas,
+                    mismos documentos, y cada cita o recado llega a la Bandeja.
+                  </p>
+                  <VoiceWebPanel workspaceId={workspaceId} widget={(widget as VoiceWebWidget | null) ?? null} xaiReady={xai?.status === "active"} />
                 </section>
                 <DisconnectVoiceForm workspaceId={workspaceId} />
               </>
