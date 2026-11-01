@@ -187,7 +187,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
       <div className="flex flex-col gap-2">
         <p className="app-eyebrow">ONBOARDING · {workspaceName.toUpperCase()}</p>
         <h1 className="rotulo text-2xl">
-          {userName ? `Hola ${userName}, ` : ""}vamos a poner MarchaSolo en marcha
+          {userName ? `Hola ${userName}, ¡pongamos a rodar MarchaSolo!` : "¡Pongamos a rodar MarchaSolo!"}
         </h1>
         <nav aria-label="Pasos del onboarding" className="setup-steps">
           <ol className="onboarding-steps">
@@ -614,11 +614,11 @@ function SupervisedStep({
   )
 }
 
-// Qué hace MarchaSolo, en pocas palabras, antes de pedir la primera tarea.
+// Qué hace MarchaSolo y cuánto tiempo devuelve, antes de pedir la primera tarea.
 const INTRO_STEPS = [
-  { title: "Tú le cuentas la tarea", text: "Con tus palabras, como se la explicarías a alguien de tu equipo." },
-  { title: "MarchaSolo prepara el trabajo", text: "Lee tus correos, planillas y agenda, redacta respuestas, actualiza datos y te resume lo importante." },
-  { title: "Tú das el visto bueno", text: "Nada se envía ni se modifica sin tu aprobación." },
+  { title: "Cuéntale la tarea", text: "Con tus palabras, como se la explicarías a alguien de tu equipo." },
+  { title: "Él hace el trabajo pesado", text: "Lee tus correos, planillas y agenda, redacta respuestas, actualiza datos y te resume lo importante." },
+  { title: "Tú apruebas en un toque", text: "Revisas lo que ha preparado y das el visto bueno. Nada sale sin tu permiso." },
 ]
 
 function Intro() {
@@ -626,11 +626,11 @@ function Intro() {
     <section aria-labelledby="intro-title" className="rounded-2xl border border-rule bg-sheet p-5 flex flex-col gap-4">
       <div>
         <h2 id="intro-title" className="rotulo text-xl">
-          Qué hace MarchaSolo
+          MarchaSolo trabaja para ti
         </h2>
         <p className="mt-1 text-graphite">
-          Es un asistente para tu negocio que se encarga del trabajo repetitivo. Tú decides qué hay que hacer; él lo prepara con tus propias
-          herramientas y te lo deja listo para revisar.
+          Deja en sus manos las tareas repetitivas y gana tiempo para lo que de verdad hace crecer tu negocio. MarchaSolo prepara el trabajo
+          con tus propias herramientas; tú solo revisas y apruebas.
         </p>
       </div>
 
@@ -652,9 +652,9 @@ function Intro() {
       </ol>
 
       <p className="text-sm text-graphite">
-        <strong className="text-ink">Dónde ahorras tiempo:</strong> en lo que repites cada día o cada semana, como responder las mismas consultas,
-        pasar datos de los correos a una planilla, confirmar citas o preparar el resumen del viernes. Lo que hoy haces a mano se convierte en unos
-        minutos de revisión.
+        <strong className="text-ink">Más productividad, menos rutina.</strong> Responder las mismas consultas, pasar datos de los correos a una
+        planilla, confirmar citas o preparar el informe del viernes deja de llevarte horas y pasa a ser una revisión de minutos. Ese tiempo
+        vuelve a ti, a tus clientes y a tu negocio.
       </p>
     </section>
   )
