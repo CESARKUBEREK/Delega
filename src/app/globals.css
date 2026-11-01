@@ -1012,6 +1012,15 @@ body {
 .setup-skip:hover { border-color:#00c2a8; }
 .setup-example { display:flex; min-height:48px; align-items:center; justify-content:space-between; gap:12px; padding:10px 16px; border:1px solid #dfe7ee; border-radius:12px; color:#0b1f3b; text-decoration:none; }
 .setup-example:hover { border-color:#00c2a8; background:#f2faf8; }
+/* Onboarding: 5 pasos; los ya hechos son botones para volver. */
+.setup-steps ol.onboarding-steps { grid-template-columns:repeat(5, minmax(0, 1fr)); }
+button.setup-step-link { width:100%; cursor:pointer; font:inherit; font-size:14px; font-weight:600; text-align:left; }
+button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset:2px; }
+@media (max-width:640px) {
+  .setup-steps ol.onboarding-steps { gap:6px; }
+  .onboarding-steps .setup-step-link { justify-content:center; padding:8px 0; }
+  .onboarding-steps .setup-step-label { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+}
 .setup-banner { display:flex; align-items:center; gap:16px; padding:16px 18px; border:1.5px solid #00c2a8; border-radius:18px; background:linear-gradient(100deg, #e3f8f4, #fff 70%); text-decoration:none; box-shadow:0 10px 26px rgb(0 194 168 / 12%); transition:box-shadow .16s ease; }
 .setup-banner:hover { box-shadow:0 14px 30px rgb(0 194 168 / 20%); }
 .setup-banner-ring { display:grid; width:54px; height:54px; flex:0 0 54px; place-items:center; border-radius:50%; background:radial-gradient(closest-side, #fff 76%, transparent 78%), conic-gradient(#00c2a8 var(--pct), #dfe7ee 0); color:#0b1f3b; font-size:13px; font-weight:800; }

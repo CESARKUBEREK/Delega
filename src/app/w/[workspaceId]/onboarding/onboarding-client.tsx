@@ -20,6 +20,21 @@ import { checkOnboardingConnection, generateOnboardingPlan } from "./actions"
 
 type Step = OnboardingStep
 
+const ONBOARDING_STEPS: { id: Step; short: string }[] = [
+  { id: "task", short: "Tarea" },
+  { id: "plan", short: "Plan" },
+  { id: "connect", short: "Conectar" },
+  { id: "supervised", short: "Supervisar" },
+  { id: "done", short: "Listo" },
+]
+const STEP_ORDER = ONBOARDING_STEPS.map((s) => s.id)
+
+const Check = () => (
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
+  </svg>
+)
+
 const SUGGESTIONS = [
   "Clasificar y responder correos de clientes",
   "Actualizar una planilla cuando llegue un pedido",
@@ -78,10 +93,22 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
 
   const needed = plan ? primaryConnection(plan) : "none"
 
-  const progress = useMemo(() => {
-    const order: Step[] = ["task", "plan", "connect", "supervised", "done"]
-    return ((order.indexOf(step) + 1) / order.length) * 100
-  }, [step])
+  const currentIndex = STEP_ORDER.indexOf(step)
+  const progress = useMemo(() => ((currentIndex + 1) / STEP_ORDER.length) * 100, [currentIndex])
+
+  // Los pasos ya hechos se pueden volver a abrir; hacia delante, no.
+  const canGoTo = (target: Step) => {
+    const i = STEP_ORDER.indexOf(target)
+    if (i < 0 || i >= currentIndex) return false
+    if (target !== "task" && !plan) return false
+    if (target === "connect" && needed === "none") return false
+    return true
+  }
+  const goToStep = (target: Step) => {
+    if (!canGoTo(target)) return
+    setError(null)
+    setStep(target)
+  }
 
   const validateTask = useCallback(() => {
     const value = task.trim()
@@ -142,12 +169,48 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
         <h1 className="rotulo text-2xl">
           {userName ? `Hola ${userName}, ` : ""}vamos a poner MarchaSolo en marcha
         </h1>
+        <nav aria-label="Pasos del onboarding" className="setup-steps">
+          <ol className="onboarding-steps">
+            {ONBOARDING_STEPS.map((s, i) => {
+              const current = s.id === step
+              // «Conectar» no hace falta si el plan no necesita ninguna conexión.
+              const skipped = s.id === "connect" && needed === "none" && i < currentIndex
+              const done = i < currentIndex
+              const className = `setup-step-link ${done ? "is-done" : ""} ${current ? "is-current" : ""}`
+              const content = (
+                <>
+                  <span className="setup-step-dot" aria-hidden="true">
+                    {done ? <Check /> : i + 1}
+                  </span>
+                  <span className="setup-step-label">
+                    {s.short}
+                    <span className="sr-only">{current ? " (actual)" : skipped ? " (no hace falta)" : done ? " (hecho)" : ""}</span>
+                  </span>
+                </>
+              )
+              return (
+                <li key={s.id}>
+                  {canGoTo(s.id) ? (
+                    <button type="button" onClick={() => goToStep(s.id)} className={className} title={`Volver a ${s.short}`}>
+                      {content}
+                    </button>
+                  ) : (
+                    <span className={className} aria-current={current ? "step" : undefined}>
+                      {content}
+                    </span>
+                  )}
+                </li>
+              )
+            })}
+          </ol>
+        </nav>
         <div
           className="setup-progress"
           role="progressbar"
           aria-valuenow={Math.round(progress)}
           aria-valuemin={0}
           aria-valuemax={100}
+          aria-label={`Paso ${currentIndex + 1} de ${STEP_ORDER.length}`}
         >
           <span style={{ width: `${progress}%` }} />
         </div>
