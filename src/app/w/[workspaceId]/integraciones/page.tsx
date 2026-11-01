@@ -9,6 +9,7 @@ import { ImapCard, TelegramCard, WhatsAppCard } from "./inbox-cards"
 import { AiCard } from "./ai-card"
 import { BufferCard, CalendarCard, ContactsCard, HubSpotCard, TokkoCard, VoiceCard, VoiceHoursCard, VoiceWebCard, XubioCard } from "./work-cards"
 import { ApiIntegrationCard } from "./api-integrations"
+import { OnboardingReturn } from "../onboarding/onboarding-return"
 
 export const metadata = { title: "Integraciones" }
 
@@ -107,6 +108,7 @@ async function Integrations({
 
   return (
     <div className="flex flex-col gap-10">
+      <OnboardingReturn workspaceId={workspaceId} />
       <Category
         id="asistente-voz"
         title="Asistente de voz"
