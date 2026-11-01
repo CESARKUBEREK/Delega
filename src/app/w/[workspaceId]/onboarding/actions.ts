@@ -9,18 +9,6 @@ export type OnboardingPlanResult =
   | { ok: true; source: "assistant" | "local"; reply: string; plan: FlowPlan }
   | { ok: false; error: string }
 
-// Detecta la conexión principal que necesita un plan.
-export function primaryConnection(plan: FlowPlan): "email" | "spreadsheet" | "calendar" | "none" {
-  const kinds = new Set([
-    ...plan.connections.map((c) => c.kind),
-    ...plan.steps.map((s) => s.connection),
-  ])
-  if (kinds.has("email")) return "email"
-  if (kinds.has("spreadsheet") || kinds.has("drive") || kinds.has("documents")) return "spreadsheet"
-  if (kinds.has("calendar")) return "calendar"
-  return "none"
-}
-
 // Plan local cuando aún no hay IA conectada (o falla el assistant).
 function localPlan(text: string): FlowPlan {
   const t = text.toLowerCase()
