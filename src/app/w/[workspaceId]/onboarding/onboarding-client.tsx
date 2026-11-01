@@ -236,6 +236,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
         </div>
       </div>
 
+      {/* Introducción: qué es MarchaSolo, antes del paso 1 */}
+      {step === "task" && <Intro />}
+
       {/* PASO 1 */}
       {step === "task" && (
         <section className="setup-panel flex flex-col gap-5">
@@ -607,6 +610,52 @@ function SupervisedStep({
           ← Volver
         </button>
       </div>
+    </section>
+  )
+}
+
+// Qué hace MarchaSolo, en pocas palabras, antes de pedir la primera tarea.
+const INTRO_STEPS = [
+  { title: "Tú le cuentas la tarea", text: "Con tus palabras, como se la explicarías a alguien de tu equipo." },
+  { title: "MarchaSolo prepara el trabajo", text: "Lee tus correos, planillas y agenda, redacta respuestas, actualiza datos y te resume lo importante." },
+  { title: "Tú das el visto bueno", text: "Nada se envía ni se modifica sin tu aprobación." },
+]
+
+function Intro() {
+  return (
+    <section aria-labelledby="intro-title" className="rounded-2xl border border-rule bg-sheet p-5 flex flex-col gap-4">
+      <div>
+        <h2 id="intro-title" className="rotulo text-xl">
+          Qué hace MarchaSolo
+        </h2>
+        <p className="mt-1 text-graphite">
+          Es un asistente para tu negocio que se encarga del trabajo repetitivo. Tú decides qué hay que hacer; él lo prepara con tus propias
+          herramientas y te lo deja listo para revisar.
+        </p>
+      </div>
+
+      <ol className="grid gap-3 sm:grid-cols-3">
+        {INTRO_STEPS.map((s, i) => (
+          <li key={s.title} className="flex gap-3 rounded-xl border border-rule bg-paper p-3">
+            <span
+              aria-hidden="true"
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-stroke text-xs font-bold text-stroke-ink"
+            >
+              {i + 1}
+            </span>
+            <span className="flex flex-col gap-0.5">
+              <span className="text-sm font-semibold text-ink">{s.title}</span>
+              <span className="text-sm text-graphite">{s.text}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+
+      <p className="text-sm text-graphite">
+        <strong className="text-ink">Dónde ahorras tiempo:</strong> en lo que repites cada día o cada semana, como responder las mismas consultas,
+        pasar datos de los correos a una planilla, confirmar citas o preparar el resumen del viernes. Lo que hoy haces a mano se convierte en unos
+        minutos de revisión.
+      </p>
     </section>
   )
 }
