@@ -6,7 +6,7 @@
 // conserve los datos (store: false).
 import { type AuthContext, authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
 import { type Plan, RESPONSE_SCHEMA, sanitizePlan, sanitizeStep, STEP_SCHEMA } from "./plan-schema.ts"
-import { generateJson, LlmError, markInvalidIfNeeded, type Msg, NO_AI_MESSAGE, recordUsage, resolveAi } from "../_shared/llm.ts"
+import { generateJson, LlmError, markInvalidIfNeeded, type Msg, NO_AI_MESSAGE, recordUsage, resolveAiOrTrial } from "../_shared/llm.ts"
 
 const MAX_MESSAGE = 4000
 const MAX_PER_MINUTE = 8
@@ -109,9 +109,14 @@ Deno.serve(async (req) => {
     return fail(429, "rate_limited", "Has enviado muchos mensajes seguidos. Espera un minuto.")
   }
 
-  // IA del espacio (la principal); la clave se descifra solo en memoria.
-  const ai = await resolveAi(ctx.admin, workspaceId)
-  if (!ai) return fail(409, "no_connection", `${NO_AI_MESSAGE} Así podrás usar el asistente.`)
+  // IA del espacio (la principal) o, si no hay, los créditos de prueba; la
+  // clave se descifra solo en memoria.
+  const resolved = await resolveAiOrTrial(ctx.admin, workspaceId)
+  if (!resolved.ai) {
+    const msg = resolved.message === NO_AI_MESSAGE ? `${NO_AI_MESSAGE} Así podrás usar el asistente.` : resolved.message
+    return fail(409, "no_connection", msg)
+  }
+  const ai = resolved.ai
 
   if (!conversationId) {
     const { data, error } = await ctx.admin
@@ -231,8 +236,9 @@ async function suggestStep(ctx: AuthContext, body: Record<string, unknown>): Pro
     .gte("created_at", since)
   if ((count ?? 0) >= 12) return fail(429, "rate_limited", "Has pedido muchas cosas seguidas. Espera un minuto.")
 
-  const ai = await resolveAi(ctx.admin, workspaceId)
-  if (!ai) return fail(409, "no_connection", NO_AI_MESSAGE)
+  const resolved = await resolveAiOrTrial(ctx.admin, workspaceId)
+  if (!resolved.ai) return fail(409, "no_connection", resolved.message)
+  const ai = resolved.ai
 
   const context = typeof body.context === "string" ? body.context.slice(0, 2000) : ""
   try {
