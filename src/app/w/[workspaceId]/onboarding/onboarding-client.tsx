@@ -614,47 +614,50 @@ function SupervisedStep({
   )
 }
 
-// Qué hace MarchaSolo y cuánto tiempo devuelve, antes de pedir la primera tarea.
-const INTRO_STEPS = [
-  { title: "Cuéntale la tarea", text: "Con tus palabras, como se la explicarías a alguien de tu equipo." },
-  { title: "Él hace el trabajo pesado", text: "Lee tus correos, planillas y agenda, redacta respuestas, actualiza datos y te resume lo importante." },
-  { title: "Tú apruebas en un toque", text: "Revisas lo que ha preparado y das el visto bueno. Nada sale sin tu permiso." },
+// Introducción antes de la primera tarea: qué hace MarchaSolo por el negocio
+// (solo cosas que ya hace hoy) y cuánto tiempo devuelve.
+const INTRO_AREAS = [
+  { title: "Atención al cliente", text: "Ordena tus correos y mensajes por urgencia y te deja las respuestas redactadas." },
+  { title: "Reservas y citas", text: "Su asistente de voz atiende por teléfono y en tu web, y agenda las citas en tu calendario." },
+  { title: "Gestión de clientes", text: "Reconoce a cada cliente y tiene a mano su ficha de HubSpot o de Google Contacts." },
+  { title: "Planillas y documentos", text: "Pasa los datos de correos y pedidos a tus planillas y completa tus documentos." },
+  { title: "Redes sociales", text: "Redacta tus publicaciones y las deja programadas en Buffer." },
+  { title: "Tu día, resumido", text: "Cada mañana: lo urgente, tu agenda y lo que espera respuesta." },
 ]
 
 function Intro() {
   return (
     <section aria-labelledby="intro-title" className="rounded-2xl border border-rule bg-sheet p-5 flex flex-col gap-4">
       <div>
-        <h2 id="intro-title" className="rotulo text-xl">
-          MarchaSolo trabaja para ti
+        <p className="app-eyebrow">TU NEGOCIO, EN AUTOMÁTICO</p>
+        <h2 id="intro-title" className="rotulo text-xl mt-1">
+          Menos rutina, más negocio
         </h2>
         <p className="mt-1 text-graphite">
-          Deja en sus manos las tareas repetitivas y gana tiempo para lo que de verdad hace crecer tu negocio. MarchaSolo prepara el trabajo
-          con tus propias herramientas; tú solo revisas y apruebas.
+          MarchaSolo es el asistente que se ocupa del trabajo repetitivo de tu negocio, cada día y a cualquier hora. Tú te dedicas a vender y a
+          cuidar a tus clientes; él prepara todo lo demás.
         </p>
       </div>
 
-      <ol className="grid gap-3 sm:grid-cols-3">
-        {INTRO_STEPS.map((s, i) => (
-          <li key={s.title} className="flex gap-3 rounded-xl border border-rule bg-paper p-3">
-            <span
-              aria-hidden="true"
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-stroke text-xs font-bold text-stroke-ink"
-            >
-              {i + 1}
-            </span>
+      <ul className="grid gap-2 sm:grid-cols-2">
+        {INTRO_AREAS.map((a) => (
+          <li key={a.title} className="flex gap-3 rounded-xl border border-rule bg-paper p-3">
+            <span aria-hidden="true" className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-stroke" />
             <span className="flex flex-col gap-0.5">
-              <span className="text-sm font-semibold text-ink">{s.title}</span>
-              <span className="text-sm text-graphite">{s.text}</span>
+              <span className="text-sm font-semibold text-ink">{a.title}</span>
+              <span className="text-sm text-graphite">{a.text}</span>
             </span>
           </li>
         ))}
-      </ol>
+      </ul>
 
       <p className="text-sm text-graphite">
-        <strong className="text-ink">Más productividad, menos rutina.</strong> Responder las mismas consultas, pasar datos de los correos a una
-        planilla, confirmar citas o preparar el informe del viernes deja de llevarte horas y pasa a ser una revisión de minutos. Ese tiempo
-        vuelve a ti, a tus clientes y a tu negocio.
+        <strong className="text-ink">Así de fácil:</strong> le cuentas la tarea con tus palabras, él hace el trabajo pesado y tú apruebas en un
+        toque. Nada se envía ni se cambia sin tu permiso.
+      </p>
+      <p className="rounded-xl bg-paper px-4 py-3 text-sm text-ink">
+        <strong>Más productividad desde el primer día.</strong> Lo que hoy te lleva horas cada semana (responder las mismas consultas, confirmar
+        citas, pasar datos, preparar informes) pasa a ser una revisión de minutos. Ese tiempo vuelve a ti, a tus clientes y a tu negocio.
       </p>
     </section>
   )
