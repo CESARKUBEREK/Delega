@@ -69,6 +69,12 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
         >
           Crear desde cero
         </Link>
+        <Link
+          href={`${base}/automatizaciones/plantillas#por-sector`}
+          className="automation-action-secondary inline-flex h-11 items-center justify-center px-5 text-base font-semibold"
+        >
+          Por sector
+        </Link>
       </div>
 
       {flows.length === 0 ? (
