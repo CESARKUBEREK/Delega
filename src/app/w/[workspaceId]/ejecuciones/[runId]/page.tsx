@@ -8,6 +8,10 @@ import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { formatDateTime, formatNumber } from "../../format"
 import { asPending } from "@/lib/pending"
 import { ApprovalCard, RunControls } from "./run-live"
+import { HelpPanel } from "@/components/help-panel"
+import { HELP_GUIDES } from "@/lib/help"
+import { diagnoseRun, type LiveStatus } from "@/lib/run-diagnosis"
+import { DiagnosisActions } from "./diagnosis"
 
 export const metadata = { title: "Ejecución" }
 // Cada tramo del agente puede tardar hasta ~90 s.
@@ -59,6 +63,7 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
 
   return (
     <div className="flex flex-col gap-6">
+      <HelpPanel workspaceId={workspaceId} page="ejecucion" runId={run.id} />
       <div>
         <p className="text-sm">
           {run.flow_id ? (
@@ -88,11 +93,7 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
         </section>
       ) : null}
 
-      {run.status === "failed" && run.error ? (
-        <p role="alert" className="border-l-2 border-alert bg-alert-bg px-4 py-3 text-sm text-alert">
-          {run.error}
-        </p>
-      ) : null}
+      {run.status === "failed" ? <Diagnosis workspaceId={workspaceId} flowId={run.flow_id} error={run.error} /> : null}
 
       {active ? <RunControls runId={run.id} status={run.status} /> : null}
 
@@ -152,4 +153,64 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
 function noticeText(detail: unknown): string | null {
   const n = detail && typeof detail === "object" ? (detail as { notice?: unknown }).notice : null
   return typeof n === "string" && n ? n : null
+}
+
+// Integraciones (proveedor en la base) → ficha de ayuda.
+const PROVIDER_GUIDE: Record<string, string> = {
+  google: "drive",
+  calendar: "calendar",
+  contacts: "contacts",
+  hubspot: "hubspot",
+  buffer: "buffer",
+  whatsapp: "whatsapp",
+  telegram: "telegram",
+  imap: "imap",
+  tokko: "tokko",
+  xubio: "xubio",
+}
+
+// «Por qué falló»: diagnóstico sin IA (src/lib/run-diagnosis.ts) con lo que
+// está conectado ahora, qué hacer, la tarjeta que abrir, volver a ejecutar y
+// preguntar al ayudante.
+async function Diagnosis({ workspaceId, flowId, error }: { workspaceId: string; flowId: string | null; error: string | null }) {
+  const supabase = await createClient()
+  const [{ data: ais }, { data: integrations }, { data: flow }] = await Promise.all([
+    supabase.from("ai_connections").select("provider, status").eq("workspace_id", workspaceId),
+    supabase.from("integrations").select("provider, status").eq("workspace_id", workspaceId),
+    flowId ? supabase.from("flows").select("settings").eq("id", flowId).eq("workspace_id", workspaceId).maybeSingle() : Promise.resolve({ data: null }),
+  ])
+  const live: LiveStatus = {}
+  for (const a of ais ?? []) if (a.status === "active") live[a.provider] = true
+  for (const i of integrations ?? []) if (i.status === "active" && PROVIDER_GUIDE[i.provider]) live[PROVIDER_GUIDE[i.provider]] = true
+  const d = diagnoseRun(error, live)
+  const guide = d.guide ? HELP_GUIDES.find((g) => g.id === d.guide) : undefined
+  const settings = (flow?.settings ?? {}) as { file_ids?: unknown }
+  const fileIds = Array.isArray(settings.file_ids) ? settings.file_ids.filter((id): id is string => typeof id === "string") : []
+
+  return (
+    <section className="border border-alert bg-sheet" aria-labelledby="por-que-fallo">
+      <h2 id="por-que-fallo" className="border-b border-alert bg-alert-bg px-5 py-3 font-semibold text-alert">
+        Por qué falló
+      </h2>
+      <div className="flex flex-col gap-3 px-5 py-4">
+        <p className="text-ink">{d.cause}</p>
+        {error ? <p className="border-l-2 border-rule pl-3 text-sm text-graphite">{error}</p> : null}
+        <p className="text-sm text-ink">
+          <strong>Qué hacer:</strong> {d.fix}
+        </p>
+        {guide ? (
+          <Link
+            href={`/w/${workspaceId}/integraciones?abrir=${guide.id}#${guide.section}`}
+            className="self-start text-sm font-semibold text-link underline underline-offset-4"
+          >
+            Abrir la tarjeta de {guide.title} →
+          </Link>
+        ) : null}
+        <DiagnosisActions workspaceId={workspaceId} flowId={flowId} fileIds={fileIds} retry={d.retry} />
+        {d.editable && flowId ? (
+          <p className="text-xs text-graphite">El ayudante puede proponerte cómo reescribir los pasos; los cambios se guardan solo si los aplicas.</p>
+        ) : null}
+      </div>
+    </section>
+  )
 }

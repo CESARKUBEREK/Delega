@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
-import { askHelp, type HelpTurn } from "@/app/w/[workspaceId]/help-actions"
+import { applyStepChanges, askHelp, type HelpTurn, type StepChange } from "@/app/w/[workspaceId]/help-actions"
 import { HELP_GUIDES, looksLikeSecret, relevantGuides, SECRET_REPLY, type HelpGuide } from "@/lib/help"
 
 // Panel «¿Te ayudo?» (fase 7-1): dudas sobre integraciones y automatizaciones.
@@ -11,13 +11,27 @@ import { HELP_GUIDES, looksLikeSecret, relevantGuides, SECRET_REPLY, type HelpGu
 // tarjeta de una integración. La conversación vive solo en esta pestaña y las
 // claves que se peguen no salen del navegador.
 
-type Page = "integraciones" | "automatizaciones" | "onboarding"
-type Message = HelpTurn & { open?: string | null; suggestions?: string[]; trial?: boolean }
+type Page = "integraciones" | "automatizaciones" | "onboarding" | "ejecucion"
+type Message = HelpTurn & {
+  open?: string | null
+  suggestions?: string[]
+  trial?: boolean
+  stepChanges?: StepChange[]
+  flowId?: string | null
+  applied?: "ok" | string
+}
+
+// Abre el panel y pregunta (por ejemplo, desde «Por qué falló» en una ejecución).
+export const HELP_ASK_EVENT = "marchasolo:help-ask"
+export function askHelpPanel(question: string) {
+  window.dispatchEvent(new CustomEvent(HELP_ASK_EVENT, { detail: { question } }))
+}
 
 const STARTERS: Record<Page, string[]> = {
   integraciones: ["¿Por dónde empiezo?", "¿Cómo conecto mi correo de Gmail?", "¿Qué IA me conviene?"],
   automatizaciones: ["¿Cómo creo mi primera automatización?", "¿Cómo hago que se ejecute sola cada día?", "Mi automatización falló, ¿qué hago?"],
   onboarding: ["¿Qué necesito para empezar?", "¿Es seguro conectar mi correo?", "¿Se envía algo sin que yo lo vea?"],
+  ejecucion: ["¿Por qué falló esta ejecución?", "¿Qué hace cada paso?", "¿Cómo evito que vuelva a pasar?"],
 }
 
 const guideById = (id: string | null | undefined) => (id ? HELP_GUIDES.find((g) => g.id === id) : undefined)
@@ -34,7 +48,7 @@ export function openHelpCard(id: string): boolean {
   return true
 }
 
-export function HelpPanel({ workspaceId, page }: { workspaceId: string; page: Page }) {
+export function HelpPanel({ workspaceId, page, runId = null }: { workspaceId: string; page: Page; runId?: string | null }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
@@ -43,6 +57,7 @@ export function HelpPanel({ workspaceId, page }: { workspaceId: string; page: Pa
   const [noAi, setNoAi] = useState<string | null>(null)
   const [focus, setFocus] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const [applying, startApply] = useTransition()
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -91,7 +106,7 @@ export function HelpPanel({ workspaceId, page }: { workspaceId: string; page: Pa
     const history: HelpTurn[] = messages.map(({ role, content }) => ({ role, content }))
     setMessages((m) => [...m, { role: "user", content: message }])
     startTransition(async () => {
-      const r = await askHelp({ workspaceId, page, focus, history, message }).catch(() => null)
+      const r = await askHelp({ workspaceId, page, focus, runId, history, message }).catch(() => null)
       if (!r) {
         setError("No se pudo contactar con el ayudante. Inténtalo de nuevo.")
         return
@@ -101,7 +116,34 @@ export function HelpPanel({ workspaceId, page }: { workspaceId: string; page: Pa
         else setError(r.error)
         return
       }
-      setMessages((m) => [...m, { role: "assistant", content: r.reply, open: r.open, suggestions: r.suggestions, trial: r.trial }])
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: r.reply, open: r.open, suggestions: r.suggestions, trial: r.trial, stepChanges: r.stepChanges, flowId: r.flowId },
+      ])
+    })
+  }
+
+  // Preguntas que llegan de otros botones de la página.
+  const sendRef = useRef(send)
+  useEffect(() => {
+    sendRef.current = send
+  })
+  useEffect(() => {
+    const onAsk = (e: Event) => {
+      const q = (e as CustomEvent<{ question?: string }>).detail?.question
+      setOpen(true)
+      if (q) window.setTimeout(() => sendRef.current(q), 0)
+    }
+    window.addEventListener(HELP_ASK_EVENT, onAsk)
+    return () => window.removeEventListener(HELP_ASK_EVENT, onAsk)
+  }, [])
+
+  const apply = (index: number) => {
+    const m = messages[index]
+    if (!m?.flowId || !m.stepChanges?.length) return
+    startApply(async () => {
+      const r = await applyStepChanges({ workspaceId, flowId: m.flowId as string, changes: m.stepChanges as StepChange[] }).catch(() => null)
+      setMessages((all) => all.map((x, i) => (i === index ? { ...x, applied: r?.ok ? "ok" : (r && !r.ok ? r.error : "No se pudo guardar el cambio.") } : x)))
     })
   }
 
@@ -149,7 +191,8 @@ export function HelpPanel({ workspaceId, page }: { workspaceId: string; page: Pa
               <>
                 {messages.length === 0 ? (
                   <p className="text-sm text-graphite">
-                    Pregúntame lo que quieras sobre {page === "automatizaciones" ? "tus automatizaciones" : "tus integraciones"}.
+                    Pregúntame lo que quieras sobre{" "}
+                    {page === "ejecucion" ? "esta ejecución" : page === "automatizaciones" ? "tus automatizaciones" : "tus integraciones"}.
                     {focusGuide ? ` Veo que estás con ${focusGuide.title}.` : ""}
                   </p>
                 ) : null}
@@ -169,6 +212,38 @@ export function HelpPanel({ workspaceId, page }: { workspaceId: string; page: Pa
                         >
                           Abrir la tarjeta de {guideById(m.open)?.title} →
                         </button>
+                      ) : null}
+                      {m.stepChanges?.length && m.flowId ? (
+                        <div className="rounded-xl border border-rule bg-paper p-3 text-sm">
+                          <p className="font-semibold text-ink">Cambios propuestos en la automatización</p>
+                          <ul className="mt-1 flex flex-col gap-1 text-graphite">
+                            {m.stepChanges.map((c) => (
+                              <li key={c.step}>
+                                <strong className="text-ink">Paso {c.step}:</strong> {c.description}
+                              </li>
+                            ))}
+                          </ul>
+                          {m.applied === "ok" ? (
+                            <p className="mt-2 font-semibold text-ok" role="status">
+                              ✓ Guardado.{" "}
+                              <Link href={`/w/${workspaceId}/automatizaciones/${m.flowId}`} className="text-link underline underline-offset-4">
+                                Ver la automatización
+                              </Link>
+                            </p>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => apply(i)}
+                                disabled={applying}
+                                className="mt-2 rounded-lg bg-stroke px-3 py-1.5 font-semibold text-stroke-ink disabled:opacity-60"
+                              >
+                                {applying ? "Guardando…" : "Aplicar el cambio"}
+                              </button>
+                              {m.applied ? <p className="mt-1 text-alert">{m.applied}</p> : null}
+                            </>
+                          )}
+                        </div>
                       ) : null}
                       {m.trial ? <p className="text-xs text-graphite">Respondido con créditos de prueba.</p> : null}
                     </div>
@@ -249,7 +324,7 @@ export function HelpPanel({ workspaceId, page }: { workspaceId: string; page: Pa
 // Sin IA ni créditos: las fichas como preguntas frecuentes.
 function NoAiHelp({ message, page, base, onOpenCard }: { message: string; page: Page; base: string; onOpenCard: (id: string) => void }) {
   const first: HelpGuide[] =
-    page === "automatizaciones" ? HELP_GUIDES.filter((g) => g.id === "automatizaciones") : HELP_GUIDES.filter((g) => g.section === "llms")
+    page === "automatizaciones" || page === "ejecucion" ? HELP_GUIDES.filter((g) => g.id === "automatizaciones") : HELP_GUIDES.filter((g) => g.section === "llms")
   const rest = HELP_GUIDES.filter((g) => !first.includes(g))
   return (
     <div className="flex flex-col gap-3 text-sm">
