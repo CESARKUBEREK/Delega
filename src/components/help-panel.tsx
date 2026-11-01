@@ -1,0 +1,297 @@
+"use client"
+
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState, useTransition } from "react"
+import { askHelp, type HelpTurn } from "@/app/w/[workspaceId]/help-actions"
+import { HELP_GUIDES, looksLikeSecret, relevantGuides, SECRET_REPLY, type HelpGuide } from "@/lib/help"
+
+// Panel «¿Te ayudo?» (fase 7-1): dudas sobre integraciones y automatizaciones.
+// Responde con el estado del espacio y las fichas de ayuda; puede abrir la
+// tarjeta de una integración. La conversación vive solo en esta pestaña y las
+// claves que se peguen no salen del navegador.
+
+type Page = "integraciones" | "automatizaciones" | "onboarding"
+type Message = HelpTurn & { open?: string | null; suggestions?: string[]; trial?: boolean }
+
+const STARTERS: Record<Page, string[]> = {
+  integraciones: ["¿Por dónde empiezo?", "¿Cómo conecto mi correo de Gmail?", "¿Qué IA me conviene?"],
+  automatizaciones: ["¿Cómo creo mi primera automatización?", "¿Cómo hago que se ejecute sola cada día?", "Mi automatización falló, ¿qué hago?"],
+  onboarding: ["¿Qué necesito para empezar?", "¿Es seguro conectar mi correo?", "¿Se envía algo sin que yo lo vea?"],
+}
+
+const guideById = (id: string | null | undefined) => (id ? HELP_GUIDES.find((g) => g.id === id) : undefined)
+
+// Abre, enseña y resalta la tarjeta de una integración. Si no está en esta
+// página, lleva a Integraciones con ?abrir=.
+export function openHelpCard(id: string): boolean {
+  const el = document.querySelector<HTMLDetailsElement>(`details[data-help="${CSS.escape(id)}"]`)
+  if (!el) return false
+  el.open = true
+  el.scrollIntoView({ behavior: "smooth", block: "center" })
+  el.classList.add("help-highlight")
+  window.setTimeout(() => el.classList.remove("help-highlight"), 2600)
+  return true
+}
+
+export function HelpPanel({ workspaceId, page }: { workspaceId: string; page: Page }) {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [noAi, setNoAi] = useState<string | null>(null)
+  const [focus, setFocus] = useState<string | null>(null)
+  const [pending, startTransition] = useTransition()
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
+
+  // La última tarjeta que se abrió en la página es el contexto de la pregunta.
+  useEffect(() => {
+    const onToggle = (e: Event) => {
+      const el = e.target as HTMLElement | null
+      if (el instanceof HTMLDetailsElement && el.open && el.dataset.help) setFocus(el.dataset.help)
+    }
+    document.addEventListener("toggle", onToggle, true)
+    return () => document.removeEventListener("toggle", onToggle, true)
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    inputRef.current?.focus()
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false)
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [open])
+
+  useEffect(() => {
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" })
+  }, [messages, pending])
+
+  const goToCard = (id: string) => {
+    if (openHelpCard(id)) {
+      if (window.matchMedia("(max-width: 1023px)").matches) setOpen(false)
+      return
+    }
+    const g = guideById(id)
+    router.push(`/w/${workspaceId}/integraciones?abrir=${encodeURIComponent(id)}${g ? `#${g.section}` : ""}`)
+  }
+
+  const send = (text: string) => {
+    const message = text.trim()
+    if (!message || pending) return
+    setError(null)
+    setInput("")
+    // Una clave pegada no sale del navegador.
+    if (looksLikeSecret(message)) {
+      const guess = relevantGuides(message, focus)[0]?.id ?? focus
+      setMessages((m) => [...m, { role: "user", content: "(He borrado tu mensaje: parecía una clave o una contraseña)" }, { role: "assistant", content: SECRET_REPLY, open: guess }])
+      return
+    }
+    const history: HelpTurn[] = messages.map(({ role, content }) => ({ role, content }))
+    setMessages((m) => [...m, { role: "user", content: message }])
+    startTransition(async () => {
+      const r = await askHelp({ workspaceId, page, focus, history, message }).catch(() => null)
+      if (!r) {
+        setError("No se pudo contactar con el ayudante. Inténtalo de nuevo.")
+        return
+      }
+      if (!r.ok) {
+        if (r.code === "no_connection") setNoAi(r.error)
+        else setError(r.error)
+        return
+      }
+      setMessages((m) => [...m, { role: "assistant", content: r.reply, open: r.open, suggestions: r.suggestions, trial: r.trial }])
+    })
+  }
+
+  const focusGuide = guideById(focus)
+  const starters = focusGuide ? [`¿Cómo conecto ${focusGuide.title}?`, ...STARTERS[page].slice(0, 2)] : STARTERS[page]
+  const last = messages[messages.length - 1]
+  const followUps = last?.role === "assistant" ? (last.suggestions ?? []) : []
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls="help-panel"
+        className="help-fab fixed right-4 bottom-24 z-40 inline-flex h-12 items-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-paper shadow-lg lg:bottom-6"
+      >
+        <span aria-hidden="true" className="grid h-6 w-6 place-items-center rounded-full bg-stroke text-xs font-bold text-stroke-ink">
+          ?
+        </span>
+        {open ? "Cerrar la ayuda" : "¿Te ayudo?"}
+      </button>
+
+      {open ? (
+        <section
+          id="help-panel"
+          role="dialog"
+          aria-label="Ayuda de MarchaSolo"
+          className="help-panel fixed inset-x-3 bottom-40 z-40 flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-rule bg-sheet shadow-xl sm:inset-x-auto sm:right-4 sm:w-[24rem] lg:bottom-20"
+        >
+          <header className="flex items-start justify-between gap-3 border-b border-rule px-4 py-3">
+            <div>
+              <p className="font-semibold text-ink">¿Te ayudo?</p>
+              <p className="text-xs text-graphite">Dudas sobre conectar tus cuentas y crear automatizaciones. Nunca me escribas claves ni contraseñas.</p>
+            </div>
+            <button type="button" onClick={() => setOpen(false)} className="text-sm text-graphite" aria-label="Cerrar">
+              ✕
+            </button>
+          </header>
+
+          <div ref={listRef} className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-3">
+            {noAi ? (
+              <NoAiHelp message={noAi} page={page} base={`/w/${workspaceId}`} onOpenCard={goToCard} />
+            ) : (
+              <>
+                {messages.length === 0 ? (
+                  <p className="text-sm text-graphite">
+                    Pregúntame lo que quieras sobre {page === "automatizaciones" ? "tus automatizaciones" : "tus integraciones"}.
+                    {focusGuide ? ` Veo que estás con ${focusGuide.title}.` : ""}
+                  </p>
+                ) : null}
+                {messages.map((m, i) =>
+                  m.role === "user" ? (
+                    <p key={i} className="ml-8 rounded-xl bg-paper px-3 py-2 text-sm text-ink">
+                      {m.content}
+                    </p>
+                  ) : (
+                    <div key={i} className="mr-4 flex flex-col gap-2">
+                      <p className="whitespace-pre-wrap text-sm text-ink">{m.content}</p>
+                      {m.open && guideById(m.open) ? (
+                        <button
+                          type="button"
+                          onClick={() => goToCard(m.open as string)}
+                          className="self-start rounded-lg border border-stroke px-3 py-1.5 text-sm font-semibold text-ink"
+                        >
+                          Abrir la tarjeta de {guideById(m.open)?.title} →
+                        </button>
+                      ) : null}
+                      {m.trial ? <p className="text-xs text-graphite">Respondido con créditos de prueba.</p> : null}
+                    </div>
+                  ),
+                )}
+                {pending ? (
+                  <p className="flex items-center gap-2 text-sm text-graphite" role="status">
+                    <span aria-hidden="true" className="h-2 w-2 animate-pulse rounded-full bg-stroke" /> Pensando…
+                  </p>
+                ) : null}
+                {error ? (
+                  <p className="text-sm text-alert" role="alert">
+                    {error}
+                  </p>
+                ) : null}
+              </>
+            )}
+          </div>
+
+          {!noAi ? (
+            <div className="flex flex-col gap-2 border-t border-rule px-4 py-3">
+              {!pending && (messages.length === 0 || followUps.length > 0) ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {(messages.length === 0 ? starters : followUps).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => send(s)}
+                      className="rounded-full border border-rule px-2.5 py-1 text-xs text-graphite hover:border-ink hover:text-ink"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  send(input)
+                }}
+                className="flex items-end gap-2"
+              >
+                <label htmlFor="help-input" className="sr-only">
+                  Tu pregunta
+                </label>
+                <textarea
+                  id="help-input"
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault()
+                      send(input)
+                    }
+                  }}
+                  rows={2}
+                  maxLength={1000}
+                  placeholder="Escribe tu pregunta…"
+                  className="min-h-11 flex-1 resize-none rounded-xl border border-rule bg-paper px-3 py-2 text-sm text-ink placeholder:text-graphite focus:border-stroke focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={pending || !input.trim()}
+                  className="h-11 rounded-xl bg-stroke px-4 text-sm font-semibold text-stroke-ink disabled:opacity-50"
+                >
+                  Enviar
+                </button>
+              </form>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+    </>
+  )
+}
+
+// Sin IA ni créditos: las fichas como preguntas frecuentes.
+function NoAiHelp({ message, page, base, onOpenCard }: { message: string; page: Page; base: string; onOpenCard: (id: string) => void }) {
+  const first: HelpGuide[] =
+    page === "automatizaciones" ? HELP_GUIDES.filter((g) => g.id === "automatizaciones") : HELP_GUIDES.filter((g) => g.section === "llms")
+  const rest = HELP_GUIDES.filter((g) => !first.includes(g))
+  return (
+    <div className="flex flex-col gap-3 text-sm">
+      <p className="text-ink">
+        Para responderte necesito una IA conectada. {message} Mientras tanto, aquí tienes las guías:
+      </p>
+      {[...first, ...rest].map((g) => (
+        <details key={g.id} className="rounded-xl border border-rule bg-paper px-3 py-2">
+          <summary className="cursor-pointer font-semibold text-ink">{g.title}</summary>
+          <p className="mt-1 text-graphite">{g.summary}</p>
+          <ol className="mt-2 list-decimal pl-5 text-graphite">
+            {g.steps.map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ol>
+          {g.errors.map((e) => (
+            <p key={e.q} className="mt-2 text-graphite">
+              <strong className="text-ink">{e.q}.</strong> {e.a}
+            </p>
+          ))}
+          {g.section !== "automatizaciones" ? (
+            <button type="button" onClick={() => onOpenCard(g.id)} className="mt-2 font-semibold text-link underline underline-offset-4">
+              Abrir la tarjeta →
+            </button>
+          ) : (
+            <Link href={`${base}/asistente`} className="mt-2 inline-block font-semibold text-link underline underline-offset-4">
+              Ir al chat →
+            </Link>
+          )}
+        </details>
+      ))}
+    </div>
+  )
+}
+
+// En Integraciones: abre la tarjeta de ?abrir=<id> al llegar.
+export function OpenCardFromQuery() {
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("abrir")
+    if (!id) return
+    const t = window.setTimeout(() => openHelpCard(id), 300)
+    return () => window.clearTimeout(t)
+  }, [])
+  return null
+}

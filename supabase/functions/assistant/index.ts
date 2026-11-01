@@ -5,6 +5,7 @@
 // guarda la conversación, el plan y el consumo, y pide a OpenAI que no
 // conserve los datos (store: false).
 import { type AuthContext, authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
+import { helpReply } from "./help.ts"
 import { type Plan, RESPONSE_SCHEMA, sanitizePlan, sanitizeStep, STEP_SCHEMA } from "./plan-schema.ts"
 import { generateJson, LlmError, markInvalidIfNeeded, type Msg, NO_AI_MESSAGE, recordUsage, resolveAiOrTrial } from "../_shared/llm.ts"
 
@@ -74,6 +75,7 @@ Deno.serve(async (req) => {
 
   const body = await req.json().catch(() => null) as Record<string, unknown> | null
   if (body?.action === "step") return suggestStep(ctx, body)
+  if (body?.action === "help") return helpReply(ctx, body)
   const workspaceId = body?.workspace_id
   const message = typeof body?.message === "string" ? body.message.trim() : ""
   let conversationId = body?.conversation_id ?? null

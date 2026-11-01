@@ -52,7 +52,7 @@ export async function AiCard({ workspaceId, isAdmin, provider }: { workspaceId: 
   const help = AI_HELP[provider]
 
   return (
-    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help={provider} name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">{p.label}</h3>

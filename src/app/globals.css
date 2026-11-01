@@ -1002,6 +1002,8 @@ body {
 .setup-panel { display:flex; flex-direction:column; gap:20px; padding:24px; border:1px solid #dfe7ee; border-radius:20px; background:#fff; box-shadow:0 14px 34px rgb(11 31 59 / 6%); }
 .setup-panel-head { display:flex; flex-direction:column; gap:6px; }
 .setup-done-chip { display:inline-flex; align-items:center; margin-left:10px; padding:2px 10px; border-radius:999px; background:#e3f8f4; color:#007a6c; font-size:13px; font-weight:700; vertical-align:middle; }
+/* Ayudante: tarjeta que abre el panel «¿Te ayudo?». */
+.help-highlight { outline:3px solid #00c2a8; outline-offset:4px; transition:outline-color .4s ease; }
 .setup-cards { display:flex; flex-direction:column; gap:12px; }
 .setup-nav { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding-top:16px; border-top:1px solid #e8eef2; }
 .setup-back { color:#4a5b73; font-weight:600; text-decoration:none; }

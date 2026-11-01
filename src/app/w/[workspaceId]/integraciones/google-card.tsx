@@ -76,7 +76,7 @@ export async function DriveCard({ workspaceId, isAdmin, notice }: { workspaceId:
   const own = files.filter((f) => !LISTED_ELSEWHERE.includes(f.mime_type ?? ""))
 
   return (
-    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="drive" name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Google Drive</h3>
@@ -162,7 +162,7 @@ export async function FilesCard({
   const active = integration?.status === "active"
 
   return (
-    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help={mimes === SHEET_MIMES ? "sheets" : mimes === EXCEL_MIMES ? "excel" : "docs"} name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">{title}</h3>
