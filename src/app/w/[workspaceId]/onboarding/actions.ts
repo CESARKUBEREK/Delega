@@ -116,3 +116,53 @@ export async function completeOnboarding(workspaceId: string): Promise<{ ok: tru
   if (error) return { ok: false, error: "No se pudo guardar. Inténtalo de nuevo." }
   return { ok: true }
 }
+
+// Paso 5: lo que MarchaSolo ya ha hecho con la bandeja (solo administradores:
+// la RLS no deja ver la bandeja a los miembros). null si no hay nada que
+// enseñar (sin correo conectado ni conversaciones).
+export type OnboardingResult = {
+  ownAi: boolean
+  total: number
+  classified: number
+  awaiting: number
+  urgent: number
+  noise: number
+  drafts: number
+}
+
+export async function getOnboardingResult(workspaceId: string): Promise<OnboardingResult | null> {
+  if (!UUID_RE.test(workspaceId)) return null
+  const supabase = await createClient()
+  const status = await setupStatus(workspaceId)
+  const since14 = new Date(Date.now() - 14 * 86_400_000).toISOString()
+  const since7 = new Date(Date.now() - 7 * 86_400_000).toISOString()
+  const threads = () =>
+    supabase.from("inbox_threads").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId).eq("archived", false)
+  // Mismo criterio que «Para hoy» en la bandeja.
+  const awaitingQ = () =>
+    threads().eq("automatic", false).eq("needs_reply", true).eq("last_direction", "in").is("prepare_dismissed_at", null).gte("last_message_at", since14)
+
+  const [{ count: total }, { count: classified }, { count: awaiting }, { count: urgent }, { count: noise }, { count: drafts }] = await Promise.all([
+    threads(),
+    threads().not("classified_at", "is", null),
+    awaitingQ(),
+    awaitingQ().eq("urgency", "alta"),
+    threads().eq("automatic", true).gte("last_message_at", since7),
+    supabase
+      .from("flow_runs")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", workspaceId)
+      .eq("trigger->>type", "inbox_prepare")
+      .eq("status", "awaiting_approval"),
+  ])
+  if (!status.correo && !total) return null
+  return {
+    ownAi: status.ia,
+    total: total ?? 0,
+    classified: classified ?? 0,
+    awaiting: awaiting ?? 0,
+    urgent: urgent ?? 0,
+    noise: noise ?? 0,
+    drafts: drafts ?? 0,
+  }
+}

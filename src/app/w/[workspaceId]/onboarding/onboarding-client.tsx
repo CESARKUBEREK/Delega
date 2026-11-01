@@ -17,7 +17,7 @@ import {
   type OnboardingStep,
 } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
-import { checkOnboardingConnection, completeOnboarding, generateOnboardingPlan } from "./actions"
+import { checkOnboardingConnection, completeOnboarding, generateOnboardingPlan, getOnboardingResult, type OnboardingResult } from "./actions"
 
 type Step = OnboardingStep
 
@@ -381,6 +381,8 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
             </p>
           </div>
 
+          {isAdmin ? <InboxResult workspaceId={workspaceId} base={base} /> : null}
+
           {plan ? (
             <div className="rounded-2xl border border-rule bg-paper p-5 flex flex-col gap-1">
               <p className="app-eyebrow">TU PLAN</p>
@@ -660,5 +662,98 @@ function Intro() {
         </p>
       </div>
     </section>
+  )
+}
+
+// Paso 5: lo que MarchaSolo ya ha hecho con tu bandeja. Se actualiza solo
+// mientras llegan y se ordenan los correos (como mucho 3 minutos).
+function InboxResult({ workspaceId, base }: { workspaceId: string; base: string }) {
+  const [result, setResult] = useState<OnboardingResult | null | undefined>(undefined)
+
+  useEffect(() => {
+    let stop = false
+    const started = Date.now()
+    let timer: number | undefined
+    const tick = async () => {
+      const r = await getOnboardingResult(workspaceId).catch(() => null)
+      if (stop) return
+      setResult(r)
+      const settling = r !== null && (r.total === 0 || (r.ownAi && r.classified < r.total))
+      if (settling && Date.now() - started < 180_000) timer = window.setTimeout(tick, 10_000)
+    }
+    void tick()
+    return () => {
+      stop = true
+      if (timer) window.clearTimeout(timer)
+    }
+  }, [workspaceId])
+
+  if (!result) return null
+
+  const box = "rounded-2xl border border-stroke bg-paper p-5 flex flex-col gap-3"
+  const pulse = <span aria-hidden="true" className="h-2 w-2 animate-pulse rounded-full bg-stroke" />
+
+  if (result.total === 0) {
+    return (
+      <div className={box} role="status">
+        <p className="app-eyebrow">TU BANDEJA</p>
+        <p className="flex items-center gap-2 text-ink">{pulse} Estoy trayendo tus correos. En unos minutos los tendrás ordenados.</p>
+      </div>
+    )
+  }
+
+  if (!result.ownAi) {
+    return (
+      <div className={box}>
+        <p className="app-eyebrow">TU BANDEJA</p>
+        <p className="text-ink">
+          Ya he traído <strong>{result.total}</strong> conversaciones a tu bandeja. Conecta tu IA y las ordenaré por urgencia y te dejaré las
+          respuestas preparadas.
+        </p>
+        <Link href={`${base}/integraciones#llms`} className="text-sm font-semibold text-link underline underline-offset-4">
+          Conectar mi IA →
+        </Link>
+      </div>
+    )
+  }
+
+  if (result.classified === 0) {
+    return (
+      <div className={box} role="status">
+        <p className="app-eyebrow">TU BANDEJA</p>
+        <p className="flex items-center gap-2 text-ink">
+          {pulse} Ordenando tus {result.total} conversaciones…
+        </p>
+      </div>
+    )
+  }
+
+  const stats = [
+    { n: result.awaiting, label: result.awaiting === 1 ? "espera tu respuesta" : "esperan tu respuesta" },
+    { n: result.urgent, label: result.urgent === 1 ? "es urgente" : "son urgentes" },
+    { n: result.drafts, label: result.drafts === 1 ? "respuesta preparada" : "respuestas preparadas" },
+    { n: result.noise, label: "boletines y avisos apartados" },
+  ].filter((st, i) => i === 0 || st.n > 0) // un 0 no impresiona: solo se queda «esperan tu respuesta»
+  return (
+    <div className={box}>
+      <p className="app-eyebrow">YA ESTOY TRABAJANDO PARA TI</p>
+      <p className="rotulo text-lg text-ink">He ordenado tu bandeja</p>
+      <ul className="flex flex-wrap gap-2">
+        {stats.map((st) => (
+          <li key={st.label} className="min-w-[8rem] flex-1 rounded-xl bg-sheet px-3 py-2">
+            <span className="rotulo block text-2xl text-ink">{st.n}</span>
+            <span className="text-xs text-graphite">{st.label}</span>
+          </li>
+        ))}
+      </ul>
+      {result.classified < result.total ? (
+        <p className="flex items-center gap-2 text-xs text-graphite" role="status">
+          {pulse} Sigo ordenando: {result.classified} de {result.total}.
+        </p>
+      ) : null}
+      <Link href={`${base}/bandeja`} className="text-sm font-semibold text-link underline underline-offset-4">
+        Ver lo de hoy en la bandeja →
+      </Link>
+    </div>
   )
 }
