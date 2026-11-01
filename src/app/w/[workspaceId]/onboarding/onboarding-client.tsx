@@ -16,7 +16,7 @@ import {
   type OnboardingStep,
 } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
-import { checkOnboardingConnection, generateOnboardingPlan } from "./actions"
+import { checkOnboardingConnection, completeOnboarding, generateOnboardingPlan } from "./actions"
 
 type Step = OnboardingStep
 
@@ -159,7 +159,26 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
       return
     }
     setError(null)
-    setStep("done")
+    startTransition(async () => {
+      const result = await completeOnboarding(workspaceId)
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      setStep("done") // el efecto de guardado borra el progreso de la pestaña
+    })
+  }
+
+  // Volver a empezar desde el paso 1 (sin salir de la página).
+  const restart = () => {
+    setStep("task")
+    setTask("")
+    setReply(null)
+    setPlan(null)
+    setSource(null)
+    setConversationId(null)
+    setSupervisedAccepted(false)
+    setError(null)
   }
 
   return (
@@ -336,6 +355,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
           }}
           onBack={() => setStep(needed === "none" ? "plan" : "connect")}
           onContinue={finish}
+          pending={pending}
         />
       )}
 
@@ -349,6 +369,14 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
               Tu plan te espera en el chat: desde allí puedes afinarlo, ejecutarlo o guardarlo como automatización.
             </p>
           </div>
+
+          {plan ? (
+            <div className="rounded-2xl border border-rule bg-paper p-5 flex flex-col gap-1">
+              <p className="app-eyebrow">TU PLAN</p>
+              <p className="font-semibold text-ink">{plan.name}</p>
+              {plan.summary ? <p className="text-sm text-graphite">{plan.summary}</p> : null}
+            </div>
+          ) : null}
 
           <div className="flex flex-col gap-3">
             <Link
@@ -372,6 +400,13 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
               </Link>
             )}
           </div>
+
+          <p className="text-xs text-graphite">
+            ¿Quieres probar con otra tarea?{" "}
+            <button type="button" onClick={restart} className="font-semibold text-link underline underline-offset-4">
+              Empezar de nuevo
+            </button>
+          </p>
         </section>
       )}
     </div>
@@ -495,6 +530,7 @@ function SupervisedStep({
   onAcceptChange,
   onBack,
   onContinue,
+  pending,
 }: {
   plan: FlowPlan | null
   accepted: boolean
@@ -502,6 +538,7 @@ function SupervisedStep({
   onAcceptChange: (v: boolean) => void
   onBack: () => void
   onContinue: () => void
+  pending: boolean
 }) {
   const preview = supervisedPreview(plan)
 
@@ -555,9 +592,10 @@ function SupervisedStep({
         <button
           type="button"
           onClick={onContinue}
-          className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
+          disabled={pending}
+          className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
         >
-          Entendido, continuar →
+          {pending ? "Guardando…" : "Entendido, continuar →"}
         </button>
         <button type="button" onClick={onBack} className="inline-flex h-11 items-center rounded-xl border border-ink px-5 font-medium text-ink">
           ← Volver
