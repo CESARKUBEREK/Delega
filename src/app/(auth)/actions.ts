@@ -16,6 +16,13 @@ function text(formData: FormData, key: string, max = 320): string {
   return typeof value === "string" ? value.trim().slice(0, max) : ""
 }
 
+// Token del CAPTCHA (Turnstile). Supabase lo exige cuando la protección está
+// activada en Authentication; si no, lo ignora.
+function captcha(formData: FormData): string | undefined {
+  const value = formData.get("captcha_token")
+  return typeof value === "string" && value ? value.slice(0, 4096) : undefined
+}
+
 function password(formData: FormData, key: string): string {
   const value = formData.get(key)
   return typeof value === "string" ? value.slice(0, 128) : ""
@@ -31,7 +38,7 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({ email, password: pass })
+  const { error } = await supabase.auth.signInWithPassword({ email, password: pass, options: { captchaToken: captcha(formData) } })
   if (error) return { error: authErrorMessage(error.code), email }
 
   redirect(next)
@@ -56,6 +63,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     options: {
       emailRedirectTo: `${origin}/auth/confirm?next=${encodeURIComponent(next)}`,
       data: name ? { full_name: name } : undefined,
+      captchaToken: captcha(formData),
     },
   })
   // Con la confirmación de correo activa, Supabase responde igual si el correo
@@ -88,8 +96,9 @@ export async function requestPasswordReset(_prev: FormState, formData: FormData)
   const origin = await siteUrl()
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${origin}/auth/confirm?next=/reset-password`,
+    captchaToken: captcha(formData),
   })
-  if (error && (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit")) {
+  if (error && (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit" || error.code === "captcha_failed")) {
     return { error: authErrorMessage(error.code), email }
   }
   // Mismo mensaje exista o no la cuenta.
