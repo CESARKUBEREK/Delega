@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { PlanView } from "@/components/plan-view"
-import { primaryConnection, type OnboardingConnection } from "@/lib/onboarding"
+import { chatHref, CONNECTION_ANCHOR, primaryConnection, type OnboardingConnection } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
 import { generateOnboardingPlan } from "./actions"
 
@@ -42,6 +42,7 @@ export function OnboardingClient({
   const [reply, setReply] = useState<string | null>(null)
   const [plan, setPlan] = useState<FlowPlan | null>(null)
   const [source, setSource] = useState<"assistant" | "local" | null>(null)
+  const [conversationId, setConversationId] = useState<string | null>(null)
   const [supervisedAccepted, setSupervisedAccepted] = useState(false)
   const [pending, startTransition] = useTransition()
 
@@ -79,6 +80,7 @@ export function OnboardingClient({
       setReply(result.reply)
       setPlan(result.plan)
       setSource(result.source)
+      setConversationId(result.conversationId)
       setStep("plan")
     })
   }
@@ -207,6 +209,7 @@ export function OnboardingClient({
                 setPlan(null)
                 setReply(null)
                 setSource(null)
+                setConversationId(null)
               }}
               className="inline-flex h-11 items-center rounded-xl border border-ink px-5 font-medium text-ink"
             >
@@ -235,7 +238,7 @@ export function OnboardingClient({
               • Puedes desconectar esta aplicación en cualquier momento.
             </p>
             <Link
-              href={`${base}/integraciones`}
+              href={`${base}/integraciones#${CONNECTION_ANCHOR[needed]}`}
               className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
             >
               Conectar {CONNECTION_LABEL[needed]} →
@@ -306,16 +309,16 @@ export function OnboardingClient({
             <p className="text-sm font-semibold text-graphite">Paso 5 de 5</p>
             <h2 className="rotulo text-xl mt-1">Listo</h2>
             <p className="text-graphite mt-1">
-              Ya puedes pedirle cosas a MarchaSolo. Empieza con una tarea sencilla y ve ganando confianza.
+              Tu plan te espera en el chat: desde allí puedes afinarlo, ejecutarlo o guardarlo como automatización.
             </p>
           </div>
 
           <div className="flex flex-col gap-3">
             <Link
-              href={`${base}/asistente`}
+              href={chatHref(base, conversationId, task)}
               className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
             >
-              Abrir el chat
+              Seguir con este plan en el chat
             </Link>
             <Link
               href={base}
