@@ -6,6 +6,7 @@ import { Divider, Field, FormMessage, SubmitButton } from "@/components/form"
 import { safeNext } from "@/lib/safe-redirect"
 import { signUp, type FormState } from "../actions"
 import { GoogleButton } from "../google-button"
+import { Captcha } from "@/components/captcha"
 
 export function SignupForm() {
   const next = safeNext(useSearchParams().get("next"))
@@ -29,6 +30,7 @@ export function SignupForm() {
           required
           hint="Al menos 10 caracteres. Una frase corta es más segura que una palabra con símbolos."
         />
+        <Captcha resetKey={state} />
         <FormMessage error={state.error} />
         <SubmitButton pendingLabel="Creando cuenta…">Crear cuenta</SubmitButton>
       </form>

@@ -7,6 +7,7 @@ import { Divider, Field, FormMessage, SubmitButton } from "@/components/form"
 import { safeNext } from "@/lib/safe-redirect"
 import { signIn, type FormState } from "../actions"
 import { GoogleButton } from "../google-button"
+import { Captcha } from "@/components/captcha"
 
 export function LoginForm() {
   const next = safeNext(useSearchParams().get("next"))
@@ -20,6 +21,7 @@ export function LoginForm() {
         <input type="hidden" name="next" value={next} />
         <Field id="email" name="email" type="email" label="Correo" autoComplete="email" required defaultValue={state.email} />
         <Field id="password" name="password" type="password" label="Contraseña" autoComplete="current-password" required />
+        <Captcha resetKey={state} />
         <FormMessage error={state.error} />
         <SubmitButton pendingLabel="Entrando…">Entrar</SubmitButton>
       </form>
