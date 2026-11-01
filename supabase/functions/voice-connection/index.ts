@@ -57,7 +57,21 @@ Deno.serve(async (req) => {
 
   if (body?.action === "web_create" || body?.action === "web_rotate") {
     const { data: integ } = await admin.from("integrations").select("id").eq("workspace_id", workspaceId).eq("provider", VOICE_PROVIDER).maybeSingle()
-    if (!integ) return fail(409, "not_connected", "Activa primero la atención por voz.")
+    // El asistente de la web no necesita el teléfono: si aún no hay conexión de
+    // voz, se crea (con una clave del servidor MCP que no se muestra) para
+    // guardar el horario de citas y los documentos.
+    if (!integ) {
+      const { error } = await admin.rpc("integration_save", {
+        p_workspace_id: workspaceId,
+        p_provider: VOICE_PROVIDER,
+        p_refresh_token: `msv_${randomToken(32)}`,
+        p_account_email: "Grok Voice",
+        p_scopes: "",
+        p_actor: userId,
+      })
+      if (error) return fail(500, "save_failed", "No se pudo crear el asistente de voz.")
+      await admin.rpc("integration_set_config", { p_workspace_id: workspaceId, p_provider: VOICE_PROVIDER, p_config: readVoiceConfig({}) })
+    }
     const { data: existing } = await admin.from("voice_web_widgets").select("public_id").eq("workspace_id", workspaceId).maybeSingle()
     if (existing && body.action === "web_create") return json({ ok: true, public_id: existing.public_id })
     const publicId = `msw_${randomToken(24)}`
