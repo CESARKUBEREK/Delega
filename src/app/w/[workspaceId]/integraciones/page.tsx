@@ -7,17 +7,17 @@ import { getWorkspace } from "@/lib/workspace"
 import { DOC_MIMES, DriveCard, EXCEL_MIMES, FilesCard, SHEET_MIMES } from "./google-card"
 import { ImapCard, TelegramCard, WhatsAppCard } from "./inbox-cards"
 import { AiCard } from "./ai-card"
-import { BufferCard, CalendarCard, ContactsCard, HubSpotCard, TokkoCard, VoiceCard, XubioCard } from "./work-cards"
+import { BufferCard, CalendarCard, ContactsCard, HubSpotCard, TokkoCard, VoiceCard, VoiceHoursCard, VoiceWebCard, XubioCard } from "./work-cards"
 import { ApiIntegrationCard } from "./api-integrations"
 
 export const metadata = { title: "Integraciones" }
 
 const CATEGORIES = [
+  { id: "asistente-voz", label: "Asistente de voz" },
   { id: "llms", label: "LLMs" },
   { id: "drives", label: "Drives" },
   { id: "comunicaciones", label: "Comunicaciones" },
   { id: "redes-sociales", label: "Redes sociales" },
-  { id: "telefono", label: "Atención telefónica" },
   { id: "calculos", label: "Cálculos" },
   { id: "textos", label: "Textos" },
   { id: "bases-de-datos", label: "Bases de datos" },
@@ -107,6 +107,16 @@ async function Integrations({
 
   return (
     <div className="flex flex-col gap-10">
+      <Category
+        id="asistente-voz"
+        title="Asistente de voz"
+        description="Atiende a tus clientes por voz, en tu web y por teléfono: reserva citas en tu horario, toma recados y responde con tus documentos. Cada conversación llega a la Bandeja."
+      >
+        <VoiceWebCard workspaceId={workspaceId} isAdmin={isAdmin} />
+        <VoiceCard workspaceId={workspaceId} isAdmin={isAdmin} />
+        <VoiceHoursCard workspaceId={workspaceId} isAdmin={isAdmin} />
+      </Category>
+
       <Category id="llms" title="LLMs" description="La IA que prepara y ejecuta tus automatizaciones, con tu propia clave. La principal la usan el asistente y la bandeja; cada automatización puede usar otra.">
         {AI_PROVIDERS.map((p) => (
           <AiCard key={p.id} workspaceId={workspaceId} isAdmin={isAdmin} provider={p.id} />
@@ -128,9 +138,6 @@ async function Integrations({
         <BufferCard workspaceId={workspaceId} isAdmin={isAdmin} />
       </Category>
 
-      <Category id="telefono" title="Atención telefónica" description="Un agente de voz que atiende las llamadas de tu negocio.">
-        <VoiceCard workspaceId={workspaceId} isAdmin={isAdmin} />
-      </Category>
 
       <Category id="calculos" title="Cálculos" description="Planillas que las automatizaciones leen y actualizan.">
         <FilesCard

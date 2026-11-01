@@ -1434,6 +1434,19 @@ async function autoBookingBlocked(
   return null
 }
 
+// Fechas de referencia en la zona del espacio, para que el modelo no las
+// calcule de memoria (hoy, mañana y el próximo día laborable).
+export function dayContext(tz: string, now = new Date()): string {
+  const ymd = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(d)
+  const label = (d: Date) => new Intl.DateTimeFormat("es-ES", { timeZone: tz, weekday: "long", day: "numeric", month: "long" }).format(d)
+  const weekday = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(d)
+  const plus = (days: number) => new Date(now.getTime() + days * 86_400_000)
+  let next = 1
+  while (["Sat", "Sun"].includes(weekday(plus(next)))) next++
+  const fmt = (d: Date) => `${label(d)} (${ymd(d)})`
+  return `Fechas de referencia: hoy es ${fmt(now)}; mañana es ${fmt(plus(1))}; el próximo día laborable es ${fmt(plus(next))}.`
+}
+
 // ---------------------------------------------------------------------------
 // Ejecutar una acción aprobada
 // ---------------------------------------------------------------------------
@@ -1701,6 +1714,7 @@ export async function createRun(
 
   const parts = [
     `Ejecuta ahora esta automatización. Ahora es ${today} (zona ${tz}).`,
+    dayContext(tz),
     `Plan (JSON):\n${JSON.stringify(input.flow.definition)}`,
     valid.length ? `Archivos disponibles:\n${listing}` : "No hay archivos elegidos para esta ejecución.",
     contactList ? `Contactos autorizados (para correo e invitaciones de calendario):\n${contactList}` : "",
@@ -1721,7 +1735,9 @@ export async function createRun(
   if (input.trigger.type === "schedule") {
     parts.push(
       "Es una ejecución programada: nadie está mirando ahora. Si el plan pide avisar al usuario, usa notify_me " +
-        "(le llega sin aprobación). Lo demás que escribas o envíes esperará su aprobación.",
+        "(le llega sin aprobación). Lo demás que escribas o envíes esperará su aprobación. " +
+        "Si el plan habla de «mañana» y mañana es sábado o domingo, revisa desde mañana hasta el próximo día laborable incluido " +
+        "(un viernes: sábado, domingo y lunes) y dilo así en el aviso. Usa siempre las fechas de arriba; no las calcules de memoria.",
     )
   }
   if (input.trigger.type === "email_message") {

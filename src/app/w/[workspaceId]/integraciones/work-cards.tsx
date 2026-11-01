@@ -352,7 +352,8 @@ export async function BufferCard({ workspaceId, isAdmin }: { workspaceId: string
   )
 }
 
-export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
+// Asistente de voz: datos comunes a la web y al teléfono.
+async function voiceData(workspaceId: string) {
   const supabase = await createClient()
   const [{ data: integration }, { data: calendar }, { data: rawFiles }, { data: ws }, { data: widget }, { data: xai }] = await Promise.all([
     supabase.from("integrations").select("status, config").eq("workspace_id", workspaceId).eq("provider", "grok_voice").maybeSingle(),
@@ -366,10 +367,75 @@ export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string;
       .maybeSingle(),
     supabase.from("ai_connections").select("status").eq("workspace_id", workspaceId).eq("provider", "xai").maybeSingle(),
   ])
-  const config = readVoiceConfig(integration?.config)
   const files = (rawFiles ?? [])
     .filter((f) => f.mime_type !== "application/vnd.google-apps.folder")
     .map((f) => ({ id: f.id, name: f.name, kind: fileKindLabel(f.mime_type).toLowerCase() }))
+  return { integration, calendar, files, ws, widget: (widget as VoiceWebWidget | null) ?? null, xaiReady: xai?.status === "active", config: readVoiceConfig(integration?.config) }
+}
+
+function CalendarWarning() {
+  return (
+    <p className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+      Conecta Google Calendar (más abajo, en Calendar) para que el asistente pueda ver huecos y reservar citas. Sin él, solo toma recados.
+    </p>
+  )
+}
+
+// Asistente de voz en la web del cliente: lo más visible del bloque.
+export async function VoiceWebCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
+  const { integration, calendar, widget, xaiReady } = await voiceData(workspaceId)
+  return (
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet" open={Boolean(isAdmin && !widget)}>
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
+        <div>
+          <h3 className="rotulo text-lg">En tu web</h3>
+          <p className="text-sm text-graphite">
+            Un botón «Habla con nosotros» en tu web: tus clientes hablan con el asistente desde el navegador, sin llamar. Pide citas en tu horario, toma
+            recados y responde con tus documentos. Todo llega a la Bandeja.
+          </p>
+        </div>
+        <Badge status={widget ? (widget.enabled ? "active" : "paused") : null} invalidLabel="Sin activar" />
+      </summary>
+      <div className="flex flex-col gap-5 px-5 py-5">
+        {!isAdmin ? (
+          <p className="text-sm text-graphite">Solo un administrador puede configurar el asistente de voz.</p>
+        ) : (
+          <>
+            {calendar?.status !== "active" ? <CalendarWarning /> : null}
+            <VoiceWebPanel workspaceId={workspaceId} widget={widget} xaiReady={xaiReady} />
+            {!integration ? null : (
+              <p className="text-xs text-graphite">El horario de citas y los documentos se eligen en «Horario de citas y documentos», aquí abajo.</p>
+            )}
+          </>
+        )}
+      </div>
+    </details>
+  )
+}
+
+// Horario de citas y documentos: comunes a la web y al teléfono.
+export async function VoiceHoursCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
+  const { integration, files, config } = await voiceData(workspaceId)
+  if (!integration || !isAdmin) return null
+  return (
+    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+      <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
+        <div>
+          <h3 className="rotulo text-lg">Horario de citas y documentos</h3>
+          <p className="text-sm text-graphite">Cuándo puede reservar citas el asistente (en la web y por teléfono) y qué documentos usa para responder.</p>
+        </div>
+      </summary>
+      <div className="flex flex-col gap-3 px-5 py-5">
+        <p className="text-xs text-graphite">Las citas quedan confirmadas en tu calendario, sin aprobación, solo dentro de este horario y si la hora está libre.</p>
+        <VoiceSettingsForm workspaceId={workspaceId} config={config} files={files} />
+      </div>
+    </details>
+  )
+}
+
+// Atención telefónica con un agente de voz de xAI.
+export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
+  const { integration, calendar, ws, config } = await voiceData(workspaceId)
   const url = `${supabaseUrl}/functions/v1/voice-mcp?w=${workspaceId}`
   const connected = Boolean(integration)
 
@@ -377,7 +443,7 @@ export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string;
     <details name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
-          <h3 className="rotulo text-lg">Grok Voice</h3>
+          <h3 className="rotulo text-lg">Por teléfono (Grok Voice)</h3>
           <p className="text-sm text-graphite">
             Un agente de voz de xAI atiende las llamadas de tu negocio: consulta tu agenda y deja la cita reservada, toma recados y responde con
             tus documentos. Cada cita y cada recado llegan a la Bandeja y te avisan.
@@ -390,12 +456,7 @@ export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string;
           <p className="text-sm text-graphite">Solo un administrador puede configurar la atención telefónica.</p>
         ) : (
           <>
-            {calendar?.status !== "active" ? (
-              <p className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
-                Conecta Google Calendar (más abajo, en Calendar) para que el agente pueda ver huecos y reservar citas. Sin él, solo toma
-                recados.
-              </p>
-            ) : null}
+            {calendar?.status !== "active" ? <CalendarWarning /> : null}
             <section className="flex flex-col gap-3">
               <h4 className="text-sm font-semibold text-ink">1. Acceso para el agente de voz</h4>
               <VoiceAccess workspaceId={workspaceId} url={url} connected={connected} />
@@ -403,14 +464,7 @@ export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string;
             {connected ? (
               <>
                 <section className="flex flex-col gap-3">
-                  <h4 className="text-sm font-semibold text-ink">2. Horario de citas y documentos</h4>
-                  <p className="text-xs text-graphite">
-                    Las citas quedan confirmadas en tu calendario, sin aprobación, solo dentro de este horario y si la hora está libre.
-                  </p>
-                  <VoiceSettingsForm workspaceId={workspaceId} config={config} files={files} />
-                </section>
-                <section className="flex flex-col gap-3">
-                  <h4 className="text-sm font-semibold text-ink">3. Crea el agente en xAI</h4>
+                  <h4 className="text-sm font-semibold text-ink">2. Crea el agente en xAI</h4>
                   <ol className="list-decimal pl-5 text-sm text-graphite">
                     <li>Entra en console.x.ai → Voice Agents y crea un agente con la plantilla «Custom».</li>
                     <li>Pega estas instrucciones como guion del agente y elige una voz.</li>
@@ -424,14 +478,6 @@ export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string;
                   <p className="text-xs text-graphite">
                     Coste en tu cuenta de xAI: unos 0,08 $ por minuto de conversación, más 0,01 $/min si usas el número de xAI.
                   </p>
-                </section>
-                <section className="flex flex-col gap-3 border-t border-rule pt-5">
-                  <h4 className="text-sm font-semibold text-ink">4. Asistente de voz en tu web (opcional)</h4>
-                  <p className="text-xs text-graphite">
-                    Un botón en tu web para que tus clientes hablen con el mismo agente desde el navegador, sin llamar: mismo horario de citas,
-                    mismos documentos, y cada cita o recado llega a la Bandeja.
-                  </p>
-                  <VoiceWebPanel workspaceId={workspaceId} widget={(widget as VoiceWebWidget | null) ?? null} xaiReady={xai?.status === "active"} />
                 </section>
                 <DisconnectVoiceForm workspaceId={workspaceId} />
               </>

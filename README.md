@@ -176,7 +176,7 @@ Un botón que el negocio pega en su web (`public/widget-voz.js`, con `data-id="m
 
 - **`voice-web`:** `start` comprueba que el asistente está activo y los límites (conversaciones en 24 h y 3 por visitante y hora), y devuelve un token temporal de xAI (5 min, con la clave Grok/xAI del espacio, que nunca sale del servidor), las instrucciones y las herramientas; `tool` ejecuta huecos, reservar cita, recado y documentos con las mismas reglas que el teléfono (`_shared/voice.ts`, `source: "web"`); `end` cierra la sesión.
 - **Datos:** `voice_web_widgets` (identificador público, activo, texto del botón, conversaciones al día, minutos por conversación, dominios permitidos) y `voice_web_sessions`. Migración `20261101090000_voice_web.sql`. Las citas y recados llegan a la bandeja con el canal `web`.
-- **Ajustes:** Integraciones → Grok Voice → «4. Asistente de voz en tu web» (crear, activar, límites, código para pegar, probar, cambiar el código). Necesita Grok (xAI) conectado en LLMs.
+- **Ajustes:** Integraciones → **Asistente de voz** (primera sección, con atajo «Asistente de voz» en el menú): «En tu web» (crear, activar, límites, código para pegar, probar, cambiar el código), «Por teléfono (Grok Voice)» y «Horario de citas y documentos», comunes a los dos. Crear el asistente de la web no exige activar el teléfono. Necesita Grok (xAI) conectado en LLMs.
 - **Cabeceras:** `/hablar/*` se puede insertar en otras webs (`frame-ancestors *`) y conecta con `wss://api.x.ai`; el resto del sitio sigue con `frame-ancestors 'none'`.
 - **Límites conocidos:** el tope de minutos lo aplica el navegador (xAI no permite cortar la sesión desde el servidor); el de conversaciones al día, el servidor. Antes de abrirlo a mucho público conviene un CAPTCHA (Turnstile).
 

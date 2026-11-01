@@ -10,6 +10,8 @@ const SECTIONS = [
   { slug: "aprobaciones", label: "Aprobaciones" },
   { slug: "bandeja", label: "Bandeja" },
   { slug: "automatizaciones", label: "Automatizaciones" },
+  // Atajo a la sección del asistente de voz (web y teléfono) en Integraciones.
+  { slug: "integraciones#asistente-voz", label: "Asistente de voz" },
   { slug: "integraciones", label: "Integraciones" },
   { slug: "historial", label: "Historial" },
   { slug: "configuracion", label: "Configuración" },
@@ -20,6 +22,8 @@ function useSection() {
   const pathname = usePathname()
   const base = `/w/${workspaceId}`
   const isActive = (slug: string) => {
+    // Los atajos con # no se marcan como activos (los marca su sección).
+    if (slug.includes("#")) return false
     const href = slug ? `${base}/${slug}` : base
     return slug ? pathname === href || pathname.startsWith(`${href}/`) : pathname === base
   }
@@ -74,6 +78,7 @@ const ICONS: Record<string, React.ReactNode> = {
   bandeja: <path d="M3.5 13.5 6 5h12l2.5 8.5M3.5 13.5V19h17v-5.5M3.5 13.5H9a3 3 0 0 0 6 0h5.5" />,
   automatizaciones: <><circle cx="5" cy="6" r="2" /><circle cx="19" cy="18" r="2" /><path d="M7 6h5a4 4 0 0 1 4 4v4a4 4 0 0 0 3 4M5 8v8a3 3 0 0 0 3 3h9" /></>,
   integraciones: <><path d="M8 7V3m8 4V3M7 7h10v4a5 5 0 0 1-10 0V7Z" /><path d="M12 16v5m-4 0h8" /></>,
+  "integraciones#asistente-voz": <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21m-3.5 0h7" /></>,
   historial: <><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3.5 2" /></>,
   configuracion: <><circle cx="12" cy="12" r="3" /><path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 0 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V2a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z" /></>,
   mas: <><circle cx="5.5" cy="12" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="18.5" cy="12" r="1.2" /></>,
