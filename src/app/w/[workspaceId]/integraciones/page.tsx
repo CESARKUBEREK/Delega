@@ -11,6 +11,7 @@ import { AiCard } from "./ai-card"
 import { BufferCard, CalendarCard, ContactsCard, HubSpotCard, TokkoCard, VoiceCard, VoiceHoursCard, VoiceWebCard, XubioCard } from "./work-cards"
 import { ApiIntegrationCard } from "./api-integrations"
 import { OnboardingReturn } from "../onboarding/onboarding-return"
+import { HelpPanel, OpenCardFromQuery } from "@/components/help-panel"
 
 export const metadata = { title: "Integraciones" }
 
@@ -112,6 +113,8 @@ async function Integrations({
   return (
     <div className="flex flex-col gap-10">
       <OnboardingReturn workspaceId={workspaceId} />
+      <OpenCardFromQuery />
+      <HelpPanel workspaceId={workspaceId} page="integraciones" />
       <Category
         id="asistente-voz"
         title="Asistente de voz"

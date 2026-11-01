@@ -24,7 +24,7 @@ export async function CalendarCard({ workspaceId, isAdmin, notice }: { workspace
   const tz = ((integration?.config ?? {}) as { timezone?: string }).timezone
 
   return (
-    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="calendar" name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Google Calendar</h3>
@@ -85,7 +85,7 @@ export async function ContactsCard({ workspaceId, isAdmin, notice }: { workspace
     .maybeSingle()
 
   return (
-    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="contacts" name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Google Contacts</h3>
@@ -147,7 +147,7 @@ export async function HubSpotCard({ workspaceId, isAdmin }: { workspaceId: strin
   const config = (integration?.config ?? {}) as { portal_id?: number | null }
 
   return (
-    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="hubspot" name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">HubSpot</h3>
@@ -216,7 +216,7 @@ export async function TokkoCard({ workspaceId, isAdmin }: { workspaceId: string;
     .maybeSingle()
 
   return (
-    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="tokko" name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Tokko Broker</h3>
@@ -264,7 +264,7 @@ export async function XubioCard({ workspaceId, isAdmin }: { workspaceId: string;
     .maybeSingle()
 
   return (
-    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="xubio" name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Xubio</h3>
@@ -313,7 +313,7 @@ export async function BufferCard({ workspaceId, isAdmin }: { workspaceId: string
     .maybeSingle()
 
   return (
-    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="buffer" name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Buffer</h3>
@@ -385,7 +385,7 @@ function CalendarWarning() {
 export async function VoiceWebCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
   const { integration, calendar, widget, xaiReady } = await voiceData(workspaceId)
   return (
-    <details name="integrations" className="integration-accordion border border-ink bg-sheet" open={Boolean(isAdmin && !widget)}>
+    <details data-help="voice-web" name="integrations" className="integration-accordion border border-ink bg-sheet" open={Boolean(isAdmin && !widget)}>
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">En tu web</h3>
@@ -440,7 +440,7 @@ export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string;
   const connected = Boolean(integration)
 
   return (
-    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="voice-phone" name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Por teléfono (Grok Voice)</h3>

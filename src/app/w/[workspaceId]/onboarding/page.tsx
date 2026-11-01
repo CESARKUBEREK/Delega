@@ -4,6 +4,7 @@ import { getWorkspace } from "@/lib/workspace"
 import { DriveCard } from "../integraciones/google-card"
 import { ImapCard } from "../integraciones/inbox-cards"
 import { CalendarCard } from "../integraciones/work-cards"
+import { HelpPanel } from "@/components/help-panel"
 import { OnboardingClient } from "./onboarding-client"
 
 export const metadata = { title: "Empieza con MarchaSolo" }
@@ -27,16 +28,19 @@ async function Onboarding({ params, searchParams }: Pick<PageProps<"/w/[workspac
   const firstName = (profile?.display_name ?? "").trim().split(/\s+/)[0] ?? ""
 
   return (
-    <OnboardingClient
-      workspaceId={workspaceId}
-      workspaceName={workspace.name}
-      isAdmin={isAdmin}
-      userName={firstName}
-      cards={{
-        email: <ImapCard workspaceId={workspaceId} isAdmin={isAdmin} />,
-        spreadsheet: <DriveCard workspaceId={workspaceId} isAdmin={isAdmin} notice={googleNotice} />,
-        calendar: <CalendarCard workspaceId={workspaceId} isAdmin={isAdmin} notice={sp.calendar === "conectado"} />,
-      }}
-    />
+    <>
+      <HelpPanel workspaceId={workspaceId} page="onboarding" />
+      <OnboardingClient
+        workspaceId={workspaceId}
+        workspaceName={workspace.name}
+        isAdmin={isAdmin}
+        userName={firstName}
+        cards={{
+          email: <ImapCard workspaceId={workspaceId} isAdmin={isAdmin} />,
+          spreadsheet: <DriveCard workspaceId={workspaceId} isAdmin={isAdmin} notice={googleNotice} />,
+          calendar: <CalendarCard workspaceId={workspaceId} isAdmin={isAdmin} notice={sp.calendar === "conectado"} />,
+        }}
+      />
+    </>
   )
 }

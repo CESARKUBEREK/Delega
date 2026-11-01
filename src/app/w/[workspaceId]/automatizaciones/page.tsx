@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { ROUTINES, type Routine, type RoutineTier, routineOfFlow, TIER_INFO, VERTICALS, verticalOfFlow } from "@/lib/templates"
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime } from "../format"
+import { HelpPanel } from "@/components/help-panel"
 
 export const metadata = { title: "Automatizaciones" }
 
@@ -56,6 +57,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
 
   return (
     <div className="flex flex-col gap-8">
+      <HelpPanel workspaceId={workspaceId} page="automatizaciones" />
       <div className="flex flex-col gap-2 sm:flex-row">
         <Link
           href={`${base}/asistente`}
