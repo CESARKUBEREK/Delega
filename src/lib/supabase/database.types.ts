@@ -1057,6 +1057,30 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_trial_credits: {
+        Row: {
+          allowance_tokens: number
+          created_at: string
+          updated_at: string
+          used_tokens: number
+          workspace_id: string
+        }
+        Insert: {
+          allowance_tokens?: number
+          created_at?: string
+          updated_at?: string
+          used_tokens?: number
+          workspace_id: string
+        }
+        Update: {
+          allowance_tokens?: number
+          created_at?: string
+          updated_at?: string
+          used_tokens?: number
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       workspaces: {
         Row: {
           created_at: string
@@ -1215,6 +1239,10 @@ export type Database = {
       push_subscribe: {
         Args: { p_auth: string; p_endpoint: string; p_p256dh: string; p_user_agent: string }
         Returns: string
+      }
+      trial_consume: {
+        Args: { p_tokens: number; p_workspace_id: string }
+        Returns: number
       }
       workspace_complete_onboarding: {
         Args: { p_workspace_id: string }

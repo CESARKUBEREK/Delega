@@ -4,6 +4,7 @@ import { runOrigin } from "@/lib/labels"
 import { asPending, pendingKind, pendingTitle } from "@/lib/pending"
 import { createClient } from "@/lib/supabase/server"
 import { setupStatus } from "@/lib/setup"
+import { getTrialStatus } from "@/lib/trial"
 import { getWorkspace } from "@/lib/workspace"
 import { formatToday, formatWhen, greeting } from "./format"
 
@@ -64,6 +65,8 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
   const firstName = (profile?.display_name ?? "").trim().split(/\s+/)[0]
   const aiActive = (connections ?? []).some((c) => c.status === "active")
   const onboarded = Boolean(ws?.onboarding_completed_at)
+  const trial = aiActive ? null : await getTrialStatus(workspaceId)
+  const onTrial = trial !== null && !trial.exhausted
   const setup = await setupStatus(workspaceId)
   const pendingTotal = waitingCount ?? (waiting ?? []).length
 
@@ -98,7 +101,9 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
             <span className="font-semibold text-ink">{onboarded ? "Conecta una IA para que MarchaSolo pueda trabajar" : "Pon MarchaSolo en marcha"}</span>
             <span className="text-sm text-graphite">
               {onboarded
-                ? "Falta la clave de OpenAI, Anthropic, DeepSeek o Grok. Con ella, tu plan ya puede ejecutarse."
+                ? onTrial
+                  ? `Con los créditos de prueba (te queda el ${trial.pctLeft} %) puedes preparar planes en el chat. Para ejecutarlos, conecta tu clave de OpenAI, Anthropic, DeepSeek o Grok.`
+                  : "Falta la clave de OpenAI, Anthropic, DeepSeek o Grok. Con ella, tu plan ya puede ejecutarse."
                 : "Cuéntanos una tarea y te guiamos paso a paso. No hace falta conectarlo todo de golpe."}
             </span>
           </span>

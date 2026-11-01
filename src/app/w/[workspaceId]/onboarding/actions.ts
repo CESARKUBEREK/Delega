@@ -5,6 +5,7 @@ import { callEdgeFunction } from "@/lib/edge-functions"
 import { CONNECTION_LABEL, type OnboardingConnection } from "@/lib/onboarding"
 import { asPlan, type FlowPlan } from "@/lib/plan"
 import { setupStatus } from "@/lib/setup"
+import { getTrialStatus } from "@/lib/trial"
 import { createClient } from "@/lib/supabase/server"
 import { UUID_RE } from "@/lib/workspace"
 
@@ -104,9 +105,10 @@ export async function generateOnboardingPlan(input: {
     .eq("status", "active")
     .limit(1)
 
-  const hasAi = (ai ?? []).length > 0
+  const trial = (ai ?? []).length ? null : await getTrialStatus(input.workspaceId)
+  // IA propia o créditos de prueba: el plan lo hace el asistente real.
+  const hasAi = (ai ?? []).length > 0 || (trial !== null && !trial.exhausted)
 
-  // Si hay IA conectada, usamos el assistant real.
   if (hasAi) {
     const result = await callEdgeFunction<{
       conversation_id: string

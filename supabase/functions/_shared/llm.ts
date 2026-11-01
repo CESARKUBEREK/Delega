@@ -36,7 +36,8 @@ export function providerOf(model: string | null | undefined): Provider | null {
   return null
 }
 
-export type Ai = { provider: Provider; model: string; apiKey: string }
+// trial = clave de MarchaSolo (créditos de prueba), no la del espacio.
+export type Ai = { provider: Provider; model: string; apiKey: string; trial?: boolean }
 
 export class LlmError extends Error {
   constructor(public code: "no_connection" | "invalid_key" | "limit" | "timeout" | "provider" | "refusal" | "bad_output" | "incomplete", message: string) {
@@ -66,6 +67,38 @@ export async function resolveAi(admin: SupabaseClient, workspaceId: string, pref
 
 // Mensaje claro cuando no hay ninguna IA conectada.
 export const NO_AI_MESSAGE = "Conecta una IA (OpenAI, Anthropic, DeepSeek o Grok) en Integraciones."
+
+// ---------------------------------------------------------------------------
+// Créditos de prueba (decisión de Cesar, 1 nov): clave de MarchaSolo, DeepSeek
+// Flash, solo para el chat y el onboarding (función assistant). El resto de
+// funciones siguen usando resolveAi, que nunca devuelve la clave de prueba.
+// ---------------------------------------------------------------------------
+const TRIAL_PROVIDER: Provider = "deepseek"
+const TRIAL_MODEL = "deepseek-flash"
+
+export const TRIAL_EXHAUSTED_MESSAGE =
+  "Se han acabado los créditos de prueba de este espacio. Conecta tu propia IA (OpenAI, Anthropic, DeepSeek o Grok) en Integraciones para seguir."
+
+// La IA del espacio si la hay; si no, la de prueba mientras quede saldo.
+// Devuelve el motivo cuando no hay ninguna, para dar el mensaje adecuado.
+export async function resolveAiOrTrial(
+  admin: SupabaseClient,
+  workspaceId: string,
+  preferredModel?: string | null,
+): Promise<{ ai: Ai } | { ai: null; message: string }> {
+  const own = await resolveAi(admin, workspaceId, preferredModel)
+  if (own) return { ai: own }
+  const key = Deno.env.get("TRIAL_LLM_API_KEY")?.trim()
+  if (!key) return { ai: null, message: NO_AI_MESSAGE }
+  const { data } = await admin
+    .from("workspace_trial_credits")
+    .select("allowance_tokens, used_tokens")
+    .eq("workspace_id", workspaceId)
+    .maybeSingle()
+  if (!data) return { ai: null, message: NO_AI_MESSAGE }
+  if (Number(data.used_tokens) >= Number(data.allowance_tokens)) return { ai: null, message: TRIAL_EXHAUSTED_MESSAGE }
+  return { ai: { provider: TRIAL_PROVIDER, model: TRIAL_MODEL, apiKey: key, trial: true } }
+}
 
 // ---------------------------------------------------------------------------
 // Formato neutro
@@ -338,9 +371,15 @@ export async function recordUsage(
     conversation_id: extra.conversationId ?? null,
     created_by: extra.userId,
   })
+  if (ai.trial) {
+    const { error } = await admin.rpc("trial_consume", { p_workspace_id: extra.workspaceId, p_tokens: usage.input + usage.output })
+    if (error) console.error("trial_consume", error.code)
+  }
 }
 
 export async function markInvalidIfNeeded(admin: SupabaseClient, workspaceId: string, ai: Ai, e: unknown) {
+  // Un fallo de la clave de prueba no es culpa de la conexión del espacio.
+  if (ai.trial) return
   if (e instanceof LlmError && e.code === "invalid_key") {
     await admin.rpc("ai_connection_mark_invalid", { p_workspace_id: workspaceId, p_provider: ai.provider })
   }
