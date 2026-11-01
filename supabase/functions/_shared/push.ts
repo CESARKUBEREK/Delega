@@ -220,6 +220,7 @@ const ACTION_PHRASE: Record<string, string> = {
   crm_update: "quiere actualizar HubSpot",
   crm_note: "quiere añadir una nota en HubSpot",
   crm_task: "quiere crear una tarea en HubSpot",
+  contacts_create: "quiere añadir un contacto en Google",
 }
 
 // Avisa de que una ejecución espera aprobación: a quien la lanzó o, si no

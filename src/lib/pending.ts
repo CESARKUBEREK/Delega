@@ -152,6 +152,20 @@ export function asPending(value: Json | null): Pending | null {
         textCaption: "",
       }
     }
+    case "contacts_create":
+      return {
+        tool: "generic",
+        description: "Añadir este contacto a tus contactos de Google.",
+        verb: "Aprobar y añadir",
+        fields: [
+          { label: "Nombre", value: t(v.name) },
+          ...(t(v.email) ? [{ label: "Correo", value: t(v.email) }] : []),
+          ...(t(v.phone) ? [{ label: "Teléfono", value: t(v.phone) }] : []),
+          ...(t(v.company) ? [{ label: "Empresa", value: t(v.company) }] : []),
+        ],
+        text: t(v.notes) || null,
+        textCaption: "Nota",
+      }
     case "crm_note":
       return {
         tool: "generic",

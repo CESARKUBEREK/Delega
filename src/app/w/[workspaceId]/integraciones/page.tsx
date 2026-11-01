@@ -7,7 +7,7 @@ import { getWorkspace } from "@/lib/workspace"
 import { DOC_MIMES, DriveCard, EXCEL_MIMES, FilesCard, SHEET_MIMES } from "./google-card"
 import { ImapCard, TelegramCard, WhatsAppCard } from "./inbox-cards"
 import { AiCard } from "./ai-card"
-import { BufferCard, CalendarCard, HubSpotCard, TokkoCard, VoiceCard, XubioCard } from "./work-cards"
+import { BufferCard, CalendarCard, ContactsCard, HubSpotCard, TokkoCard, VoiceCard, XubioCard } from "./work-cards"
 import { ApiIntegrationCard } from "./api-integrations"
 
 export const metadata = { title: "Integraciones" }
@@ -23,7 +23,7 @@ const CATEGORIES = [
   { id: "bases-de-datos", label: "Bases de datos" },
   { id: "apis", label: "APIs a medida" },
   { id: "calendar", label: "Calendar" },
-  { id: "crm", label: "CRM" },
+  { id: "crm", label: "CRM y contactos" },
   { id: "inmobiliaria", label: "Inmobiliaria" },
   { id: "contabilidad", label: "Contabilidad" },
 ]
@@ -99,6 +99,7 @@ async function Integrations({
   const sp = await searchParams
   const notice = sp.google === "conectado" ? "connected" : typeof sp.google_error === "string" ? sp.google_error : null
   const calendarNotice = sp.calendar === "conectado"
+  const contactsNotice = sp.contacts === "conectado"
   const { isAdmin } = await getWorkspace(workspaceId, `/w/${workspaceId}/integraciones`)
   const supabase = await createClient()
   const { data: apiConnections } = await supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["supabase", "custom_1", "custom_2"])
@@ -110,7 +111,6 @@ async function Integrations({
         {AI_PROVIDERS.map((p) => (
           <AiCard key={p.id} workspaceId={workspaceId} isAdmin={isAdmin} provider={p.id} />
         ))}
-        <ComingSoon title="Kimi" description="Modelos Kimi de Moonshot AI con tu propia clave de API." />
       </Category>
 
       <Category id="drives" title="Drives" description="Carpetas y archivos que MarchaSolo puede leer y donde puede guardar.">
@@ -178,8 +178,9 @@ async function Integrations({
         <CalendarCard workspaceId={workspaceId} isAdmin={isAdmin} notice={calendarNotice} />
       </Category>
 
-      <Category id="crm" title="CRM" description="Contactos, empresas y negocios de tu CRM.">
+      <Category id="crm" title="CRM y contactos" description="Contactos, empresas y negocios de tu CRM o, si no usas uno, tus contactos de Google.">
         <HubSpotCard workspaceId={workspaceId} isAdmin={isAdmin} />
+        <ContactsCard workspaceId={workspaceId} isAdmin={isAdmin} notice={contactsNotice} />
       </Category>
 
       <Category id="inmobiliaria" title="Inmobiliaria" description="Tu cartera de propiedades: buscar fichas y registrar consultas.">

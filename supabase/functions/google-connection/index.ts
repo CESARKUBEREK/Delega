@@ -2,6 +2,8 @@
 //   * product "drive" (provider "google"): permiso drive.file, solo las planillas
 //     y documentos que el usuario elige con el selector.
 //   * product "calendar" (provider "calendar"): leer la agenda y crear eventos.
+//   * product "contacts" (provider "contacts"): Google Contacts, buscar y crear
+//     contactos (para quien no usa un CRM).
 // Acciones: start, callback, picker_token, add_files, remove_file, disconnect.
 // Solo owners y admins. El refresh token se guarda cifrado en Vault.
 import { authenticate, fail, isUuid, json, membershipRole, type AuthContext } from "../_shared/core.ts"
@@ -24,10 +26,11 @@ import {
   SPREADSHEET_MIME,
 } from "../_shared/google.ts"
 import { CALENDAR_REQUIRED, CALENDAR_SCOPES, primaryTimezone } from "../_shared/calendar.ts"
+import { CONTACTS_REQUIRED, CONTACTS_SCOPES } from "../_shared/contacts.ts"
 
 const SLIDES = "application/vnd.google-apps.presentation"
 
-type Provider = "google" | "calendar"
+type Provider = "google" | "calendar" | "contacts"
 const PRODUCTS: Record<Provider, { scopes: string[]; required: string[]; denied: string; deniedMessage: string }> = {
   google: {
     scopes: GOOGLE_SCOPES,
@@ -41,9 +44,15 @@ const PRODUCTS: Record<Provider, { scopes: string[]; required: string[]; denied:
     denied: "calendar_scope_denied",
     deniedMessage: "Hace falta permitir ver y editar los eventos del calendario. Vuelve a conectar y marca esa casilla.",
   },
+  contacts: {
+    scopes: CONTACTS_SCOPES,
+    required: CONTACTS_REQUIRED,
+    denied: "contacts_scope_denied",
+    deniedMessage: "Hace falta permitir ver y crear tus contactos. Vuelve a conectar y marca esa casilla.",
+  },
 }
 function productOf(v: unknown): Provider {
-  return v === "calendar" ? "calendar" : "google"
+  return v === "calendar" ? "calendar" : v === "contacts" ? "contacts" : "google"
 }
 
 const MAX_FILES_PER_WORKSPACE = 100
@@ -151,6 +160,9 @@ Deno.serve(async (req) => {
       p_actor: ctx.userId,
     })
     if (error) return fail(500, "save_failed", "No se pudo guardar la conexión.")
+    if (provider === "contacts") {
+      await ctx.admin.rpc("integration_set_config", { p_workspace_id: ws, p_provider: "contacts", p_config: { email } })
+    }
     if (provider === "calendar") {
       const tz = tokens.access_token ? await primaryTimezone(tokens.access_token) : null
       await ctx.admin.rpc("integration_set_config", {

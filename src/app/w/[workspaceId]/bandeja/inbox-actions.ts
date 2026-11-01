@@ -140,6 +140,8 @@ export type SenderProfile = {
     deals: { name: string; stage: string | null; amount: string | null; url: string | null }[]
   }
   hubspotConnected: boolean
+  google: null | { name: string | null; phones: string[]; company: string | null; notes: string | null }
+  googleConnected: boolean
   xubio: null | { name: string }
   xubioConnected: boolean
 }

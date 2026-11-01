@@ -5,11 +5,11 @@ import type { FlowPlan, PlanStep } from "@/lib/plan"
 // elige después los archivos, los filtros y la activa. Todo lo que escribe o
 // envía espera aprobación, como cualquier otro flujo.
 
-export type TemplateNeed = "ai" | "imap" | "telegram" | "whatsapp" | "google" | "calendar" | "hubspot" | "tokko" | "xubio" | "buffer" | "voice"
+export type TemplateNeed = "ai" | "imap" | "telegram" | "whatsapp" | "google" | "calendar" | "contacts" | "hubspot" | "tokko" | "xubio" | "buffer" | "voice"
 
 export type FlowTemplate = {
   id: string
-  category: "Correo" | "WhatsApp" | "Telegram" | "CRM" | "Agenda" | "Informes" | "Avisos" | "Inmobiliaria" | "Contabilidad" | "Redes" | "Tareas"
+  category: "Correo" | "WhatsApp" | "Telegram" | "CRM" | "Agenda" | "Informes" | "Avisos" | "Inmobiliaria" | "Clínica" | "Contabilidad" | "Redes" | "Tareas"
   plan: FlowPlan
   needs: TemplateNeed[]
   // Ajustes iniciales (filtros del correo).
@@ -28,6 +28,7 @@ export const NEED_LABEL: Record<TemplateNeed, string> = {
   whatsapp: "WhatsApp",
   google: "Google Drive",
   calendar: "Google Calendar",
+  contacts: "Google Contacts",
   hubspot: "HubSpot",
   tokko: "Tokko Broker",
   xubio: "Xubio",
@@ -552,6 +553,132 @@ export const TEMPLATES: FlowTemplate[] = [
       open_questions: [],
     },
   },
+  // -------------------------------------------------------------------------
+  // Plantillas de los sectores (inmobiliarias, clínicas y profesionales).
+  // -------------------------------------------------------------------------
+  {
+    id: "seguimiento-visitas",
+    category: "Inmobiliaria",
+    needs: ["ai", "imap", "calendar"],
+    settings: { schedule: { frequency: "weekdays", time: "19:00", weekday: 1, day_of_month: 1 } },
+    setup: "Cada tarde busca en tu agenda las visitas del día (eventos con «visita» en el título). Cada correo de seguimiento espera tu aprobación.",
+    plan: {
+      version: 1,
+      name: "Seguimiento de visitas",
+      summary: "Cada tarde, a quien visitó una propiedad hoy le escribe para saber qué le pareció y ofrecerle otras opciones o una segunda visita.",
+      trigger: { type: "schedule", description: "Días laborables a las 19:00" },
+      connections: [
+        { kind: "calendar", purpose: "Visitas de hoy" },
+        { kind: "email", purpose: "Conversación con cada interesado" },
+        { kind: "properties", purpose: "Propiedades parecidas, si Tokko está conectado" },
+      ],
+      steps: steps([
+        { kind: "read", title: "Visitas de hoy", description: "Eventos de hoy con «visita» en el título, con la propiedad y el interesado.", connection: "calendar", requires_approval: false },
+        { kind: "read", title: "Conversación del interesado", description: "Buscar en la bandeja la conversación con cada interesado. Si no hay, dejarlo en el aviso final.", connection: "email", requires_approval: false },
+        { kind: "read", title: "Propiedades parecidas", description: "Si Tokko está conectado, hasta 3 propiedades disponibles parecidas a la visitada (zona, precio, ambientes).", connection: "properties", requires_approval: false },
+        { kind: "notify", title: "Escribir a cada interesado", description: "En su mismo hilo: agradecer la visita, preguntar qué le pareció y ofrecer las alternativas o una segunda visita. Sin inventar datos.", connection: "email", requires_approval: true },
+        { kind: "notify", title: "Avisarte", description: "Lista de visitas de hoy y a quién no se pudo escribir. Si no hubo visitas, no avisar.", connection: "none", requires_approval: false },
+      ]),
+      open_questions: [],
+    },
+  },
+  {
+    id: "propiedades-nuevas",
+    category: "Inmobiliaria",
+    needs: ["ai", "tokko", "imap"],
+    settings: { schedule: { frequency: "weekly", time: "10:00", weekday: 1, day_of_month: 1 } },
+    setup: "Cada lunes cruza las propiedades nuevas de Tokko con lo que pidieron tus interesados en la bandeja (últimos 60 días). Cada correo espera tu aprobación.",
+    plan: {
+      version: 1,
+      name: "Propiedades nuevas para tus interesados",
+      summary: "Cada lunes busca en Tokko las propiedades que entraron en la semana y avisa a los interesados cuya búsqueda encaja.",
+      trigger: { type: "schedule", description: "Cada lunes a las 10:00" },
+      connections: [
+        { kind: "properties", purpose: "Propiedades nuevas" },
+        { kind: "email", purpose: "Qué busca cada interesado y escribirle" },
+      ],
+      steps: steps([
+        { kind: "read", title: "Propiedades nuevas", description: "Propiedades disponibles dadas de alta en los últimos 7 días, con operación, zona, precio y ambientes.", connection: "properties", requires_approval: false },
+        { kind: "read", title: "Qué buscan tus interesados", description: "Conversaciones de la bandeja de los últimos 60 días con consultas de compra o alquiler: operación, zona, presupuesto y ambientes.", connection: "email", requires_approval: false },
+        { kind: "compare", title: "Cruzar", description: "Para cada interesado, las propiedades nuevas que encajan con lo que pidió (como mucho 3 por persona y 10 personas).", connection: "none", requires_approval: false },
+        { kind: "notify", title: "Escribir a cada interesado", description: "En su mismo hilo, con las propiedades que encajan (precio, zona, ambientes y enlace) y ofreciendo una visita.", connection: "email", requires_approval: true },
+        { kind: "notify", title: "Avisarte", description: "Resumen: propiedades nuevas y a quién se le ofrecieron.", connection: "none", requires_approval: false },
+      ]),
+      open_questions: [],
+    },
+  },
+  {
+    id: "recordatorio-citas",
+    category: "Clínica",
+    needs: ["ai", "imap", "calendar"],
+    settings: { schedule: { frequency: "weekdays", time: "18:00", weekday: 1, day_of_month: 1 } },
+    setup:
+      "Cada tarde recuerda las citas de mañana a los pacientes con correo en la cita (como invitados) o con una conversación en la bandeja. Sin datos clínicos. Cada recordatorio espera tu aprobación; puedes aprobarlos todos desde Aprobaciones.",
+    plan: {
+      version: 1,
+      name: "Recordatorio de citas",
+      summary: "Cada tarde envía a cada paciente un recordatorio de su cita de mañana, con la hora, la dirección y cómo cambiarla. Menos ausencias, sin llamar uno a uno.",
+      trigger: { type: "schedule", description: "Días laborables a las 18:00" },
+      connections: [
+        { kind: "calendar", purpose: "Citas de mañana" },
+        { kind: "email", purpose: "Recordatorio a cada paciente" },
+      ],
+      steps: steps([
+        { kind: "read", title: "Citas de mañana", description: "Eventos del día siguiente con su hora, lugar y el paciente (invitado o nombre en el título).", connection: "calendar", requires_approval: false },
+        { kind: "read", title: "Correo de cada paciente", description: "El correo del invitado o, si no lo hay, su conversación en la bandeja. Sin correo, dejarlo en el aviso final.", connection: "email", requires_approval: false },
+        { kind: "notify", title: "Recordatorio", description: "Breve y cordial: día, hora, dirección y que responda a este correo si necesita cambiarla. Nunca incluir el motivo de la consulta ni datos de salud.", connection: "email", requires_approval: true },
+        { kind: "notify", title: "Avisarte", description: "Cuántas citas hay mañana y a quién no se pudo avisar. Si no hay citas, no avisar.", connection: "none", requires_approval: false },
+      ]),
+      open_questions: [],
+    },
+  },
+  {
+    id: "seguimiento-consulta",
+    category: "Clínica",
+    needs: ["ai", "imap", "calendar"],
+    settings: { schedule: { frequency: "weekdays", time: "19:30", weekday: 1, day_of_month: 1 } },
+    setup: "Puedes elegir un documento con las indicaciones generales que das después de la consulta y el enlace a tu encuesta o a tus reseñas. Sin datos clínicos.",
+    plan: {
+      version: 1,
+      name: "Seguimiento tras la consulta",
+      summary: "Cada tarde escribe a los pacientes atendidos hoy: gracias por venir, indicaciones generales y, si quieres, el enlace para valorar la atención.",
+      trigger: { type: "schedule", description: "Días laborables a las 19:30" },
+      connections: [
+        { kind: "calendar", purpose: "Citas de hoy" },
+        { kind: "documents", purpose: "Indicaciones y enlace de valoración" },
+        { kind: "email", purpose: "Mensaje a cada paciente" },
+      ],
+      steps: steps([
+        { kind: "read", title: "Citas de hoy", description: "Eventos de hoy con el paciente (invitado o nombre en el título).", connection: "calendar", requires_approval: false },
+        { kind: "read", title: "Tus indicaciones", description: "Si elegiste un documento, las indicaciones generales y el enlace de valoración.", connection: "documents", requires_approval: false },
+        { kind: "notify", title: "Mensaje de seguimiento", description: "Agradecer la visita, recordar las indicaciones generales y, si hay enlace, pedir la valoración. Sin diagnósticos, tratamientos ni datos de salud.", connection: "email", requires_approval: true },
+      ]),
+      open_questions: [],
+    },
+  },
+  {
+    id: "alta-cliente",
+    category: "CRM",
+    needs: ["ai", "imap", "contacts"],
+    settings: { email_filter: { from: [], subject: [], words: [], skip_automatic: true } },
+    setup: "Para quien no usa un CRM: da de alta en Google Contacts a quien te escribe por primera vez con una consulta de trabajo. Añadir el contacto espera tu aprobación.",
+    plan: {
+      version: 1,
+      name: "Alta de cliente nuevo",
+      summary: "Cuando te escribe alguien nuevo con una consulta de trabajo, lo guarda en tus contactos de Google con sus datos de la firma y una nota de lo que pide.",
+      trigger: { type: "email_message", description: "Al llegar un correo de alguien nuevo" },
+      connections: [
+        { kind: "email", purpose: "Leer el correo" },
+        { kind: "contacts", purpose: "Buscar y crear el contacto" },
+      ],
+      steps: steps([
+        { kind: "read", title: "Leer el correo", description: "Si no es una consulta de trabajo (publicidad, un aviso, algo personal), terminar sin hacer nada.", connection: "email", requires_approval: false },
+        { kind: "read", title: "¿Ya está en tus contactos?", description: "Buscar al remitente por su correo en Google Contacts. Si ya está, terminar.", connection: "contacts", requires_approval: false },
+        { kind: "write", title: "Crear el contacto", description: "Nombre, correo, teléfono y empresa si aparecen en la firma, y una nota con lo que pide y la fecha.", connection: "contacts", requires_approval: true },
+      ]),
+      open_questions: [],
+    },
+  },
 ]
 
 export function findTemplate(id: string): FlowTemplate | undefined {
@@ -721,8 +848,62 @@ export const ROUTINES: Routine[] = [
   },
 ]
 
-// Plantillas de un sector concreto, fuera de las 10 rutinas.
-export const SECTOR_TEMPLATES: { title: string; templates: string[] }[] = [{ title: "Inmobiliarias (Tokko Broker)", templates: ["consultas-propiedades"] }]
+// ---------------------------------------------------------------------------
+// Verticales: paquetes por sector. Cada una recomienda rutinas de las 10 y
+// añade sus plantillas propias (que no están en ninguna rutina).
+// ---------------------------------------------------------------------------
+export type VerticalId = "inmobiliarias" | "clinicas" | "profesionales"
+
+export type Vertical = {
+  id: VerticalId
+  title: string
+  who: string
+  pitch: string
+  needs: TemplateNeed[]
+  routines: string[]
+  templates: string[]
+  note?: string
+}
+
+export const VERTICALS: Vertical[] = [
+  {
+    id: "inmobiliarias",
+    title: "Inmobiliarias",
+    who: "Inmobiliarias y agentes",
+    pitch: "Cada interesado recibe al momento las propiedades que encajan, las visitas tienen seguimiento y ninguna consulta se queda sin respuesta.",
+    needs: ["imap", "tokko", "calendar", "contacts"],
+    routines: ["bandeja", "agenda", "seguimiento", "recepcionista"],
+    templates: ["consultas-propiedades", "seguimiento-visitas", "propiedades-nuevas"],
+  },
+  {
+    id: "clinicas",
+    title: "Clínicas",
+    who: "Clínicas, consultas y centros de salud, fisioterapia o estética",
+    pitch: "Citas sin idas y vueltas, recordatorios que reducen las ausencias y llamadas atendidas aunque estés en consulta.",
+    needs: ["imap", "calendar", "contacts", "voice"],
+    routines: ["agenda", "recepcionista", "bandeja", "secretaria"],
+    templates: ["recordatorio-citas", "seguimiento-consulta"],
+    note: "MarchaSolo gestiona la agenda y la comunicación, no la historia clínica: los mensajes no incluyen motivos de consulta ni datos de salud.",
+  },
+  {
+    id: "profesionales",
+    title: "Profesionales",
+    who: "Abogados, arquitectos, ingenieros, asesores y despachos",
+    pitch: "Presupuestos en minutos, plazos y vencimientos bajo control, reuniones preparadas y cada cliente nuevo dado de alta.",
+    needs: ["imap", "google", "calendar", "contacts"],
+    routines: ["presupuestos", "facturas", "tareas", "informes"],
+    templates: ["alta-cliente"],
+  },
+]
+
+// Compatibilidad: plantillas de sector, fuera de las 10 rutinas.
+export const SECTOR_TEMPLATES: { title: string; templates: string[] }[] = VERTICALS.map((v) => ({ title: v.title, templates: v.templates }))
+
+// Vertical de una automatización creada con una plantilla de sector.
+export function verticalOfFlow(flow: { name: string; settings?: unknown }): Vertical | undefined {
+  const id = templateIdOfFlow(flow)
+  return id ? VERTICALS.find((v) => v.templates.includes(id)) : undefined
+}
 
 // Plantillas que se fusionaron con otra (31 oct 2026). Las automatizaciones ya
 // creadas con ellas siguen funcionando; aquí solo se usan para agruparlas en

@@ -2,7 +2,7 @@ import Link from "next/link"
 import { Suspense } from "react"
 import { FLOW_STATUS_LABEL } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
-import { ROUTINES, type Routine, type RoutineTier, routineOfFlow, TIER_INFO } from "@/lib/templates"
+import { ROUTINES, type Routine, type RoutineTier, routineOfFlow, TIER_INFO, VERTICALS, verticalOfFlow } from "@/lib/templates"
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime } from "../format"
 
@@ -43,10 +43,13 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
   // Cada automatización va con su rutina; las que no salen de una plantilla,
   // en «Otras».
   const byRoutine = new Map<string, FlowRow[]>()
+  const byVertical = new Map<string, FlowRow[]>()
   const others: FlowRow[] = []
   for (const f of flows) {
     const r = routineOfFlow(f)
+    const v = r ? undefined : verticalOfFlow(f)
     if (r) byRoutine.set(r.id, [...(byRoutine.get(r.id) ?? []), f])
+    else if (v) byVertical.set(v.id, [...(byVertical.get(v.id) ?? []), f])
     else others.push(f)
   }
   const tiers: RoutineTier[] = ["personal", "negocio", "avanzado"]
@@ -93,13 +96,40 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
         </section>
       ))}
 
+      {VERTICALS.some((v) => byVertical.has(v.id)) ? (
+        <section aria-labelledby="sectores" className="flex flex-col gap-3">
+          <h2 id="sectores" className="rotulo text-xl">
+            De tu sector
+          </h2>
+          {VERTICALS.filter((v) => byVertical.has(v.id)).map((v) => (
+            <article key={v.id} className="routine-card">
+              <header className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="text-lg font-bold text-ink">{v.title}</h3>
+                <Link href={`${base}/automatizaciones/plantillas#sector-${v.id}`} className="text-sm font-semibold text-link underline underline-offset-4">
+                  Más plantillas del sector
+                </Link>
+              </header>
+              <FlowRows flows={byVertical.get(v.id) ?? []} base={base} />
+            </article>
+          ))}
+        </section>
+      ) : (
+        <p className="text-sm text-graphite">
+          ¿Inmobiliaria, clínica o despacho profesional?{" "}
+          <Link href={`${base}/automatizaciones/plantillas#por-sector`} className="font-semibold text-link underline underline-offset-4">
+            Mira las plantillas de tu sector
+          </Link>
+          .
+        </p>
+      )}
+
       {others.length ? (
         <section aria-labelledby="otras" className="flex flex-col gap-3">
           <div>
             <h2 id="otras" className="rotulo text-xl">
               Otras automatizaciones
             </h2>
-            <p className="text-sm text-graphite">Las que no pertenecen a ninguna rutina: creadas con el asistente, desde cero o con una plantilla de sector.</p>
+            <p className="text-sm text-graphite">Las que no pertenecen a ninguna rutina ni sector: creadas con el asistente o desde cero.</p>
           </div>
           <FlowRows flows={others} base={base} />
         </section>

@@ -30,7 +30,7 @@ Reglas:
   documentos de Google Docs (documents: leer, crear y añadir texto), Google Drive (drive: leer PDF, Word, Excel y
   otros archivos o carpetas elegidos, y guardar archivos nuevos en esas carpetas), Google Calendar (calendar: consultar
   la agenda, crear y cambiar eventos), HubSpot (crm: buscar y leer contactos, empresas y negocios; crearlos,
-  actualizarlos, cambiar la etapa de un negocio, añadir notas y tareas), correo (email: el correo de su dominio, de su
+  actualizarlos, cambiar la etapa de un negocio, añadir notas y tareas), Google Contacts (contacts: para quien no usa un CRM; buscar contactos y crear contactos nuevos), correo (email: el correo de su dominio, de su
   hosting o Gmail, conectado por IMAP/SMTP; enviar correos a contactos autorizados; la bandeja clasifica los recibidos), Telegram (telegram: responder por el bot a quien
   escribió), WhatsApp (whatsapp: leer los mensajes de clientes y responder a quien escribió), Tokko Broker (properties: buscar propiedades y emprendimientos de la inmobiliaria y registrar consultas
   de interesados en su CRM) y Xubio (accounting: consultar clientes, proveedores, productos y facturas de venta y de
@@ -207,7 +207,7 @@ UN paso de una automatización y tú lo conviertes en un paso del plan.
 - connection: la aplicación que usa ese paso, o "none". spreadsheet = planillas (Google Sheets o Excel en Drive),
   documents = Google Docs, drive = archivos o carpetas de Drive, email = correo, telegram, whatsapp = responder por
   WhatsApp a quien escribió, calendar = Google Calendar,
-  crm = HubSpot, properties = Tokko Broker, accounting = Xubio (solo lectura), social = Buffer (publicar en redes
+  crm = HubSpot, contacts = Google Contacts (si el usuario no tiene HubSpot, usa contacts para guardar o buscar clientes), properties = Tokko Broker, accounting = Xubio (solo lectura), social = Buffer (publicar en redes
   sociales; es un paso write).
 - title: corto, en imperativo («Leer la planilla de cobros»). description: qué hacer exactamente, con los datos que
   dio el usuario (nombres, columnas, plazos, condiciones), en una o dos frases. En español.

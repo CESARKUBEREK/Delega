@@ -2,6 +2,7 @@
 // esa persona en HubSpot y en Xubio. Solo lecturas y sin IA. La bandeja es de
 // owners y admins, así que Xubio también se muestra.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
+import { contactsToken, findContactByEmail } from "./contacts.ts"
 import { dealPipelines, getRecord, hubspotToken, recordLabel, search } from "./hubspot.ts"
 import { xubioCredentials, xubioList, xubioToken } from "./xubio.ts"
 
@@ -12,6 +13,8 @@ export type SenderProfile = {
     deals: { name: string; stage: string | null; amount: string | null; url: string | null }[]
   }
   hubspotConnected: boolean
+  google: null | { name: string | null; phones: string[]; company: string | null; notes: string | null }
+  googleConnected: boolean
   xubio: null | { name: string }
   xubioConnected: boolean
 }
@@ -19,12 +22,13 @@ export type SenderProfile = {
 const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/
 
 export async function senderProfile(admin: SupabaseClient, workspaceId: string, address: string | null, role: string | null): Promise<SenderProfile> {
-  const out: SenderProfile = { hubspot: null, hubspotConnected: false, xubio: null, xubioConnected: false }
+  const out: SenderProfile = { hubspot: null, hubspotConnected: false, google: null, googleConnected: false, xubio: null, xubioConnected: false }
   const email = (address ?? "").trim().toLowerCase()
   if (!EMAIL_RE.test(email)) return out
 
-  const [hs, xb] = await Promise.all([
+  const [hs, gc, xb] = await Promise.all([
     hubspotToken(admin, workspaceId).catch(() => null),
+    contactsToken(admin, workspaceId).catch(() => null),
     role === "owner" || role === "admin" ? xubioCredentials(admin, workspaceId).catch(() => null) : Promise.resolve(null),
   ])
 
@@ -53,6 +57,12 @@ export async function senderProfile(admin: SupabaseClient, workspaceId: string, 
     } catch {
       // HubSpot no respondió: la ficha sale sin él.
     }
+  }
+
+  if (gc) {
+    out.googleConnected = true
+    const c = await findContactByEmail(gc.token, email).catch(() => null)
+    if (c) out.google = { name: c.name, phones: c.phones, company: c.company, notes: c.notes }
   }
 
   if (xb) {
