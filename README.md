@@ -166,6 +166,16 @@ supabase functions deploy hubspot-connection google-connection run-flow assistan
 supabase functions deploy telegram-webhook --no-verify-jwt
 ```
 
+## Asistente de voz en la web del cliente (1 nov)
+
+Un botón que el negocio pega en su web (`public/widget-voz.js`, con `data-id="msw_…"`) abre `/hablar/<id>` en un panel. La página pide el micrófono, llama a `voice-web` (Edge Function pública, sin JWT) y habla con el Voice Agent API de xAI por WebSocket (`wss://api.x.ai/v1/realtime`, PCM 16 bits a 24 kHz).
+
+- **`voice-web`:** `start` comprueba que el asistente está activo y los límites (conversaciones en 24 h y 3 por visitante y hora), y devuelve un token temporal de xAI (5 min, con la clave Grok/xAI del espacio, que nunca sale del servidor), las instrucciones y las herramientas; `tool` ejecuta huecos, reservar cita, recado y documentos con las mismas reglas que el teléfono (`_shared/voice.ts`, `source: "web"`); `end` cierra la sesión.
+- **Datos:** `voice_web_widgets` (identificador público, activo, texto del botón, conversaciones al día, minutos por conversación, dominios permitidos) y `voice_web_sessions`. Migración `20261101090000_voice_web.sql`. Las citas y recados llegan a la bandeja con el canal `web`.
+- **Ajustes:** Integraciones → Grok Voice → «4. Asistente de voz en tu web» (crear, activar, límites, código para pegar, probar, cambiar el código). Necesita Grok (xAI) conectado en LLMs.
+- **Cabeceras:** `/hablar/*` se puede insertar en otras webs (`frame-ancestors *`) y conecta con `wss://api.x.ai`; el resto del sitio sigue con `frame-ancestors 'none'`.
+- **Límites conocidos:** el tope de minutos lo aplica el navegador (xAI no permite cortar la sesión desde el servidor); el de conversaciones al día, el servidor. Antes de abrirlo a mucho público conviene un CAPTCHA (Turnstile).
+
 ## Google Contacts (31 oct)
 
 Para quien no usa un CRM. Conexión OAuth propia (`google-connection`, producto y provider `contacts`, migración `20261031220000_google_contacts.sql`) con el permiso `https://www.googleapis.com/auth/contacts` (People API; **hay que habilitar la People API en el proyecto de Google Cloud y añadir el permiso a la pantalla de consentimiento**). Cliente en `_shared/contacts.ts`.

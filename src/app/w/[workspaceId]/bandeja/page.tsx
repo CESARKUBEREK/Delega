@@ -415,7 +415,7 @@ async function AllList({
   const supabase = await createClient()
   const one = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "")
   const cat = one("cat")
-  const ch = ["email", "telegram", "whatsapp", "phone"].includes(one("ch")) ? one("ch") : ""
+  const ch = ["email", "telegram", "whatsapp", "phone", "web"].includes(one("ch")) ? one("ch") : ""
   const urg = one("urg")
   const reply = one("reply") === "1"
   const archived = one("arch") === "1"
@@ -505,7 +505,7 @@ async function AllList({
       </form>
 
       <nav aria-label="Filtros de la bandeja" className="inbox-filters">
-        {(["email", "whatsapp", "telegram", "phone"] as const).map((c) => (
+        {(["email", "whatsapp", "telegram", "phone", "web"] as const).map((c) => (
           <Link key={c} href={filterHref({ ch: ch === c ? "" : c })} className={chip(ch === c)} aria-current={ch === c ? "page" : undefined}>
             {CHANNEL_LABEL[c]}
           </Link>

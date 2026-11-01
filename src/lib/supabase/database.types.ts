@@ -988,6 +988,75 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_web_sessions: {
+        Row: {
+          ended_at: string | null
+          id: string
+          origin: string | null
+          secret_hash: string
+          started_at: string
+          tool_calls: number
+          visitor_hash: string
+          workspace_id: string
+        }
+        Insert: {
+          ended_at?: string | null
+          id?: string
+          origin?: string | null
+          secret_hash: string
+          started_at?: string
+          tool_calls?: number
+          visitor_hash: string
+          workspace_id: string
+        }
+        Update: {
+          ended_at?: string | null
+          id?: string
+          origin?: string | null
+          secret_hash?: string
+          started_at?: string
+          tool_calls?: number
+          visitor_hash?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      voice_web_widgets: {
+        Row: {
+          allowed_domains: string[]
+          created_at: string
+          enabled: boolean
+          minutes_per_session: number
+          public_id: string
+          sessions_per_day: number
+          title: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          allowed_domains?: string[]
+          created_at?: string
+          enabled?: boolean
+          minutes_per_session?: number
+          public_id: string
+          sessions_per_day?: number
+          title?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          allowed_domains?: string[]
+          created_at?: string
+          enabled?: boolean
+          minutes_per_session?: number
+          public_id?: string
+          sessions_per_day?: number
+          title?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       workspaces: {
         Row: {
           created_at: string

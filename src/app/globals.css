@@ -1050,3 +1050,11 @@ body {
   .routine-facts { grid-template-columns:minmax(0, 1fr); }
   .routine-card { padding:16px; }
 }
+
+/* Asistente de voz en la web (/hablar/<id>). */
+.voice-web { background:#f3f6fa; }
+.voice-orb { width:120px; height:120px; border-radius:50%; background:#0b1f3b; box-shadow:0 0 0 0 rgb(0 194 168 / 40%); }
+.voice-orb.is-listening { background:#00c2a8; animation:voice-pulse 1.8s ease-out infinite; }
+.voice-orb.is-speaking { background:#007a6c; animation:voice-pulse .9s ease-out infinite; }
+@keyframes voice-pulse { 0% { box-shadow:0 0 0 0 rgb(0 194 168 / 45%); } 100% { box-shadow:0 0 0 28px rgb(0 194 168 / 0%); } }
+@media (prefers-reduced-motion:reduce) { .voice-orb.is-listening, .voice-orb.is-speaking { animation:none; } }

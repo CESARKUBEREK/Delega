@@ -4,6 +4,9 @@
 //               la guarda en Vault. Si ya había una, la sustituye.
 //   settings    guarda el horario de citas, la duración y los documentos.
 //   disconnect  borra la conexión: el agente de xAI deja de tener acceso.
+//   web_create  crea el asistente de voz para la web (desactivado) con su
+//               identificador público; si ya existe, lo devuelve.
+//   web_rotate  cambia el identificador público (el código anterior deja de funcionar).
 import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
 import { randomToken } from "../_shared/google.ts"
 import { readVoiceConfig, VOICE_PROVIDER } from "../_shared/voice.ts"
@@ -50,6 +53,19 @@ Deno.serve(async (req) => {
     const { error } = await admin.rpc("integration_set_config", { p_workspace_id: workspaceId, p_provider: VOICE_PROVIDER, p_config: config })
     if (error) return fail(500, "save_failed", "No se pudieron guardar los ajustes.")
     return json({ ok: true, config })
+  }
+
+  if (body?.action === "web_create" || body?.action === "web_rotate") {
+    const { data: integ } = await admin.from("integrations").select("id").eq("workspace_id", workspaceId).eq("provider", VOICE_PROVIDER).maybeSingle()
+    if (!integ) return fail(409, "not_connected", "Activa primero la atención por voz.")
+    const { data: existing } = await admin.from("voice_web_widgets").select("public_id").eq("workspace_id", workspaceId).maybeSingle()
+    if (existing && body.action === "web_create") return json({ ok: true, public_id: existing.public_id })
+    const publicId = `msw_${randomToken(24)}`
+    const { error } = existing
+      ? await admin.from("voice_web_widgets").update({ public_id: publicId }).eq("workspace_id", workspaceId)
+      : await admin.from("voice_web_widgets").insert({ workspace_id: workspaceId, public_id: publicId })
+    if (error) return fail(500, "save_failed", "No se pudo crear el asistente de la web.")
+    return json({ ok: true, public_id: publicId })
   }
 
   if (body?.action === "disconnect") {

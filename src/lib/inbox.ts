@@ -1,7 +1,7 @@
 // Utilidades de la bandeja compartidas por las pantallas (fase 6G).
 
 export const DEFAULT_CATEGORIES = ["Cliente", "Proveedor", "Obra o proyecto", "Administración", "Personal", "Publicidad", "Otros"]
-export const CHANNEL_LABEL: Record<string, string> = { email: "Correo", telegram: "Telegram", whatsapp: "WhatsApp", phone: "Teléfono" }
+export const CHANNEL_LABEL: Record<string, string> = { email: "Correo", telegram: "Telegram", whatsapp: "WhatsApp", phone: "Teléfono", web: "Web (voz)" }
 export const DEFAULT_DRAFTS_PER_DAY = 30
 // Días laborables sin respuesta para proponer un recordatorio.
 export const FOLLOWUP_BUSINESS_DAYS = 3

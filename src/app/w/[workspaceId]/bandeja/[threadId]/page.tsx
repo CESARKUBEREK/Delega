@@ -14,7 +14,7 @@ import { ThreadForm } from "./thread-form"
 export const metadata = { title: "Conversación" }
 export const maxDuration = 120
 
-const CHANNEL_LABEL: Record<string, string> = { email: "Correo", telegram: "Telegram", whatsapp: "WhatsApp", phone: "Teléfono" }
+const CHANNEL_LABEL: Record<string, string> = { email: "Correo", telegram: "Telegram", whatsapp: "WhatsApp", phone: "Teléfono", web: "Web (voz)" }
 
 export default function ThreadPage({ params }: PageProps<"/w/[workspaceId]/bandeja/[threadId]">) {
   return (
@@ -91,9 +91,9 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
         {thread.summary ? <p className="mt-4 border-l-2 border-stroke pl-3 text-ink">{thread.summary}</p> : null}
 
         <div className="mt-6">
-          {thread.channel === "phone" ? (
+          {thread.channel === "phone" || thread.channel === "web" ? (
             <p className="text-sm text-graphite">
-              Llamada atendida por el agente telefónico.{" "}
+              {thread.channel === "web" ? "Conversación atendida por el asistente de voz de tu web." : "Llamada atendida por el agente telefónico."}{" "}
               {thread.contact_address ? (
                 <a href={`tel:${thread.contact_address.replace(/[^\d+]/g, "")}`} className="font-semibold text-link underline underline-offset-4">
                   Llamar a {thread.contact_address}
