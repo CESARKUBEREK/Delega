@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useState, useSyncExternalStore, useTransition } from "react"
+import { type ReactNode, useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react"
 import { PlanView } from "@/components/plan-view"
 import {
   chatHref,
@@ -17,7 +17,14 @@ import {
   type OnboardingStep,
 } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
-import { checkOnboardingConnection, completeOnboarding, generateOnboardingPlan, getOnboardingResult, type OnboardingResult } from "./actions"
+import {
+  checkOnboardingConnection,
+  completeOnboarding,
+  generateOnboardingPlan,
+  getOnboardingResult,
+  trackOnboardingStep,
+  type OnboardingResult,
+} from "./actions"
 
 type Step = OnboardingStep
 
@@ -70,6 +77,9 @@ type OnboardingProps = {
   workspaceName: string
   isAdmin: boolean
   userName: string
+  // Tarjetas de conexión de Integraciones (componentes de servidor), para
+  // conectar en el paso 3 sin salir del onboarding.
+  cards: Record<Exclude<OnboardingConnection, "none">, ReactNode>
 }
 
 const noopSubscribe = () => () => {}
@@ -84,7 +94,7 @@ export function OnboardingClient(props: OnboardingProps) {
   return <OnboardingFlow {...props} />
 }
 
-function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: OnboardingProps) {
+function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards }: OnboardingProps) {
   const base = `/w/${workspaceId}`
   // Lo guardado al ir a Integraciones (o a Google) y volver.
   const [saved] = useState(() => loadOnboarding(workspaceId))
@@ -98,7 +108,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
   const [supervisedAccepted, setSupervisedAccepted] = useState(saved?.supervisedAccepted ?? false)
   const [pending, startTransition] = useTransition()
 
-  // Si quedó la cookie de /bienvenida, Google devolvería allí y no aquí.
+  // Borra una cookie de vuelta antigua; el paso 3 la vuelve a poner si hace falta.
   useEffect(() => {
     document.cookie = "ms_setup=; path=/; max-age=0; samesite=lax"
   }, [])
@@ -113,6 +123,12 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
   }, [workspaceId, step, task, reply, plan, source, conversationId, supervisedAccepted])
 
   const needed = plan ? primaryConnection(plan) : "none"
+
+  // Embudo: la primera llegada a cada paso (la base ignora las repeticiones).
+  const planName = plan?.name
+  useEffect(() => {
+    void trackOnboardingStep(workspaceId, step, { source: source ?? undefined, plan: planName, needed })
+  }, [workspaceId, step, source, planName, needed])
 
   const currentIndex = STEP_ORDER.indexOf(step)
 
@@ -354,6 +370,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
           base={base}
           needed={needed}
           label={CONNECTION_LABEL[needed]}
+          card={needed === "none" ? null : cards[needed]}
           onBack={() => setStep("plan")}
           onContinue={goToSupervised}
         />
@@ -426,13 +443,16 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
   )
 }
 
-// Paso 3: comprueba si ya está conectado lo que hace falta y, si no, lleva a
-// Integraciones. Vuelve a comprobar al regresar a esta pestaña.
+// Paso 3: comprueba si ya está conectado lo que hace falta y, si no, enseña
+// aquí mismo la tarjeta de conexión (la misma que en Integraciones). Vuelve a
+// comprobar sola cada pocos segundos, al volver a la pestaña y al volver de
+// Google (la cookie ms_setup trae de vuelta a esta página).
 function ConnectStep({
   workspaceId,
   base,
   needed,
   label,
+  card,
   onBack,
   onContinue,
 }: {
@@ -440,36 +460,57 @@ function ConnectStep({
   base: string
   needed: OnboardingConnection
   label: string
+  card: ReactNode
   onBack: () => void
   onContinue: () => void
 }) {
   const [status, setStatus] = useState<"loading" | "connected" | "missing">("loading")
   const [error, setError] = useState<string | null>(null)
   const [checking, startCheck] = useTransition()
+  const box = useRef<HTMLDivElement>(null)
 
-  const refresh = useCallback(() => {
-    startCheck(async () => {
-      const result = await checkOnboardingConnection({ workspaceId, connection: needed })
-      if (!result.ok) {
-        setError(result.error)
-        setStatus("missing")
-        return
-      }
-      setError(null)
-      setStatus(result.connected ? "connected" : "missing")
-    })
+  // Comprobación silenciosa: no cambia la pantalla salvo que ya esté conectado,
+  // para no borrar lo que se esté escribiendo en la tarjeta.
+  const check = useCallback(async () => {
+    const result = await checkOnboardingConnection({ workspaceId, connection: needed }).catch(() => null)
+    if (!result) return
+    if (!result.ok) {
+      setError(result.error)
+      setStatus((s) => (s === "loading" ? "missing" : s))
+      return
+    }
+    setError(null)
+    setStatus((s) => (result.connected ? "connected" : s === "loading" ? "missing" : s))
   }, [workspaceId, needed])
 
   useEffect(() => {
-    refresh()
-  }, [refresh])
-
-  // Al volver de otra pestaña (Integraciones), re-comprobar
-  useEffect(() => {
-    const onFocus = () => refresh()
+    const first = window.setTimeout(() => void check(), 0)
+    const id = window.setInterval(() => void check(), 8000)
+    const onFocus = () => void check()
     window.addEventListener("focus", onFocus)
-    return () => window.removeEventListener("focus", onFocus)
-  }, [refresh])
+    return () => {
+      window.clearTimeout(first)
+      window.clearInterval(id)
+      window.removeEventListener("focus", onFocus)
+    }
+  }, [check])
+
+  // Si Google se abre desde aquí, que vuelva a esta página (30 minutos).
+  useEffect(() => {
+    const secure = window.location.protocol === "https:" ? "; secure" : ""
+    document.cookie = `ms_setup=${encodeURIComponent(`${workspaceId}:onboarding`)}; path=/; max-age=1800; samesite=lax${secure}`
+  }, [workspaceId])
+
+  useEffect(() => {
+    if (status === "connected") void trackOnboardingStep(workspaceId, "connected", { needed })
+  }, [status, workspaceId, needed])
+
+  // Las tarjetas de Integraciones vienen plegadas: abrir la primera.
+  useEffect(() => {
+    if (status !== "missing") return
+    const first = box.current?.querySelector<HTMLDetailsElement>("details.integration-accordion")
+    if (first && !first.open) first.open = true
+  }, [status])
 
   return (
     <section className="setup-panel flex flex-col gap-5">
@@ -477,20 +518,19 @@ function ConnectStep({
         <p className="text-sm font-semibold text-graphite">Paso 3 de 5</p>
         <h2 className="rotulo text-xl mt-1">Solo necesito una cosa</h2>
         <p className="text-graphite mt-1">
-          Para ejecutar este plan necesito acceso a <strong>{label}</strong>.
-          No te pediré el resto de aplicaciones ahora.
+          Para este plan necesito acceso a <strong>{label}</strong>. Conéctalo aquí mismo; el resto puede esperar.
         </p>
       </div>
 
-      {status === "loading" || checking ? (
+      {status === "loading" ? (
         <p className="text-sm text-graphite" role="status">
-          Comprobando conexión…
+          Comprobando la conexión…
         </p>
       ) : status === "connected" ? (
-        <div className="rounded-2xl border border-ok bg-paper p-5 flex flex-col gap-3">
-          <p className="font-medium text-ink">✓ {label} ya está conectado</p>
-          <p className="text-sm text-graphite">Puedes seguir con la primera ejecución supervisada.</p>
+        <div className="rounded-2xl border border-ok bg-paper p-5 flex flex-col gap-3" role="status">
+          <p className="font-medium text-ink">✓ {label} está conectado</p>
           <button
+            type="button"
             onClick={onContinue}
             className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
           >
@@ -498,36 +538,35 @@ function ConnectStep({
           </button>
         </div>
       ) : (
-        <div className="rounded-2xl border border-rule bg-paper p-5 flex flex-col gap-3">
-          <p className="text-sm text-graphite">
-            • Tus credenciales se cifran y se guardan en Vault.
-            <br />
-            • MarchaSolo nunca envía ni escribe nada sin tu aprobación.
-            <br />
-            • Puedes desconectar esta aplicación en cualquier momento.
+        <div className="flex flex-col gap-3">
+          <div ref={box} className="setup-cards">
+            {card}
+          </div>
+          <p className="text-xs text-graphite">
+            Tus credenciales se guardan cifradas y puedes desconectar cuando quieras. MarchaSolo nunca envía ni escribe nada sin tu aprobación.
           </p>
-          <Link
-            href={`${base}/integraciones#${CONNECTION_ANCHOR[needed]}`}
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
-          >
-            Conectar {label} →
-          </Link>
-          <button
-            type="button"
-            onClick={refresh}
-            className="text-sm font-semibold text-link underline underline-offset-4"
-          >
-            Ya lo conecté, comprobar de nuevo
-          </button>
+          <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            <button
+              type="button"
+              onClick={() => startCheck(check)}
+              disabled={checking}
+              className="font-semibold text-link underline underline-offset-4 disabled:opacity-60"
+            >
+              {checking ? "Comprobando…" : "Ya lo conecté, comprobar"}
+            </button>
+            <Link href={`${base}/integraciones#${CONNECTION_ANCHOR[needed]}`} className="text-graphite underline underline-offset-4">
+              Abrir en Integraciones
+            </Link>
+          </p>
           {error && <p className="text-sm text-alert">{error}</p>}
         </div>
       )}
 
       <div className="flex flex-wrap gap-3">
-        <button onClick={onContinue} className="text-sm font-semibold text-link underline underline-offset-4">
+        <button type="button" onClick={onContinue} className="text-sm font-semibold text-link underline underline-offset-4">
           Continuar sin conectar (modo demo)
         </button>
-        <button onClick={onBack} className="text-sm text-graphite">
+        <button type="button" onClick={onBack} className="text-sm text-graphite">
           ← Volver al plan
         </button>
       </div>

@@ -827,6 +827,33 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_events: {
+        Row: {
+          created_at: string
+          detail: Json
+          id: number
+          step: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          id?: never
+          step: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          id?: never
+          step?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1239,6 +1266,10 @@ export type Database = {
       push_subscribe: {
         Args: { p_auth: string; p_endpoint: string; p_p256dh: string; p_user_agent: string }
         Returns: string
+      }
+      onboarding_track: {
+        Args: { p_detail?: Json; p_step: string; p_workspace_id: string }
+        Returns: undefined
       }
       trial_consume: {
         Args: { p_tokens: number; p_workspace_id: string }
