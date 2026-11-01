@@ -3,6 +3,7 @@ import { Suspense } from "react"
 import { asPending } from "@/lib/pending"
 import { asPlan, fileKindLabel } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
+import { TrialMeter } from "@/components/trial-meter"
 import { getTrialStatus } from "@/lib/trial"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { formatDateTime } from "../format"
@@ -147,6 +148,7 @@ async function Assistant({
               "un administrador tiene que conectar una IA"
             )}
             .
+            <TrialMeter pctLeft={trial.pctLeft} />
           </div>
         ) : !aiActive ? (
           <div className="mb-4 border-l-2 border-alert bg-alert-bg px-4 py-3 text-sm text-alert" role="status">

@@ -39,6 +39,7 @@ export function chatHref(base: string, conversationId: string | null, task: stri
 // Progreso del onboarding en esta pestaña (sessionStorage), para no perder el
 // plan al ir a Integraciones (o a Google) y volver. Se borra al terminar; al
 // cerrar la pestaña se pierde a propósito.
+export type OnboardingSource = "assistant" | "trial" | "local"
 export type OnboardingStep = "task" | "plan" | "connect" | "supervised" | "done"
 
 export type OnboardingSnapshot = {
@@ -46,7 +47,8 @@ export type OnboardingSnapshot = {
   task: string
   reply: string | null
   plan: FlowPlan | null
-  source: "assistant" | "local" | null
+  // trial = el asistente real, con los créditos de prueba de MarchaSolo.
+  source: OnboardingSource | null
   conversationId: string | null
   supervisedAccepted: boolean
 }
@@ -70,7 +72,7 @@ export function loadOnboarding(workspaceId: string): OnboardingSnapshot | null {
       task: typeof v.task === "string" ? v.task.slice(0, 500) : "",
       reply: typeof v.reply === "string" ? v.reply : null,
       plan,
-      source: v.source === "assistant" || v.source === "local" ? v.source : null,
+      source: v.source === "assistant" || v.source === "trial" || v.source === "local" ? v.source : null,
       conversationId: typeof v.conversationId === "string" ? v.conversationId : null,
       supervisedAccepted: v.supervisedAccepted === true,
     }

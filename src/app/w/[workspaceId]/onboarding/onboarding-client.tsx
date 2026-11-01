@@ -13,6 +13,7 @@ import {
   saveOnboarding,
   supervisedPreview,
   type OnboardingConnection,
+  type OnboardingSource,
   type OnboardingStep,
 } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
@@ -72,7 +73,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
   const [error, setError] = useState<string | null>(null)
   const [reply, setReply] = useState<string | null>(saved?.reply ?? null)
   const [plan, setPlan] = useState<FlowPlan | null>(saved?.plan ?? null)
-  const [source, setSource] = useState<"assistant" | "local" | null>(saved?.source ?? null)
+  const [source, setSource] = useState<OnboardingSource | null>(saved?.source ?? null)
   const [conversationId, setConversationId] = useState<string | null>(saved?.conversationId ?? null)
   const [supervisedAccepted, setSupervisedAccepted] = useState(saved?.supervisedAccepted ?? false)
   const [pending, startTransition] = useTransition()
@@ -299,6 +300,11 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: Onboa
             <p className="text-sm font-semibold text-graphite">Paso 2 de 5</p>
             <h2 className="rotulo text-xl mt-1">Así lo resolvería</h2>
             {reply && <p className="text-graphite mt-1 whitespace-pre-wrap">{reply}</p>}
+            {source === "trial" && (
+              <p className="mt-2 text-xs text-graphite">
+                Plan preparado con los créditos de prueba de MarchaSolo. Para ejecutarlo, conecta tu propia IA.
+              </p>
+            )}
             {source === "local" && (
               <p className="mt-2 text-xs text-graphite">
                 Propuesta generada sin IA conectada. Cuando conectes una clave, los planes serán más precisos.

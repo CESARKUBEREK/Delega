@@ -2,7 +2,7 @@
 
 
 import { callEdgeFunction } from "@/lib/edge-functions"
-import { CONNECTION_LABEL, type OnboardingConnection } from "@/lib/onboarding"
+import { CONNECTION_LABEL, type OnboardingConnection, type OnboardingSource } from "@/lib/onboarding"
 import { asPlan, type FlowPlan } from "@/lib/plan"
 import { setupStatus } from "@/lib/setup"
 import { getTrialStatus } from "@/lib/trial"
@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server"
 import { UUID_RE } from "@/lib/workspace"
 
 export type OnboardingPlanResult =
-  | { ok: true; source: "assistant" | "local"; reply: string; plan: FlowPlan; conversationId: string | null }
+  | { ok: true; source: OnboardingSource; reply: string; plan: FlowPlan; conversationId: string | null }
   | { ok: false; error: string }
 
 // Plan local cuando aún no hay IA conectada (o falla el assistant).
@@ -126,7 +126,7 @@ export async function generateOnboardingPlan(input: {
       if (plan) {
         return {
           ok: true,
-          source: "assistant",
+          source: (ai ?? []).length ? "assistant" : "trial",
           reply: result.data.reply,
           plan,
           // La conversación que crea el asistente: el onboarding termina en ella.
