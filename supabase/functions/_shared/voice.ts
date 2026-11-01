@@ -118,7 +118,7 @@ function spokenDate(date: string, hhmm: string): string {
 // ---------------------------------------------------------------------------
 type Busy = { start: number; end: number }
 
-async function busyTimes(token: string, date: string, tz: string): Promise<Busy[]> {
+export async function busyTimes(token: string, date: string, tz: string): Promise<Busy[]> {
   const dayStart = localToUtc(date, "00:00", tz)
   const dayEnd = dayStart + 24 * 3_600_000
   const events = await listEvents(token, new Date(dayStart).toISOString(), new Date(dayEnd).toISOString(), null, 100)

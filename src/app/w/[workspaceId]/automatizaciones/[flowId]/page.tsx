@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { deleteFlow } from "../../ai-actions"
 import { formatDateTime, formatLong, formatWhen } from "../../format"
+import { readVoiceConfig } from "@/lib/voice"
+import { CalendarModeForm } from "./calendar-mode"
 import { ActivationPanel, type EmailFilterInput, FlowModelForm, RunPanel, type ScheduleInput } from "./run-panel"
 
 export const metadata = { title: "Automatización" }
@@ -119,7 +121,12 @@ async function Flow({
       ) : null}
 
       {plan ? (
-        <FlowMap plan={plan} schedule={mapSchedule} editHref={canDelete ? `${base}/automatizaciones/${flow.id}/editar` : null} />
+        <FlowMap
+          plan={plan}
+          schedule={mapSchedule}
+          editHref={canDelete ? `${base}/automatizaciones/${flow.id}/editar` : null}
+          autoCalendar={((flow.settings ?? {}) as { calendar?: { mode?: string } }).calendar?.mode === "auto"}
+        />
       ) : (
         <p className="text-graphite">Este flujo no tiene un plan legible.</p>
       )}
@@ -150,6 +157,28 @@ async function Flow({
               nextRun={flow.next_run_at ? formatLong(flow.next_run_at, timezone) : null}
               canEdit={canDelete}
             />
+          </div>
+        </section>
+      ) : null}
+
+      {plan?.steps.some((st) => st.kind === "write" && st.connection === "calendar") ? (
+        <section className="border border-ink bg-sheet">
+          <h2 className="border-b border-ink px-5 py-3 font-semibold">Citas en tu calendario</h2>
+          <div className="px-5 py-4">
+            {(() => {
+              const cal = ((flow.settings ?? {}) as { calendar?: { mode?: string; days?: unknown; ranges?: unknown } }).calendar
+              const hours = readVoiceConfig({ days: cal?.days, ranges: cal?.ranges })
+              return (
+                <CalendarModeForm
+                  workspaceId={workspaceId}
+                  flowId={flow.id}
+                  mode={cal?.mode === "auto" ? "auto" : "approval"}
+                  days={hours.days}
+                  ranges={hours.ranges}
+                  canEdit={isAdmin}
+                />
+              )
+            })()}
           </div>
         </section>
       ) : null}

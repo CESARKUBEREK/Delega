@@ -54,7 +54,8 @@ import {
   updateRecord,
 } from "./hubspot.ts"
 import { contactsToken, createContact, searchContacts } from "./contacts.ts"
-import { notifyApproval } from "./push.ts"
+import { notifyApproval, sendPush } from "./push.ts"
+import { busyTimes, freeSlots, readVoiceConfig, type VoiceConfig } from "./voice.ts"
 import { telegramApproval, telegramRunResult } from "./telegram-notice.ts"
 import { downloadXlsx, XLSX_MIME, xlsxInfo, xlsxRead, xlsxWrite } from "./excel.ts"
 import { type Ai, complete, fromResponsesItems, LlmError, type Msg, NO_AI_MESSAGE, providerOf, resolveAi, type ToolDef } from "./llm.ts"
@@ -120,6 +121,7 @@ export type RunRow = {
   output_tokens: number
   started_by: string | null
   trigger: RunTrigger
+  flow_id?: string | null
 }
 
 // xlsx: archivo Excel guardado en Drive; se trata como una planilla.
@@ -175,6 +177,9 @@ type Resources = {
   buffer: string | null
   xubio: XubioCredentials | null
   apiProviders: ("supabase" | "custom_1" | "custom_2")[]
+  // Agenda: la automatización permite crear citas sin aprobación (si la hora
+  // está libre y dentro de su horario). Solo en ejecuciones de administradores.
+  autoBooking: VoiceConfig | null
 }
 
 function kindOf(mime: string | null): FileKind {
@@ -195,6 +200,8 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
     isWorkspaceAdmin(admin, run.workspace_id, run.started_by),
     workspaceTimezone(admin, run.workspace_id),
   ])
+  const { data: flowRow } = run.flow_id ? await admin.from("flows").select("settings").eq("id", run.flow_id).maybeSingle() : { data: null }
+  const calendarSettings = ((flowRow?.settings ?? {}) as { calendar?: { mode?: unknown; days?: unknown; ranges?: unknown } }).calendar
 
   const byId = new Map((files ?? []).map((f) => [f.id, f]))
   const refs: FileRef[] = []
@@ -275,6 +282,10 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
     // Contabilidad: solo en ejecuciones de administradores.
     xubio: starterIsAdmin && find("xubio")?.status === "active" ? await xubioCredentials(admin, run.workspace_id) : null,
     apiProviders,
+    autoBooking:
+      starterIsAdmin && calendarSettings?.mode === "auto" && calendar?.status === "active"
+        ? readVoiceConfig({ ...((find("grok_voice")?.config ?? {}) as Record<string, unknown>), ...(calendarSettings.days ? { days: calendarSettings.days } : {}), ...(calendarSettings.ranges ? { ranges: calendarSettings.ranges } : {}) })
+        : null,
   }
 }
 
@@ -369,18 +380,23 @@ function toolDefs(r: Resources): ToolDef[] {
         to: { type: "string", description: "Fin, AAAA-MM-DD o AAAA-MM-DDTHH:MM." },
         query: nullable("Texto a buscar en los eventos, o null."),
       }),
-      fn("create_event", "Crea un evento en el calendario principal. Requiere aprobación.", {
+      fn("create_event", r.autoBooking
+        ? "Crea un evento en el calendario principal. Si es una cita dentro del horario de citas y la hora está libre, se crea directamente (sin aprobación) y la invitación sale enseguida; si no, espera aprobación. Comprueba antes con list_events que la hora está libre."
+        : "Crea un evento en el calendario principal. Requiere aprobación.", {
         title: { type: "string" },
         start: { type: "string", description: date },
         end: { type: "string", description: date },
         all_day: { type: "boolean" },
         description: nullable("Descripción o null."),
         location: nullable("Lugar o null."),
-        ...(r.contacts.length
+        ...(r.contacts.length || r.recipients.some((x) => x.alias === "remitente" && x.channel === "email")
           ? {
             attendees: {
               type: "array",
-              items: { type: "string", enum: r.contacts.map((c) => c.alias) },
+              items: {
+                type: "string",
+                enum: [...r.contacts.map((c) => c.alias), ...r.recipients.filter((x) => x.alias === "remitente" && x.channel === "email").map((x) => x.alias)],
+              },
               description: "Alias de contactos autorizados a invitar (recibirán la invitación). Vacío si no hay invitados.",
             },
           }
@@ -1246,7 +1262,11 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
           if (!title || !start || !end) throw new RunError("Faltan el título, el inicio o el fin.")
           if (allDay && end.slice(0, 10) <= start.slice(0, 10)) end = nextDay(start)
           const aliases = Array.isArray(args.attendees) ? args.attendees.filter((a): a is string => typeof a === "string") : []
-          const attendees = res.contacts.filter((c) => aliases.includes(c.alias)).map((c) => ({ label: c.label, email: c.email }))
+          const attendees = [
+            ...res.contacts.filter((c) => aliases.includes(c.alias)).map((c) => ({ label: c.label, email: c.email })),
+            // Quien escribió el correo que lanzó la ejecución.
+            ...res.recipients.filter((x) => x.alias === "remitente" && x.channel === "email" && aliases.includes("remitente")).map((x) => ({ label: x.label, email: x.address })),
+          ]
           pending = {
             call_id: call.call_id!,
             tool: "create_event",
@@ -1340,6 +1360,34 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       continue
     }
 
+    // Agenda automática: la cita se crea sin aprobación si la hora está libre
+    // y dentro del horario elegido en la automatización.
+    if (pending.tool === "create_event" && res.autoBooking) {
+      const why = await autoBookingBlocked(admin, run, res, pending)
+      if (!why) {
+        try {
+          const { token: ct } = await calendarToken(admin, run.workspace_id)
+          const ev = await createEvent(ct, { ...pending.event, attendees: pending.attendees.map((a) => a.email) }, res.timezone)
+          respond({ ok: true, created_without_approval: true, event: ev })
+          await addEvent(admin, run, "approved", `Cita reservada directamente, sin aprobación: «${ev.title}» (${pending.event.start})`, { tool: "create_event", url: ev.link, auto: true })
+          if (run.started_by) {
+            await sendPush(admin, [run.started_by], {
+              title: "MarchaSolo · Agenda",
+              body: "Se reservó una cita en tu calendario sin pedir aprobación.",
+              url: `/w/${run.workspace_id}/ejecuciones/${run.id}`,
+              tag: `auto-booking-${run.id}`,
+            }).catch(() => null)
+          }
+          await save(admin, run, {})
+          continue
+        } catch (e) {
+          await addEvent(admin, run, "tool", `No se pudo reservar directamente: ${e instanceof Error ? e.message : "error"}. Pide aprobación.`, { tool: "create_event" })
+        }
+      } else {
+        await addEvent(admin, run, "tool", `La cita necesita tu aprobación: ${why}`, { tool: "create_event" })
+      }
+    }
+
     await save(admin, run, { status: "awaiting_approval", pending_action: pending, lease_until: null })
     await addEvent(admin, run, "approval_requested", proposalTitle(pending), { tool: pending.tool })
     // Aviso al móvil; un fallo aquí no detiene la ejecución.
@@ -1350,6 +1398,40 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
 
   await save(admin, run, { lease_until: null })
   return "running"
+}
+
+// Por qué una cita no se puede crear sola (o null si sí puede).
+const AUTO_BOOKINGS_PER_DAY = 20
+const DATE_TIME_RE = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/
+async function autoBookingBlocked(
+  admin: Admin,
+  run: RunRow,
+  res: Resources,
+  p: Extract<PendingAction, { tool: "create_event" }>,
+): Promise<string | null> {
+  const config = res.autoBooking
+  if (!config) return "la reserva directa no está activada."
+  if (p.event.all_day) return "es un evento de día completo."
+  const a = p.event.start.match(DATE_TIME_RE)
+  const b = p.event.end.match(DATE_TIME_RE)
+  if (!a || !b || a[1] !== b[1]) return "empieza y termina en días distintos o sin hora."
+  const toMin = (h: string) => Number(h.slice(0, 2)) * 60 + Number(h.slice(3, 5))
+  const minutes = toMin(b[2]) - toMin(a[2])
+  if (minutes < 5 || minutes > 240) return "dura menos de 5 minutos o más de 4 horas."
+  const { count } = await admin
+    .from("run_events")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", run.workspace_id)
+    .eq("kind", "approved")
+    .eq("detail->>auto", "true")
+    .gte("created_at", new Date(Date.now() - 86_400_000).toISOString())
+  if ((count ?? 0) >= AUTO_BOOKINGS_PER_DAY) return `ya se reservaron ${AUTO_BOOKINGS_PER_DAY} citas directamente en las últimas 24 horas.`
+  const { token } = await calendarToken(admin, run.workspace_id)
+  const busy = await busyTimes(token, a[1], res.timezone)
+  if (!freeSlots({ ...config, slot_minutes: 1 }, a[1], minutes, busy, res.timezone).includes(a[2])) {
+    return "la hora no está libre, está fuera del horario de citas o es con menos de 30 minutos de antelación."
+  }
+  return null
 }
 
 // ---------------------------------------------------------------------------
