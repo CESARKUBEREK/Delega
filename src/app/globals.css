@@ -578,6 +578,7 @@ button.bg-stroke:disabled { color:#0b1f3b; }
 .today-hero-state { display:inline-flex; width:fit-content; align-items:center; gap:8px; padding:7px 10px; border:1px solid rgb(255 255 255 / 13%); border-radius:999px; color:#e9f1fb; font-size:12px; font-weight:650; }
 .today-hero-state i { width:7px; height:7px; border-radius:50%; background:#55d6a5; box-shadow:0 0 12px rgb(85 214 165 / 60%); }
 .today-hero-state.is-setup i { background:#5ee6cf; box-shadow:0 0 12px rgb(94 230 207 / 50%); }
+.today-hero-state.is-trial i { background:#fbbf24; box-shadow:0 0 12px rgb(251 191 36 / 50%); }
 .today-hero-pending { display:flex; align-items:baseline; gap:8px; color:#c3cedc; font-size:11px; }
 .today-hero-pending strong { color:#fff; font-size:27px; font-weight:750; letter-spacing:-.04em; }
 .today .today-hero + .today-callout { border-left:3px solid #00c2a8; }
