@@ -13,6 +13,13 @@ export function primaryConnection(plan: FlowPlan): OnboardingConnection {
   return "none"
 }
 
+export const CONNECTION_LABEL: Record<OnboardingConnection, string> = {
+  email: "Correo (IMAP)",
+  spreadsheet: "Google Drive / Planillas",
+  calendar: "Google Calendar",
+  none: "Ninguna por ahora",
+}
+
 // Sección de Integraciones donde está la tarjeta que hace falta.
 export const CONNECTION_ANCHOR: Record<OnboardingConnection, string> = {
   email: "comunicaciones",

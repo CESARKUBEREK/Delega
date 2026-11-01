@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { PlanView } from "@/components/plan-view"
-import { chatHref, CONNECTION_ANCHOR, primaryConnection, type OnboardingConnection } from "@/lib/onboarding"
+import { chatHref, CONNECTION_ANCHOR, CONNECTION_LABEL, primaryConnection, type OnboardingConnection } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
 import { checkOnboardingConnection, generateOnboardingPlan } from "./actions"
 
@@ -17,12 +17,6 @@ const SUGGESTIONS = [
   "Preparar borradores de respuesta a presupuestos",
 ]
 
-const CONNECTION_LABEL: Record<OnboardingConnection, string> = {
-  email: "Correo (IMAP)",
-  spreadsheet: "Google Drive / Planillas",
-  calendar: "Google Calendar",
-  none: "Ninguna por ahora",
-}
 
 export function OnboardingClient({
   workspaceId,
@@ -219,7 +213,7 @@ export function OnboardingClient({
         </section>
       )}
 
-            {/* PASO 3 — Solo la conexión necesaria */}
+      {/* PASO 3 — Solo la conexión necesaria */}
       {step === "connect" && plan && (
         <ConnectStep
           workspaceId={workspaceId}
@@ -315,6 +309,9 @@ export function OnboardingClient({
     </div>
   )
 }
+
+// Paso 3: comprueba si ya está conectado lo que hace falta y, si no, lleva a
+// Integraciones. Vuelve a comprobar al regresar a esta pestaña.
 function ConnectStep({
   workspaceId,
   base,
