@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       supabase.from("integrations").select("workspace_id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
     ])
     const admin = membership?.status === "active" && (membership.role === "owner" || membership.role === "admin")
-    return go(admin && !ai && !integrations ? `/w/${workspaceId}/bienvenida` : `/w/${workspaceId}`)
+    return go(admin && !ai && !integrations ? `/w/${workspaceId}/onboarding` : `/w/${workspaceId}`)
   }
 
   const last = request.cookies.get("orkesta_ws")?.value
