@@ -96,3 +96,58 @@ export function clearOnboarding(workspaceId: string): void {
     // Nada que hacer.
   }
 }
+
+// Paso 4: lo que MarchaSolo dirá antes de ejecutar este plan, sacado del plan
+// real (pasos y conexiones), en primera persona.
+export type SupervisedPreview = {
+  will: string
+  wont: string
+  approvals: { id: string; title: string }[]
+}
+
+const lower = (t: string) => (t ? t.charAt(0).toLowerCase() + t.slice(1) : t)
+
+function joinList(items: string[]): string {
+  if (items.length <= 1) return items.join("")
+  return `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`
+}
+
+export function supervisedPreview(plan: FlowPlan | null): SupervisedPreview {
+  if (!plan) {
+    return {
+      will: "Antes de cada acción sensible te enseñaré exactamente qué voy a hacer.",
+      wont: "No escribiré ni enviaré nada sin tu aprobación.",
+      approvals: [],
+    }
+  }
+
+  const approvalSteps = plan.steps.filter((s) => s.requires_approval)
+  const freeSteps = plan.steps.filter((s) => !s.requires_approval)
+  const kinds = new Set(
+    [...plan.connections.map((c) => c.kind), ...plan.steps.map((s) => s.connection)].filter((k) => k && k !== "none"),
+  )
+
+  // Los títulos de los pasos con aprobación van aparte, en la lista: dentro
+  // de la frase quedan forzados («permiso para escribir tras tu aprobación»).
+  const first = freeSteps.length ? `Voy a ${joinList(freeSteps.slice(0, 2).map((s) => lower(s.title)))}.` : ""
+  const then = approvalSteps.length
+    ? `${first ? "Después te" : "Te"} enseñaré lo que propongo y esperaré tu permiso.`
+    : first
+      ? ""
+      : `Voy a preparar «${plan.name}».`
+  const will = [first, then].filter(Boolean).join(" ")
+
+  const wont: string[] = []
+  if (kinds.has("email")) wont.push("no enviaré ningún correo")
+  if (kinds.has("spreadsheet") || kinds.has("drive") || kinds.has("documents")) wont.push("no escribiré en tus planillas ni documentos")
+  if (kinds.has("calendar")) wont.push("no crearé ni cambiaré eventos")
+  if (kinds.has("telegram") || kinds.has("whatsapp")) wont.push("no enviaré mensajes")
+  if (kinds.has("crm") || kinds.has("hubspot") || kinds.has("contacts")) wont.push("no cambiaré tus contactos")
+  const wontText = wont.length ? joinList(wont) : "no cambiaré ni enviaré nada"
+
+  return {
+    will,
+    wont: `${wontText.charAt(0).toUpperCase()}${wontText.slice(1)} sin tu aprobación.`,
+    approvals: approvalSteps.map((s) => ({ id: s.id, title: s.title })),
+  }
+}
