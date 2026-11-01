@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { ONBOARDED_COOKIE, parseOnboarded } from "@/lib/onboarding"
 import { createClient } from "@/lib/supabase/server"
 import { UUID_RE } from "@/lib/workspace"
 
@@ -8,8 +7,8 @@ import { UUID_RE } from "@/lib/workspace"
 // usuario sigue siendo miembro. Si no hay cookie, a su espacio personal o al
 // primero que tenga; sin ninguno, a la lista de espacios. El proxy ya exige
 // sesión para esta ruta. Un espacio recién creado (sin IA ni ninguna
-// conexión) abre el onboarding si el usuario lo administra y aún no lo terminó
-// en este navegador.
+// conexión) abre el onboarding si el usuario lo administra y aún no se ha
+// terminado en ese espacio.
 export async function GET(request: NextRequest) {
   const go = (path: string) => NextResponse.redirect(new URL(path, request.nextUrl.origin))
   const supabase = await createClient()
@@ -18,13 +17,14 @@ export async function GET(request: NextRequest) {
   if (!userId) return go("/login")
 
   const home = async (workspaceId: string) => {
-    const [{ data: membership }, { count: ai }, { count: integrations }] = await Promise.all([
+    const [{ data: membership }, { data: workspace }, { count: ai }, { count: integrations }] = await Promise.all([
       supabase.from("memberships").select("role, status").eq("workspace_id", workspaceId).eq("user_id", userId).maybeSingle(),
+      supabase.from("workspaces").select("onboarding_completed_at").eq("id", workspaceId).maybeSingle(),
       supabase.from("ai_connections").select("workspace_id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
       supabase.from("integrations").select("workspace_id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
     ])
     const admin = membership?.status === "active" && (membership.role === "owner" || membership.role === "admin")
-    const onboarded = parseOnboarded(request.cookies.get(ONBOARDED_COOKIE)?.value).includes(workspaceId)
+    const onboarded = Boolean(workspace?.onboarding_completed_at)
     return go(admin && !ai && !integrations && !onboarded ? `/w/${workspaceId}/onboarding` : `/w/${workspaceId}`)
   }
 

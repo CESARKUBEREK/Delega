@@ -29,7 +29,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
   // todas las del espacio.
   const [{ data: ws }, { data: profile }, { data: connections }, { data: waiting, count: waitingCount }, { data: lastSummary }, { data: upcoming }, { count: flowCount }] =
     await Promise.all([
-      supabase.from("workspaces").select("timezone").eq("id", workspaceId).maybeSingle(),
+      supabase.from("workspaces").select("timezone, onboarding_completed_at").eq("id", workspaceId).maybeSingle(),
       supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
       supabase.from("ai_connections").select("status").eq("workspace_id", workspaceId),
       supabase
@@ -63,6 +63,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
   const timezone = ws?.timezone || "Europe/Madrid"
   const firstName = (profile?.display_name ?? "").trim().split(/\s+/)[0]
   const aiActive = (connections ?? []).some((c) => c.status === "active")
+  const onboarded = Boolean(ws?.onboarding_completed_at)
   const setup = await setupStatus(workspaceId)
   const pendingTotal = waitingCount ?? (waiting ?? []).length
 
@@ -87,7 +88,23 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
         </aside>
       </header>
 
-      {isAdmin && !setup.complete ? (
+      {isAdmin && !setup.ia ? (
+        // Sin IA: antes del onboarding, al onboarding; después, a conectar la IA.
+        <Link href={onboarded ? `${base}/integraciones#llms` : `${base}/onboarding`} className="setup-banner">
+          <span className="setup-banner-ring" aria-hidden="true" style={{ ["--pct" as string]: `${Math.round((setup.done / setup.total) * 100)}%` }}>
+            {setup.done}/{setup.total}
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="font-semibold text-ink">{onboarded ? "Conecta una IA para que MarchaSolo pueda trabajar" : "Pon MarchaSolo en marcha"}</span>
+            <span className="text-sm text-graphite">
+              {onboarded
+                ? "Falta la clave de OpenAI, Anthropic, DeepSeek o Grok. Con ella, tu plan ya puede ejecutarse."
+                : "Cuéntanos una tarea y te guiamos paso a paso. No hace falta conectarlo todo de golpe."}
+            </span>
+          </span>
+          <span className="setup-banner-cta">{onboarded ? "Conectar la IA →" : "Empezar →"}</span>
+        </Link>
+      ) : isAdmin && !setup.complete ? (
         <Link href={`${base}/bienvenida`} className="setup-banner">
           <span className="setup-banner-ring" aria-hidden="true" style={{ ["--pct" as string]: `${Math.round((setup.done / setup.total) * 100)}%` }}>
             {setup.done}/{setup.total}

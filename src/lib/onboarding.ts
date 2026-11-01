@@ -151,22 +151,3 @@ export function supervisedPreview(plan: FlowPlan | null): SupervisedPreview {
     approvals: approvalSteps.map((s) => ({ id: s.id, title: s.title })),
   }
 }
-
-// Espacios que ya terminaron el onboarding en este navegador (cookie
-// httpOnly). Sin ella, /abrir devolvería al onboarding a quien terminó sin
-// conectar nada. Se guardan como mucho los 20 últimos.
-export const ONBOARDED_COOKIE = "ms_onboarded"
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-export function parseOnboarded(raw: string | undefined): string[] {
-  if (!raw) return []
-  return raw
-    .split(",")
-    .map((s) => s.trim())
-    .filter((id) => UUID.test(id))
-}
-
-export function addOnboarded(raw: string | undefined, workspaceId: string): string {
-  const list = parseOnboarded(raw).filter((id) => id !== workspaceId)
-  return [...list, workspaceId].slice(-20).join(",")
-}

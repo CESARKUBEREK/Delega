@@ -1064,6 +1064,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["workspace_kind"]
           name: string
+          onboarding_completed_at: string | null
           timezone: string | null
           personal_owner: string | null
           updated_at: string
@@ -1074,6 +1075,7 @@ export type Database = {
           id?: string
           kind: Database["public"]["Enums"]["workspace_kind"]
           name: string
+          onboarding_completed_at?: string | null
           timezone?: string | null
           personal_owner?: string | null
           updated_at?: string
@@ -1084,6 +1086,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["workspace_kind"]
           name?: string
+          onboarding_completed_at?: string | null
           timezone?: string | null
           personal_owner?: string | null
           updated_at?: string
@@ -1212,6 +1215,10 @@ export type Database = {
       push_subscribe: {
         Args: { p_auth: string; p_endpoint: string; p_p256dh: string; p_user_agent: string }
         Returns: string
+      }
+      workspace_complete_onboarding: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
       }
     }
     Enums: {
