@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server"
 import { UUID_RE } from "@/lib/workspace"
 
 export type OnboardingPlanResult =
-  | { ok: true; source: "assistant" | "local"; reply: string; plan: FlowPlan }
+  | { ok: true; source: "assistant" | "local"; reply: string; plan: FlowPlan; conversationId: string | null }
   | { ok: false; error: string }
 
 // Plan local cuando aún no hay IA conectada (o falla el assistant).
@@ -124,6 +124,8 @@ export async function generateOnboardingPlan(input: {
           source: "assistant",
           reply: result.data.reply,
           plan,
+          // La conversación que crea el asistente: el onboarding termina en ella.
+          conversationId: UUID_RE.test(result.data.conversation_id ?? "") ? result.data.conversation_id : null,
         }
       }
     }
@@ -140,5 +142,6 @@ export async function generateOnboardingPlan(input: {
         ? "He preparado una propuesta a partir de tu descripción. Puedes afinarla después en el chat."
         : "Todavía no hay una IA conectada en este espacio, así que te muestro una propuesta basada en patrones habituales. Cuando conectes una clave, MarchaSolo podrá generar planes más precisos.",
     plan,
+    conversationId: null,
   }
 }
