@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { ONBOARDED_COOKIE, parseOnboarded } from "@/lib/onboarding"
 import { createClient } from "@/lib/supabase/server"
 import { UUID_RE } from "@/lib/workspace"
 
@@ -7,7 +8,8 @@ import { UUID_RE } from "@/lib/workspace"
 // usuario sigue siendo miembro. Si no hay cookie, a su espacio personal o al
 // primero que tenga; sin ninguno, a la lista de espacios. El proxy ya exige
 // sesión para esta ruta. Un espacio recién creado (sin IA ni ninguna
-// conexión) abre el asistente de configuración si el usuario lo administra.
+// conexión) abre el onboarding si el usuario lo administra y aún no lo terminó
+// en este navegador.
 export async function GET(request: NextRequest) {
   const go = (path: string) => NextResponse.redirect(new URL(path, request.nextUrl.origin))
   const supabase = await createClient()
@@ -22,7 +24,8 @@ export async function GET(request: NextRequest) {
       supabase.from("integrations").select("workspace_id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
     ])
     const admin = membership?.status === "active" && (membership.role === "owner" || membership.role === "admin")
-    return go(admin && !ai && !integrations ? `/w/${workspaceId}/onboarding` : `/w/${workspaceId}`)
+    const onboarded = parseOnboarded(request.cookies.get(ONBOARDED_COOKIE)?.value).includes(workspaceId)
+    return go(admin && !ai && !integrations && !onboarded ? `/w/${workspaceId}/onboarding` : `/w/${workspaceId}`)
   }
 
   const last = request.cookies.get("orkesta_ws")?.value
