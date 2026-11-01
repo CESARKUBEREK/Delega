@@ -1,11 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useMemo, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { PlanView } from "@/components/plan-view"
 import { chatHref, CONNECTION_ANCHOR, primaryConnection, type OnboardingConnection } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
-import { generateOnboardingPlan } from "./actions"
+import { checkOnboardingConnection, generateOnboardingPlan } from "./actions"
 
 type Step = "task" | "plan" | "connect" | "supervised" | "done"
 
@@ -219,41 +219,16 @@ export function OnboardingClient({
         </section>
       )}
 
-      {/* PASO 3 — Solo la conexión necesaria */}
+            {/* PASO 3 — Solo la conexión necesaria */}
       {step === "connect" && plan && (
-        <section className="setup-panel flex flex-col gap-5">
-          <div>
-            <p className="text-sm font-semibold text-graphite">Paso 3 de 5</p>
-            <h2 className="rotulo text-xl mt-1">Solo necesito una cosa</h2>
-            <p className="text-graphite mt-1">
-              Para ejecutar este plan necesito acceso a <strong>{CONNECTION_LABEL[needed]}</strong>.
-              No te pediré el resto de aplicaciones ahora.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-rule bg-paper p-5 flex flex-col gap-3">
-            <p className="text-sm text-graphite">
-              • Tus credenciales se cifran y se guardan en Vault.<br />
-              • MarchaSolo nunca envía ni escribe nada sin tu aprobación.<br />
-              • Puedes desconectar esta aplicación en cualquier momento.
-            </p>
-            <Link
-              href={`${base}/integraciones#${CONNECTION_ANCHOR[needed]}`}
-              className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
-            >
-              Conectar {CONNECTION_LABEL[needed]} →
-            </Link>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <button onClick={goToSupervised} className="text-sm font-semibold text-link underline underline-offset-4">
-              Continuar sin conectar (modo demo)
-            </button>
-            <button onClick={() => setStep("plan")} className="text-sm text-graphite">
-              ← Volver al plan
-            </button>
-          </div>
-        </section>
+        <ConnectStep
+          workspaceId={workspaceId}
+          base={base}
+          needed={needed}
+          label={CONNECTION_LABEL[needed]}
+          onBack={() => setStep("plan")}
+          onContinue={goToSupervised}
+        />
       )}
 
       {/* PASO 4 — Supervisado */}
@@ -338,5 +313,111 @@ export function OnboardingClient({
         </section>
       )}
     </div>
+  )
+}
+function ConnectStep({
+  workspaceId,
+  base,
+  needed,
+  label,
+  onBack,
+  onContinue,
+}: {
+  workspaceId: string
+  base: string
+  needed: OnboardingConnection
+  label: string
+  onBack: () => void
+  onContinue: () => void
+}) {
+  const [status, setStatus] = useState<"loading" | "connected" | "missing">("loading")
+  const [error, setError] = useState<string | null>(null)
+  const [checking, startCheck] = useTransition()
+
+  const refresh = useCallback(() => {
+    startCheck(async () => {
+      const result = await checkOnboardingConnection({ workspaceId, connection: needed })
+      if (!result.ok) {
+        setError(result.error)
+        setStatus("missing")
+        return
+      }
+      setError(null)
+      setStatus(result.connected ? "connected" : "missing")
+    })
+  }, [workspaceId, needed])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
+  // Al volver de otra pestaña (Integraciones), re-comprobar
+  useEffect(() => {
+    const onFocus = () => refresh()
+    window.addEventListener("focus", onFocus)
+    return () => window.removeEventListener("focus", onFocus)
+  }, [refresh])
+
+  return (
+    <section className="setup-panel flex flex-col gap-5">
+      <div>
+        <p className="text-sm font-semibold text-graphite">Paso 3 de 5</p>
+        <h2 className="rotulo text-xl mt-1">Solo necesito una cosa</h2>
+        <p className="text-graphite mt-1">
+          Para ejecutar este plan necesito acceso a <strong>{label}</strong>.
+          No te pediré el resto de aplicaciones ahora.
+        </p>
+      </div>
+
+      {status === "loading" || checking ? (
+        <p className="text-sm text-graphite" role="status">
+          Comprobando conexión…
+        </p>
+      ) : status === "connected" ? (
+        <div className="rounded-2xl border border-ok bg-paper p-5 flex flex-col gap-3">
+          <p className="font-medium text-ink">✓ {label} ya está conectado</p>
+          <p className="text-sm text-graphite">Puedes seguir con la primera ejecución supervisada.</p>
+          <button
+            onClick={onContinue}
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
+          >
+            Continuar →
+          </button>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-rule bg-paper p-5 flex flex-col gap-3">
+          <p className="text-sm text-graphite">
+            • Tus credenciales se cifran y se guardan en Vault.
+            <br />
+            • MarchaSolo nunca envía ni escribe nada sin tu aprobación.
+            <br />
+            • Puedes desconectar esta aplicación en cualquier momento.
+          </p>
+          <Link
+            href={`${base}/integraciones#${CONNECTION_ANCHOR[needed]}`}
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
+          >
+            Conectar {label} →
+          </Link>
+          <button
+            type="button"
+            onClick={refresh}
+            className="text-sm font-semibold text-link underline underline-offset-4"
+          >
+            Ya lo conecté, comprobar de nuevo
+          </button>
+          {error && <p className="text-sm text-alert">{error}</p>}
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-3">
+        <button onClick={onContinue} className="text-sm font-semibold text-link underline underline-offset-4">
+          Continuar sin conectar (modo demo)
+        </button>
+        <button onClick={onBack} className="text-sm text-graphite">
+          ← Volver al plan
+        </button>
+      </div>
+    </section>
   )
 }
