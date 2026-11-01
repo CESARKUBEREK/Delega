@@ -1,7 +1,9 @@
 "use server"
 
 import { callEdgeFunction } from "@/lib/edge-functions"
+import { CONNECTION_LABEL, type OnboardingConnection } from "@/lib/onboarding"
 import { asPlan, type FlowPlan } from "@/lib/plan"
+import { setupStatus } from "@/lib/setup"
 import { createClient } from "@/lib/supabase/server"
 import { UUID_RE } from "@/lib/workspace"
 
@@ -145,19 +147,14 @@ export async function generateOnboardingPlan(input: {
     conversationId: null,
   }
 }
-import type { OnboardingConnection } from "@/lib/onboarding"
 
 export type ConnectionStatusResult =
   | { ok: true; connected: boolean; label: string }
   | { ok: false; error: string }
 
-const LABELS: Record<OnboardingConnection, string> = {
-  email: "Correo (IMAP)",
-  spreadsheet: "Google Drive / Planillas",
-  calendar: "Google Calendar",
-  none: "Ninguna",
-}
-
+// ¿Ya está conectado lo que necesita el plan? Usa las mismas reglas que el
+// asistente de configuración (/bienvenida). Las planillas viven en Drive, así
+// que basta con Drive conectado.
 export async function checkOnboardingConnection(input: {
   workspaceId: string
   connection: OnboardingConnection
@@ -165,52 +162,11 @@ export async function checkOnboardingConnection(input: {
   if (!UUID_RE.test(input.workspaceId)) {
     return { ok: false, error: "Espacio no válido." }
   }
-  if (input.connection === "none") {
-    return { ok: true, connected: true, label: LABELS.none }
-  }
+  const label = CONNECTION_LABEL[input.connection] ?? CONNECTION_LABEL.none
+  if (input.connection === "none") return { ok: true, connected: true, label }
 
-  const supabase = await createClient()
-
-  if (input.connection === "email") {
-    const { data } = await supabase
-      .from("integrations")
-      .select("status")
-      .eq("workspace_id", input.workspaceId)
-      .eq("provider", "imap")
-      .eq("status", "active")
-      .limit(1)
-    return { ok: true, connected: (data ?? []).length > 0, label: LABELS.email }
-  }
-
-  if (input.connection === "spreadsheet") {
-    // Drive conectado O hay archivos/planillas elegidos
-    const [{ data: google }, { count: files }] = await Promise.all([
-      supabase
-        .from("integrations")
-        .select("status")
-        .eq("workspace_id", input.workspaceId)
-        .eq("provider", "google")
-        .eq("status", "active")
-        .limit(1),
-      supabase
-        .from("workspace_files")
-        .select("id", { count: "exact", head: true })
-        .eq("workspace_id", input.workspaceId),
-    ])
-    const connected = (google ?? []).length > 0 || (files ?? 0) > 0
-    return { ok: true, connected, label: LABELS.spreadsheet }
-  }
-
-  if (input.connection === "calendar") {
-    const { data } = await supabase
-      .from("integrations")
-      .select("status")
-      .eq("workspace_id", input.workspaceId)
-      .eq("provider", "calendar")
-      .eq("status", "active")
-      .limit(1)
-    return { ok: true, connected: (data ?? []).length > 0, label: LABELS.calendar }
-  }
-
-  return { ok: true, connected: false, label: LABELS[input.connection] }
+  const status = await setupStatus(input.workspaceId)
+  const connected =
+    input.connection === "email" ? status.correo : input.connection === "spreadsheet" ? status.drive : input.connection === "calendar" ? status.calendario : false
+  return { ok: true, connected, label }
 }

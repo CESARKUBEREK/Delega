@@ -1,13 +1,23 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore, useTransition } from "react"
 import { PlanView } from "@/components/plan-view"
-import { chatHref, CONNECTION_ANCHOR, primaryConnection, type OnboardingConnection } from "@/lib/onboarding"
+import {
+  chatHref,
+  clearOnboarding,
+  CONNECTION_ANCHOR,
+  CONNECTION_LABEL,
+  loadOnboarding,
+  primaryConnection,
+  saveOnboarding,
+  type OnboardingConnection,
+  type OnboardingStep,
+} from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
 import { checkOnboardingConnection, generateOnboardingPlan } from "./actions"
 
-type Step = "task" | "plan" | "connect" | "supervised" | "done"
+type Step = OnboardingStep
 
 const SUGGESTIONS = [
   "Clasificar y responder correos de clientes",
@@ -17,34 +27,53 @@ const SUGGESTIONS = [
   "Preparar borradores de respuesta a presupuestos",
 ]
 
-const CONNECTION_LABEL: Record<OnboardingConnection, string> = {
-  email: "Correo (IMAP)",
-  spreadsheet: "Google Drive / Planillas",
-  calendar: "Google Calendar",
-  none: "Ninguna por ahora",
-}
 
-export function OnboardingClient({
-  workspaceId,
-  workspaceName,
-  isAdmin,
-  userName,
-}: {
+type OnboardingProps = {
   workspaceId: string
   workspaceName: string
   isAdmin: boolean
   userName: string
-}) {
+}
+
+const noopSubscribe = () => () => {}
+
+// El progreso se guarda en sessionStorage, que solo existe en el navegador:
+// el flujo se pinta solo en el cliente y arranca con lo guardado.
+export function OnboardingClient(props: OnboardingProps) {
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false)
+  if (!mounted) {
+    return <div className="h-64 rounded-2xl border border-rule bg-sheet" aria-busy="true" />
+  }
+  return <OnboardingFlow {...props} />
+}
+
+function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName }: OnboardingProps) {
   const base = `/w/${workspaceId}`
-  const [step, setStep] = useState<Step>("task")
-  const [task, setTask] = useState("")
+  // Lo guardado al ir a Integraciones (o a Google) y volver.
+  const [saved] = useState(() => loadOnboarding(workspaceId))
+  const [step, setStep] = useState<Step>(saved?.step ?? "task")
+  const [task, setTask] = useState(saved?.task ?? "")
   const [error, setError] = useState<string | null>(null)
-  const [reply, setReply] = useState<string | null>(null)
-  const [plan, setPlan] = useState<FlowPlan | null>(null)
-  const [source, setSource] = useState<"assistant" | "local" | null>(null)
-  const [conversationId, setConversationId] = useState<string | null>(null)
-  const [supervisedAccepted, setSupervisedAccepted] = useState(false)
+  const [reply, setReply] = useState<string | null>(saved?.reply ?? null)
+  const [plan, setPlan] = useState<FlowPlan | null>(saved?.plan ?? null)
+  const [source, setSource] = useState<"assistant" | "local" | null>(saved?.source ?? null)
+  const [conversationId, setConversationId] = useState<string | null>(saved?.conversationId ?? null)
+  const [supervisedAccepted, setSupervisedAccepted] = useState(saved?.supervisedAccepted ?? false)
   const [pending, startTransition] = useTransition()
+
+  // Si quedó la cookie de /bienvenida, Google devolvería allí y no aquí.
+  useEffect(() => {
+    document.cookie = "ms_setup=; path=/; max-age=0; samesite=lax"
+  }, [])
+
+  // Guardar en cada cambio. Al terminar (o sin nada que guardar) se borra.
+  useEffect(() => {
+    if (step === "done" || (step === "task" && !task.trim())) {
+      clearOnboarding(workspaceId)
+      return
+    }
+    saveOnboarding(workspaceId, { step, task, reply, plan, source, conversationId, supervisedAccepted })
+  }, [workspaceId, step, task, reply, plan, source, conversationId, supervisedAccepted])
 
   const needed = plan ? primaryConnection(plan) : "none"
 
@@ -219,7 +248,7 @@ export function OnboardingClient({
         </section>
       )}
 
-            {/* PASO 3 — Solo la conexión necesaria */}
+      {/* PASO 3 — Solo la conexión necesaria */}
       {step === "connect" && plan && (
         <ConnectStep
           workspaceId={workspaceId}
@@ -315,6 +344,9 @@ export function OnboardingClient({
     </div>
   )
 }
+
+// Paso 3: comprueba si ya está conectado lo que hace falta y, si no, lleva a
+// Integraciones. Vuelve a comprobar al regresar a esta pestaña.
 function ConnectStep({
   workspaceId,
   base,
