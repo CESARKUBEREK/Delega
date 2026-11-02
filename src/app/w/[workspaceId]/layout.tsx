@@ -4,6 +4,7 @@ import { KIND_LABEL, ROLE_LABEL } from "@/lib/labels"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { Logo } from "@/components/logo"
+import { SiteFooter } from "@/components/site/site-footer"
 import { AccountMenu } from "../account-menu"
 import { PendingInviteNotice } from "../pending-invite-notice"
 import { InstallPrompt } from "./install-prompt"
@@ -11,7 +12,7 @@ import { MobileTabBar, PanelNav } from "./panel-nav"
 
 export default function PanelLayout({ children, params }: LayoutProps<"/w/[workspaceId]">) {
   return (
-    <div className="app-shell pb-24 lg:pb-0">
+    <div className="app-shell">
       <Suspense fallback={<div className="app-topbar h-20" aria-busy="true" />}>
         <WorkspaceHeading params={params} />
       </Suspense>
@@ -29,6 +30,7 @@ export default function PanelLayout({ children, params }: LayoutProps<"/w/[works
           </div>
         </div>
       </main>
+      <SiteFooter inApp />
       <Suspense fallback={null}>
         <Navigation params={params} variant="bottom" />
       </Suspense>
@@ -61,7 +63,7 @@ async function WorkspaceHeading({ params }: { params: LayoutProps<"/w/[workspace
   return (
     <header className="app-topbar">
       <div className="app-topbar-inner">
-        <Link href={`/w/${workspace.id}`} aria-label="MarchaSolo, Hoy" className="app-brand-link">
+        <Link href="/" aria-label="MarchaSolo, inicio" className="app-brand-link">
           <Logo size={34} id="orkesta-workspace" />
         </Link>
         <span className="app-topbar-divider" aria-hidden="true" />

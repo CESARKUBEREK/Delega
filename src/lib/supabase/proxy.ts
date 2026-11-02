@@ -46,11 +46,6 @@ export async function updateSession(request: NextRequest) {
     return redirect
   }
 
-  // La portada es la página pública; con sesión, se entra directo en la app.
-  if (pathname === "/" && signedIn) {
-    return redirectTo("/abrir")
-  }
-
   if (!signedIn && matches(pathname, PROTECTED_PREFIXES)) {
     const redirect = redirectTo("/entrar")
     const url = new URL(redirect.headers.get("location")!)

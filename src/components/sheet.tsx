@@ -1,6 +1,7 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { Logo } from "./logo"
+import { SiteFooter } from "./site/site-footer"
 
 // Marco de las páginas de acceso (entrar, crear cuenta, contraseña): a un lado
 // el formulario; al otro, qué es MarchaSolo o qué pasa al crear la cuenta.
@@ -20,77 +21,76 @@ export function Sheet({
   story?: "access" | "signup"
 }) {
   return (
-    <main className="access">
-      <section className="access-story" aria-label={story === "signup" ? "Qué pasa al crear tu cuenta" : "MarchaSolo"}>
-        <Link href="/" aria-label="MarchaSolo, inicio" className="site-brand self-start">
-          <Logo size={34} />
-        </Link>
-        <div className="access-story-main">
-          {story === "signup" ? (
-            <>
-              <h2>Qué pasa al crear tu cuenta</h2>
-              <ol className="access-next">
-                <li>
-                  <b>Confirmas tu correo</b>
-                  Te enviamos un enlace. Si entras con Google, te lo ahorras.
-                </li>
-                <li>
-                  <b>Nos cuentas una tarea</b>
-                  La que más tiempo te quita, con tus palabras.
-                </li>
-                <li>
-                  <b>Ves el plan que te prepara</b>
-                  Con créditos de prueba de MarchaSolo, sin conectar nada.
-                </li>
-                <li>
-                  <b>Conectas solo lo que haga falta</b>
-                  El correo, Drive o la agenda. Y nada se envía sin tu aprobación.
-                </li>
-              </ol>
-            </>
-          ) : (
-            <>
-              <h2>Las tareas avanzan. Tú decides.</h2>
-              <ol className="access-next">
-                <li>
-                  <b>Lo pides con tus palabras</b>
-                  MarchaSolo lo convierte en pasos.
-                </li>
-                <li>
-                  <b>MarchaSolo hace el trabajo</b>
-                  Lee, consulta y redacta con tus aplicaciones.
-                </li>
-                <li>
-                  <b>Tú apruebas</b>
-                  Nada se envía ni se cambia sin tu visto bueno.
-                </li>
-              </ol>
-            </>
-          )}
-        </div>
-        <p className="access-story-foot">Tu negocio, en automático.</p>
-      </section>
+    <>
+      <main className="access">
+        <section className="access-story" aria-label={story === "signup" ? "Qué pasa al crear tu cuenta" : "MarchaSolo"}>
+          <Link href="/" aria-label="MarchaSolo, inicio" className="site-brand self-start">
+            <Logo size={34} />
+          </Link>
+          <div className="access-story-main">
+            {story === "signup" ? (
+              <>
+                <h2>Qué pasa al crear tu cuenta</h2>
+                <ol className="access-next">
+                  <li>
+                    <b>Confirmas tu correo</b>
+                    Te enviamos un enlace. Si entras con Google, te lo ahorras.
+                  </li>
+                  <li>
+                    <b>Nos cuentas una tarea</b>
+                    La que más tiempo te quita, con tus palabras.
+                  </li>
+                  <li>
+                    <b>Ves el plan que te prepara</b>
+                    Con créditos de prueba de MarchaSolo, sin conectar nada.
+                  </li>
+                  <li>
+                    <b>Conectas solo lo que haga falta</b>
+                    El correo, Drive o la agenda. Y nada se envía sin tu aprobación.
+                  </li>
+                </ol>
+              </>
+            ) : (
+              <>
+                <h2>Las tareas avanzan. Tú decides.</h2>
+                <ol className="access-next">
+                  <li>
+                    <b>Lo pides con tus palabras</b>
+                    MarchaSolo lo convierte en pasos.
+                  </li>
+                  <li>
+                    <b>MarchaSolo hace el trabajo</b>
+                    Lee, consulta y redacta con tus aplicaciones.
+                  </li>
+                  <li>
+                    <b>Tú apruebas</b>
+                    Nada se envía ni se cambia sin tu visto bueno.
+                  </li>
+                </ol>
+              </>
+            )}
+          </div>
+          <p className="access-story-foot">Tu negocio, en automático.</p>
+        </section>
 
-      <section className="access-form">
-        <div className="access-top">
-          <Link href="/" aria-label="MarchaSolo, inicio" className="site-brand access-mobile-brand">
-            <Logo size={30} />
-          </Link>
-          <Link href="/" className="link">
-            Volver al inicio
-          </Link>
-        </div>
-        <div className="access-card">
-          <h1>{title}</h1>
-          {intro ? <p className="access-intro">{intro}</p> : null}
-          <div className="auth-form-content">{children}</div>
-          {footer ? <div className="access-card-footer">{footer}</div> : null}
-        </div>
-        <nav aria-label="Legal" className="access-legal flex gap-5">
-          <Link href="/privacidad">Privacidad</Link>
-          <Link href="/terminos">Términos</Link>
-        </nav>
-      </section>
-    </main>
+        <section className="access-form">
+          <div className="access-top">
+            <Link href="/" aria-label="MarchaSolo, inicio" className="site-brand access-mobile-brand">
+              <Logo size={30} />
+            </Link>
+            <Link href="/" className="link">
+              Volver al inicio
+            </Link>
+          </div>
+          <div className="access-card">
+            <h1>{title}</h1>
+            {intro ? <p className="access-intro">{intro}</p> : null}
+            <div className="auth-form-content">{children}</div>
+            {footer ? <div className="access-card-footer">{footer}</div> : null}
+          </div>
+        </section>
+      </main>
+      <SiteFooter />
+    </>
   )
 }

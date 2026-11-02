@@ -1,13 +1,15 @@
 import Link from "next/link"
 import { Logo } from "@/components/logo"
 import { LEGAL } from "@/lib/legal"
+import { FooterAccountLinks } from "./account-hint"
 import { SITE_LINKS } from "./nav-links"
 
 // Pie del sitio público. Solo datos confirmados: el responsable y el correo
 // de contacto son los de las páginas legales (src/lib/legal.ts).
-export function SiteFooter() {
+// inApp: dentro de la app deja sitio para la barra inferior del móvil.
+export function SiteFooter({ inApp = false }: { inApp?: boolean }) {
   return (
-    <footer className="site-footer">
+    <footer className={inApp ? "site-footer is-app" : "site-footer"}>
       <div className="site-container site-footer-grid">
         <div>
           <Link href="/" aria-label="MarchaSolo, inicio" className="site-brand">
@@ -50,10 +52,7 @@ export function SiteFooter() {
       </div>
       <div className="site-container site-footer-bottom">
         <span>© 2026 {LEGAL.owner}</span>
-        <span className="flex gap-5">
-          <Link href="/entrar">Entrar</Link>
-          <Link href="/crear-cuenta">Crear cuenta</Link>
-        </span>
+        <FooterAccountLinks />
       </div>
     </footer>
   )
