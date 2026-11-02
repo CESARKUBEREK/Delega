@@ -8,7 +8,7 @@ import { USE_CASES } from "@/lib/site-content"
 export const metadata: Metadata = {
   title: { absolute: "MarchaSolo · Tu negocio, en automático" },
   description:
-    "MarchaSolo automatiza las tareas de tu negocio, conecta tus aplicaciones y trabaja por ti. Las tareas avanzan; tú decides antes de que se envíe nada.",
+    "MarchaSolo prepara el trabajo de tu negocio con tus aplicaciones y espera tu aprobación antes de enviar o cambiar nada. Las tareas avanzan; tú decides.",
   robots: { index: true, follow: true },
   alternates: { canonical: "/" },
 }
@@ -26,8 +26,8 @@ export default function HomePage() {
             <div>
               <h1 className="site-display">Las tareas avanzan. Tú decides.</h1>
               <p className="site-lead">
-                MarchaSolo conecta tus aplicaciones, prepara el trabajo y espera tu aprobación antes de enviar o cambiar
-                nada.
+                Un compañero de trabajo con IA: conecta tus aplicaciones, prepara lo que hay que hacer y se detiene
+                antes de enviar o cambiar nada. Tú revisas y das el visto bueno.
               </p>
               <div className="site-actions">
                 <Link href="/crear-cuenta" className="btn btn-primary">
@@ -57,20 +57,22 @@ export default function HomePage() {
               <h2 id="pasos" className="site-h2">
                 Así de simple
               </h2>
-              <p className="site-lead">Lo explicas como se lo explicarías a alguien de tu equipo.</p>
+              <p className="site-lead">
+                Se lo pides como a alguien de tu equipo. Él prepara el trabajo; la decisión final es siempre tuya.
+              </p>
             </div>
             <ol className="steps">
               <li>
                 <h3 className="site-h3">Dile qué necesitas</h3>
-                <p>Escribes o dictas la tarea con tus palabras.</p>
+                <p>Escribes o dictas la tarea con tus palabras, como se lo explicarías a un compañero.</p>
               </li>
               <li>
                 <h3 className="site-h3">MarchaSolo prepara el trabajo</h3>
-                <p>Organiza los pasos, consulta tus apps y redacta lo necesario.</p>
+                <p>Organiza los pasos, consulta tus apps y deja listo el borrador o el cambio.</p>
               </li>
               <li>
                 <h3 className="site-h3">Tú decides</h3>
-                <p>Apruebas, editas o descartas antes de que se envíe o se cambie nada.</p>
+                <p>Apruebas, editas o descartas. Hasta que no lo hagas, no se envía ni se modifica nada.</p>
               </li>
             </ol>
             <p className="mt-10">
@@ -88,7 +90,9 @@ export default function HomePage() {
               <h2 id="casos" className="site-h2">
                 Tareas que puedes dejar de hacer a mano
               </h2>
-              <p className="site-lead">Ejemplos reales con las aplicaciones que ya usas.</p>
+              <p className="site-lead">
+                MarchaSolo las prepara con tus aplicaciones. Tú revisas y apruebas antes de que salgan.
+              </p>
             </div>
             <div className="grid gap-8 md:grid-cols-3">
               {preview.map((c) => (
@@ -112,12 +116,13 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="control" className="site-h2">
-                Tú mantienes el control.
+                No es un agente que actúa solo.
                 <br />
-                MarchaSolo hace el trabajo.
+                Es un compañero que espera tu visto bueno.
               </h2>
               <p className="site-lead">
-                La automatización solo es útil si te fías de ella. Por eso estas reglas no se pueden desactivar.
+                La automatización solo sirve si te fías de ella. Por eso, en MarchaSolo estas reglas no se pueden
+                desactivar.
               </p>
             </div>
             <div className="trust">
@@ -130,11 +135,17 @@ export default function HomePage() {
               </div>
               <div>
                 <h3 className="site-h3">Tus claves, cifradas</h3>
-                <p>Las contraseñas y claves de tus servicios se guardan cifradas. Nadie puede volver a verlas, ni siquiera tú.</p>
+                <p>
+                  Las contraseñas y claves de tus servicios se guardan cifradas. Nadie puede volver a verlas, ni siquiera
+                  tú.
+                </p>
               </div>
               <div>
                 <h3 className="site-h3">Tus cuentas, tu factura</h3>
-                <p>Usas tus propias cuentas y tu propia IA. Ves el coste estimado de cada tarea y puedes poner un presupuesto.</p>
+                <p>
+                  Usas tus propias cuentas y tu propia IA. Ves el coste estimado de cada tarea y puedes poner un
+                  presupuesto.
+                </p>
               </div>
             </div>
           </div>
@@ -145,21 +156,25 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="para-quien" className="site-h2">
-                Para quien lleva un negocio sin un equipo grande detrás
+                Para quien quiere ayuda sin soltar el control
               </h2>
             </div>
             <ul className="audience">
               <li>
                 <h3 className="site-h3">Freelancers y autónomos</h3>
-                <p>Atiendes clientes, facturas y haces el trabajo. MarchaSolo se queda con lo repetitivo.</p>
+                <p>
+                  Atiendes clientes y haces el trabajo. MarchaSolo prepara lo repetitivo; tú decides qué se envía.
+                </p>
               </li>
               <li>
                 <h3 className="site-h3">Pequeños equipos y agencias</h3>
-                <p>Espacios compartidos con funciones: cada persona ve y aprueba lo que le toca.</p>
+                <p>Espacios compartidos con funciones: cada persona revisa y aprueba lo que le toca.</p>
               </li>
               <li>
                 <h3 className="site-h3">Negocios de correo, citas y planillas</h3>
-                <p>Inmobiliarias, despachos y negocios con muchos mensajes y poco tiempo para ordenarlos.</p>
+                <p>
+                  Inmobiliarias, despachos y negocios con muchos mensajes: el trabajo avanza, pero nada sale sin revisión.
+                </p>
               </li>
             </ul>
           </div>
@@ -172,7 +187,8 @@ export default function HomePage() {
               <div>
                 <h2 className="site-h2">Cuéntale una tarea que te quite tiempo</h2>
                 <p>
-                  Al crear la cuenta te pedimos solo eso. MarchaSolo te prepara el plan antes de que conectes nada.
+                  Al crear la cuenta te pedimos solo eso. MarchaSolo te prepara el plan antes de que conectes nada. Tú
+                  decides si lo pones en marcha.
                 </p>
                 <ul className="site-hero-note" style={{ marginTop: "0.75rem" }}>
                   <li>Sin tarjeta</li>
