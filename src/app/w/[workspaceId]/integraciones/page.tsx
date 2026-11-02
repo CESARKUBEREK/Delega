@@ -12,6 +12,7 @@ import { BufferCard, CalendarCard, ContactsCard, HubSpotCard, TokkoCard, VoiceCa
 import { ApiIntegrationCard } from "./api-integrations"
 import { OnboardingReturn } from "../onboarding/onboarding-return"
 import { HelpPanel, OpenCardFromQuery } from "@/components/help-panel"
+import { HelpVoiceCard } from "./help-voice-card"
 
 export const metadata = { title: "Integraciones" }
 
@@ -123,6 +124,7 @@ async function Integrations({
         <VoiceWebCard workspaceId={workspaceId} isAdmin={isAdmin} />
         <VoiceCard workspaceId={workspaceId} isAdmin={isAdmin} />
         <VoiceHoursCard workspaceId={workspaceId} isAdmin={isAdmin} />
+        <HelpVoiceCard workspaceId={workspaceId} isAdmin={isAdmin} />
       </Category>
 
       <Category
