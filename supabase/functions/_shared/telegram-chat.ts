@@ -14,7 +14,7 @@ import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { advance, claim, createRun, proposalTitle, type RunRow } from "./agent.ts"
 import { isUuid, isWorkspaceAdmin } from "./core.ts"
 import { decideRun } from "./decide.ts"
-import { NO_AI_MESSAGE, resolveAi } from "./llm.ts"
+import { isRouteError, planRun, stepCount } from "./router/index.ts"
 import { answerCallback, downloadTelegramFile, editTelegram, type InlineKeyboard, sendTelegram, sendTyping, TelegramError } from "./telegram.ts"
 import { actionKey, APPROVAL_TTL_MS, approvableFromTelegram, approvalMessage } from "./telegram-notice.ts"
 import { MAX_AUDIO_BYTES, MAX_AUDIO_SECONDS, transcribe, TranscribeError } from "./transcribe.ts"
@@ -186,8 +186,12 @@ async function startRun(
 ) {
   if (await overLimit(admin, workspaceId, userId)) return reply(token, chatId, "Has hecho muchas peticiones en la última hora. Espera un poco.")
   const settings = (input.flow?.settings ?? {}) as { file_ids?: unknown; model?: unknown }
-  const ai = await resolveAi(admin, workspaceId, typeof settings.model === "string" ? settings.model : null)
-  if (!ai) return reply(token, chatId, NO_AI_MESSAGE)
+  const ai = await planRun(admin, workspaceId, {
+    flowId: input.flow?.id ?? null,
+    flowSettings: input.flow?.settings,
+    steps: input.flow ? stepCount(input.flow.definition) : 0,
+  })
+  if (isRouteError(ai)) return reply(token, chatId, ai.error)
 
   let fileIds: string[]
   if (input.flow) {
@@ -206,6 +210,7 @@ async function startRun(
       fileIds,
       note: input.flow ? "" : await recentContext(admin, workspaceId, userId),
       model: ai.model,
+      routing: ai,
       startedBy: userId,
       trigger: { type: "telegram_chat", chat_id: chatId, message_id: messageId, text: input.text.slice(0, 4000), ...(input.voice ? { voice: true } : {}) },
     })

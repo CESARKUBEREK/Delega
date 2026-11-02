@@ -8,7 +8,8 @@ import { type AuthContext, authenticate, fail, isUuid, json, membershipRole } fr
 import { helpReply } from "./help.ts"
 import { helpVoiceStart } from "./help-voice.ts"
 import { type Plan, RESPONSE_SCHEMA, sanitizePlan, sanitizeStep, STEP_SCHEMA } from "./plan-schema.ts"
-import { generateJson, LlmError, markInvalidIfNeeded, type Msg, NO_AI_MESSAGE, recordUsage, resolveAiOrTrial } from "../_shared/llm.ts"
+import { type Ai, generateJson, LlmError, type Msg, NO_AI_MESSAGE } from "../_shared/llm.ts"
+import { callRouted, isRouteError, routeAi } from "../_shared/router/index.ts"
 
 const MAX_MESSAGE = 4000
 const MAX_PER_MINUTE = 8
@@ -115,12 +116,13 @@ Deno.serve(async (req) => {
 
   // IA del espacio (la principal) o, si no hay, los créditos de prueba; la
   // clave se descifra solo en memoria.
-  const resolved = await resolveAiOrTrial(ctx.admin, workspaceId)
-  if (!resolved.ai) {
-    const msg = resolved.message === NO_AI_MESSAGE ? `${NO_AI_MESSAGE} Así podrás usar el asistente.` : resolved.message
-    return fail(409, "no_connection", msg)
+  // Router: diseñar automatizaciones; créditos de prueba si no hay IA propia.
+  const routed = await routeAi(ctx.admin, workspaceId, "plan", { allowTrial: true })
+  if (isRouteError(routed)) {
+    const msg = routed.error === NO_AI_MESSAGE ? `${NO_AI_MESSAGE} Así podrás usar el asistente.` : routed.error
+    return fail(409, routed.code === "budget" ? "budget" : "no_connection", msg)
   }
-  const ai = resolved.ai
+  let ai: Ai = routed.ai
 
   if (!conversationId) {
     const { data, error } = await ctx.admin
@@ -160,21 +162,25 @@ Deno.serve(async (req) => {
 
   let reply = "No he podido preparar un plan con esa petición."
   let plan: ReturnType<typeof sanitizePlan> = null
-  let usage = { input: 0, output: 0 }
   try {
-    const result = await generateJson<{ reply: string; plan: Plan | null }>(ai, {
-      instructions: INSTRUCTIONS,
-      messages: input,
-      name: "orkesta_plan",
-      schema: RESPONSE_SCHEMA,
-      maxTokens: 6000,
-      timeoutMs: 110_000,
+    // El consumo se registra al responder (con la conversación); si el
+    // proveedor falla, el router pasa al siguiente modelo del respaldo.
+    const routedResult = await callRouted(ctx.admin, routed, { userId: ctx.userId, conversationId: conversationId as string }, async (a) => {
+      const r = await generateJson<{ reply: string; plan: Plan | null }>(a, {
+        instructions: INSTRUCTIONS,
+        messages: input,
+        name: "orkesta_plan",
+        schema: RESPONSE_SCHEMA,
+        maxTokens: 6000,
+        timeoutMs: 110_000,
+      })
+      return { value: r, usage: r.usage }
     })
-    usage = result.usage
+    ai = routedResult.ai
+    const result = routedResult.value
     reply = String(result.data.reply ?? "").slice(0, 4000) || reply
     plan = sanitizePlan(result.data.plan)
   } catch (e) {
-    await markInvalidIfNeeded(ctx.admin, workspaceId, ai, e)
     if (e instanceof LlmError && e.code === "refusal") {
       reply = "No puedo ayudar con esa petición."
     } else {
@@ -196,7 +202,6 @@ Deno.serve(async (req) => {
     .select("id")
     .single()
 
-  await recordUsage(ctx.admin, ai, usage, { workspaceId, userId: ctx.userId, conversationId: conversationId as string })
   await ctx.admin.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId)
 
   return json({ conversation_id: conversationId, message_id: saved?.id ?? null, reply, plan })
@@ -240,24 +245,25 @@ async function suggestStep(ctx: AuthContext, body: Record<string, unknown>): Pro
     .gte("created_at", since)
   if ((count ?? 0) >= 12) return fail(429, "rate_limited", "Has pedido muchas cosas seguidas. Espera un minuto.")
 
-  const resolved = await resolveAiOrTrial(ctx.admin, workspaceId)
-  if (!resolved.ai) return fail(409, "no_connection", resolved.message)
-  const ai = resolved.ai
+  // Un paso: tarea sencilla del editor (complejidad 2).
+  const routed = await routeAi(ctx.admin, workspaceId, "plan", { allowTrial: true, complexity: 2 })
+  if (isRouteError(routed)) return fail(409, routed.code === "budget" ? "budget" : "no_connection", routed.error)
 
   const context = typeof body.context === "string" ? body.context.slice(0, 2000) : ""
   try {
-    const result = await generateJson<unknown>(ai, {
-      instructions: STEP_INSTRUCTIONS,
-      messages: [{ role: "user", content: `${context ? `Automatización (contexto):\n${context}\n\n` : ""}Paso que quiero:\n<<<\n${text}\n>>>` }],
-      name: "orkesta_step",
-      schema: STEP_SCHEMA,
-      maxTokens: 800,
-      timeoutMs: 45_000,
+    const { value } = await callRouted(ctx.admin, routed, { userId: ctx.userId }, async (a) => {
+      const r = await generateJson<unknown>(a, {
+        instructions: STEP_INSTRUCTIONS,
+        messages: [{ role: "user", content: `${context ? `Automatización (contexto):\n${context}\n\n` : ""}Paso que quiero:\n<<<\n${text}\n>>>` }],
+        name: "orkesta_step",
+        schema: STEP_SCHEMA,
+        maxTokens: 800,
+        timeoutMs: 45_000,
+      })
+      return { value: r.data, usage: r.usage }
     })
-    await recordUsage(ctx.admin, ai, result.usage, { workspaceId, userId: ctx.userId })
-    return json({ step: sanitizeStep(result.data) })
+    return json({ step: sanitizeStep(value) })
   } catch (e) {
-    await markInvalidIfNeeded(ctx.admin, workspaceId, ai, e)
     const status = e instanceof LlmError ? ({ invalid_key: 409, limit: 429, timeout: 504 } as Record<string, number>)[e.code] ?? 502 : 502
     return fail(status, e instanceof LlmError ? e.code : "provider_error", e instanceof LlmError ? e.message : "La IA no pudo preparar el paso.")
   }

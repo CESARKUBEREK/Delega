@@ -9,7 +9,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { createRun } from "./agent.ts"
 import { isUuid } from "./core.ts"
-import { resolveAi } from "./llm.ts"
+import { isRouteError, planRun, stepCount } from "./router/index.ts"
 import { sendPush } from "./push.ts"
 
 export const MAX_SCHEDULED_PER_DAY = 20
@@ -80,8 +80,8 @@ async function launchOne(admin: SupabaseClient, flow: DueFlow): Promise<boolean>
   if ((count ?? 0) >= MAX_SCHEDULED_PER_DAY) return false
 
   const settings = flow.settings ?? {}
-  const conn = await resolveAi(admin, flow.workspace_id, typeof settings.model === "string" ? settings.model : null)
-  if (!conn) return false
+  const conn = await planRun(admin, flow.workspace_id, { flowId: flow.id, flowSettings: settings, steps: stepCount(flow.definition) })
+  if (isRouteError(conn)) return false
   const fileIds = Array.isArray(settings.file_ids) ? settings.file_ids.filter(isUuid).slice(0, 5) : []
   await createRun(admin, {
     workspaceId: flow.workspace_id,
@@ -89,6 +89,7 @@ async function launchOne(admin: SupabaseClient, flow: DueFlow): Promise<boolean>
     fileIds,
     note: "",
     model: conn.model,
+    routing: conn,
     startedBy: flow.created_by,
     trigger: { type: "schedule", scheduled_for: flow.scheduled_for },
   })

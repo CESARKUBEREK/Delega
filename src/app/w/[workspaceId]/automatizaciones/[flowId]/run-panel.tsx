@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useActionState, useState, useTransition } from "react"
 import { FormMessage } from "@/components/form"
 import { AI_PROVIDERS } from "@/lib/plan"
+import { MODE_HINT, MODE_LABEL, MODES } from "@/lib/router"
 import { type AiKeyState, setFlowModel } from "../../ai-actions"
 import { setFlowActive, startRun } from "../../run-actions"
 
@@ -372,49 +373,76 @@ export function ActivationPanel({
   )
 }
 
-// Modelo de IA de esta automatización (o la IA principal del espacio).
+// IA de esta automatización (router, fase 8): el modo del espacio, otro modo
+// o un modelo fijo, y el presupuesto por ejecución.
 export function FlowModelForm({
   workspaceId,
   flowId,
-  model,
+  choice,
+  runUsd,
   providers,
-  defaultLabel,
+  spaceModeLabel,
+  summary,
   canEdit,
 }: {
   workspaceId: string
   flowId: string
-  model: string
+  // "" (modo del espacio), "eco" | "smart" | "expert" o "fixed:<modelo>".
+  choice: string
+  runUsd: number | null
   providers: string[]
-  defaultLabel: string
+  spaceModeLabel: string
+  // Lo que se usará ahora y cuánto suele costar.
+  summary: string | null
   canEdit: boolean
 }) {
   const [state, action, pending] = useActionState<AiKeyState, FormData>(setFlowModel, {})
-  const options = AI_PROVIDERS.filter((p) => providers.includes(p.id) || p.models.some((m) => m.id === model))
+  const fixed = choice.startsWith("fixed:") ? choice.slice(6) : ""
+  const options = AI_PROVIDERS.filter((p) => providers.includes(p.id) || p.models.some((m) => m.id === fixed))
   return (
     <form action={action} className="flex flex-col gap-3">
       <input type="hidden" name="workspaceId" value={workspaceId} />
       <input type="hidden" name="flowId" value={flowId} />
       <label htmlFor="flow-model" className="text-sm text-graphite">
-        Qué IA ejecuta esta automatización. Si su proveedor deja de estar conectado, se usa la principal.
+        Cómo elige la IA esta automatización. Con un modo, MarchaSolo elige el modelo y, si un proveedor falla, sigue con otra IA conectada.
       </label>
       <select
         id="flow-model"
-        name="model"
-        defaultValue={model}
+        name="choice"
+        defaultValue={choice}
         disabled={!canEdit}
         className="h-11 border border-rule bg-sheet px-3 text-base text-ink focus:border-link focus:outline-none sm:max-w-md"
       >
-        <option value="">IA principal del espacio{defaultLabel ? ` (${defaultLabel})` : ""}</option>
+        <option value="">El modo del espacio ({spaceModeLabel})</option>
+        <optgroup label="Otro modo">
+          {MODES.map((m) => (
+            <option key={m} value={m}>
+              {MODE_LABEL[m]}: {MODE_HINT[m]}
+            </option>
+          ))}
+        </optgroup>
         {options.map((p) => (
-          <optgroup key={p.id} label={p.label}>
+          <optgroup key={p.id} label={`Siempre un modelo de ${p.label}`}>
             {p.models.map((m) => (
-              <option key={m.id} value={m.id}>
+              <option key={m.id} value={`fixed:${m.id}`}>
                 {m.label}: {m.hint}
               </option>
             ))}
           </optgroup>
         ))}
       </select>
+      <label className="flex flex-col gap-1 text-sm sm:max-w-xs">
+        <span className="text-graphite">Presupuesto por ejecución (USD)</span>
+        <input
+          name="run_usd"
+          defaultValue={runUsd === null ? "" : String(runUsd).replace(".", ",")}
+          inputMode="decimal"
+          placeholder="Automático"
+          disabled={!canEdit}
+          className="h-11 border border-rule bg-sheet px-3 text-base text-ink focus:border-link focus:outline-none"
+        />
+      </label>
+      {summary ? <p className="text-sm text-graphite">{summary}</p> : null}
       <FormMessage error={state.error} message={state.message} />
       {canEdit ? (
         <button

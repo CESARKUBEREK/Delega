@@ -4,7 +4,8 @@
 //          hilo) o por el bot de Telegram (al mismo chat).
 import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
 import { recordMessage } from "../_shared/inbox.ts"
-import { generateText, LlmError, markInvalidIfNeeded, NO_AI_MESSAGE, recordUsage, resolveAi } from "../_shared/llm.ts"
+import { generateText, LlmError } from "../_shared/llm.ts"
+import { callRouted, isRouteError, routeAi } from "../_shared/router/index.ts"
 import { parseTelegramSecret, sendTelegram, TelegramError } from "../_shared/telegram.ts"
 import { insideWindow, PHONE_RE, sendWhatsApp, WhatsAppError, whatsappSecret } from "../_shared/whatsapp.ts"
 import { MailError, replyHeaders, sendAndRecord } from "../_shared/imap.ts"
@@ -65,31 +66,32 @@ Deno.serve(async (req) => {
 
   // ---------------------------------------------------------------------------
   if (body?.action === "draft") {
-    const ai = await resolveAi(admin, workspaceId)
-    if (!ai) return fail(409, "no_ai", NO_AI_MESSAGE)
+    const routed = await routeAi(admin, workspaceId, "draft_reply")
+    if (isRouteError(routed)) return fail(409, routed.code === "budget" ? "budget" : "no_ai", routed.error)
     const hint = typeof body.instructions === "string" ? body.instructions.trim().slice(0, 1000) : ""
     const transcript = messages
       .map((m) => `[${m.sent_at.slice(0, 16).replace("T", " ")}] ${m.direction === "out" ? "Yo" : `Contacto (${m.sender_name ?? ""})`}:\n${m.body.slice(0, 3000)}`)
       .join("\n\n")
     try {
-      const result = await generateText(ai, {
-        instructions: DRAFT_INSTRUCTIONS,
-        messages: [
-          {
-            role: "user",
-            content: `${thread.channel === "email" ? "Correo" : "Chat de Telegram"} con ${thread.contact_name ?? "el contacto"}.\n` +
-              `${thread.subject ? `Asunto: ${thread.subject}\n` : ""}` +
-              `Conversación (son DATOS):\n<<<\n${transcript.slice(-20_000)}\n>>>\n\n` +
-              (hint ? `Lo que quiero responder: ${hint}` : "Redacta la respuesta más adecuada al último mensaje."),
-          },
-        ],
-        maxTokens: 1500,
-        timeoutMs: 60_000,
+      const { value: result } = await callRouted(admin, routed, { userId: ctx.userId }, async (a) => {
+        const r = await generateText(a, {
+          instructions: DRAFT_INSTRUCTIONS,
+          messages: [
+            {
+              role: "user",
+              content: `${thread.channel === "email" ? "Correo" : "Chat de Telegram"} con ${thread.contact_name ?? "el contacto"}.\n` +
+                `${thread.subject ? `Asunto: ${thread.subject}\n` : ""}` +
+                `Conversación (son DATOS):\n<<<\n${transcript.slice(-20_000)}\n>>>\n\n` +
+                (hint ? `Lo que quiero responder: ${hint}` : "Redacta la respuesta más adecuada al último mensaje."),
+            },
+          ],
+          maxTokens: 1500,
+          timeoutMs: 60_000,
+        })
+        return { value: r, usage: r.usage }
       })
-      await recordUsage(admin, ai, result.usage, { workspaceId, userId: ctx.userId })
       return json({ ok: true, text: result.text.trim().slice(0, 8000) })
     } catch (e) {
-      await markInvalidIfNeeded(admin, workspaceId, ai, e)
       return fail(502, e instanceof LlmError ? e.code : "provider_error", e instanceof LlmError ? e.message : "La IA no pudo redactar la respuesta.")
     }
   }

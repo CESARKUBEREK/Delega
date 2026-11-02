@@ -58,7 +58,10 @@ import { notifyApproval, sendPush } from "./push.ts"
 import { busyTimes, freeSlots, readVoiceConfig, type VoiceConfig } from "./voice.ts"
 import { telegramApproval, telegramRunResult } from "./telegram-notice.ts"
 import { downloadXlsx, XLSX_MIME, xlsxInfo, xlsxRead, xlsxWrite } from "./excel.ts"
-import { type Ai, complete, fromResponsesItems, LlmError, type Msg, NO_AI_MESSAGE, providerOf, resolveAi, type ToolDef } from "./llm.ts"
+import { type Ai, complete, fromResponsesItems, LlmError, type Msg, NO_AI_MESSAGE, providerOf, type ToolDef } from "./llm.ts"
+import { modelInfo } from "./router/catalog.ts"
+import { costUsd, formatUsd } from "./router/core.ts"
+import { aiForRun, parseRunRouting, type PlannedRun, type RunRouting } from "./router/index.ts"
 
 export const SLICE_MS = 90_000
 const LEASE_SECONDS = 140
@@ -122,6 +125,10 @@ export type RunRow = {
   started_by: string | null
   trigger: RunTrigger
   flow_id?: string | null
+  // Router (fase 8): decisión, coste acumulado y presupuesto de la ejecución.
+  routing?: unknown
+  cost_usd?: number | string | null
+  budget_usd?: number | string | null
 }
 
 // xlsx: archivo Excel guardado en Drive; se trata como una planilla.
@@ -151,6 +158,11 @@ export type PendingAction =
   | { call_id: string; tool: "api_request"; provider: "supabase" | "custom_1" | "custom_2"; connection_name: string; method: "POST" | "PATCH" | "DELETE"; path: string; query: string; body: string }
   | TokkoLeadPending
   | { call_id: string; tool: "buffer_post"; channels: { id: string; name: string; service: string }[]; text: string; due_at: string | null; when_label: string }
+  // La ejecución llegó a su presupuesto de IA: ¿continuar con más? No es una
+  // llamada del agente (call_id propio) y nunca se aprueba por voz ni Telegram.
+  | BudgetPending
+
+export type BudgetPending = { call_id: string; tool: "budget_extend"; spent_usd: number; budget_usd: number; extra_usd: number }
 
 export class RunError extends Error {}
 
@@ -898,7 +910,51 @@ export function proposalTitle(p: PendingAction): string {
       return `Propone registrar la consulta de ${p.name} en Tokko`
     case "buffer_post":
       return `Propone publicar en ${p.channels.map((c) => c.name).join(", ")} (Buffer)`
+    case "budget_extend":
+      return `Ha llegado a su presupuesto de IA (${formatUsd(p.budget_usd)}): ¿continuar con ${formatUsd(p.extra_usd)} más?`
   }
+}
+
+// ---------------------------------------------------------------------------
+// Router: cambios de modelo y presupuesto
+// ---------------------------------------------------------------------------
+const SWITCH_REASON: Record<string, string> = {
+  disconnected: "su IA ya no está conectada",
+  limit: "su cuenta llegó al límite o no tiene saldo",
+  invalid_key: "su clave fue rechazada",
+  provider: "el proveedor no respondía bien",
+}
+
+// Apunta el cambio de modelo en la ejecución (routing.switches y bitácora).
+async function noteSwitch(admin: Admin, run: RunRow, routing: RunRouting | null, from: string | null, to: string, code: string) {
+  const labelOf = async (m: string | null) => (m ? (await modelInfo(admin, m))?.label ?? m : "—")
+  run.model = to
+  const next: RunRouting | null = routing
+    ? { ...routing, switches: [...(routing.switches ?? []), { from: from ?? "", to, code, at: new Date().toISOString() }].slice(-5) }
+    : null
+  if (routing && next) routing.switches = next.switches
+  await admin.from("flow_runs").update({ model: to, ...(next ? { routing: next } : {}) }).eq("id", run.id)
+  await addEvent(admin, run, "message", `Se pasó de ${await labelOf(from)} a ${await labelOf(to)}: ${SWITCH_REASON[code] ?? "fallo de la IA"}`, {
+    router: true,
+    from,
+    to,
+    code,
+  })
+}
+
+// La ejecución llegó a su presupuesto: espera a que alguien diga si continúa.
+async function pauseForBudget(admin: Admin, run: RunRow, spent: number, cap: number): Promise<string> {
+  const pending: BudgetPending = {
+    call_id: `budget-${Date.now()}`,
+    tool: "budget_extend",
+    spent_usd: Math.round(spent * 10_000) / 10_000,
+    budget_usd: cap,
+    extra_usd: cap,
+  }
+  await save(admin, run, { status: "awaiting_approval", pending_action: pending, lease_until: null })
+  await addEvent(admin, run, "approval_requested", proposalTitle(pending), { tool: pending.tool })
+  await notifyApproval(admin, run, pending.tool).catch(() => console.error("push: no se pudo avisar"))
+  return "awaiting_approval"
 }
 
 // ---------------------------------------------------------------------------
@@ -910,12 +966,25 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
   const byAlias = new Map(res.files.map((f) => [f.alias, f]))
   const recipients = new Map(res.recipients.map((x) => [x.alias, x]))
 
-  const ai: Ai | null = await resolveAi(admin, run.workspace_id, run.model)
+  // Modelo elegido por el router al crear la ejecución; si su proveedor ya no
+  // está conectado, el primero del respaldo que lo esté.
+  const routing = parseRunRouting(run.routing)
+  let ai: Ai | null = await aiForRun(admin, run.workspace_id, run.model, routing)
   if (!ai) return finishRun(admin, run, "failed", `${NO_AI_MESSAGE} La conexión que usaba esta ejecución no está activa.`)
   const messages = transcript(run)
   // Si la ejecución cambió de proveedor (se desconectó el suyo), no se reenvía
   // nada en el formato del anterior.
-  if (providerOf(run.model) !== ai.provider) for (const m of messages) if (m.role === "assistant") delete m.native
+  const dropNative = () => {
+    for (const m of messages) if (m.role === "assistant") delete m.native
+  }
+  if (providerOf(run.model) !== ai.provider) dropNative()
+  let switched = false
+  // Modelos ya probados en este tramo: el respaldo nunca vuelve a uno que falló.
+  const tried = new Set<string>([ai.model])
+  if (run.model && ai.model !== run.model) {
+    await noteSwitch(admin, run, routing, run.model, ai.model, "disconnected")
+    switched = true
+  }
 
   let token: string | null
   try {
@@ -926,7 +995,6 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
   }
   if (!token) res.googleActive = false
 
-  const model = ai.model
   const tools = toolDefs(res)
   let calToken: string | null = null
   const calendar = async () => (calToken ??= (await calendarToken(admin, run.workspace_id)).token)
@@ -937,7 +1005,13 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       return finishRun(admin, run, "failed", `Se alcanzó el límite de ${MAX_TOOL_CALLS} acciones sin terminar.`)
     }
 
+    // Presupuesto de la ejecución: al llegar, se pausa y se pregunta.
+    const spent = Number(run.cost_usd) || 0
+    const cap = Number(run.budget_usd) || 0
+    if (cap > 0 && spent >= cap) return pauseForBudget(admin, run, spent, cap)
+
     let result
+    const started = Date.now()
     try {
       result = await complete(ai, {
         instructions: INSTRUCTIONS,
@@ -954,19 +1028,48 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       if (e instanceof LlmError && e.code === "invalid_key") {
         await admin.rpc("ai_connection_mark_invalid", { p_workspace_id: run.workspace_id, p_provider: ai.provider })
       }
+      // Saldo, límite, clave rechazada o caída del proveedor: el respaldo.
+      if (e instanceof LlmError && (e.code === "invalid_key" || e.code === "limit" || e.code === "provider")) {
+        const skip = new Set<string>(e.code === "provider" ? [] : [ai.provider])
+        const rest = routing ? { ...routing, fallbacks: routing.fallbacks.filter((x) => !tried.has(x)) } : null
+        const next = await aiForRun(admin, run.workspace_id, null, rest, skip)
+        if (next && !tried.has(next.model)) {
+          tried.add(next.model)
+          if (next.provider !== ai.provider) dropNative()
+          await noteSwitch(admin, run, routing, ai.model, next.model, e.code)
+          ai = next
+          switched = true
+          await save(admin, run, {})
+          continue
+        }
+      }
       return finishRun(admin, run, "failed", e instanceof LlmError ? e.message : "La IA no pudo procesar la petición.")
     }
 
     run.input_tokens += result.usage.input
     run.output_tokens += result.usage.output
+    const cost = costUsd(await modelInfo(admin, ai.model), result.usage)
+    run.cost_usd = spent + cost
     await admin.from("usage_events").insert({
       workspace_id: run.workspace_id,
       provider: ai.provider,
-      model,
+      model: ai.model,
       input_tokens: result.usage.input,
       output_tokens: result.usage.output,
+      cached_tokens: result.usage.cached ?? 0,
+      cache_write_tokens: result.usage.cacheWrite ?? 0,
+      reasoning_tokens: result.usage.reasoning ?? 0,
+      cost_usd: cost,
+      latency_ms: Date.now() - started,
+      task: routing?.task ?? "agent",
+      run_id: run.id,
+      step_type: switched ? "fallback" : "primary",
       created_by: run.started_by,
     })
+    if (cost > 0) {
+      const { error: costError } = await admin.rpc("flow_run_add_cost", { p_run_id: run.id, p_cost: cost })
+      if (costError) console.error("flow_run_add_cost", costError.code)
+    }
 
     messages.push(result.message)
     const first = result.message.calls[0]
@@ -1451,6 +1554,8 @@ export function dayContext(tz: string, now = new Date()): string {
 // Ejecutar una acción aprobada
 // ---------------------------------------------------------------------------
 export async function executePending(admin: Admin, run: RunRow, pending: PendingAction, decidedBy: string | null): Promise<string> {
+  // El presupuesto se decide en decideRun; nunca llega aquí.
+  if (pending.tool === "budget_extend") return JSON.stringify({ ok: true })
   const res = await loadResources(admin, run)
   try {
     if (pending.tool === "api_request") {
@@ -1690,6 +1795,8 @@ export async function createRun(
     fileIds: string[]
     note: string
     model: string
+    // Decisión del router (modelo, respaldo y presupuesto de la ejecución).
+    routing?: PlannedRun
     startedBy: string | null
     trigger: RunTrigger
     sourceMessageId?: number | null
@@ -1789,6 +1896,9 @@ export async function createRun(
       file_ids: valid,
       note: input.note,
       model: input.model,
+      ...(input.routing
+        ? { routing: input.routing.routing, routing_mode: input.routing.routingMode, budget_usd: input.routing.budgetUsd }
+        : {}),
       state: { messages: [{ role: "user", content: parts.filter(Boolean).join("\n\n") }] },
       started_by: input.startedBy,
       trigger: input.trigger,

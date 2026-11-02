@@ -12,7 +12,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { createRun } from "./agent.ts"
 import { isUuid, isWorkspaceAdmin } from "./core.ts"
-import { resolveAi } from "./llm.ts"
+import { isRouteError, planRun, stepCount } from "./router/index.ts"
 
 export const MAX_EMAIL_RUNS_PER_HOUR = 30
 const MAX_FLOWS_PER_MAIL = 3
@@ -112,8 +112,8 @@ export async function launchEmailFlows(admin: SupabaseClient, workspaceId: strin
       if (perMail >= MAX_FLOWS_PER_MAIL) break
       const settings = (flow.settings ?? {}) as { file_ids?: unknown; model?: unknown; email_filter?: unknown }
       if (!matchesEmail(parseEmailFilter(settings.email_filter), mail)) continue
-      const conn = await resolveAi(admin, workspaceId, typeof settings.model === "string" ? settings.model : null)
-      if (!conn) return launched
+      const conn = await planRun(admin, workspaceId, { flowId: flow.id, flowSettings: flow.settings, steps: stepCount(flow.definition) })
+      if (isRouteError(conn)) return launched
       const fileIds = Array.isArray(settings.file_ids) ? settings.file_ids.filter(isUuid).slice(0, 5) : []
       try {
         const run = await createRun(admin, {
@@ -122,6 +122,7 @@ export async function launchEmailFlows(admin: SupabaseClient, workspaceId: strin
           fileIds,
           note: "",
           model: conn.model,
+          routing: conn,
           startedBy: flow.created_by,
           trigger: {
             type: "email_message",

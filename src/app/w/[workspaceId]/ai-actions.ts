@@ -6,6 +6,7 @@ import { callEdgeFunction } from "@/lib/edge-functions"
 import { AI_PROVIDERS, type AiProvider, asPlan, type FlowPlan, scheduleOf } from "@/lib/plan"
 import type { Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
+import { isMode, MODE_LABEL, parseUsdInput } from "@/lib/router"
 import { findTemplate } from "@/lib/templates"
 import { UUID_RE } from "@/lib/workspace"
 
@@ -83,12 +84,20 @@ export async function disconnectAi(_prev: AiKeyState, formData: FormData): Promi
 
 // IA de una automatización: un modelo concreto o, si se deja vacío, la
 // principal del espacio. Lo guarda la persona con su sesión (RLS).
+// IA de una automatización (router, fase 8): «choice» es "" (el modo del
+// espacio), un modo (eco | smart | expert) o "fixed:<modelo>"; «run_usd», el
+// presupuesto por ejecución (vacío = automático).
 export async function setFlowModel(_prev: AiKeyState, formData: FormData): Promise<AiKeyState> {
   const workspaceId = String(formData.get("workspaceId") ?? "")
   const flowId = String(formData.get("flowId") ?? "")
-  const model = String(formData.get("model") ?? "")
+  const choice = String(formData.get("choice") ?? "")
   if (!UUID_RE.test(workspaceId) || !UUID_RE.test(flowId)) return { error: "Datos no válidos." }
+  const model = choice.startsWith("fixed:") ? choice.slice(6) : ""
+  const mode = isMode(choice) ? choice : null
+  if (choice && !mode && !model) return { error: "Elige una opción." }
   if (model && !AI_PROVIDERS.some((p) => p.models.some((m) => m.id === model))) return { error: "Elige un modelo." }
+  const runUsd = parseUsdInput(formData.get("run_usd"))
+  if (runUsd === undefined) return { error: "El presupuesto por ejecución debe ser un importe entre 0,01 y 100.000 $." }
 
   const supabase = await createClient()
   const { data: flow } = await supabase.from("flows").select("settings").eq("id", flowId).eq("workspace_id", workspaceId).maybeSingle()
@@ -96,10 +105,51 @@ export async function setFlowModel(_prev: AiKeyState, formData: FormData): Promi
   const settings = { ...((flow.settings ?? {}) as { [key: string]: Json | undefined }) }
   if (model) settings.model = model
   else delete settings.model
+  const routing: { [key: string]: Json } = {}
+  if (mode) routing.mode = mode
+  if (runUsd) routing.run_usd = runUsd
+  if (Object.keys(routing).length) settings.routing = routing
+  else delete settings.routing
   const { data, error } = await supabase.from("flows").update({ settings }).eq("id", flowId).eq("workspace_id", workspaceId).select("id")
   if (error || !data?.length) return { error: "Solo quien creó la automatización o un administrador puede cambiarla." }
   refresh()
-  return { message: model ? "Esta automatización usará ese modelo." : "Esta automatización usará la IA principal." }
+  return {
+    message: model
+      ? "Esta automatización usará siempre ese modelo."
+      : mode
+      ? `Esta automatización usará el modo ${MODE_LABEL[mode]}.`
+      : "Esta automatización usará el modo del espacio.",
+  }
+}
+
+// Cómo elige la IA el espacio (solo owners y admins; lo comprueba la RPC).
+export async function setAiRouting(_prev: AiKeyState, formData: FormData): Promise<AiKeyState> {
+  const workspaceId = String(formData.get("workspaceId") ?? "")
+  if (!UUID_RE.test(workspaceId)) return { error: "Datos no válidos." }
+  const mode = String(formData.get("mode") ?? "")
+  if (!isMode(mode)) return { error: "Elige un modo." }
+  const daily = parseUsdInput(formData.get("daily_usd"))
+  const monthly = parseUsdInput(formData.get("monthly_usd"))
+  const run = parseUsdInput(formData.get("run_usd"))
+  if (daily === undefined || monthly === undefined || run === undefined) return { error: "Los importes deben estar entre 0,01 y 100.000 $." }
+  if (daily && monthly && daily > monthly) return { error: "El límite diario no puede ser mayor que el mensual." }
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("workspace_set_ai_routing", {
+    p_workspace_id: workspaceId,
+    p_settings: {
+      mode,
+      learning: true,
+      cross_provider: formData.get("cross_provider") === "on",
+      stop_at_limit: formData.get("stop_at_limit") === "on",
+      daily_usd: daily,
+      monthly_usd: monthly,
+      run_usd: run,
+    },
+  })
+  if (error) return { error: "No se pudo guardar." }
+  if (!data) return { error: "Solo un administrador puede cambiarlo." }
+  refresh()
+  return { message: "Guardado." }
 }
 
 // ---------------------------------------------------------------------------

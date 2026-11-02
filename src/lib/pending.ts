@@ -69,6 +69,21 @@ export function asPending(value: Json | null): Pending | null {
         textCaption: "Consulta",
       }
     }
+    case "budget_extend": {
+      const n = (x: unknown) => (typeof x === "number" ? x : Number(x) || 0)
+      const usd = (x: number) => `${x.toLocaleString("es-ES", { maximumFractionDigits: 4 })} $`
+      return {
+        tool: "generic",
+        description: "Esta ejecución ha llegado a su presupuesto de IA. ¿Continúa con más presupuesto o se para aquí?",
+        verb: `Continuar con ${usd(n(v.extra_usd))} más`,
+        fields: [
+          { label: "Gastado", value: usd(n(v.spent_usd)) },
+          { label: "Presupuesto", value: usd(n(v.budget_usd)) },
+        ],
+        text: null,
+        textCaption: "",
+      }
+    }
     case "buffer_post": {
       const channels = Array.isArray(v.channels)
         ? v.channels.map((c) => `${t(obj(c).name)}${t(obj(c).service) ? ` (${t(obj(c).service)})` : ""}`).join(", ")
