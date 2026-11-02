@@ -17,6 +17,43 @@ export type UseCase = {
 }
 
 export const USE_CASES: UseCase[] = [
+ 
+  // ——— Canales del negocio ———
+  {
+    id: "whatsapp-negocio",
+    title: "Atender el WhatsApp del negocio sin vivir pegado al móvil",
+    before:
+      "Cada mensaje de WhatsApp te interrumpe. Buscas tarifas o condiciones y contestas cuando puedes; a veces se enfría el cliente.",
+    ask: "Cuando un cliente escriba por WhatsApp, busca la respuesta en mis documentos y déjame la contestación preparada.",
+    does: "Lee el mensaje, consulta tarifas o FAQ en Drive y redacta una respuesta breve de chat. No inventa datos.",
+    waits: "Cada respuesta por WhatsApp, antes de enviarse.",
+    result: "El cliente no espera en silencio. Tú revisas en la app o en el móvil y envías en un toque.",
+    tags: ["WhatsApp", "Google Drive"],
+  },
+  {
+    id: "voz-reservas",
+    title: "Atención por voz y reservas en tu horario",
+    before:
+      "Pierdes llamadas o las coges a medias. Apuntas el recado a mano y luego buscas hueco en la agenda.",
+    ask: "Que el asistente de voz atienda en la web y por teléfono, reserve solo en mi horario y me deje los recados en la bandeja.",
+    does: "Atiende con tus documentos, propone citas solo en los huecos que tú definiste y deja cada conversación en la Bandeja.",
+    waits: "Lo que implique enviar un mensaje o crear algo fuera de las reglas que tú fijaste.",
+    result: "Llamadas y web atendidas con tu criterio. Tú ves el recado o la reserva y decides el siguiente paso.",
+    tags: ["Asistente de voz", "Google Calendar"],
+  },
+  {
+    id: "reservas-agenda",
+    title: "Proponer visitas y citas con huecos reales",
+    before:
+      "El cliente pide día y hora; abres el calendario, miras disponibilidad y vuelves al chat o al correo.",
+    ask: "Cuando pidan una visita o una cita, mira mi agenda y prepárame una respuesta con dos huecos libres.",
+    does: "Consulta Google Calendar, elige huecos dentro de tu disponibilidad y redacta la propuesta.",
+    waits: "La respuesta al cliente (y el evento, si lo crea al aprobar).",
+    result: "Pasas de «¿cuándo puedes?» a una propuesta concreta sin salir del hilo. Tú confirmas.",
+    tags: ["Google Calendar", "Correo", "WhatsApp"],
+  },  
+  
+  
   // ——— Ventas ———
   {
     id: "leads",
