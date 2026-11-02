@@ -20,8 +20,8 @@ export default function UseCasesPage() {
           <div className="site-container">
             <h1 className="site-h1">Casos de uso</h1>
             <p className="site-lead">
-              Siete tareas que muchos negocios hacen a mano cada semana. MarchaSolo las prepara con tus aplicaciones; tú
-              decides qué se envía o se cambia.
+              Siete tareas que muchos negocios hacen a mano cada semana. Se las pides como a un compañero: MarchaSolo las
+              prepara con tus aplicaciones; tú decides qué se envía o se cambia.
             </p>
             <nav aria-label="Casos" className="mt-8 flex flex-wrap gap-2">
               {USE_CASES.map((c) => (
