@@ -7,7 +7,7 @@ import { USE_CASES } from "@/lib/site-content"
 export const metadata: Metadata = {
   title: "Casos de uso",
   description:
-   "Casos de uso de MarchaSolo en ventas, atención al cliente y soporte técnico: prepara respuestas, seguimientos e incidencias; tú apruebas antes de enviar.",
+    "WhatsApp del negocio, voz y reservas, ventas, atención al cliente y soporte técnico. MarchaSolo prepara el trabajo; tú apruebas antes de enviar o cambiar nada.",
   robots: { index: true, follow: true },
   alternates: { canonical: "/casos-de-uso" },
 }
@@ -20,9 +20,9 @@ export default function UseCasesPage() {
           <div className="site-container">
             <h1 className="site-h1">Casos de uso</h1>
             <p className="site-lead">
-              Casos de ventas, atención al cliente y soporte técnico. Se los pides como a un compañero: MarchaSolo prepara
-              el trabajo con tus aplicaciones; tú decides qué se envía o se cambia.
-            </p>
+  WhatsApp, voz, reservas, ventas, atención y soporte. Se lo pides como a un compañero: MarchaSolo prepara el trabajo con
+  tus aplicaciones; tú decides qué se envía o se cambia.
+</p>
             <nav aria-label="Casos" className="mt-8 flex flex-wrap gap-2">
               {USE_CASES.map((c) => (
                 <a key={c.id} href={`#${c.id}`} className="chip no-underline hover:border-[var(--ms-navy)]">
