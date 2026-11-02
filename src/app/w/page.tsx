@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Suspense } from "react"
 import { Logo } from "@/components/logo"
+import { SiteFooter } from "@/components/site/site-footer"
 import { requireUser } from "@/lib/auth"
 import { KIND_LABEL, ROLE_LABEL } from "@/lib/labels"
 import { createClient } from "@/lib/supabase/server"
@@ -15,7 +16,7 @@ export default function WorkspacesPage() {
     <div className="app-shell min-h-dvh">
       <header className="app-topbar">
         <div className="app-topbar-inner">
-          <Link href="/abrir" aria-label="MarchaSolo, Hoy" className="app-brand-link">
+          <Link href="/" aria-label="MarchaSolo, inicio" className="app-brand-link">
             <Logo size={30} id="orkesta-header" />
           </Link>
           <div className="app-topbar-spacer" />
@@ -28,6 +29,7 @@ export default function WorkspacesPage() {
         <PendingInviteNotice />
         <Workspaces />
       </main>
+      <SiteFooter inApp />
     </div>
   )
 }

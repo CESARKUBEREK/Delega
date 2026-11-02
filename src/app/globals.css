@@ -828,7 +828,7 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
 .site h1, .site h2, .site h3 { color:var(--ms-navy); font-weight:650; text-wrap:balance; }
 /* En una capa: las utilidades de Tailwind (mb-10, text-[…]) pueden ajustarlos. */
 @layer components {
-  .site-display { margin:0; font-size:clamp(44px, 6.2vw, 72px); letter-spacing:-.04em; line-height:1.02; }
+  .site-display { margin:0; font-size:clamp(46px, 6.6vw, 84px); font-weight:700; letter-spacing:-.045em; line-height:.98; }
   .site-h1 { margin:0; font-size:clamp(38px, 5vw, 56px); letter-spacing:-.035em; line-height:1.06; }
   .site-h2 { margin:0; font-size:clamp(30px, 3.6vw, 44px); letter-spacing:-.03em; line-height:1.1; }
   .site-h3 { margin:0; font-size:21px; letter-spacing:-.015em; line-height:1.25; }
@@ -885,6 +885,39 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
 .demo-approval-actions span { display:inline-flex; min-height:36px; align-items:center; padding:0 14px; border-radius:8px; font-size:14px; font-weight:650; }
 .demo-approval-actions .is-yes { background:var(--ms-navy); color:#fff; }
 .demo-approval-actions .is-edit { border:1px solid #d9b98c; background:#fff; color:var(--ms-navy); }
+
+/* La app en pequeño en la portada: flota inclinada y se endereza un poco al
+   pasar el ratón. En pantallas estrechas y sin movimiento, recta. */
+.preview-stage { perspective:2200px; }
+.preview { overflow:hidden; border:1px solid #c9d5e3; border-radius:20px; background:var(--ms-paper); box-shadow:0 2px 4px rgb(11 31 59 / 6%), 0 24px 48px rgb(11 31 59 / 14%), 0 60px 120px rgb(11 31 59 / 22%); transform:rotateY(-11deg) rotateX(5deg) rotateZ(1deg); transform-origin:60% 50%; transition:transform .7s var(--ms-ease), box-shadow .7s var(--ms-ease); }
+.preview-stage:hover .preview { transform:rotateY(-5deg) rotateX(2deg) rotateZ(.4deg); box-shadow:0 2px 4px rgb(11 31 59 / 6%), 0 30px 60px rgb(11 31 59 / 16%), 0 70px 130px rgb(11 31 59 / 24%); }
+.preview-top { display:flex; align-items:center; gap:9px; padding:11px 16px; background:var(--ms-navy); box-shadow:inset 0 -2px 0 var(--ms-teal); color:#fff; font-size:13px; }
+.preview-top-name { font-weight:800; letter-spacing:-.02em; }
+.preview-top-name span { color:var(--ms-teal); }
+.preview-top-space { margin-left:auto; color:#9fb1c6; }
+.preview-body { display:grid; grid-template-columns:168px minmax(0, 1fr); }
+.preview-nav { display:grid; align-content:start; gap:2px; margin:0; padding:14px 10px; border-right:1px solid var(--ms-line); background:var(--ms-white); list-style:none; }
+.preview-nav li { display:flex; align-items:center; gap:8px; padding:8px 9px; border-radius:8px; color:var(--ms-muted); font-size:12.5px; font-weight:550; white-space:nowrap; }
+.preview-nav li.is-active { background:var(--ms-teal-wash); color:var(--ms-navy); }
+.preview-nav svg { width:16px; height:16px; flex:0 0 auto; }
+.preview-nav b { margin-left:auto; padding:0 6px; border-radius:999px; background:#e08a1e; color:#fff; font-size:11px; line-height:17px; }
+.preview-main { padding:16px; }
+.preview .console { box-shadow:0 10px 30px rgb(11 31 59 / 18%); font-size:14px; }
+.preview .console-ask p { font-size:15px; }
+@media (max-width:1180px) { .preview-body { grid-template-columns:52px minmax(0, 1fr); } .preview-nav span, .preview-nav b { display:none; } .preview-nav li { justify-content:center; } }
+@media (max-width:980px) { .preview, .preview-stage:hover .preview { transform:none; } }
+@media (max-width:640px) { .preview-body { grid-template-columns:1fr; } .preview-nav { display:none; } .preview-main { padding:10px; } .preview-top-space { display:none; } }
+@media (prefers-reduced-motion:reduce) { .preview { transition:none; } .preview-stage:hover .preview { transform:rotateY(-11deg) rotateX(5deg) rotateZ(1deg); } }
+@media (prefers-reduced-motion:reduce) and (max-width:980px) { .preview-stage:hover .preview { transform:none; } }
+
+/* Garantías bajo la portada. */
+.guarantees { border-bottom:1px solid var(--ms-line); background:var(--ms-white); }
+.guarantees ul { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:28px; margin-block:0; padding-block:28px; list-style:none; }
+.guarantees li { display:flex; align-items:flex-start; gap:12px; color:var(--ms-muted); font-size:15px; line-height:1.45; }
+.guarantees svg { width:22px; height:22px; flex:0 0 auto; margin-top:1px; padding:7px; box-sizing:content-box; border-radius:10px; background:var(--ms-teal-wash); color:var(--ms-teal-ink); }
+.guarantees b { display:block; margin-bottom:2px; color:var(--ms-navy); font-weight:650; }
+@media (max-width:980px) { .guarantees ul { grid-template-columns:1fr 1fr; } }
+@media (max-width:540px) { .guarantees ul { grid-template-columns:1fr; gap:18px; } }
 
 /* Animación única al cargar: entra la instrucción, se marcan los pasos y llega
    la aprobación. Sin animación si se prefiere menos movimiento. */
@@ -1020,8 +1053,6 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
 .access-card .access-intro { margin:10px 0 0; color:var(--ms-muted); }
 .access-card .auth-form-content { margin-top:28px; }
 .access-card-footer { margin-top:24px; padding-top:20px; border-top:1px solid var(--ms-line); color:var(--ms-muted); font-size:15px; }
-.access-legal { width:min(100%, 440px); margin:32px auto 0; color:var(--ms-muted); font-size:14px; }
-.access-legal a { color:var(--ms-teal-ink); }
 @media (max-width:900px) {
   .access { grid-template-columns:1fr; }
   .access-story { order:2; padding-block:32px; }
@@ -1044,3 +1075,19 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
 .state.is-wait { background:var(--ms-amber-wash); color:var(--ms-amber); }
 .state.is-info { background:#e9eef5; color:var(--ms-navy); }
 .page-intro { padding-block:clamp(56px, 8vw, 96px) clamp(32px, 4vw, 48px); border-bottom:1px solid var(--ms-line); background:var(--ms-white); }
+
+/* Elevación al pasar el ratón: botones y tarjetas del sitio público. */
+.btn { transition:background-color .18s var(--ms-ease), border-color .18s var(--ms-ease), color .18s var(--ms-ease), box-shadow .25s var(--ms-ease), transform .25s var(--ms-ease); }
+.btn:hover { transform:translateY(-1px); }
+.btn-primary:hover { box-shadow:0 1px 0 rgb(255 255 255 / 35%) inset, 0 10px 26px rgb(0 194 168 / 32%); }
+.btn-secondary:hover { box-shadow:0 8px 20px rgb(11 31 59 / 10%); }
+.btn:active { transform:none; }
+.fact, .panel, .trail { transition:transform .3s var(--ms-ease), box-shadow .3s var(--ms-ease), border-color .3s var(--ms-ease); }
+.fact:hover, .panel:hover, .trail:hover { transform:translateY(-3px); border-color:#c3d0de; box-shadow:0 2px 4px rgb(11 31 59 / 5%), 0 18px 40px rgb(11 31 59 / 11%); }
+@media (prefers-reduced-motion:reduce) {
+  .btn:hover, .fact:hover, .panel:hover, .trail:hover { transform:none; }
+}
+
+/* El pie también dentro de la app: en el móvil deja sitio a la barra inferior. */
+.site-footer.is-app { margin-top:56px; }
+@media (max-width:1023px) { .site-footer.is-app { padding-bottom:calc(84px + env(safe-area-inset-bottom)); } }

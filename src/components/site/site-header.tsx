@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { Logo } from "@/components/logo"
+import { useSignedInHint } from "./account-hint"
 import { SITE_LINKS } from "./nav-links"
 
 // Cabecera del sitio público: menú completo en escritorio y menú desplegable
@@ -11,6 +12,7 @@ import { SITE_LINKS } from "./nav-links"
 export function SiteHeader() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const signedIn = useSignedInHint()
   const button = useRef<HTMLButtonElement>(null)
 
   // Cerrar el menú al cambiar de página.
@@ -57,12 +59,20 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="site-header-actions">
-          <Link href="/entrar" className="site-login" aria-current={current("/entrar")}>
-            Entrar
-          </Link>
-          <Link href="/crear-cuenta" className="btn btn-primary btn-sm">
-            Probar gratis
-          </Link>
+          {signedIn ? (
+            <Link href="/abrir" className="btn btn-primary btn-sm">
+              Ir a mi espacio
+            </Link>
+          ) : (
+            <>
+              <Link href="/entrar" className="site-login" aria-current={current("/entrar")}>
+                Entrar
+              </Link>
+              <Link href="/crear-cuenta" className="btn btn-primary btn-sm">
+                Probar gratis
+              </Link>
+            </>
+          )}
           <button
             ref={button}
             type="button"
@@ -94,12 +104,20 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="site-mobile-actions">
-            <Link href="/crear-cuenta" className="btn btn-primary">
-              Probar gratis
-            </Link>
-            <Link href="/entrar" className="btn btn-secondary">
-              Entrar
-            </Link>
+            {signedIn ? (
+              <Link href="/abrir" className="btn btn-primary">
+                Ir a mi espacio
+              </Link>
+            ) : (
+              <>
+                <Link href="/crear-cuenta" className="btn btn-primary">
+                  Probar gratis
+                </Link>
+                <Link href="/entrar" className="btn btn-secondary">
+                  Entrar
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

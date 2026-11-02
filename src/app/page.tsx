@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { MarketingLayout } from "@/components/marketing-layout"
 import { CaseTrail } from "@/components/site/case-trail"
-import { CommandDemo } from "@/components/site/command-demo"
+import { AppPreview, GuaranteeStrip } from "@/components/site/app-preview"
 import { TOOL_GROUPS, USE_CASES } from "@/lib/site-content"
 
 export const metadata: Metadata = {
@@ -13,7 +13,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 }
 
-// Portada pública. Quien ya tiene sesión entra directo en la app (src/lib/supabase/proxy.ts).
+// Portada pública, también con sesión (el logo de la app lleva aquí); la
+// cabecera cambia «Entrar» por «Ir a mi espacio».
 export default function HomePage() {
   const preview = USE_CASES.filter((c) => ["correo", "planillas", "reuniones"].includes(c.id))
   return (
@@ -39,9 +40,10 @@ export default function HomePage() {
                 <li>Nada se envía sin tu aprobación</li>
               </ul>
             </div>
-            <CommandDemo />
+            <AppPreview />
           </div>
         </section>
+        <GuaranteeStrip />
 
         <section className="site-section is-white" aria-labelledby="pasos">
           <div className="site-container">
