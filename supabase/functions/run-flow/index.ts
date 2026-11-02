@@ -13,7 +13,7 @@ import { type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { authenticate, fail, isUuid, json, membershipRole, type AuthContext } from "../_shared/core.ts"
 import { addEvent, advance, claim, createRun, RunError, type RunRow } from "../_shared/agent.ts"
 import { decideRun } from "../_shared/decide.ts"
-import { NO_AI_MESSAGE, resolveAi } from "../_shared/llm.ts"
+import { isRouteError, planRun, type PlannedRun, stepCount } from "../_shared/router/index.ts"
 
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined
 
@@ -27,11 +27,15 @@ function kick(admin: SupabaseClient, runId: string) {
   )
 }
 
-// IA activa (la del modelo de la automatización o la principal) y límite de
-// 10 ejecuciones cada 10 minutos por persona.
-async function readyToRun(ctx: AuthContext, workspaceId: string, preferredModel?: string | null): Promise<{ model: string } | Response> {
-  const ai = await resolveAi(ctx.admin, workspaceId, preferredModel)
-  if (!ai) return fail(409, "no_connection", NO_AI_MESSAGE)
+// Modelo que elige el router (según el modo, la IA fijada en la automatización
+// y el presupuesto) y límite de 10 ejecuciones cada 10 minutos por persona.
+async function readyToRun(
+  ctx: AuthContext,
+  workspaceId: string,
+  flow: { id: string | null; settings?: unknown; definition?: unknown },
+): Promise<PlannedRun | Response> {
+  const planned = await planRun(ctx.admin, workspaceId, { flowId: flow.id, flowSettings: flow.settings, steps: stepCount(flow.definition) })
+  if (isRouteError(planned)) return fail(409, planned.code === "budget" ? "budget" : "no_connection", planned.error)
 
   const since = new Date(Date.now() - 10 * 60_000).toISOString()
   const { count } = await ctx.admin
@@ -40,7 +44,7 @@ async function readyToRun(ctx: AuthContext, workspaceId: string, preferredModel?
     .eq("started_by", ctx.userId)
     .gte("started_at", since)
   if ((count ?? 0) >= 10) return fail(429, "rate_limited", "Has lanzado muchas ejecuciones seguidas. Espera unos minutos.")
-  return { model: ai.model }
+  return planned
 }
 
 async function canManage(ctx: AuthContext, run: RunRow): Promise<boolean> {
@@ -86,8 +90,7 @@ async function handle(req: Request): Promise<Response> {
       .maybeSingle()
     if (!flow) return fail(404, "not_found", "No se encontró la automatización.")
 
-    const flowModel = (flow.settings as { model?: unknown } | null)?.model
-    const ai = await readyToRun(ctx, workspaceId, typeof flowModel === "string" ? flowModel : null)
+    const ai = await readyToRun(ctx, workspaceId, flow)
     if (ai instanceof Response) return ai
 
     const run = await createRun(ctx.admin, {
@@ -96,6 +99,7 @@ async function handle(req: Request): Promise<Response> {
       fileIds,
       note,
       model: ai.model,
+      routing: ai,
       startedBy: ctx.userId,
       trigger: { type: "manual" },
     })
@@ -142,7 +146,7 @@ async function handle(req: Request): Promise<Response> {
       .limit(1)
       .maybeSingle()
 
-    const ai = await readyToRun(ctx, workspaceId)
+    const ai = await readyToRun(ctx, workspaceId, { id: null, definition: plan })
     if (ai instanceof Response) return ai
 
     const run = await createRun(ctx.admin, {
@@ -151,6 +155,7 @@ async function handle(req: Request): Promise<Response> {
       fileIds,
       note: ask?.content ? `Lo que pidió en el chat: ${ask.content}`.slice(0, 2000) : "",
       model: ai.model,
+      routing: ai,
       startedBy: ctx.userId,
       trigger: { type: "chat", conversation_id: msg.conversation_id, message_id: msg.id },
       sourceMessageId: msg.id,
@@ -176,6 +181,8 @@ async function handle(req: Request): Promise<Response> {
     }
     const decision = await decideRun(ctx.admin, run.id, body?.approve === true, ctx.userId)
     if (!decision.ok) return fail(409, "busy", "La ejecución se está procesando. Recarga la página.")
+    // Parar al llegar al presupuesto termina la ejecución.
+    if (decision.pending.tool === "budget_extend" && body?.approve !== true) return json({ run_id: run.id, status: "failed" })
     // Sigue en segundo plano; el panel también puede retomarla con "continue".
     kick(ctx.admin, run.id)
     return json({ run_id: run.id, status: "running" })

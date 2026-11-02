@@ -10,7 +10,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.118.0"
 import { advance, claim, createRun, type RunRow } from "../_shared/agent.ts"
 import { isUuid, isWorkspaceAdmin } from "../_shared/core.ts"
-import { resolveAi } from "../_shared/llm.ts"
+import { isRouteError, planRun, stepCount } from "../_shared/router/index.ts"
 import { recordMessage } from "../_shared/inbox.ts"
 import { TRIGGER_TEXT_CHARS } from "../_shared/triggers.ts"
 import { parseWhatsAppSecret, phoneOf, validTwilioSignature } from "../_shared/whatsapp.ts"
@@ -77,8 +77,8 @@ async function launchFlows(workspaceId: string, msg: Incoming, messageId: number
     if (!(await isWorkspaceAdmin(admin, workspaceId, flow.created_by))) continue
     if (budget-- <= 0) break
     const settings = (flow.settings ?? {}) as { file_ids?: unknown; model?: unknown }
-    const conn = await resolveAi(admin, workspaceId, typeof settings.model === "string" ? settings.model : null)
-    if (!conn) return
+    const conn = await planRun(admin, workspaceId, { flowId: flow.id, flowSettings: flow.settings, steps: stepCount(flow.definition) })
+    if (isRouteError(conn)) return
     const fileIds = Array.isArray(settings.file_ids) ? settings.file_ids.filter(isUuid).slice(0, 5) : []
     try {
       const run = await createRun(admin, {
@@ -87,6 +87,7 @@ async function launchFlows(workspaceId: string, msg: Incoming, messageId: number
         fileIds,
         note: "",
         model: conn.model,
+        routing: conn,
         startedBy: flow.created_by,
         trigger: { type: "whatsapp_message", phone: msg.phone, name: msg.name, message_id: messageId, text: msg.text.slice(0, TRIGGER_TEXT_CHARS) },
       })

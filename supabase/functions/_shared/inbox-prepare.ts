@@ -15,7 +15,7 @@ import { isWorkspaceAdmin } from "./core.ts"
 import { contactsToken, findContactByEmail } from "./contacts.ts"
 import { hubspotToken, search as hubspotSearch } from "./hubspot.ts"
 import type { InboxConfig } from "./inbox.ts"
-import { resolveAi } from "./llm.ts"
+import { isRouteError, planRun } from "./router/index.ts"
 
 export const DEFAULT_DRAFTS_PER_DAY = 30
 const AUTO_PER_TICK = 3
@@ -85,8 +85,8 @@ export async function prepareThread(
     throw new PrepareError("limit", "Se alcanzó el límite diario de respuestas preparadas.")
   }
 
-  const ai = await resolveAi(admin, workspaceId)
-  if (!ai) throw new PrepareError("no_ai", "Conecta una IA en Integraciones.")
+  const ai = await planRun(admin, workspaceId, { task: "draft_reply" })
+  if (isRouteError(ai)) throw new PrepareError(ai.code === "budget" ? "limit" : "no_ai", ai.code === "budget" ? ai.error : "Conecta una IA en Integraciones.")
 
   // El mensaje de referencia: el último recibido (respuesta) o el último
   // nuestro (recordatorio).
@@ -126,6 +126,7 @@ export async function prepareThread(
     fileIds: [],
     note: "",
     model: ai.model,
+    routing: ai,
     startedBy: opts.startedBy,
     trigger: {
       type: "inbox_prepare",

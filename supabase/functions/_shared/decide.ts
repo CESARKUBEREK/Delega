@@ -2,7 +2,8 @@
 // (botones de la app) y telegram-webhook (botones del chat de Telegram), con
 // las mismas reglas: la ejecución debe seguir esperando y estar libre (lease).
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
-import { addEvent, appendToolResult, claim, executePending, type PendingAction, type RunRow, save } from "./agent.ts"
+import { addEvent, appendToolResult, claim, executePending, finishRun, type PendingAction, type RunRow, save } from "./agent.ts"
+import { formatUsd } from "./router/core.ts"
 
 export type Decision =
   | { ok: true; run: RunRow; pending: PendingAction; output: string }
@@ -22,6 +23,23 @@ export async function decideRun(
     // Se suelta el lease sin tocar nada más.
     await admin.from("flow_runs").update({ lease_until: null }).eq("id", runId)
     return { ok: false, code: "not_pending" }
+  }
+
+  // Presupuesto de IA de la ejecución: continuar con más o pararla. No hay
+  // llamada del agente que contestar.
+  if (pending.tool === "budget_extend") {
+    if (!approve) {
+      await addEvent(admin, claimed, "rejected", "Ejecución parada al llegar a su presupuesto de IA", { tool: pending.tool, decided_by: userId })
+      await finishRun(admin, claimed, "failed", `Parada al llegar a su presupuesto de IA (${formatUsd(pending.budget_usd)}).`)
+      return { ok: true, run: claimed, pending, output: JSON.stringify({ ok: false, rejected: true }) }
+    }
+    const budget = Math.round((pending.budget_usd + pending.extra_usd) * 100) / 100
+    await addEvent(admin, claimed, "approved", `Presupuesto ampliado a ${formatUsd(budget)}`, { tool: pending.tool, decided_by: userId })
+    claimed.status = "running"
+    claimed.pending_action = null
+    claimed.budget_usd = budget
+    await save(admin, claimed, { status: "running", pending_action: null, lease_until: null, budget_usd: budget })
+    return { ok: true, run: claimed, pending, output: JSON.stringify({ ok: true }) }
   }
 
   let output: string

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { FlowMap } from "@/components/flow-map"
 import { asPlan, AUTO_TRIGGERS, fileKindLabel, FLOW_STATUS_LABEL, modelLabel, RUN_STATUS_LABEL, scheduleOf } from "@/lib/plan"
+import { autoRunBudget, FALLBACK_CATALOG, formatUsd, MODE_LABEL, type ModelInfo, rankModels, readFlowRouting, readWorkspaceRouting, toModelInfo } from "@/lib/router"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { deleteFlow } from "../../ai-actions"
@@ -42,17 +43,18 @@ async function Flow({
     .maybeSingle()
   if (!flow) notFound()
 
-  const [{ data: rawFiles }, { data: ai }, { data: runs }, { data: channels }] = await Promise.all([
+  const [{ data: rawFiles }, { data: ai }, { data: runs }, { data: channels }, { data: models }] = await Promise.all([
     supabase.from("integration_files").select("id, name, mime_type").eq("workspace_id", workspaceId).order("name"),
     supabase.from("ai_connections").select("provider, model, status, is_default").eq("workspace_id", workspaceId),
     supabase
       .from("flow_runs")
-      .select("id, status, started_at")
+      .select("id, status, started_at, cost_usd")
       .eq("workspace_id", workspaceId)
       .eq("flow_id", flow.id)
       .order("started_at", { ascending: false })
       .limit(10),
     supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["telegram", "imap", "whatsapp", "calendar"]),
+    supabase.from("llm_models").select("*"),
   ])
   const files = (rawFiles ?? []).map((f) => ({
     id: f.id,
@@ -74,7 +76,7 @@ async function Flow({
     (c) => c.status === "active" && c.provider === (trigger === "email_message" ? "imap" : trigger === "whatsapp_message" ? "whatsapp" : "telegram"),
   )
   const emailFilter = readEmailFilter((flow.settings as { email_filter?: unknown } | null)?.email_filter)
-  const { data: ws } = await supabase.from("workspaces").select("timezone").eq("id", workspaceId).maybeSingle()
+  const { data: ws } = await supabase.from("workspaces").select("timezone, ai_routing").eq("id", workspaceId).maybeSingle()
   const timezone = String(
     ws?.timezone || ((channels ?? []).find((c) => c.provider === "calendar")?.config as { timezone?: string } | null)?.timezone || "Europe/Madrid",
   )
@@ -187,17 +189,47 @@ async function Flow({
         <section className="border border-ink bg-sheet">
           <h2 className="border-b border-ink px-5 py-3 font-semibold">IA de esta automatización</h2>
           <div className="px-5 py-4">
-            <FlowModelForm
-              workspaceId={workspaceId}
-              flowId={flow.id}
-              model={typeof (flow.settings as { model?: unknown } | null)?.model === "string" ? ((flow.settings as { model: string }).model) : ""}
-              providers={(ai ?? []).filter((c) => c.status === "active").map((c) => c.provider)}
-              defaultLabel={(() => {
-                const d = (ai ?? []).find((c) => c.is_default) ?? (ai ?? [])[0]
-                return d ? modelLabel(d.model) : ""
-              })()}
-              canEdit={canDelete}
-            />
+            {(() => {
+              const wsRouting = readWorkspaceRouting(ws?.ai_routing)
+              const flowRouting = readFlowRouting(flow.settings)
+              const catalog = (models ?? []).map((m) => toModelInfo(m)).filter((m): m is ModelInfo => m !== null)
+              const connections = (ai ?? [])
+                .filter((c) => c.status === "active")
+                .map((c) => ({ provider: c.provider, model: c.model, isDefault: c.is_default }))
+              const mode = flowRouting.mode ?? wsRouting.mode
+              const route = connections.length
+                ? rankModels({
+                  catalog: catalog.length ? catalog : FALLBACK_CATALOG,
+                  connections,
+                  task: "agent",
+                  mode,
+                  fixedModel: flowRouting.fixedModel,
+                  crossProvider: wsRouting.crossProvider,
+                  needsTools: true,
+                  complexity: (plan?.steps.length ?? 0) >= 6 ? 4 : 3,
+                })
+                : null
+              const costs = (runs ?? []).map((r) => Number(r.cost_usd)).filter((c) => c > 0)
+              const typical = costs.length >= 3 ? costs.reduce((a, b) => a + b, 0) / costs.length : route?.estimatedCostUsd ?? 0
+              const budget = flowRouting.runUsd ?? wsRouting.runUsd ?? autoRunBudget(mode, costs)
+              const summary = route
+                ? `Ahora: ${route.fixed ? "modelo fijo" : MODE_LABEL[mode]} → ${modelLabel(route.primary)}. ` +
+                  `Cada ejecución cuesta unos ${formatUsd(typical)} (${costs.length >= 3 ? "media de las últimas" : "estimado"}); ` +
+                  `si llega a ${formatUsd(budget)}, se pausa y te pregunta.`
+                : null
+              return (
+                <FlowModelForm
+                  workspaceId={workspaceId}
+                  flowId={flow.id}
+                  choice={flowRouting.fixedModel ? `fixed:${flowRouting.fixedModel}` : flowRouting.mode ?? ""}
+                  runUsd={flowRouting.runUsd}
+                  providers={connections.map((c) => c.provider)}
+                  spaceModeLabel={MODE_LABEL[wsRouting.mode]}
+                  summary={summary}
+                  canEdit={canDelete}
+                />
+              )
+            })()}
           </div>
         </section>
       ) : null}

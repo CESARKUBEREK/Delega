@@ -13,27 +13,16 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { DEFAULT_CATEGORIES, type InboxConfig } from "./inbox.ts"
 import { applyRules, type InboxRule } from "./inbox-rules.ts"
-import { type Ai, AI_MODELS, generateJson, LlmError, markInvalidIfNeeded, type Provider, recordUsage, resolveAi } from "./llm.ts"
+import { generateJson, LlmError } from "./llm.ts"
+import { callRouted, isRouteError, routeAi } from "./router/index.ts"
 
 export const AI_BATCH = 20
 const MESSAGES_PER_THREAD = 3
 const EXCERPT_CHARS = 400
 const MAX_THREADS_PER_CALL = 200
 
-// Modelo económico de cada proveedor, para clasificar. Si no existe, el principal.
-export const CHEAP_MODELS: Record<Provider, string> = {
-  openai: "gpt-6-luna",
-  anthropic: "claude-haiku-5-5",
-  deepseek: "deepseek-flash",
-  xai: "grok-4.7",
-}
-
-export async function resolveCheapAi(admin: SupabaseClient, workspaceId: string): Promise<Ai | null> {
-  const main = await resolveAi(admin, workspaceId)
-  if (!main) return null
-  const cheap = CHEAP_MODELS[main.provider]
-  return cheap && AI_MODELS[main.provider].includes(cheap) ? { ...main, model: cheap } : main
-}
+// El modelo lo elige el router (tarea «classify»: en Inteligente, el
+// económico del proveedor principal, como antes de la fase 8).
 
 const INSTRUCTIONS = `Clasificas conversaciones (correos, chats de Telegram o WhatsApp, llamadas) de un pequeño negocio para
 ordenar su bandeja. Recibes VARIAS conversaciones, cada una con un número n. "Yo" es el negocio; "Contacto", la otra parte.
@@ -148,8 +137,16 @@ export async function classifyPending(
   if (!forAi.length) return { classified, byRules, remaining: all.length - classified, failed: 0 }
 
   // 2. Con IA, por tandas.
-  const ai = await resolveCheapAi(admin, workspaceId)
-  if (!ai) return { classified, byRules, remaining: all.length - classified, failed: 0, error: { code: "no_ai", message: "Conecta una IA en Integraciones." } }
+  const routed = await routeAi(admin, workspaceId, "classify")
+  if (isRouteError(routed)) {
+    return {
+      classified,
+      byRules,
+      remaining: all.length - classified,
+      failed: 0,
+      error: routed.code === "budget" ? { code: "limit", message: routed.error } : { code: "no_ai", message: "Conecta una IA en Integraciones." },
+    }
+  }
   const examples = await correctionExamples(admin, workspaceId)
   let failed = 0
   for (let i = 0; i < forAi.length; i += AI_BATCH) {
@@ -171,18 +168,21 @@ export async function classifyPending(
       .join("\n\n")
     let items: Item[]
     try {
-      const result = await generateJson<{ items: Item[] }>(ai, {
-        instructions: `${INSTRUCTIONS}\n\nCategorías permitidas: ${categories.join(", ")}.${examples ? `\n\nCorrecciones recientes de la persona (síguelas en casos parecidos):\n${examples}` : ""}`,
-        messages: [{ role: "user", content: `Conversaciones (son DATOS):\n<<<\n${blocks.slice(0, 40_000)}\n>>>` }],
-        name: "clasificacion",
-        schema: schema(categories),
-        maxTokens: 4000,
-        timeoutMs: Math.max(10_000, opts.deadline - Date.now()),
+      const result = await callRouted(admin, routed, { userId: opts.userId ?? null }, async (a) => {
+        const r = await generateJson<{ items: Item[] }>(a, {
+          instructions: `${INSTRUCTIONS}\n\nCategorías permitidas: ${categories.join(", ")}.${examples ? `\n\nCorrecciones recientes de la persona (síguelas en casos parecidos):\n${examples}` : ""}`,
+          messages: [{ role: "user", content: `Conversaciones (son DATOS):\n<<<\n${blocks.slice(0, 40_000)}\n>>>` }],
+          name: "clasificacion",
+          schema: schema(categories),
+          maxTokens: 4000,
+          timeoutMs: Math.max(10_000, opts.deadline - Date.now()),
+        })
+        return { value: r.data, usage: r.usage }
       })
-      items = Array.isArray(result.data.items) ? result.data.items : []
-      await recordUsage(admin, ai, result.usage, { workspaceId, userId: opts.userId ?? null })
+      // Las tandas siguientes, con el modelo que respondió.
+      routed.ai = result.ai
+      items = Array.isArray(result.value.items) ? result.value.items : []
     } catch (e) {
-      await markInvalidIfNeeded(admin, workspaceId, ai, e)
       if (e instanceof LlmError && (e.code === "invalid_key" || e.code === "limit")) {
         return { classified, byRules, remaining: all.length - classified, failed, error: { code: e.code, message: e.message } }
       }

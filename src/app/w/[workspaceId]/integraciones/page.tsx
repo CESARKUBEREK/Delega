@@ -8,6 +8,7 @@ import { getWorkspace } from "@/lib/workspace"
 import { DOC_MIMES, DriveCard, EXCEL_MIMES, FilesCard, SHEET_MIMES } from "./google-card"
 import { ImapCard, TelegramCard, WhatsAppCard } from "./inbox-cards"
 import { AiCard } from "./ai-card"
+import { RoutingCard } from "./routing-card"
 import { BufferCard, CalendarCard, ContactsCard, HubSpotCard, TokkoCard, VoiceCard, VoiceHoursCard, VoiceWebCard, XubioCard } from "./work-cards"
 import { ApiIntegrationCard } from "./api-integrations"
 import { OnboardingReturn } from "../onboarding/onboarding-return"
@@ -135,12 +136,13 @@ async function Integrations({
             ? trial.exhausted
               ? "Se han acabado los créditos de prueba. Conecta tu propia clave para seguir usando el asistente, la bandeja y las automatizaciones."
               : `Tienes créditos de prueba de MarchaSolo (te queda el ${trial.pctLeft} %) para preparar planes en el chat. Para ejecutarlos, la bandeja y las automatizaciones, conecta tu propia clave.`
-            : "La IA que prepara y ejecuta tus automatizaciones, con tu propia clave. La principal la usan el asistente y la bandeja; cada automatización puede usar otra."
+            : "La IA que prepara y ejecuta tus automatizaciones, con tu propia clave. MarchaSolo elige el modelo de cada tarea según el modo y tu presupuesto (en «Cómo elige la IA»)."
         }
       >
         {AI_PROVIDERS.map((p) => (
           <AiCard key={p.id} workspaceId={workspaceId} isAdmin={isAdmin} provider={p.id} />
         ))}
+        <RoutingCard workspaceId={workspaceId} isAdmin={isAdmin} />
       </Category>
 
       <Category id="drives" title="Drives" description="Carpetas y archivos que MarchaSolo puede leer y donde puede guardar.">

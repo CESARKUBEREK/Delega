@@ -2,7 +2,8 @@ import Link from "next/link"
 import { runOrigin } from "@/lib/labels"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
-import { RUN_STATUS_LABEL } from "@/lib/plan"
+import { modelLabel, RUN_STATUS_LABEL } from "@/lib/plan"
+import { costUsd, FALLBACK_CATALOG, formatUsd, isMode, MODE_LABEL, type ModelInfo, toModelInfo } from "@/lib/router"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { formatDateTime, formatNumber } from "../../format"
@@ -42,14 +43,20 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
   await getWorkspace(workspaceId, `/w/${workspaceId}/ejecuciones/${runId}`)
   const supabase = await createClient()
 
-  const [{ data: run }, { data: events }] = await Promise.all([
+  const [{ data: run }, { data: events }, { data: calls }, { data: models }] = await Promise.all([
     supabase
       .from("flow_runs")
-      .select("id, flow_id, flow_name, status, pending_action, summary, error, tool_calls, input_tokens, output_tokens, started_at, finished_at, note, trigger")
+      .select("id, flow_id, flow_name, status, pending_action, summary, error, tool_calls, input_tokens, output_tokens, started_at, finished_at, note, trigger, model, routing, routing_mode, cost_usd, budget_usd")
       .eq("id", runId)
       .eq("workspace_id", workspaceId)
       .maybeSingle(),
     supabase.from("run_events").select("id, kind, title, detail, created_at").eq("run_id", runId).eq("workspace_id", workspaceId).order("id"),
+    supabase
+      .from("usage_events")
+      .select("model, input_tokens, output_tokens, cached_tokens, cache_write_tokens, cost_usd, latency_ms")
+      .eq("run_id", runId)
+      .eq("workspace_id", workspaceId),
+    supabase.from("llm_models").select("*"),
   ])
   if (!run) notFound()
 
@@ -96,6 +103,8 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
       {run.status === "failed" ? <Diagnosis workspaceId={workspaceId} flowId={run.flow_id} error={run.error} /> : null}
 
       {active ? <RunControls runId={run.id} status={run.status} /> : null}
+
+      <RunAi run={run} calls={calls ?? []} models={models ?? []} />
 
       <section className="border border-ink bg-sheet">
         <h2 className="border-b border-ink px-5 py-3 font-semibold">Bitácora</h2>
@@ -210,6 +219,81 @@ async function Diagnosis({ workspaceId, flowId, error }: { workspaceId: string; 
         {d.editable && flowId ? (
           <p className="text-xs text-graphite">El ayudante puede proponerte cómo reescribir los pasos; los cambios se guardan solo si los aplicas.</p>
         ) : null}
+      </div>
+    </section>
+  )
+}
+
+// IA de la ejecución (router, fase 8): modelos, llamadas, coste estimado,
+// presupuesto, motivo y ahorro frente a usar siempre el modelo más capaz del
+// mismo proveedor (con los mismos tokens).
+function RunAi({
+  run,
+  calls,
+  models,
+}: {
+  run: { model: string | null; routing: unknown; routing_mode: string | null; cost_usd: number; budget_usd: number | null; started_at: string; finished_at: string | null }
+  calls: { model: string; input_tokens: number; output_tokens: number; cached_tokens: number; cache_write_tokens: number; cost_usd: number; latency_ms: number | null }[]
+  models: Record<string, unknown>[]
+}) {
+  const routing = (run.routing && typeof run.routing === "object" ? run.routing : {}) as {
+    reason?: unknown
+    switches?: { from?: string; to?: string; code?: string }[]
+  }
+  if (!run.model && !calls.length) return null
+  const catalog = models.map((m) => toModelInfo(m)).filter((m): m is ModelInfo => m !== null)
+  const cat = catalog.length ? catalog : FALLBACK_CATALOG
+  const used = [...new Set(calls.map((c) => c.model))]
+  const cost = Number(run.cost_usd) || calls.reduce((a, c) => a + Number(c.cost_usd), 0)
+  const main = cat.find((m) => m.model === (calls[0]?.model ?? run.model))
+  const premium = main
+    ? cat.filter((m) => m.provider === main.provider && m.tier === "premium").sort((a, b) => a.price_in - b.price_in)[0]
+    : undefined
+  const reference = premium && calls.length
+    ? calls.reduce(
+      (a, c) => a + costUsd(premium, { input: c.input_tokens, output: c.output_tokens, cached: c.cached_tokens, cacheWrite: c.cache_write_tokens }),
+      0,
+    )
+    : 0
+  const saving = reference > 0 && cost > 0 && !used.every((m) => m === premium?.model) ? Math.round((1 - cost / reference) * 100) : null
+  const end = run.finished_at ? new Date(run.finished_at).getTime() : null
+  const seconds = end ? Math.max(0, Math.round((end - new Date(run.started_at).getTime()) / 1000)) : null
+  const modeLabel = run.routing_mode === "fixed" ? "modelo fijo" : isMode(run.routing_mode) ? MODE_LABEL[run.routing_mode] : null
+  const reason = typeof routing.reason === "string" ? routing.reason : null
+  const switches = Array.isArray(routing.switches) ? routing.switches : []
+
+  return (
+    <section className="border border-ink bg-sheet">
+      <h2 className="border-b border-ink px-5 py-3 font-semibold">IA de esta ejecución</h2>
+      <div className="flex flex-col gap-2 px-5 py-4 text-sm text-graphite">
+        <p>
+          {used.length ? (
+            <>
+              {used.length === 1 ? "Modelo" : "Modelos"}: <span className="font-medium text-ink">{used.map((m) => modelLabel(m)).join(", ")}</span>
+            </>
+          ) : (
+            <>
+              Modelo: <span className="font-medium text-ink">{modelLabel(run.model)}</span>
+            </>
+          )}
+          {modeLabel ? ` · ${modeLabel}` : ""} · {calls.length} {calls.length === 1 ? "llamada" : "llamadas"} · coste estimado{" "}
+          <span className="font-medium text-ink">{formatUsd(cost)}</span>
+          {run.budget_usd ? ` de ${formatUsd(Number(run.budget_usd))} de presupuesto` : ""}
+          {seconds !== null ? ` · ${seconds < 60 ? `${seconds} s` : `${Math.round(seconds / 60)} min`}` : ""}
+        </p>
+        {reason ? <p>{reason}</p> : null}
+        {switches.map((x, i) => (
+          <p key={i} className="border-l-2 border-coral pl-3">
+            Se pasó de {modelLabel(x.from)} a {modelLabel(x.to)}
+            {x.code === "limit" ? " porque la cuenta se quedó sin saldo o llegó a su límite" : x.code === "invalid_key" ? " porque la clave fue rechazada" : x.code === "disconnected" ? " porque su IA ya no está conectada" : " porque el proveedor no respondía bien"}.
+          </p>
+        ))}
+        {saving !== null && saving > 0 && premium ? (
+          <p>
+            Un {saving} % menos que con {premium.label} para el mismo trabajo ({formatUsd(reference)}).
+          </p>
+        ) : null}
+        <p className="text-xs">Estimación con los tokens que informa el proveedor y sus precios oficiales; la factura que vale es la de tu cuenta.</p>
       </div>
     </section>
   )

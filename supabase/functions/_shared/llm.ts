@@ -8,6 +8,8 @@
 // - La clave del espacio se descifra solo en memoria; nunca se registra.
 // - Errores normalizados en LlmError; una clave rechazada se marca como inválida.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
+import { modelInfo } from "./router/catalog.ts"
+import { costUsd, type Task } from "./router/core.ts"
 
 export type Provider = "openai" | "anthropic" | "deepseek" | "xai"
 export const PROVIDERS: Provider[] = ["openai", "anthropic", "deepseek", "xai"]
@@ -110,7 +112,9 @@ export type Msg =
   | AssistantMsg
   | { role: "tool"; call_id: string; content: string }
 export type ToolDef = { name: string; description: string; parameters: Record<string, unknown> }
-export type Usage = { input: number; output: number }
+// input incluye los tokens leídos de caché (cached) y escritos en caché
+// (cacheWrite); output incluye los de razonamiento (reasoning).
+export type Usage = { input: number; output: number; cached?: number; cacheWrite?: number; reasoning?: number }
 export type Completion = { message: AssistantMsg; usage: Usage; stop: "end" | "tool" | "length" | "refusal" }
 
 type Request = {
@@ -197,7 +201,12 @@ async function openai(ai: Ai, r: Request): Promise<Completion> {
   const usage = (data.usage ?? {}) as Record<string, unknown>
   return {
     message: { role: "assistant", content, calls, native: output },
-    usage: { input: int(usage.input_tokens), output: int(usage.output_tokens) },
+    usage: {
+      input: int(usage.input_tokens),
+      output: int(usage.output_tokens),
+      cached: int((usage.input_tokens_details as Record<string, unknown> | undefined)?.cached_tokens),
+      reasoning: int((usage.output_tokens_details as Record<string, unknown> | undefined)?.reasoning_tokens),
+    },
     stop: refusal ? "refusal" : calls.length ? "tool" : data.status === "incomplete" ? "length" : "end",
   }
 }
@@ -264,7 +273,12 @@ async function anthropic(ai: Ai, r: Request): Promise<Completion> {
   const reason = data.stop_reason
   return {
     message: { role: "assistant", content, calls, native: blocks },
-    usage: { input: int(usage.input_tokens) + int(usage.cache_read_input_tokens) + int(usage.cache_creation_input_tokens), output: int(usage.output_tokens) },
+    usage: {
+      input: int(usage.input_tokens) + int(usage.cache_read_input_tokens) + int(usage.cache_creation_input_tokens),
+      output: int(usage.output_tokens),
+      cached: int(usage.cache_read_input_tokens),
+      cacheWrite: int(usage.cache_creation_input_tokens),
+    },
     stop: reason === "refusal" ? "refusal" : calls.length ? "tool" : reason === "max_tokens" ? "length" : "end",
   }
 }
@@ -319,7 +333,12 @@ async function deepseek(ai: Ai, r: Request): Promise<Completion> {
   const usage = (data.usage ?? {}) as Record<string, unknown>
   return {
     message: { role: "assistant", content: (choice.message?.content ?? "").trim(), calls },
-    usage: { input: int(usage.prompt_tokens), output: int(usage.completion_tokens) },
+    usage: {
+      input: int(usage.prompt_tokens),
+      output: int(usage.completion_tokens),
+      cached: int(usage.prompt_cache_hit_tokens),
+      reasoning: int((usage.completion_tokens_details as Record<string, unknown> | undefined)?.reasoning_tokens),
+    },
     stop: calls.length ? "tool" : choice.finish_reason === "length" ? "length" : choice.finish_reason === "content_filter" ? "refusal" : "end",
   }
 }
@@ -355,19 +374,40 @@ export async function generateText(ai: Ai, r: { instructions: string; messages: 
   return { text: res.message.content, usage: res.usage }
 }
 
-// Registra el consumo y, si la clave fue rechazada, la marca como inválida.
+export type StepType = "primary" | "fallback" | "escalation" | "verify" | "parallel" | "subtask" | "evaluate"
+
+// Registra el consumo de una llamada con su coste estimado (tokens × precio
+// del catálogo). Nunca guarda texto. Devuelve el coste.
 export async function recordUsage(
   admin: SupabaseClient,
   ai: Ai,
   usage: Usage,
-  extra: { workspaceId: string; userId: string | null; conversationId?: string | null },
-) {
+  extra: {
+    workspaceId: string
+    userId: string | null
+    conversationId?: string | null
+    task?: Task | null
+    runId?: string | null
+    stepType?: StepType
+    latencyMs?: number | null
+  },
+): Promise<number> {
+  // Lo gastado con los créditos de prueba no cuenta en el gasto del cliente.
+  const cost = ai.trial ? 0 : costUsd(await modelInfo(admin, ai.model), usage)
   await admin.from("usage_events").insert({
     workspace_id: extra.workspaceId,
     provider: ai.provider,
     model: ai.model,
     input_tokens: usage.input,
     output_tokens: usage.output,
+    cached_tokens: usage.cached ?? 0,
+    cache_write_tokens: usage.cacheWrite ?? 0,
+    reasoning_tokens: usage.reasoning ?? 0,
+    cost_usd: cost,
+    latency_ms: extra.latencyMs ?? null,
+    task: extra.task ?? null,
+    run_id: extra.runId ?? null,
+    step_type: extra.stepType ?? "primary",
     conversation_id: extra.conversationId ?? null,
     created_by: extra.userId,
   })
@@ -375,6 +415,7 @@ export async function recordUsage(
     const { error } = await admin.rpc("trial_consume", { p_workspace_id: extra.workspaceId, p_tokens: usage.input + usage.output })
     if (error) console.error("trial_consume", error.code)
   }
+  return cost
 }
 
 export async function markInvalidIfNeeded(admin: SupabaseClient, workspaceId: string, ai: Ai, e: unknown) {

@@ -106,6 +106,8 @@ export function proposalDetail(p: PendingAction): string {
       return `${p.method} ${p.path}${p.query ? `?${clip(p.query, 300)}` : ""} en ${p.connection_name}${p.body ? `\n\n${clip(p.body, 1500)}` : ""}`
     case "buffer_post":
       return `En: ${p.channels.map((c) => `${c.name} (${c.service})`).join(", ")}\nCuándo: ${p.when_label}\n\n${clip(p.text, 1800)}`
+    case "budget_extend":
+      return `Gastado: ${p.spent_usd} $ de ${p.budget_usd} $`
   }
 }
 

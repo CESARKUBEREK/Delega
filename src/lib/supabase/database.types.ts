@@ -180,6 +180,10 @@ export type Database = {
       }
       flow_runs: {
         Row: {
+          budget_usd: number | null
+          cost_usd: number
+          routing: Json | null
+          routing_mode: string | null
           trigger: Json
           error: string | null
           file_ids: string[]
@@ -205,6 +209,10 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          budget_usd?: number | null
+          cost_usd?: number
+          routing?: Json | null
+          routing_mode?: string | null
           trigger?: Json
           error?: string | null
           file_ids?: string[]
@@ -230,6 +238,10 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          budget_usd?: number | null
+          cost_usd?: number
+          routing?: Json | null
+          routing_mode?: string | null
           trigger?: Json
           error?: string | null
           file_ids?: string[]
@@ -940,8 +952,63 @@ export type Database = {
           },
         ]
       }
+      llm_models: {
+        Row: {
+          capabilities: string[]
+          context_tokens: number | null
+          label: string
+          latency: string
+          long_context_threshold: number | null
+          long_price_cached_in: number | null
+          long_price_in: number | null
+          long_price_out: number | null
+          model: string
+          notes: string
+          price_cache_write: number | null
+          price_cached_in: number | null
+          price_in: number
+          price_out: number
+          prices_source_url: string
+          prices_updated_at: string
+          provider: string
+          quality_prior: number | null
+          status: string
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          [key: string]: never
+        }
+        Update: {
+          [key: string]: never
+        }
+        Relationships: []
+      }
+      ai_budget_alerts: {
+        Row: {
+          created_at: string
+          level: number
+          period: string
+          workspace_id: string
+        }
+        Insert: {
+          [key: string]: never
+        }
+        Update: {
+          [key: string]: never
+        }
+        Relationships: []
+      }
       usage_events: {
         Row: {
+          cache_write_tokens: number
+          cached_tokens: number
+          cost_usd: number
+          latency_ms: number | null
+          reasoning_tokens: number
+          run_id: string | null
+          step_type: string
+          task: string | null
           audio_seconds: number
           conversation_id: string | null
           created_at: string
@@ -955,6 +1022,14 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          cache_write_tokens?: number
+          cached_tokens?: number
+          cost_usd?: number
+          latency_ms?: number | null
+          reasoning_tokens?: number
+          run_id?: string | null
+          step_type?: string
+          task?: string | null
           audio_seconds?: number
           conversation_id?: string | null
           created_at?: string
@@ -968,6 +1043,14 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          cache_write_tokens?: number
+          cached_tokens?: number
+          cost_usd?: number
+          latency_ms?: number | null
+          reasoning_tokens?: number
+          run_id?: string | null
+          step_type?: string
+          task?: string | null
           audio_seconds?: number
           conversation_id?: string | null
           created_at?: string
@@ -1131,6 +1214,7 @@ export type Database = {
       }
       workspaces: {
         Row: {
+          ai_routing: Json
           created_at: string
           created_by: string | null
           id: string
@@ -1143,6 +1227,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_routing?: Json
           created_at?: string
           created_by?: string | null
           id?: string
@@ -1155,6 +1240,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_routing?: Json
           created_at?: string
           created_by?: string | null
           id?: string
@@ -1298,6 +1384,18 @@ export type Database = {
       trial_consume: {
         Args: { p_tokens: number; p_workspace_id: string }
         Returns: number
+      }
+      workspace_set_ai_routing: {
+        Args: { p_settings: Json; p_workspace_id: string }
+        Returns: boolean
+      }
+      ai_spend: {
+        Args: { p_workspace_id: string }
+        Returns: { day_usd: number; month_usd: number }[]
+      }
+      ai_spend_breakdown: {
+        Args: { p_since: string; p_workspace_id: string }
+        Returns: { calls: number; cost_usd: number; input_tokens: number; model: string; output_tokens: number; task: string }[]
       }
       workspace_set_help_voice: {
         Args: { p_enabled: boolean; p_workspace_id: string }

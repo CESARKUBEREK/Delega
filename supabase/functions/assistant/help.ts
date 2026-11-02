@@ -5,7 +5,8 @@
 // solo anota el consumo. Las claves y contraseñas nunca llegan a la IA.
 import { type AuthContext, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
 import { HELP_GUIDES, looksLikeSecret, relevantGuides, SECRET_REPLY } from "../_shared/help-guides.ts"
-import { generateJson, LlmError, markInvalidIfNeeded, type Msg, recordUsage, resolveAiOrTrial } from "../_shared/llm.ts"
+import { generateJson, LlmError, type Msg } from "../_shared/llm.ts"
+import { callRouted, isRouteError, routeAi } from "../_shared/router/index.ts"
 
 const MAX_MESSAGE = 1000
 const MAX_HISTORY = 8
@@ -97,9 +98,10 @@ export async function helpReply(ctx: AuthContext, body: Record<string, unknown>)
     .gte("created_at", since)
   if ((count ?? 0) >= PER_MINUTE) return fail(429, "rate_limited", "Has hecho muchas preguntas seguidas. Espera un minuto.")
 
-  const resolved = await resolveAiOrTrial(ctx.admin, workspaceId)
-  if (!resolved.ai) return fail(409, "no_connection", resolved.message)
-  const ai = resolved.ai
+  // Router: dudas = tarea sencilla (modelo económico); créditos de prueba si no hay IA propia.
+  const routed = await routeAi(ctx.admin, workspaceId, "help", { allowTrial: true })
+  if (isRouteError(routed)) return fail(409, routed.code === "budget" ? "budget" : "no_connection", routed.error)
+  const ai = routed.ai
 
   // Estado del espacio, sin credenciales.
   const [{ data: integrations }, { data: ais }, { data: trial }] = await Promise.all([
@@ -135,15 +137,17 @@ export async function helpReply(ctx: AuthContext, body: Record<string, unknown>)
   ]
 
   try {
-    const result = await generateJson<{ reply: string; open: string | null; suggestions: string[]; step_changes?: { step: number; description: string }[] }>(ai, {
-      instructions: INSTRUCTIONS,
-      messages,
-      name: "marchasolo_help",
-      schema: SCHEMA,
-      maxTokens: 1500,
-      timeoutMs: 45_000,
-    })
-    await recordUsage(ctx.admin, ai, result.usage, { workspaceId, userId: ctx.userId })
+    const result = await callRouted(ctx.admin, routed, { userId: ctx.userId }, async (a) => {
+      const r = await generateJson<{ reply: string; open: string | null; suggestions: string[]; step_changes?: { step: number; description: string }[] }>(a, {
+        instructions: INSTRUCTIONS,
+        messages,
+        name: "marchasolo_help",
+        schema: SCHEMA,
+        maxTokens: 1500,
+        timeoutMs: 45_000,
+      })
+      return { value: r, usage: r.usage }
+    }).then((x) => x.value)
     const reply = String(result.data.reply ?? "").slice(0, 2000) || "No he podido responder. Prueba a preguntarlo de otra forma."
     const open = typeof result.data.open === "string" && GUIDE_IDS.has(result.data.open) ? result.data.open : null
     const suggestions = (Array.isArray(result.data.suggestions) ? result.data.suggestions : [])
@@ -161,7 +165,6 @@ export async function helpReply(ctx: AuthContext, body: Record<string, unknown>)
       : []
     return json({ reply, open, suggestions, trial: Boolean(ai.trial), step_changes: stepChanges, flow_id: stepChanges.length ? run?.flowId : null })
   } catch (e) {
-    await markInvalidIfNeeded(ctx.admin, workspaceId, ai, e)
     const status = e instanceof LlmError ? ({ invalid_key: 409, limit: 429, timeout: 504 } as Record<string, number>)[e.code] ?? 502 : 502
     return fail(status, e instanceof LlmError ? e.code : "provider_error", e instanceof LlmError ? e.message : "La IA no pudo responder.")
   }
