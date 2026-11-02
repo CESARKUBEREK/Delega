@@ -1,6 +1,8 @@
 // Contenido del sitio público. Todo lo que se describe aquí existe en el
 // producto (plantillas, conectores y aprobaciones); nada de cifras de ahorro
 // ni testimonios inventados.
+//
+// Posicionamiento: compañero que prepara el trabajo; la decisión final es del usuario.
 
 export type UseCase = {
   id: string
@@ -21,7 +23,7 @@ export const USE_CASES: UseCase[] = [
     ask: "Cada mañana, dime qué espera respuesta y déjame preparadas las respuestas urgentes.",
     does: "Ordena la bandeja: lo urgente arriba y los boletines aparte. Lee cada conversación y redacta la respuesta en el mismo hilo.",
     waits: "Cada respuesta, antes de enviarse.",
-    result: "Empiezas el día con una lista corta de lo pendiente y los borradores listos para revisar.",
+    result: "Empiezas el día con lo pendiente ordenado y los borradores listos. Tú revisas y envías cuando quieras.",
     tags: ["Correo", "Telegram", "WhatsApp"],
   },
   {
@@ -31,7 +33,7 @@ export const USE_CASES: UseCase[] = [
     ask: "Lee los contratos de esta carpeta y apunta en la planilla la fecha de fin y el importe de cada uno.",
     does: "Lee los archivos que eliges en Drive (PDF, Word, Excel o Google Docs), saca los datos que pides y prepara las filas.",
     waits: "Las filas nuevas, con lo que había antes y lo que quedará.",
-    result: "Los datos llegan a la planilla sin copiarlos a mano, y los revisas de un vistazo.",
+    result: "Los datos llegan preparados a la planilla. Tú revisas el cambio antes de que se escriba.",
     tags: ["Google Drive", "Google Sheets", "Excel"],
   },
   {
@@ -39,9 +41,9 @@ export const USE_CASES: UseCase[] = [
     title: "Crear informes automáticamente",
     before: "Cada viernes reúnes datos del CRM, la agenda y el correo para escribir el resumen de la semana.",
     ask: "Cada viernes a las 17:00, prepárame el informe de la semana con los negocios y las reuniones.",
-    does: "Consulta el CRM y la agenda, redacta el informe y te lo envía. Si se lo pides, lo guarda como documento.",
+    does: "Consulta el CRM y la agenda, redacta el informe y te lo deja listo. Si se lo pides, prepara el documento en Drive.",
     waits: "Crear el documento en tu Drive.",
-    result: "El informe te llega a la hora fijada, aunque no estés delante del ordenador.",
+    result: "El informe te llega preparado a la hora fijada. Tú decides si se guarda o se envía.",
     tags: ["HubSpot", "Google Calendar", "Google Docs"],
   },
   {
@@ -51,7 +53,7 @@ export const USE_CASES: UseCase[] = [
     ask: "Cuando llegue una factura por correo, añade una fila a la planilla de gastos con el proveedor, la fecha y el importe.",
     does: "Se pone en marcha con cada correo que encaje, lee la factura y prepara la fila en la hoja que elegiste.",
     waits: "Escribir la fila en la planilla.",
-    result: "La planilla se mantiene al día sin que tengas que acordarte.",
+    result: "La fila queda lista para revisar. La planilla solo se actualiza cuando tú lo apruebas.",
     tags: ["Correo", "Google Sheets", "Excel"],
   },
   {
@@ -61,7 +63,7 @@ export const USE_CASES: UseCase[] = [
     ask: "Los lunes, dime qué negocios llevan dos semanas sin moverse y prepárame un recordatorio para cada cliente.",
     does: "Repasa los negocios y sus etapas, detecta los parados y redacta un recordatorio para cada contacto.",
     waits: "Cada recordatorio y cada tarea nueva en el CRM.",
-    result: "Ningún cliente se queda sin respuesta por despiste.",
+    result: "Tienes los recordatorios y las tareas preparados. Nada se envía ni se crea en el CRM sin tu visto bueno.",
     tags: ["HubSpot", "Correo"],
   },
   {
@@ -81,7 +83,7 @@ export const USE_CASES: UseCase[] = [
     ask: "Cuando alguien pregunte por WhatsApp por una propiedad, búscala, contéstale con los datos y registra la consulta.",
     does: "Lee el mensaje, busca la propiedad, mira tus huecos libres y prepara la respuesta y el registro del contacto.",
     waits: "La respuesta al cliente y el registro en el CRM.",
-    result: "Un solo paso tuyo (aprobar) en lugar de cuatro aplicaciones abiertas.",
+    result: "Un solo paso tuyo (aprobar) en lugar de cuatro aplicaciones abiertas. Nada sale hasta que lo confirmas.",
     tags: ["WhatsApp", "Tokko Broker", "Google Calendar"],
   },
 ]
