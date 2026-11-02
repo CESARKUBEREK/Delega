@@ -4,7 +4,9 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { applyStepChanges, askHelp, type HelpTurn, type StepChange } from "@/app/w/[workspaceId]/help-actions"
+import { AutoReadToggle, DictateButton, ListenButton, useAutoRead } from "@/app/w/[workspaceId]/asistente/voice"
 import { HELP_GUIDES, looksLikeSecret, relevantGuides, SECRET_REPLY, type HelpGuide } from "@/lib/help"
+import { speak, stopSpeaking, unlockSpeech } from "@/lib/speech"
 
 // Panel «¿Te ayudo?» (fase 7-1): dudas sobre integraciones y automatizaciones.
 // Responde con el estado del espacio y las fichas de ayuda; puede abrir la
@@ -13,6 +15,8 @@ import { HELP_GUIDES, looksLikeSecret, relevantGuides, SECRET_REPLY, type HelpGu
 
 type Page = "integraciones" | "automatizaciones" | "onboarding" | "ejecucion"
 type Message = HelpTurn & {
+  // Clave para «Escuchar» (solo respuestas del ayudante).
+  key?: string
   open?: string | null
   suggestions?: string[]
   trial?: boolean
@@ -58,6 +62,9 @@ export function HelpPanel({ workspaceId, page, runId = null }: { workspaceId: st
   const [focus, setFocus] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
   const [applying, startApply] = useTransition()
+  // Dictado y lectura en voz alta (fase 7-3): los mismos que el chat. La
+  // preferencia «leer en voz alta» es la del dispositivo, compartida con el chat.
+  const autoRead = useAutoRead()
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -72,7 +79,10 @@ export function HelpPanel({ workspaceId, page, runId = null }: { workspaceId: st
   }, [])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      stopSpeaking()
+      return
+    }
     inputRef.current?.focus()
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false)
     window.addEventListener("keydown", onKey)
@@ -97,10 +107,16 @@ export function HelpPanel({ workspaceId, page, runId = null }: { workspaceId: st
     if (!message || pending) return
     setError(null)
     setInput("")
+    // iOS solo deja hablar tras un gesto: se desbloquea la voz al enviar.
+    if (autoRead) unlockSpeech()
     // Una clave pegada no sale del navegador.
     if (looksLikeSecret(message)) {
       const guess = relevantGuides(message, focus)[0]?.id ?? focus
-      setMessages((m) => [...m, { role: "user", content: "(He borrado tu mensaje: parecía una clave o una contraseña)" }, { role: "assistant", content: SECRET_REPLY, open: guess }])
+      setMessages((m) => [
+        ...m,
+        { role: "user", content: "(He borrado tu mensaje: parecía una clave o una contraseña)" },
+        { role: "assistant", content: SECRET_REPLY, open: guess, key: `ayuda-${Date.now()}` },
+      ])
       return
     }
     const history: HelpTurn[] = messages.map(({ role, content }) => ({ role, content }))
@@ -116,10 +132,12 @@ export function HelpPanel({ workspaceId, page, runId = null }: { workspaceId: st
         else setError(r.error)
         return
       }
+      const key = `ayuda-${Date.now()}`
       setMessages((m) => [
         ...m,
-        { role: "assistant", content: r.reply, open: r.open, suggestions: r.suggestions, trial: r.trial, stepChanges: r.stepChanges, flowId: r.flowId },
+        { role: "assistant", content: r.reply, key, open: r.open, suggestions: r.suggestions, trial: r.trial, stepChanges: r.stepChanges, flowId: r.flowId },
       ])
+      if (autoRead) speak(key, r.reply)
     })
   }
 
@@ -177,7 +195,9 @@ export function HelpPanel({ workspaceId, page, runId = null }: { workspaceId: st
           <header className="flex items-start justify-between gap-3 border-b border-rule px-4 py-3">
             <div>
               <p className="font-semibold text-ink">¿Te ayudo?</p>
-              <p className="text-xs text-graphite">Dudas sobre conectar tus cuentas y crear automatizaciones. Nunca me escribas claves ni contraseñas.</p>
+              <p className="text-xs text-graphite">
+                Escríbeme o díctame tu duda sobre conectar cuentas y crear automatizaciones. Nunca me digas claves ni contraseñas.
+              </p>
             </div>
             <button type="button" onClick={() => setOpen(false)} className="text-sm text-graphite" aria-label="Cerrar">
               ✕
@@ -204,6 +224,11 @@ export function HelpPanel({ workspaceId, page, runId = null }: { workspaceId: st
                   ) : (
                     <div key={i} className="mr-4 flex flex-col gap-2">
                       <p className="whitespace-pre-wrap text-sm text-ink">{m.content}</p>
+                      {m.key ? (
+                        <div className="text-xs">
+                          <ListenButton id={m.key} text={m.content} />
+                        </div>
+                      ) : null}
                       {m.open && guideById(m.open) ? (
                         <button
                           type="button"
@@ -286,6 +311,15 @@ export function HelpPanel({ workspaceId, page, runId = null }: { workspaceId: st
                 }}
                 className="flex items-end gap-2"
               >
+                <DictateButton
+                  workspaceId={workspaceId}
+                  disabled={pending}
+                  onError={setError}
+                  onText={(text) => {
+                    setInput((d) => (d.trim() ? `${d.trimEnd()} ${text}` : text))
+                    inputRef.current?.focus()
+                  }}
+                />
                 <label htmlFor="help-input" className="sr-only">
                   Tu pregunta
                 </label>
@@ -313,6 +347,7 @@ export function HelpPanel({ workspaceId, page, runId = null }: { workspaceId: st
                   Enviar
                 </button>
               </form>
+              <AutoReadToggle />
             </div>
           ) : null}
         </section>
