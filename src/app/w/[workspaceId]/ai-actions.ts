@@ -197,7 +197,7 @@ export async function saveFlowFromMessage(formData: FormData): Promise<void> {
   const supabase = await createClient()
   const { data: claims } = await supabase.auth.getClaims()
   const userId = claims?.claims?.sub
-  if (!userId) redirect("/login")
+  if (!userId) redirect("/entrar")
 
   const { data: msg } = await supabase
     .from("messages")
@@ -237,7 +237,7 @@ export async function createFlowFromTemplate(formData: FormData): Promise<void> 
   const supabase = await createClient()
   const { data: claims } = await supabase.auth.getClaims()
   const userId = claims?.claims?.sub
-  if (!userId) redirect("/login")
+  if (!userId) redirect("/entrar")
 
   const { data: flow } = await supabase
     .from("flows")

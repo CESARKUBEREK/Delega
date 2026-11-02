@@ -3,17 +3,20 @@ import { Suspense } from "react"
 import { Sheet } from "@/components/sheet"
 import { LoginForm } from "./login-form"
 
-export const metadata = { title: "Entrar" }
+export const metadata = {
+  title: "Entrar",
+  description: "Entra en tu espacio de MarchaSolo.",
+  alternates: { canonical: "/entrar" },
+}
 
 export default function LoginPage() {
   return (
     <Sheet
       title="Entra en MarchaSolo"
-      sheetName="Acceso"
       footer={
         <>
           ¿Aún no tienes cuenta?{" "}
-          <Link href="/signup" className="text-link underline underline-offset-4">
+          <Link href="/crear-cuenta" className="text-link underline underline-offset-4">
             Crear cuenta
           </Link>
         </>

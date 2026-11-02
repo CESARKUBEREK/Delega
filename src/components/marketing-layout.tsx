@@ -1,33 +1,17 @@
 import type { ReactNode } from "react"
-import Link from "next/link"
-import { Logo } from "@/components/logo"
+import { SiteFooter } from "@/components/site/site-footer"
+import { SiteHeader } from "@/components/site/site-header"
 
+// Marco del sitio público: cabecera, contenido y pie. La app autenticada
+// tiene su propia navegación (src/app/w).
 export function MarketingLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="marketing-site">
-      <header className="marketing-header">
-        <Link href="/para-que-sirve" aria-label="MarchaSolo, inicio" className="marketing-brand">
-          <Logo size={32} />
-        </Link>
-        <nav aria-label="Navegación principal" className="marketing-nav">
-          <Link href="/para-que-sirve">Qué puedes hacer</Link>
-          <Link href="/como-empezar">Cómo empezar</Link>
-        </nav>
-        <Link href="/login" className="marketing-login">Entrar</Link>
-        <Link href="/signup" className="marketing-header-cta">Probar MarchaSolo <span aria-hidden="true">→</span></Link>
-      </header>
-      {children}
-      <footer className="marketing-footer">
-        <Link href="/para-que-sirve" aria-label="MarchaSolo, inicio"><Logo size={26} /></Link>
-        <nav aria-label="Información">
-          <Link href="/para-que-sirve">Qué puedes hacer</Link>
-          <Link href="/como-empezar">Cómo empezar</Link>
-          <Link href="/login">Entrar</Link>
-          <Link href="/privacidad">Privacidad</Link>
-          <Link href="/terminos">Términos</Link>
-        </nav>
-        <span>Automatiza lo repetitivo. Conserva las decisiones.</span>
-      </footer>
+    <div className="site">
+      <SiteHeader />
+      <div id="contenido" tabIndex={-1}>
+        {children}
+      </div>
+      <SiteFooter />
     </div>
   )
 }

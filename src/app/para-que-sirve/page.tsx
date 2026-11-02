@@ -1,114 +1,183 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { MarketingLayout } from "@/components/marketing-layout"
+import { Panel, type PanelRow } from "@/components/site/panel"
 
 export const metadata: Metadata = {
   title: "Qué puedes hacer",
-  description: "Descubre cómo MarchaSolo convierte tareas repetitivas en flujos de trabajo que puedes revisar, ajustar y poner en marcha.",
+  description:
+    "Correo y mensajes, documentos e informes, clientes, administración, análisis y tareas repetitivas: lo que MarchaSolo hace por ti, con tu aprobación.",
   robots: { index: true, follow: true },
+  alternates: { canonical: "/para-que-sirve" },
 }
 
-const examples = [
+type Capability = { id: string; title: string; problem: string; solution: string; result: string; example: string; panel: { title: string; meta?: string; rows: PanelRow[] } }
+
+const CAPABILITIES: Capability[] = [
   {
-    number: "01",
-    title: "Pon orden en los mensajes",
-    body: "Reúne correo, WhatsApp y Telegram en una bandeja. Clasifica conversaciones, encuentra lo urgente y prepara respuestas para que las revises.",
-    tag: "MENSAJES",
+    id: "comunicaciones",
+    title: "Correo y mensajes",
+    problem: "Los mensajes llegan por correo, WhatsApp y Telegram, y lo importante se pierde entre boletines y avisos.",
+    solution: "Una bandeja que se ordena sola: clasifica cada conversación, marca lo urgente y prepara la respuesta en el mismo hilo.",
+    result: "Abres «Para hoy» y ves solo lo que espera respuesta, con el borrador listo.",
+    example: "«Cuando escriba un cliente que ya conozco, déjame la respuesta preparada.»",
+    panel: {
+      title: "Para hoy",
+      meta: "Bandeja",
+      rows: [
+        { title: "Laura Gómez", detail: "Quiere ver el piso de la calle Mayor", state: "wait", label: "Respuesta lista" },
+        { title: "Marcos Ruiz", detail: "Pregunta por el presupuesto enviado el lunes", state: "wait", label: "Respuesta lista" },
+        { title: "Boletines y avisos de la semana", detail: "Apartados para que no te distraigan", state: "info", label: "Apartados" },
+      ],
+    },
   },
   {
-    number: "02",
-    title: "Pasa de la petición a un plan",
-    body: "Describe una tarea como se la explicarías a una persona de tu equipo. El asistente propone los pasos y tú puedes ajustarlos antes de guardarlos.",
-    tag: "ASISTENTE",
+    id: "documentos",
+    title: "Documentos e informes",
+    problem: "Los informes se escriben a partir de datos repartidos en planillas, documentos y el CRM.",
+    solution: "MarchaSolo lee tus archivos de Drive (Google Docs, Sheets, PDF, Word o Excel), redacta el informe y lo guarda donde le digas.",
+    result: "El informe aparece cuando toca, sin tener que reunir nada a mano.",
+    example: "«Cada viernes, prepárame el informe de la semana y guárdalo en la carpeta Informes.»",
+    panel: {
+      title: "Informe de la semana",
+      meta: "Viernes, 17:00",
+      rows: [
+        { title: "Leyó «Ventas 2026»", detail: "Planilla de Google Sheets", state: "done", label: "Hecho" },
+        { title: "Consultó los negocios de la semana", detail: "CRM", state: "done", label: "Hecho" },
+        { title: "Crear «Informe semana 45» en Informes", detail: "Documento nuevo en Drive", state: "wait", label: "Espera tu aprobación" },
+      ],
+    },
   },
   {
-    number: "03",
-    title: "Mantén los datos al día",
-    body: "Conecta tus documentos, planillas, agenda y CRM para preparar actualizaciones y tareas usando las herramientas que ya forman parte de tu trabajo.",
-    tag: "HERRAMIENTAS",
+    id: "clientes",
+    title: "Clientes y oportunidades",
+    problem: "Los contactos y los negocios están en un sitio y las conversaciones en otro; los seguimientos se olvidan.",
+    solution: "Busca a cada remitente en HubSpot o en Google Contacts, propone altas, notas y tareas, y detecta los negocios parados.",
+    result: "Junto a cada conversación ves quién es y en qué punto está su negocio.",
+    example: "«Los lunes, dime qué negocios llevan dos semanas parados y prepárame un recordatorio para cada cliente.»",
+    panel: {
+      title: "Negocios parados",
+      meta: "Lunes, 9:00",
+      rows: [
+        { title: "Reforma oficina Ruiz", detail: "Propuesta enviada hace 16 días, sin cambios", state: "wait", label: "Recordatorio listo" },
+        { title: "Alta de Clínica Norte", detail: "Contacto nuevo para tu CRM", state: "wait", label: "Espera tu aprobación" },
+      ],
+    },
+  },
+  {
+    id: "administracion",
+    title: "Administración y gestión",
+    problem: "Vencimientos, cobros y renovaciones viven en planillas que nadie revisa a tiempo.",
+    solution: "Lee tus planillas de cobros, contratos o stock y te avisa de lo que vence. Con Xubio consulta facturas y clientes, sin emitir nada.",
+    result: "Te enteras de lo que vence esta semana antes de que sea un problema.",
+    example: "«Cada lunes, avísame de los contratos y cobros que vencen esta semana.»",
+    panel: {
+      title: "Control de vencimientos",
+      meta: "Lunes, 9:00",
+      rows: [
+        { title: "3 cobros vencen esta semana", detail: "Planilla «Cobros 2026»", state: "info", label: "Aviso para ti" },
+        { title: "Renovación del seguro del local", detail: "Vence el viernes", state: "info", label: "Aviso para ti" },
+      ],
+    },
+  },
+  {
+    id: "analisis",
+    title: "Análisis de información",
+    problem: "Para responder una pregunta sencilla hay que cruzar una planilla, un documento y varios correos.",
+    solution: "Pregúntalo con tus palabras, en el chat o por Telegram. MarchaSolo consulta tus fuentes y responde con sus datos, sin inventar.",
+    result: "Respuestas con cifras de tus propios archivos, y la fuente que ha consultado.",
+    example: "«¿Qué clientes de la planilla de pedidos no han vuelto a comprar desde septiembre?»",
+    panel: {
+      title: "Pedidos sin repetir",
+      meta: "Chat",
+      rows: [
+        { title: "Leyó «Pedidos 2026»", detail: "1.240 filas", state: "done", label: "Hecho" },
+        { title: "8 clientes sin pedidos desde septiembre", detail: "Lista con su último pedido e importe", state: "info", label: "Respuesta" },
+      ],
+    },
+  },
+  {
+    id: "rutinas",
+    title: "Tareas repetitivas",
+    problem: "Hay trabajo que se repite cada día o cada semana, siempre igual, y siempre a mano.",
+    solution: "Automatizaciones que arrancan solas: a una hora (cada día, los laborables, una vez por semana o al mes) o al llegar un correo, un Telegram o un WhatsApp.",
+    result: "Las rutinas se hacen solas; tú solo apruebas lo que sale hacia fuera.",
+    example: "«Cada día laborable a las 8:00, resúmeme la bandeja, la agenda y lo que espera mi aprobación.»",
+    panel: {
+      title: "Tus automatizaciones",
+      rows: [
+        { title: "Resumen de la mañana", detail: "Días laborables, 8:00", state: "done", label: "Activa" },
+        { title: "Agenda de mañana", detail: "Días laborables, 18:00", state: "done", label: "Activa" },
+        { title: "Facturas a la planilla", detail: "Al llegar un correo con factura", state: "done", label: "Activa" },
+      ],
+    },
   },
 ]
 
-export default function WhatIsMarchaSoloPage() {
+export default function WhatYouCanDoPage() {
   return (
     <MarketingLayout>
-      <main className="marketing-main">
-        <section className="marketing-hero">
-          <div className="marketing-hero-copy">
-            <p className="marketing-eyebrow"><span /> TU NEGOCIO, CON MÁS IMPULSO</p>
-            <h1>Menos tareas que se repiten.<br /><em>Más tiempo para avanzar.</em></h1>
-            <p className="marketing-lead">
-              MarchaSolo convierte instrucciones cotidianas en planes de trabajo que puedes revisar, adaptar y poner en marcha.
-              Conecta tus herramientas y deja que la IA te ayude con el trabajo repetitivo.
+      <main>
+        <section className="page-intro">
+          <div className="site-container">
+            <h1 className="site-h1">Qué puedes hacer con MarchaSolo</h1>
+            <p className="site-lead">
+              Seis tipos de trabajo que MarchaSolo hace por ti con las aplicaciones que ya usas. En todos, lo que se envía o se cambia espera tu
+              aprobación.
             </p>
-            <div className="marketing-actions">
-              <Link href="/signup" className="marketing-primary-button">Prueba MarchaSolo <span aria-hidden="true">→</span></Link>
-              <Link href="/como-empezar" className="marketing-text-link">Descubre cómo funciona <span aria-hidden="true">↗</span></Link>
-            </div>
-            <p className="marketing-reassurance">Tú marcas el objetivo. Tú revisas el plan. Tú decides cómo avanzar.</p>
+            <nav aria-label="Categorías" className="mt-8 flex flex-wrap gap-2">
+              {CAPABILITIES.map((c) => (
+                <a key={c.id} href={`#${c.id}`} className="chip no-underline hover:border-[var(--ms-navy)]">
+                  {c.title}
+                </a>
+              ))}
+            </nav>
           </div>
-          <div className="marketing-hero-visual" aria-label="Ejemplo de tarea preparada para revisión">
-            <div className="marketing-glow" />
-            <div className="marketing-task-card">
-              <div className="marketing-task-top"><span className="marketing-task-icon">✉</span><span><small>NUEVA TAREA</small><b>Consulta de presupuesto</b></span><i>PARA REVISAR</i></div>
-              <p>“Ayúdame a responder esta consulta y organiza los datos del cliente.”</p>
-              <div className="marketing-task-steps">
-                <div><span>1</span><p><b>Entender</b><small>Leer y resumir el mensaje</small></p><strong>✓</strong></div>
-                <div><span>2</span><p><b>Preparar</b><small>Redactar una respuesta</small></p><strong>✓</strong></div>
-                <div><span>3</span><p><b>Revisar</b><small>Decides antes de enviar</small></p><strong>↗</strong></div>
+        </section>
+
+        <div className="site-container py-10">
+          {CAPABILITIES.map((c) => (
+            <section key={c.id} id={c.id} className="capability scroll-mt-24" aria-labelledby={`${c.id}-t`}>
+              <div>
+                <h2 id={`${c.id}-t`} className="site-h2">
+                  {c.title}
+                </h2>
+                <dl className="capability-facts">
+                  <div>
+                    <dt>Lo habitual</dt>
+                    <dd>{c.problem}</dd>
+                  </div>
+                  <div>
+                    <dt>Con MarchaSolo</dt>
+                    <dd>{c.solution}</dd>
+                  </div>
+                  <div>
+                    <dt>Resultado</dt>
+                    <dd>{c.result}</dd>
+                  </div>
+                  <div>
+                    <dt>Se lo pides así</dt>
+                    <dd className="text-[var(--ms-navy)]">{c.example}</dd>
+                  </div>
+                </dl>
               </div>
-              <div className="marketing-task-foot"><span /> Plan listo para que lo revises</div>
+              <Panel {...c.panel} />
+            </section>
+          ))}
+        </div>
+
+        <section className="site-section pt-0">
+          <div className="site-container">
+            <div className="site-cta">
+              <div>
+                <h2 className="site-h2">Empieza por una sola tarea</h2>
+                <p>Elige la que más tiempo te quita. Cuando funcione, añade la siguiente.</p>
+              </div>
+              <Link href="/crear-cuenta" className="btn btn-primary">
+                Probar MarchaSolo
+              </Link>
             </div>
-            <div className="marketing-float-card"><span>✦</span> La decisión sigue siendo tuya</div>
           </div>
-        </section>
-
-        <section className="marketing-section marketing-capabilities">
-          <div className="marketing-section-heading">
-            <p className="marketing-eyebrow">UNA AYUDA PRÁCTICA, CADA DÍA</p>
-            <h2>Tu forma de trabajar,<br /><em>con menos pasos manuales.</em></h2>
-          </div>
-          <div className="marketing-example-grid">
-            {examples.map((item) => (
-              <article className="marketing-example-card" key={item.number}>
-                <span className="marketing-card-number">{item.number}</span>
-                <span className="marketing-card-tag">{item.tag}</span>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="marketing-use-cases">
-          <div>
-            <p className="marketing-eyebrow">EMPIEZA CON ALGO CONCRETO</p>
-            <h2>Una tarea menos en tu lista<br /><em>ya es un buen comienzo.</em></h2>
-            <p>Prueba con una de las rutinas que conoces de memoria:</p>
-          </div>
-          <ul className="marketing-prompt-list">
-            <li><span>“</span>Cuando llegue una consulta, clasifícala y déjame una respuesta preparada.</li>
-            <li><span>“</span>Antes de la reunión, reúne la información del cliente y prepara un resumen.</li>
-            <li><span>“</span>Cada viernes, organiza los datos de la semana y prepara un informe para revisar.</li>
-          </ul>
-        </section>
-
-        <section className="marketing-integrations-band">
-          <div>
-            <p className="marketing-eyebrow">TUS HERRAMIENTAS, EN CONJUNTO</p>
-            <h2>Conecta lo que ya usas.</h2>
-            <p>Trabaja con tus archivos, mensajes, agenda y registros de clientes desde un mismo espacio. Empieza por las conexiones que necesitas y añade otras cuando quieras.</p>
-          </div>
-          <div className="marketing-integration-pills" aria-label="Algunas herramientas disponibles">
-            <span>Google Drive</span><span>Google Calendar</span><span>Gmail</span><span>WhatsApp</span><span>Telegram</span><span>HubSpot</span>
-          </div>
-        </section>
-
-        <section className="marketing-final-cta">
-          <p className="marketing-eyebrow">DA EL PRIMER PASO</p>
-          <h2>Cuéntale una tarea.<br /><em>Empieza a recuperar tiempo.</em></h2>
-          <p>Describe algo que haces a menudo. MarchaSolo te ayudará a convertirlo en un plan claro.</p>
-          <Link href="/signup" className="marketing-primary-button">Probar MarchaSolo <span aria-hidden="true">→</span></Link>
         </section>
       </main>
     </MarketingLayout>

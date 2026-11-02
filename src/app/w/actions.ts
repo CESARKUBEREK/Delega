@@ -15,7 +15,7 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 async function sessionClient() {
   const supabase = await createClient()
   const { data } = await supabase.auth.getClaims()
-  if (!data?.claims?.sub) redirect("/login")
+  if (!data?.claims?.sub) redirect("/entrar")
   return supabase
 }
 

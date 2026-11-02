@@ -7,7 +7,7 @@ import { supabasePublishableKey, supabaseUrl } from "./env"
 const PROTECTED_PREFIXES = ["/w", "/reset-password", "/integraciones", "/abrir"]
 // /w/<espacio>/…: se recuerda el último espacio para abrir la app instalada en él.
 const WORKSPACE_PATH = /^\/w\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\/|$)/i
-const GUEST_ONLY = ["/login", "/signup", "/forgot-password"]
+const GUEST_ONLY = ["/entrar", "/crear-cuenta", "/login", "/signup", "/forgot-password"]
 
 function matches(pathname: string, prefixes: string[]) {
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`))
@@ -46,12 +46,13 @@ export async function updateSession(request: NextRequest) {
     return redirect
   }
 
-  if (pathname === "/") {
-    return redirectTo(signedIn ? "/abrir" : "/login")
+  // La portada es la página pública; con sesión, se entra directo en la app.
+  if (pathname === "/" && signedIn) {
+    return redirectTo("/abrir")
   }
 
   if (!signedIn && matches(pathname, PROTECTED_PREFIXES)) {
-    const redirect = redirectTo("/login")
+    const redirect = redirectTo("/entrar")
     const url = new URL(redirect.headers.get("location")!)
     url.searchParams.set("next", `${pathname}${search}`)
     redirect.headers.set("location", url.toString())

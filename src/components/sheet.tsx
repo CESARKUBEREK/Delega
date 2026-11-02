@@ -1,59 +1,96 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
-import { Logo, LogoMark } from "./logo"
+import { Logo } from "./logo"
 
-// La lámina: el formulario se presenta como una hoja de plano, con una cota
-// encima y el cajetín (recuadro de datos del plano) al pie.
+// Marco de las páginas de acceso (entrar, crear cuenta, contraseña): a un lado
+// el formulario; al otro, qué es MarchaSolo o qué pasa al crear la cuenta.
 export function Sheet({
   title,
-  sheetName,
+  intro,
   children,
   footer,
+  story = "access",
 }: {
   title: string
-  sheetName: string
+  // Nombre antiguo de la lámina; ya no se muestra.
+  sheetName?: string
+  intro?: ReactNode
   children: ReactNode
   footer?: ReactNode
+  story?: "access" | "signup"
 }) {
   return (
-    <main className="auth-shell">
-      <section className="auth-story" aria-label="Qué puedes hacer con MarchaSolo">
-        <header className="auth-brand"><Logo size={38} id="orkesta-auth" /></header>
-        <div className="auth-copy">
-          <span className="auth-eyebrow"><span className="auth-live-dot" /> AUTOMATIZACIÓN CON IA</span>
-          <h2>Las tareas avanzan.<br /><span>Tú decides.</span></h2>
-          <p>Conecta tus herramientas, describe lo que necesitas y deja que MarchaSolo prepare el trabajo.</p>
+    <main className="access">
+      <section className="access-story" aria-label={story === "signup" ? "Qué pasa al crear tu cuenta" : "MarchaSolo"}>
+        <Link href="/" aria-label="MarchaSolo, inicio" className="site-brand self-start">
+          <Logo size={34} />
+        </Link>
+        <div className="access-story-main">
+          {story === "signup" ? (
+            <>
+              <h2>Qué pasa al crear tu cuenta</h2>
+              <ol className="access-next">
+                <li>
+                  <b>Confirmas tu correo</b>
+                  Te enviamos un enlace. Si entras con Google, te lo ahorras.
+                </li>
+                <li>
+                  <b>Nos cuentas una tarea</b>
+                  La que más tiempo te quita, con tus palabras.
+                </li>
+                <li>
+                  <b>Ves el plan que te prepara</b>
+                  Con créditos de prueba de MarchaSolo, sin conectar nada.
+                </li>
+                <li>
+                  <b>Conectas solo lo que haga falta</b>
+                  El correo, Drive o la agenda. Y nada se envía sin tu aprobación.
+                </li>
+              </ol>
+            </>
+          ) : (
+            <>
+              <h2>Las tareas avanzan. Tú decides.</h2>
+              <ol className="access-next">
+                <li>
+                  <b>Lo pides con tus palabras</b>
+                  MarchaSolo lo convierte en pasos.
+                </li>
+                <li>
+                  <b>MarchaSolo hace el trabajo</b>
+                  Lee, consulta y redacta con tus aplicaciones.
+                </li>
+                <li>
+                  <b>Tú apruebas</b>
+                  Nada se envía ni se cambia sin tu visto bueno.
+                </li>
+              </ol>
+            </>
+          )}
         </div>
-        <div className="workflow-card" aria-label="Ejemplo de automatización: correo, MarchaSolo y aprobación">
-          <div className="workflow-top"><span>FLUJO DE TRABAJO</span><span className="workflow-status"><i /> LISTO PARA REVISAR</span></div>
-          <div className="workflow-lane">
-            <div className="workflow-node"><span className="workflow-icon inbox-icon">✉</span><span><b>Nuevo correo</b><small>Solicitud recibida</small></span></div>
-            <span className="workflow-link" aria-hidden="true"><i /></span>
-            <div className="workflow-node brand-node"><span className="workflow-icon brand-icon"><LogoMark size={22} id="orkesta-flow" /></span><span><b>MarchaSolo prepara</b><small>Clasifica y propone</small></span></div>
-            <span className="workflow-link" aria-hidden="true"><i /></span>
-            <div className="workflow-node"><span className="workflow-icon check-icon">✓</span><span><b>Tu aprobación</b><small>Antes de ejecutar</small></span></div>
-          </div>
-          <div className="workflow-bottom"><span className="workflow-check">✓</span> Tú mantienes el control de cada acción</div>
-        </div>
-        <div className="auth-footnote"><span>01</span> Automatiza lo repetitivo. Conserva las decisiones.</div>
-        <div className="auth-orbit auth-orbit-one" /><div className="auth-orbit auth-orbit-two" />
+        <p className="access-story-foot">Tu negocio, en automático.</p>
       </section>
 
-      <section className="auth-form-side">
-        <div className="auth-form-brand"><Logo size={34} tagline id="orkesta-auth-mobile" /></div>
-        <div className="auth-form-card">
-          <nav className="auth-info-links" aria-label="Conoce MarchaSolo">
-            <Link href="/para-que-sirve">Qué puedes hacer</Link>
-            <Link href="/como-empezar">Cómo empezar</Link>
-          </nav>
-          <div className="auth-form-kicker">{sheetName.toUpperCase()}</div>
-          <h1 className="rotulo text-[1.8rem] text-ink">{title}</h1>
-          <div className="auth-form-content">{children}</div>
-          <div className="auth-form-footer">{footer}</div>
+      <section className="access-form">
+        <div className="access-top">
+          <Link href="/" aria-label="MarchaSolo, inicio" className="site-brand access-mobile-brand">
+            <Logo size={30} />
+          </Link>
+          <Link href="/" className="link">
+            Volver al inicio
+          </Link>
         </div>
-        <p className="auth-privacy"><span>⌑</span> Tus datos y tus conexiones permanecen bajo tu control. <Link href="/privacidad">Privacidad</Link> · <Link href="/terminos">Términos</Link></p>
+        <div className="access-card">
+          <h1>{title}</h1>
+          {intro ? <p className="access-intro">{intro}</p> : null}
+          <div className="auth-form-content">{children}</div>
+          {footer ? <div className="access-card-footer">{footer}</div> : null}
+        </div>
+        <nav aria-label="Legal" className="access-legal flex gap-5">
+          <Link href="/privacidad">Privacidad</Link>
+          <Link href="/terminos">Términos</Link>
+        </nav>
       </section>
     </main>
   )
 }
-

@@ -3,9 +3,20 @@ import { PwaRegister } from "@/components/pwa-register"
 import "@fontsource-variable/outfit/wght.css"
 import "./globals.css"
 
+const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://delega-five.vercel.app").replace(/\/+$/, "")
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE),
   title: { default: "MarchaSolo", template: "%s · MarchaSolo" },
-  description: "Tu negocio, en automático. Describe una tarea y MarchaSolo la convierte en un flujo que revisas y apruebas.",
+  description: "Tu negocio, en automático. Las tareas avanzan; tú decides antes de que se envíe nada.",
+  openGraph: {
+    type: "website",
+    locale: "es_ES",
+    siteName: "MarchaSolo",
+    title: "MarchaSolo · Tu negocio, en automático",
+    description: "MarchaSolo automatiza las tareas de tu negocio, conecta tus aplicaciones y trabaja por ti. Tú mantienes el control.",
+  },
+  twitter: { card: "summary_large_image" },
   applicationName: "MarchaSolo",
   robots: { index: false, follow: false },
   // App instalable en el iPhone: el manifiesto lo genera app/manifest.ts.
