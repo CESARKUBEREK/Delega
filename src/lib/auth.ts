@@ -15,7 +15,7 @@ export async function requireUser(next?: string): Promise<CurrentUser> {
   const { data } = await supabase.auth.getClaims()
   const claims = data?.claims
   if (!claims?.sub) {
-    redirect(next ? `/login?next=${encodeURIComponent(next)}` : "/login")
+    redirect(next ? `/entrar?next=${encodeURIComponent(next)}` : "/entrar")
   }
   return {
     id: claims.sub,

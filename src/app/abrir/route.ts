@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient()
   const { data: claims } = await supabase.auth.getClaims()
   const userId = claims?.claims?.sub
-  if (!userId) return go("/login")
+  if (!userId) return go("/entrar")
 
   const home = async (workspaceId: string) => {
     const [{ data: membership }, { data: workspace }, { count: ai }, { count: integrations }] = await Promise.all([

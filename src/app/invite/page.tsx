@@ -62,10 +62,10 @@ export default function InvitePage() {
         <div className="flex flex-col gap-4">
           <p className="text-ink">Para aceptar, entra o crea tu cuenta con el correo al que te invitaron.</p>
           <div className="flex gap-3">
-            <Link href="/login?next=/invite" className="flex h-11 flex-1 items-center justify-center bg-stroke font-semibold text-stroke-ink">
+            <Link href="/entrar?next=/invite" className="flex h-11 flex-1 items-center justify-center bg-stroke font-semibold text-stroke-ink">
               Entrar
             </Link>
-            <Link href="/signup?next=/invite" className="flex h-11 flex-1 items-center justify-center border border-ink">
+            <Link href="/crear-cuenta?next=/invite" className="flex h-11 flex-1 items-center justify-center border border-ink">
               Crear cuenta
             </Link>
           </div>

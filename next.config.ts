@@ -60,7 +60,14 @@ const nextConfig: NextConfig = {
   // El asistente de configuración /bienvenida se retiró (1 nov): lo sustituye
   // el onboarding. Los enlaces antiguos llevan allí.
   async redirects() {
-    return [{ source: "/w/:workspaceId/bienvenida", destination: "/w/:workspaceId/onboarding", permanent: false }]
+    return [
+      { source: "/w/:workspaceId/bienvenida", destination: "/w/:workspaceId/onboarding", permanent: false },
+      // Rutas de acceso en español (2 nov): los enlaces antiguos siguen
+      // funcionando y conservan ?next=. /como-empezar pasa a /como-funciona.
+      { source: "/login", destination: "/entrar", permanent: true },
+      { source: "/signup", destination: "/crear-cuenta", permanent: true },
+      { source: "/como-empezar", destination: "/como-funciona#empezar", permanent: true },
+    ]
   },
   async headers() {
     return [

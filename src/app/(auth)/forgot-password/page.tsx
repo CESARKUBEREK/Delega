@@ -15,7 +15,7 @@ export default function ForgotPasswordPage() {
       title="Recupera el acceso"
       sheetName="Contraseña"
       footer={
-        <Link href="/login" className="text-link underline underline-offset-4">
+        <Link href="/entrar" className="text-link underline underline-offset-4">
           Volver a entrar
         </Link>
       }

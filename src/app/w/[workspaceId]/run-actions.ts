@@ -303,7 +303,7 @@ export async function addContact(_prev: ContactState, formData: FormData): Promi
   const supabase = await createClient()
   const { data: claims } = await supabase.auth.getClaims()
   const userId = claims?.claims?.sub
-  if (!userId) redirect("/login")
+  if (!userId) redirect("/entrar")
   const { error } = await supabase.from("contacts").insert({ workspace_id: workspaceId, name, email, created_by: userId })
   if (error) {
     return { error: error.code === "23505" ? "Ese correo ya está en la lista." : "Solo un administrador puede añadir contactos." }
