@@ -14,7 +14,8 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data: https://lh3.googleusercontent.com https://*.gstatic.com",
   "font-src 'self'",
-  `connect-src 'self' ${supabaseUrl} ${supabaseWs}`.trim(),
+  // wss://api.x.ai: voz en tiempo real (asistente en la web y ayudante por voz).
+  `connect-src 'self' ${supabaseUrl} ${supabaseWs} wss://api.x.ai`.trim(),
   "frame-src https://docs.google.com https://drive.google.com https://accounts.google.com https://challenges.cloudflare.com",
   "worker-src 'self'",
   "manifest-src 'self'",
@@ -29,10 +30,8 @@ const csp = [
   .join("; ")
 
 // Asistente de voz en la web del cliente (/hablar/<id>): se inserta en otras
-// webs (frame-ancestors *) y habla con xAI por WebSocket.
-const voiceCsp = csp
-  .replace("frame-ancestors 'none'", "frame-ancestors *")
-  .replace(`connect-src 'self' ${supabaseUrl} ${supabaseWs}`.trim(), `connect-src 'self' ${supabaseUrl} ${supabaseWs} wss://api.x.ai`.trim())
+// webs (frame-ancestors *) y habla con xAI por WebSocket (ya permitido arriba).
+const voiceCsp = csp.replace("frame-ancestors 'none'", "frame-ancestors *")
 
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },

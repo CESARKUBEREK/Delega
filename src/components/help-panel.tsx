@@ -3,9 +3,10 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
-import { applyStepChanges, askHelp, type HelpTurn, type StepChange } from "@/app/w/[workspaceId]/help-actions"
+import { applyStepChanges, askHelp, helpVoiceAvailable, startHelpVoice, type HelpTurn, type StepChange } from "@/app/w/[workspaceId]/help-actions"
 import { AutoReadToggle, DictateButton, ListenButton, useAutoRead } from "@/app/w/[workspaceId]/asistente/voice"
 import { HELP_GUIDES, looksLikeSecret, relevantGuides, SECRET_REPLY, type HelpGuide } from "@/lib/help"
+import { RealtimeVoice, requestMicrophone, type VoicePhase } from "@/lib/realtime-voice"
 import { speak, stopSpeaking, unlockSpeech } from "@/lib/speech"
 
 // Panel «¿Te ayudo?» (fase 7-1): dudas sobre integraciones y automatizaciones.
@@ -288,6 +289,8 @@ export function HelpPanel({ workspaceId, page, runId = null }: { workspaceId: st
             )}
           </div>
 
+          <VoiceSection workspaceId={workspaceId} page={page} onCardElsewhere={goToCard} />
+
           {!noAi ? (
             <div className="flex flex-col gap-2 border-t border-rule px-4 py-3">
               {!pending && (messages.length === 0 || followUps.length > 0) ? (
@@ -404,4 +407,116 @@ export function OpenCardFromQuery() {
     return () => window.clearTimeout(t)
   }, [])
   return null
+}
+
+// Conversación por voz en tiempo real con el ayudante (fase 7-4). Opcional:
+// solo si un administrador la activó y hay clave de xAI. El agente solo puede
+// abrir tarjetas; si la tarjeta no está en esta página, deja un botón.
+function VoiceSection({ workspaceId, page, onCardElsewhere }: { workspaceId: string; page: Page; onCardElsewhere: (id: string) => void }) {
+  const [available, setAvailable] = useState<{ enabled: boolean; xai: boolean; isAdmin: boolean } | null>(null)
+  const [phase, setPhase] = useState<VoicePhase | "idle">("idle")
+  const [speaking, setSpeaking] = useState(false)
+  const [seconds, setSeconds] = useState(0)
+  const [note, setNote] = useState<string | null>(null)
+  const [elsewhere, setElsewhere] = useState<string | null>(null)
+  const session = useRef<RealtimeVoice | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    helpVoiceAvailable(workspaceId)
+      .then((a) => alive && setAvailable(a))
+      .catch(() => null)
+    return () => {
+      alive = false
+      session.current?.stop()
+    }
+  }, [workspaceId])
+
+  if (!available) return null
+  if (!available.enabled) {
+    return available.isAdmin ? (
+      <p className="border-t border-rule px-4 py-2 text-xs text-graphite">
+        ¿Prefieres hablar?{" "}
+        <a href={`/w/${workspaceId}/integraciones?abrir=voice-app#asistente-voz`} className="font-semibold text-link underline underline-offset-4">
+          Activa la conversación por voz
+        </a>
+      </p>
+    ) : null
+  }
+  if (!available.xai) {
+    return <p className="border-t border-rule px-4 py-2 text-xs text-graphite">Para hablar conmigo por voz hace falta conectar Grok (xAI) en Integraciones → LLMs.</p>
+  }
+
+  const start = async () => {
+    stopSpeaking()
+    setNote(null)
+    setElsewhere(null)
+    setPhase("connecting")
+    const stream = await requestMicrophone()
+    if (!stream) {
+      setPhase("idle")
+      setNote("Necesito permiso para usar el micrófono. Actívalo en el navegador.")
+      return
+    }
+    const r = await startHelpVoice({ workspaceId, page }).catch(() => null)
+    if (!r || !r.ok) {
+      stream.getTracks().forEach((t) => t.stop())
+      setPhase("idle")
+      setNote(r && !r.ok ? r.error : "No se pudo conectar. Inténtalo de nuevo.")
+      return
+    }
+    setSeconds(0)
+    session.current = new RealtimeVoice(stream, r, {
+      onPhase: (p, n) => {
+        setPhase(p)
+        if (p === "ended") {
+          session.current = null
+          setNote(n ?? null)
+        }
+      },
+      onSpeaking: setSpeaking,
+      onSeconds: setSeconds,
+      onTool: async (name, args) => {
+        const id = typeof args.id === "string" ? args.id : ""
+        if (name !== "open_card" || !guideById(id)) return "No existe esa tarjeta."
+        if (openHelpCard(id)) return "Tarjeta abierta en pantalla."
+        setElsewhere(id)
+        return "La tarjeta está en la página de Integraciones: dile que pulse el botón «Abrir la tarjeta» del panel."
+      },
+    })
+  }
+
+  const live = phase === "live" || phase === "connecting"
+  const mm = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`
+  return (
+    <div className="flex flex-col gap-2 border-t border-rule px-4 py-2">
+      {live ? (
+        <div className="flex items-center gap-3">
+          <span aria-hidden="true" className={`h-3 w-3 rounded-full ${speaking ? "animate-pulse bg-stroke" : "bg-ok"}`} />
+          <p className="flex-1 text-sm text-ink" role="status" aria-live="polite">
+            {phase === "connecting" ? "Conectando…" : speaking ? "Te estoy respondiendo…" : "Te escucho. Habla cuando quieras."}{" "}
+            <span className="text-xs text-graphite">{phase === "live" ? mm : ""}</span>
+          </p>
+          <button type="button" onClick={() => session.current?.stop()} className="h-9 rounded-full bg-alert px-4 text-sm font-semibold text-white">
+            Colgar
+          </button>
+        </div>
+      ) : (
+        <button type="button" onClick={() => void start()} className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-ink px-4 text-sm font-semibold text-ink">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <rect x="9" y="3" width="6" height="11" rx="3" />
+            <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />
+          </svg>
+          Hablar con el ayudante
+        </button>
+      )}
+      {elsewhere && guideById(elsewhere) ? (
+        <button type="button" onClick={() => onCardElsewhere(elsewhere)} className="self-start text-sm font-semibold text-link underline underline-offset-4">
+          Abrir la tarjeta de {guideById(elsewhere)?.title} →
+        </button>
+      ) : null}
+      {note ? <p className="text-xs text-graphite">{note}</p> : null}
+      {!live ? <p className="text-[11px] text-graphite">Usa tu clave de Grok (xAI). Por voz no se aprueba nada ni se dicen claves.</p> : null}
+    </div>
+  )
 }

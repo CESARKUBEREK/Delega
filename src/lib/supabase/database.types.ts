@@ -341,6 +341,27 @@ export type Database = {
           },
         ]
       }
+      help_voice_sessions: {
+        Row: {
+          id: string
+          started_at: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          id?: string
+          started_at?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          id?: string
+          started_at?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       inbox_messages: {
         Row: {
           body: string
@@ -1114,6 +1135,7 @@ export type Database = {
           created_by: string | null
           id: string
           kind: Database["public"]["Enums"]["workspace_kind"]
+          help_voice_enabled: boolean
           name: string
           onboarding_completed_at: string | null
           timezone: string | null
@@ -1125,6 +1147,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           kind: Database["public"]["Enums"]["workspace_kind"]
+          help_voice_enabled?: boolean
           name: string
           onboarding_completed_at?: string | null
           timezone?: string | null
@@ -1136,6 +1159,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["workspace_kind"]
+          help_voice_enabled?: boolean
           name?: string
           onboarding_completed_at?: string | null
           timezone?: string | null
@@ -1274,6 +1298,10 @@ export type Database = {
       trial_consume: {
         Args: { p_tokens: number; p_workspace_id: string }
         Returns: number
+      }
+      workspace_set_help_voice: {
+        Args: { p_enabled: boolean; p_workspace_id: string }
+        Returns: boolean
       }
       workspace_complete_onboarding: {
         Args: { p_workspace_id: string }

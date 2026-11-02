@@ -93,3 +93,45 @@ export async function applyStepChanges(input: {
   const saved = await saveFlowPlan({ workspaceId: input.workspaceId, flowId: flow.id, plan: { ...plan, steps }, fileIds })
   return saved.ok ? { ok: true } : { ok: false, error: saved.error }
 }
+
+// Ayudante por voz (fase 7-4). ¿Está activado en el espacio y hay clave de xAI?
+export async function helpVoiceAvailable(workspaceId: string): Promise<{ enabled: boolean; xai: boolean; isAdmin: boolean }> {
+  if (!UUID_RE.test(workspaceId)) return { enabled: false, xai: false, isAdmin: false }
+  const supabase = await createClient()
+  const { data: claims } = await supabase.auth.getClaims()
+  const userId = claims?.claims?.sub
+  const [{ data: ws }, { data: ai }, { data: me }] = await Promise.all([
+    supabase.from("workspaces").select("help_voice_enabled").eq("id", workspaceId).maybeSingle(),
+    supabase.from("ai_connections").select("status").eq("workspace_id", workspaceId).eq("provider", "xai").maybeSingle(),
+    userId
+      ? supabase.from("memberships").select("role, status").eq("workspace_id", workspaceId).eq("user_id", userId).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+  const isAdmin = me?.status === "active" && (me.role === "owner" || me.role === "admin")
+  return { enabled: Boolean(ws?.help_voice_enabled), xai: ai?.status === "active", isAdmin }
+}
+
+// Token temporal y configuración para hablar con el ayudante.
+export async function startHelpVoice(input: {
+  workspaceId: string
+  page: string
+}): Promise<{ ok: true; token: string; model: string; max_minutes: number; session: Record<string, unknown> } | { ok: false; error: string }> {
+  if (!UUID_RE.test(input.workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const result = await callEdgeFunction<{ token: string; model: string; max_minutes: number; session: Record<string, unknown> }>(
+    "assistant",
+    { action: "help_voice", workspace_id: input.workspaceId, page: String(input.page).slice(0, 30) },
+    30_000,
+  )
+  if (result.error) return { ok: false, error: result.error.message }
+  return { ok: true, ...result.data }
+}
+
+// Activar o desactivar la conversación por voz (solo administradores).
+export async function setHelpVoice(workspaceId: string, enabled: boolean): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("workspace_set_help_voice", { p_workspace_id: workspaceId, p_enabled: enabled })
+  if (error) return { ok: false, error: "No se pudo guardar." }
+  if (!data) return { ok: false, error: "Solo un administrador puede cambiarlo." }
+  return { ok: true }
+}
