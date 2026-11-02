@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 // Portada pública, también con sesión (el logo de la app lleva aquí); la
 // cabecera cambia «Entrar» por «Ir a mi espacio».
 export default function HomePage() {
-  const preview = USE_CASES.filter((c) => ["correo", "planillas", "reuniones"].includes(c.id))
+  const preview = USE_CASES.filter((c) => ["leads", "bandeja-clientes", "tickets"].includes(c.id))
   return (
     <MarketingLayout>
       <main>
