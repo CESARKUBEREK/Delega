@@ -139,4 +139,54 @@ export const USE_CASES: UseCase[] = [
     id: "diagnostico",
     title: "Reunir contexto antes de diagnosticar",
     before:
-      "Antes de tocar un caso 
+      "Antes de tocar un caso abres correo, CRM, documentación y capturas. Pierdes tiempo armando el contexto.",
+    ask: "Cuando abra una incidencia, reúne el historial del cliente, los últimos mensajes y los documentos relacionados en un solo resumen.",
+    does: "Consulta correo, CRM y archivos vinculados y deja un resumen listo para que empieces a diagnosticar.",
+    waits: null,
+    result: "Llegas al caso con el contexto montado. Es un aviso para ti: no necesita aprobación.",
+    tags: ["Correo", "HubSpot", "Google Drive"],
+  },
+  {
+    id: "escalado",
+    title: "Preparar el traspaso cuando hay que escalar",
+    before:
+      "Al escalar copias hilos, adjuntas capturas y escribes a mano qué se ha probado. El siguiente nivel pierde tiempo reconstruyendo el caso.",
+    ask: "Cuando haya que escalar, prepárame el resumen del caso, qué se ha intentado y el mensaje para el equipo de segundo nivel.",
+    does: "Reúne el hilo, el historial y los pasos ya dados, y redacta el paquete de traspaso.",
+    waits: "El envío al equipo interno (o la tarea creada).",
+    result: "El escalado llega completo a la primera. Tú revisas y envías o asignas.",
+    tags: ["Correo", "Telegram", "Google Docs"],
+  },
+]
+
+// Herramientas que se pueden conectar hoy, agrupadas por para qué sirven.
+export const TOOL_GROUPS: { title: string; tools: string[] }[] = [
+  {
+    title: "Correo y mensajes",
+    tools: ["Tu correo (IMAP)", "WhatsApp", "Telegram"],
+  },
+  {
+    title: "Voz y reservas",
+    tools: ["Asistente de voz (web y teléfono)", "Google Calendar"],
+  },
+  {
+    title: "Archivos y documentos",
+    tools: ["Google Drive", "Google Sheets", "Google Docs", "Excel en Drive"],
+  },
+  {
+    title: "Agenda y clientes",
+    tools: ["Google Calendar", "Google Contacts", "HubSpot"],
+  },
+  {
+    title: "Tu sector",
+    tools: ["Tokko Broker", "Xubio (solo lectura)"],
+  },
+  {
+    title: "Redes y atención",
+    tools: ["Buffer", "Asistente de voz en tu web"],
+  },
+  {
+    title: "Inteligencia artificial",
+    tools: ["OpenAI", "Anthropic", "DeepSeek", "Grok"],
+  },
+]
