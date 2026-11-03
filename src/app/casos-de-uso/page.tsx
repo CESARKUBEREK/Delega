@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { MarketingLayout } from "@/components/marketing-layout"
 import { CaseTrail } from "@/components/site/case-trail"
-import { USE_CASES } from "@/lib/site-content"
+import { USE_CASES, type UseCase } from "@/lib/site-content"
 
 export const metadata: Metadata = {
   title: "Casos de uso",
@@ -10,6 +10,35 @@ export const metadata: Metadata = {
     "WhatsApp del negocio, voz y reservas, ventas, atención al cliente y soporte técnico. MarchaSolo prepara el trabajo; tú apruebas antes de enviar o cambiar nada.",
   robots: { index: true, follow: true },
   alternates: { canonical: "/casos-de-uso" },
+}
+
+const GROUPS: { id: string; title: string; ids: string[] }[] = [
+  {
+    id: "canales",
+    title: "Canales del negocio",
+    ids: ["whatsapp-negocio", "voz-reservas", "reservas-agenda"],
+  },
+  {
+    id: "ventas",
+    title: "Ventas",
+    ids: ["leads", "seguimiento-ventas", "propuestas"],
+  },
+  {
+    id: "atencion",
+    title: "Atención al cliente",
+    ids: ["bandeja-clientes", "consultas-repetidas", "postventa"],
+  },
+  {
+    id: "soporte",
+    title: "Soporte técnico",
+    ids: ["tickets", "diagnostico", "escalado"],
+  },
+]
+
+function casesInGroup(ids: string[]): UseCase[] {
+  return ids
+    .map((id) => USE_CASES.find((c) => c.id === id))
+    .filter((c): c is UseCase => Boolean(c))
 }
 
 export default function UseCasesPage() {
@@ -20,13 +49,13 @@ export default function UseCasesPage() {
           <div className="site-container">
             <h1 className="site-h1">Casos de uso</h1>
             <p className="site-lead">
-  WhatsApp, voz, reservas, ventas, atención y soporte. Se lo pides como a un compañero: MarchaSolo prepara el trabajo con
-  tus aplicaciones; tú decides qué se envía o se cambia.
-</p>
-            <nav aria-label="Casos" className="mt-8 flex flex-wrap gap-2">
-              {USE_CASES.map((c) => (
-                <a key={c.id} href={`#${c.id}`} className="chip no-underline hover:border-[var(--ms-navy)]">
-                  {c.title}
+              WhatsApp, voz, reservas, ventas, atención y soporte. Se lo pides como a un compañero: MarchaSolo prepara el
+              trabajo con tus aplicaciones; tú decides qué se envía o se cambia.
+            </p>
+            <nav aria-label="Áreas" className="mt-8 flex flex-wrap gap-2">
+              {GROUPS.map((g) => (
+                <a key={g.id} href={`#${g.id}`} className="chip no-underline hover:border-[var(--ms-navy)]">
+                  {g.title}
                 </a>
               ))}
             </nav>
@@ -34,31 +63,44 @@ export default function UseCasesPage() {
         </section>
 
         <div className="site-container py-16">
-          {USE_CASES.map((c) => (
-            <article key={c.id} id={c.id} className="case scroll-mt-24" aria-labelledby={`${c.id}-t`}>
-              <div>
-                <h2 id={`${c.id}-t`} className="site-h2 text-[clamp(26px,2.6vw,34px)]">
-                  {c.title}
+          {GROUPS.map((g) => {
+            const items = casesInGroup(g.ids)
+            if (!items.length) return null
+            return (
+              <section key={g.id} id={g.id} className="scroll-mt-24 mb-20 last:mb-0" aria-labelledby={`${g.id}-h`}>
+                <h2 id={`${g.id}-h`} className="site-h2 mb-10">
+                  {g.title}
                 </h2>
-                <dl className="mt-6 grid gap-5">
-                  <div>
-                    <dt className="font-semibold">Antes</dt>
-                    <dd className="m-0 mt-1 text-[var(--ms-muted)]">{c.before}</dd>
-                  </div>
-                  <div>
-                    <dt className="font-semibold">Resultado</dt>
-                    <dd className="m-0 mt-1 text-[var(--ms-muted)]">{c.result}</dd>
-                  </div>
-                </dl>
-                <div className="case-tags" aria-label="Aplicaciones">
-                  {c.tags.map((t) => (
-                    <span key={t}>{t}</span>
+                <div className="grid gap-16">
+                  {items.map((c) => (
+                    <article key={c.id} id={c.id} className="case scroll-mt-24" aria-labelledby={`${c.id}-t`}>
+                      <div>
+                        <h3 id={`${c.id}-t`} className="site-h2 text-[clamp(26px,2.6vw,34px)]">
+                          {c.title}
+                        </h3>
+                        <dl className="mt-6 grid gap-5">
+                          <div>
+                            <dt className="font-semibold">Antes</dt>
+                            <dd className="m-0 mt-1 text-[var(--ms-muted)]">{c.before}</dd>
+                          </div>
+                          <div>
+                            <dt className="font-semibold">Resultado</dt>
+                            <dd className="m-0 mt-1 text-[var(--ms-muted)]">{c.result}</dd>
+                          </div>
+                        </dl>
+                        <div className="case-tags" aria-label="Aplicaciones">
+                          {c.tags.map((t) => (
+                            <span key={t}>{t}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <CaseTrail item={c} />
+                    </article>
                   ))}
                 </div>
-              </div>
-              <CaseTrail item={c} />
-            </article>
-          ))}
+              </section>
+            )
+          })}
         </div>
 
         <section className="site-section pt-0">
