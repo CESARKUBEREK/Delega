@@ -49,12 +49,12 @@ const Check = () => (
 // Ejemplos de los tres sectores (inmobiliarias, clínicas, profesionales).
 // Cada uno cae en su plan sin IA (src/lib/onboarding-plans.ts).
 const SUGGESTIONS = [
-  "Responder las consultas de mis clientes",
-  "Recordar sus citas a mis clientes el día antes",
-  "Contestar a los interesados en una propiedad",
-  "Avisar a los clientes con pagos pendientes",
-  "Pasar los pedidos que llegan por correo a una planilla",
-  "Preparar un informe de ventas cada viernes",
+  "Cuando un cliente escriba por WhatsApp, prepárame la respuesta con mis tarifas",
+  "Cuando pidan una visita o una cita, ofrece dos huecos de mi agenda",
+  "Cuando entre un lead, regístralo en el CRM y prepárame la primera respuesta",
+  "Cada mañana, ordena la bandeja y déjame las respuestas urgentes preparadas",
+  "Cuando entre una incidencia, clasifícala y déjame la primera respuesta",
+  "Después de cada visita, prepárame el mensaje de seguimiento",
 ]
 
 // Mientras el asistente prepara el plan (puede tardar unos segundos).
@@ -111,6 +111,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const [source, setSource] = useState<OnboardingSource | null>(saved?.source ?? null)
   const [conversationId, setConversationId] = useState<string | null>(saved?.conversationId ?? null)
   const [trialRemaining, setTrialRemaining] = useState<number | null>(saved?.trialRemaining ?? null)
+  const [flowId, setFlowId] = useState<string | null>(saved?.flowId ?? null)
   const [pending, startTransition] = useTransition()
 
   // Borra una cookie de vuelta antigua; el paso 4 la vuelve a poner si hace falta.
@@ -124,8 +125,8 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
       clearOnboarding(workspaceId)
       return
     }
-    saveOnboarding(workspaceId, { step, task, reply, plan, source, conversationId, trialRemaining })
-  }, [workspaceId, step, task, reply, plan, source, conversationId, trialRemaining])
+    saveOnboarding(workspaceId, { step, task, reply, plan, source, conversationId, trialRemaining, flowId })
+  }, [workspaceId, step, task, reply, plan, source, conversationId, trialRemaining, flowId])
 
   const needed = plan ? primaryConnection(plan) : "none"
 
@@ -184,11 +185,18 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     })
   }
 
-  // Plan aceptado → siempre la IA primero (sin ella no se ejecuta nada).
+  // Plan aceptado → guardar borrador (si se puede) y pasar a conectar la IA.
   const acceptPlan = () => {
-    if (!plan) return
+    if (!plan || pending) return
     setError(null)
-    setStep("ai")
+    startTransition(async () => {
+      if (!flowId) {
+        const savedPlan = await saveFlowPlan({ workspaceId, flowId: null, plan, fileIds: [] })
+        if (savedPlan.ok) setFlowId(savedPlan.flowId)
+        // Si falla el guardado, el onboarding sigue: el plan está en localStorage.
+      }
+      setStep("ai")
+    })
   }
 
   // Después de la IA, la herramienta que pide el plan (si pide alguna).
@@ -218,8 +226,17 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     setPlan(null)
     setSource(null)
     setConversationId(null)
+    setFlowId(null)
     setError(null)
   }
+
+  // Pasos visibles (si el plan no pide herramienta, «Conectar» no cuenta).
+  const visibleSteps = ONBOARDING_STEPS.filter((s) => !(s.id === "connect" && needed === "none"))
+  const stepOrdinal = (id: Step) => {
+    const i = visibleSteps.findIndex((s) => s.id === id)
+    return i >= 0 ? i + 1 : 1
+  }
+  const stepTotal = visibleSteps.length
 
   return (
     <div className="setup flex flex-col gap-6 max-w-2xl mx-auto">
@@ -272,7 +289,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
       {step === "task" && (
         <section className="setup-panel flex flex-col gap-5">
           <div>
-            <p className="text-sm font-semibold text-graphite">Paso 1 de 5</p>
+            <p className="text-sm font-semibold text-graphite">
+              Paso {stepOrdinal("task")} de {stepTotal}
+            </p>
             <h2 className="rotulo text-xl mt-1">¿Qué tarea te quita más tiempo?</h2>
             <p className="text-graphite mt-1">
               Cuéntamela con tus palabras, como se la explicarías a alguien de tu equipo, o elige un ejemplo. No hace falta conectar nada
@@ -330,7 +349,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
       {step === "plan" && plan && (
         <section className="setup-panel flex flex-col gap-5">
           <div>
-            <p className="text-sm font-semibold text-graphite">Paso 2 de 5</p>
+            <p className="text-sm font-semibold text-graphite">
+              Paso {stepOrdinal("plan")} de {stepTotal}
+            </p>
             <h2 className="rotulo text-xl mt-1">Así lo resolvería</h2>
             {reply && <p className="text-graphite mt-1 whitespace-pre-wrap">{reply}</p>}
             {source === "trial" && (
@@ -358,9 +379,10 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           <div className="flex flex-wrap gap-3">
             <button
               onClick={acceptPlan}
-              className="inline-flex h-11 items-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
+              disabled={pending}
+              className="inline-flex h-11 items-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
             >
-              Me gusta, conectar mi IA →
+              {pending ? "Guardando el plan…" : "Me gusta, continuar →"}
             </button>
             <button
               onClick={() => {
@@ -369,6 +391,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                 setReply(null)
                 setSource(null)
                 setConversationId(null)
+                setFlowId(null)
               }}
               className="inline-flex h-11 items-center rounded-xl border border-ink px-5 font-medium text-ink"
             >
@@ -389,8 +412,10 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           error={error}
           pending={pending}
           lastStep={needed === "none"}
+          stepLabel={`Paso ${stepOrdinal("ai")} de ${stepTotal}`}
           onBack={() => setStep("plan")}
           onContinue={afterAi}
+          onFinishDraft={finish}
         />
       )}
 
@@ -404,6 +429,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           card={needed === "none" ? null : cards[needed]}
           error={error}
           pending={pending}
+          stepLabel={`Paso ${stepOrdinal("connect")} de ${stepTotal}`}
           onBack={() => setStep("ai")}
           onContinue={finish}
         />
@@ -417,6 +443,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           isAdmin={isAdmin}
           plan={plan}
           needed={needed}
+          flowId={flowId}
           chatLink={chatHref(base, conversationId, task)}
           onConnectAi={() => setStep("ai")}
           onConnectTool={() => setStep("connect")}
@@ -439,6 +466,7 @@ function ConnectStep({
   card,
   error: finishError,
   pending,
+  stepLabel,
   onBack,
   onContinue,
 }: {
@@ -449,6 +477,7 @@ function ConnectStep({
   card: ReactNode
   error: string | null
   pending: boolean
+  stepLabel: string
   onBack: () => void
   onContinue: () => void
 }) {
@@ -506,7 +535,7 @@ function ConnectStep({
   return (
     <section className="setup-panel flex flex-col gap-5">
       <div>
-        <p className="text-sm font-semibold text-graphite">Paso 4 de 5</p>
+        <p className="text-sm font-semibold text-graphite">{stepLabel}</p>
         <h2 className="rotulo text-xl mt-1">Solo falta una cosa</h2>
         <p className="text-graphite mt-1">
           Para este plan necesito acceso a <strong>{label}</strong>. Conéctalo aquí mismo; el resto puede esperar.
@@ -611,8 +640,10 @@ function AiStep({
   error: finishError,
   pending,
   lastStep,
+  stepLabel,
   onBack,
   onContinue,
+  onFinishDraft,
 }: {
   workspaceId: string
   base: string
@@ -622,8 +653,10 @@ function AiStep({
   error: string | null
   pending: boolean
   lastStep: boolean
+  stepLabel: string
   onBack: () => void
   onContinue: () => void
+  onFinishDraft: () => void
 }) {
   const [status, setStatus] = useState<"loading" | "connected" | "missing">("loading")
   const [label, setLabel] = useState<string | null>(null)
@@ -676,7 +709,7 @@ function AiStep({
   return (
     <section className="setup-panel flex flex-col gap-5">
       <div>
-        <p className="text-sm font-semibold text-graphite">Paso 3 de 5</p>
+        <p className="text-sm font-semibold text-graphite">{stepLabel}</p>
         <h2 className="rotulo text-xl mt-1">Conecta tu IA</h2>
         <p className="text-graphite mt-1">
           Es el motor de MarchaSolo: con ella lee, ordena y redacta. Usas tu propia cuenta de IA: pagas allí, directamente al proveedor, solo
@@ -756,12 +789,20 @@ function AiStep({
 
       {finishError && <p className="text-sm text-alert">{finishError}</p>}
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-col gap-3">
         {status !== "connected" ? (
-          <button type="button" onClick={onContinue} disabled={pending} className="text-sm text-graphite underline underline-offset-4">
-            Lo conecto más tarde (sin IA no se ejecuta nada)
+          <button
+            type="button"
+            onClick={onFinishDraft}
+            disabled={pending}
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-ink px-5 font-medium text-ink disabled:opacity-60"
+          >
+            {pending ? "Guardando…" : "Guardar el plan como borrador y terminar"}
           </button>
         ) : null}
+        <p className="text-xs text-graphite">
+          Sin tu IA no se ejecuta nada. El plan no se pierde: puedes conectar la clave cuando quieras.
+        </p>
         <button type="button" onClick={onBack} className="text-sm text-graphite">
           ← Volver al plan
         </button>
@@ -770,64 +811,18 @@ function AiStep({
   )
 }
 
-// Introducción antes de la primera tarea: qué hace MarchaSolo por el negocio
-// (solo cosas que ya hace hoy) y cuánto tiempo devuelve.
-const INTRO_AREAS = [
-  { title: "Atención al cliente", text: "Ordena tus correos y mensajes por urgencia y te deja las respuestas redactadas." },
-  { title: "Reservas y citas", text: "Su asistente de voz atiende por teléfono y en tu web, y agenda las citas en tu calendario." },
-  { title: "Gestión de clientes", text: "Reconoce a cada cliente y tiene a mano su ficha y sus conversaciones anteriores." },
-  { title: "Planillas y documentos", text: "Pasa los datos de correos y pedidos a tus planillas y completa tus documentos." },
-  { title: "Redes sociales", text: "Redacta tus publicaciones y las deja programadas." },
-  { title: "Tu día, resumido", text: "Cada mañana: lo urgente, tu agenda y lo que espera respuesta." },
-]
-
+// Introducción breve: no compite con el paso 1.
 function Intro() {
-  // El detalle va plegado para que la tarea (lo que hay que hacer) quede a la vista.
-  const [open, setOpen] = useState(false)
   return (
-    <section aria-labelledby="intro-title" className="rounded-2xl border border-rule bg-sheet p-5 flex flex-col gap-4">
-      <div>
-        <p className="app-eyebrow">TU NEGOCIO, EN AUTOMÁTICO</p>
-        <h2 id="intro-title" className="rotulo text-xl mt-1">
-          Menos rutina, más negocio
-        </h2>
-        <p className="mt-1 text-graphite">
-          MarchaSolo es el asistente que se ocupa del trabajo repetitivo de tu negocio, cada día y a cualquier hora. Tú te dedicas a vender y a
-          cuidar a tus clientes; él prepara todo lo demás.
-        </p>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-controls="intro-detail"
-          className="mt-3 text-sm font-semibold text-link underline underline-offset-4"
-        >
-          {open ? "Ver menos" : "Ver qué puede hacer por ti"}
-        </button>
-      </div>
-
-      <div id="intro-detail" className={`${open ? "flex" : "hidden"} flex-col gap-4`}>
-        <ul className="grid gap-2 sm:grid-cols-2">
-          {INTRO_AREAS.map((a) => (
-            <li key={a.title} className="flex gap-3 rounded-xl border border-rule bg-paper p-3">
-              <span aria-hidden="true" className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-stroke" />
-              <span className="flex flex-col gap-0.5">
-                <span className="text-sm font-semibold text-ink">{a.title}</span>
-                <span className="text-sm text-graphite">{a.text}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        <p className="text-sm text-graphite">
-          <strong className="text-ink">Así de fácil:</strong> le cuentas la tarea con tus palabras, él hace el trabajo pesado y tú apruebas en un
-          toque. Nada se envía ni se cambia sin tu permiso.
-        </p>
-        <p className="rounded-xl bg-paper px-4 py-3 text-sm text-ink">
-          <strong>Más productividad desde el primer día.</strong> Lo que hoy te lleva horas cada semana (responder las mismas consultas, confirmar
-          citas, pasar datos, preparar informes) pasa a ser una revisión de minutos. Ese tiempo vuelve a ti, a tus clientes y a tu negocio.
-        </p>
-      </div>
+    <section aria-labelledby="intro-title" className="rounded-2xl border border-rule bg-sheet p-5 flex flex-col gap-2">
+      <p className="app-eyebrow">CÓMO FUNCIONA</p>
+      <h2 id="intro-title" className="rotulo text-xl">
+        Una tarea. Un plan. Tú decides.
+      </h2>
+      <p className="text-graphite">
+        Te preparo el plan de una tarea real. Nada se envía sin tu aprobación. Luego conectas solo lo necesario para
+        ejecutarlo.
+      </p>
     </section>
   )
 }
@@ -841,6 +836,7 @@ function DoneStep({
   isAdmin,
   plan,
   needed,
+  flowId,
   chatLink,
   onConnectAi,
   onConnectTool,
@@ -851,6 +847,7 @@ function DoneStep({
   isAdmin: boolean
   plan: FlowPlan | null
   needed: OnboardingConnection
+  flowId: string | null
   chatLink: string
   onConnectAi: () => void
   onConnectTool: () => void
@@ -950,17 +947,25 @@ function DoneStep({
         <div className="flex flex-col gap-3">
           {ready && plan ? (
             <button type="button" onClick={saveAndOpen} disabled={saving} className={primary}>
-              {saving ? "Guardando…" : "Guardar y probar esta automatización →"}
+              {saving ? "Guardando…" : "Abrir y probar esta automatización →"}
             </button>
+          ) : flowId ? (
+            <Link href={`${base}/automatizaciones/${flowId}`} className={primary}>
+              Ver el borrador de la automatización →
+            </Link>
           ) : isAdmin && ai?.ok === false ? (
             <button type="button" onClick={onConnectAi} className={primary}>
-              Conectar mi IA →
+              Conectar mi IA para ejecutarla →
             </button>
           ) : isAdmin && tool === false ? (
             <button type="button" onClick={onConnectTool} className={primary}>
               Conectar {CONNECTION_LABEL[needed]} →
             </button>
-          ) : null}
+          ) : (
+            <Link href={base} className={primary}>
+              Ir a Hoy →
+            </Link>
+          )}
           {ai?.ok ? (
             <Link href={chatLink} className={secondary}>
               Seguir con este plan en el chat
@@ -1074,3 +1079,4 @@ function InboxResult({ workspaceId, base }: { workspaceId: string; base: string 
     </div>
   )
 }
+
