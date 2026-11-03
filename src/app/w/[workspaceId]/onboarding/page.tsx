@@ -36,13 +36,17 @@ async function Onboarding({ params, searchParams }: Pick<PageProps<"/w/[workspac
         workspaceName={workspace.name}
         isAdmin={isAdmin}
         userName={firstName}
-        aiCards={
-          <>
-            {(["anthropic", "openai", "deepseek", "xai"] as const).map((provider) => (
-              <AiCard key={provider} workspaceId={workspaceId} isAdmin={isAdmin} provider={provider} />
-            ))}
-          </>
-        }
+        aiCards={{
+          // Recomendada: la de los planes de prueba (el cliente ya ha visto lo que hace).
+          recommended: <AiCard workspaceId={workspaceId} isAdmin={isAdmin} provider="anthropic" />,
+          others: (
+            <>
+              {(["openai", "deepseek", "xai"] as const).map((provider) => (
+                <AiCard key={provider} workspaceId={workspaceId} isAdmin={isAdmin} provider={provider} />
+              ))}
+            </>
+          ),
+        }}
         cards={{
           email: <ImapCard workspaceId={workspaceId} isAdmin={isAdmin} />,
           spreadsheet: <DriveCard workspaceId={workspaceId} isAdmin={isAdmin} notice={googleNotice} />,
