@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { type ReactNode, useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react"
 import { PlanView } from "@/components/plan-view"
 import {
@@ -17,6 +18,7 @@ import {
   type OnboardingStep,
 } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
+import { saveFlowPlan } from "../flow-editor-actions"
 import {
   checkOnboardingAi,
   checkOnboardingConnection,
@@ -82,7 +84,7 @@ type OnboardingProps = {
   // conectar sin salir del onboarding: las IAs en el paso 3 y la herramienta
   // del plan en el paso 4.
   cards: Record<Exclude<OnboardingConnection, "none">, ReactNode>
-  aiCards: ReactNode
+  aiCards: { recommended: ReactNode; others: ReactNode }
 }
 
 const noopSubscribe = () => () => {}
@@ -383,6 +385,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           base={base}
           isAdmin={isAdmin}
           cards={aiCards}
+          fromTrial={source === "trial"}
           error={error}
           pending={pending}
           lastStep={needed === "none"}
@@ -406,57 +409,19 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
         />
       )}
 
-      {/* PASO 5 — Listo */}
+      {/* PASO 5 — Listo: lo hecho y la acción que toca ahora */}
       {step === "done" && (
-        <section className="setup-panel flex flex-col gap-5">
-          <div>
-            <p className="text-sm font-semibold text-graphite">Paso 5 de 5</p>
-            <h2 className="rotulo text-xl mt-1">Listo</h2>
-            <p className="text-graphite mt-1">
-              Tu plan te espera en el chat: desde allí puedes afinarlo, ejecutarlo o guardarlo como automatización.
-            </p>
-          </div>
-
-          {isAdmin ? <InboxResult workspaceId={workspaceId} base={base} /> : null}
-
-          {plan ? (
-            <div className="rounded-2xl border border-rule bg-paper p-5 flex flex-col gap-1">
-              <p className="app-eyebrow">TU PLAN</p>
-              <p className="font-semibold text-ink">{plan.name}</p>
-              {plan.summary ? <p className="text-sm text-graphite">{plan.summary}</p> : null}
-            </div>
-          ) : null}
-
-          <div className="flex flex-col gap-3">
-            <Link
-              href={chatHref(base, conversationId, task)}
-              className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
-            >
-              Seguir con este plan en el chat
-            </Link>
-            <Link
-              href={base}
-              className="inline-flex h-11 items-center justify-center rounded-xl border border-ink px-5 font-medium text-ink"
-            >
-              Ir a Hoy
-            </Link>
-            {isAdmin && (
-              <Link
-                href={`${base}/integraciones`}
-                className="text-sm font-semibold text-link underline underline-offset-4 text-center"
-              >
-                Configurar más conexiones
-              </Link>
-            )}
-          </div>
-
-          <p className="text-xs text-graphite">
-            ¿Quieres probar con otra tarea?{" "}
-            <button type="button" onClick={restart} className="font-semibold text-link underline underline-offset-4">
-              Empezar de nuevo
-            </button>
-          </p>
-        </section>
+        <DoneStep
+          workspaceId={workspaceId}
+          base={base}
+          isAdmin={isAdmin}
+          plan={plan}
+          needed={needed}
+          chatLink={chatHref(base, conversationId, task)}
+          onConnectAi={() => setStep("ai")}
+          onConnectTool={() => setStep("connect")}
+          onRestart={restart}
+        />
       )}
     </div>
   )
@@ -642,6 +607,7 @@ function AiStep({
   base,
   isAdmin,
   cards,
+  fromTrial,
   error: finishError,
   pending,
   lastStep,
@@ -651,7 +617,8 @@ function AiStep({
   workspaceId: string
   base: string
   isAdmin: boolean
-  cards: ReactNode
+  cards: { recommended: ReactNode; others: ReactNode }
+  fromTrial: boolean
   error: string | null
   pending: boolean
   lastStep: boolean
@@ -662,6 +629,7 @@ function AiStep({
   const [label, setLabel] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [checking, startCheck] = useTransition()
+  const recommendedBox = useRef<HTMLDivElement>(null)
 
   const check = useCallback(async () => {
     const result = await checkOnboardingAi(workspaceId).catch(() => null)
@@ -696,6 +664,13 @@ function AiStep({
     if (status === "connected") void trackOnboardingStep(workspaceId, "ai_connected")
   }, [status, workspaceId])
 
+  // La tarjeta recomendada, abierta: el botón a la web del proveedor a la vista.
+  useEffect(() => {
+    if (status !== "missing") return
+    const card = recommendedBox.current?.querySelector<HTMLDetailsElement>("details.integration-accordion")
+    if (card && !card.open) card.open = true
+  }, [status])
+
   const next = lastStep ? (pending ? "Guardando…" : "Terminar →") : "Continuar →"
 
   return (
@@ -704,8 +679,8 @@ function AiStep({
         <p className="text-sm font-semibold text-graphite">Paso 3 de 5</p>
         <h2 className="rotulo text-xl mt-1">Conecta tu IA</h2>
         <p className="text-graphite mt-1">
-          Es el motor de MarchaSolo: con ella lee, ordena y redacta. Usas tu propia cuenta de IA, así que el consumo se paga allí,
-          directamente al proveedor, y tus datos no pasan por la cuenta de nadie más.
+          Es el motor de MarchaSolo: con ella lee, ordena y redacta. Usas tu propia cuenta de IA: pagas allí, directamente al proveedor, solo
+          lo que uses. Una automatización como la de tu plan suele costar unos céntimos por ejecución, y puedes fijar un presupuesto.
         </p>
       </div>
 
@@ -729,19 +704,35 @@ function AiStep({
         <div className="flex flex-col gap-3">
           <ol className="grid gap-2 text-sm text-graphite sm:grid-cols-3">
             <li className="rounded-xl border border-rule bg-paper p-3">
-              <strong className="block text-ink">1. Elige un proveedor</strong>
-              ¿No tienes ninguno? Anthropic u OpenAI dan los mejores resultados; DeepSeek es el más económico.
+              <strong className="block text-ink">1. Abre la web del proveedor</strong>
+              Con el botón de la tarjeta, en otra pestaña. Crea la cuenta si no la tienes.
             </li>
             <li className="rounded-xl border border-rule bg-paper p-3">
-              <strong className="block text-ink">2. Crea una clave</strong>
-              Abre su web con el botón de la tarjeta (se abre en otra pestaña) y carga algo de saldo.
+              <strong className="block text-ink">2. Carga saldo y crea una clave</strong>
+              Sin saldo, la clave no funciona. Copia la clave al crearla: solo se ve una vez.
             </li>
             <li className="rounded-xl border border-rule bg-paper p-3">
-              <strong className="block text-ink">3. Pégala aquí</strong>
-              MarchaSolo la comprueba y la guarda cifrada. Nadie puede volver a verla.
+              <strong className="block text-ink">3. Vuelve y pégala aquí</strong>
+              MarchaSolo la comprueba y la guarda cifrada. Tu progreso te espera aquí.
             </li>
           </ol>
-          <div className="setup-cards flex flex-col gap-3">{cards}</div>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-semibold text-ink">
+              Recomendada: Anthropic
+              <span className="font-normal text-graphite">
+                {fromTrial ? " · es la IA que te ha preparado el plan" : " · da muy buenos resultados redactando y razonando"}
+              </span>
+            </p>
+            <div ref={recommendedBox} className="setup-cards flex flex-col gap-3">
+              {cards.recommended}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-semibold text-ink">
+              ¿Ya tienes otra? <span className="font-normal text-graphite">Sirve cualquiera. DeepSeek es la más económica.</span>
+            </p>
+            <div className="setup-cards flex flex-col gap-3">{cards.others}</div>
+          </div>
           <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
             <button
               type="button"
@@ -791,7 +782,7 @@ const INTRO_AREAS = [
 ]
 
 function Intro() {
-  // En el móvil, el detalle va plegado para que la tarea quede a la vista.
+  // El detalle va plegado para que la tarea (lo que hay que hacer) quede a la vista.
   const [open, setOpen] = useState(false)
   return (
     <section aria-labelledby="intro-title" className="rounded-2xl border border-rule bg-sheet p-5 flex flex-col gap-4">
@@ -809,13 +800,13 @@ function Intro() {
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-controls="intro-detail"
-          className="mt-3 text-sm font-semibold text-link underline underline-offset-4 sm:hidden"
+          className="mt-3 text-sm font-semibold text-link underline underline-offset-4"
         >
           {open ? "Ver menos" : "Ver qué puede hacer por ti"}
         </button>
       </div>
 
-      <div id="intro-detail" className={`${open ? "flex" : "hidden"} flex-col gap-4 sm:flex`}>
+      <div id="intro-detail" className={`${open ? "flex" : "hidden"} flex-col gap-4`}>
         <ul className="grid gap-2 sm:grid-cols-2">
           {INTRO_AREAS.map((a) => (
             <li key={a.title} className="flex gap-3 rounded-xl border border-rule bg-paper p-3">
@@ -837,6 +828,156 @@ function Intro() {
           citas, pasar datos, preparar informes) pasa a ser una revisión de minutos. Ese tiempo vuelve a ti, a tus clientes y a tu negocio.
         </p>
       </div>
+    </section>
+  )
+}
+
+// Paso 5: qué está listo y qué falta, con la acción que toca ahora. Si la IA y
+// la herramienta del plan están conectadas, el plan se guarda como
+// automatización y se abre su página para probarla o activarla.
+function DoneStep({
+  workspaceId,
+  base,
+  isAdmin,
+  plan,
+  needed,
+  chatLink,
+  onConnectAi,
+  onConnectTool,
+  onRestart,
+}: {
+  workspaceId: string
+  base: string
+  isAdmin: boolean
+  plan: FlowPlan | null
+  needed: OnboardingConnection
+  chatLink: string
+  onConnectAi: () => void
+  onConnectTool: () => void
+  onRestart: () => void
+}) {
+  const router = useRouter()
+  const [ai, setAi] = useState<{ ok: boolean; label: string | null } | null>(null)
+  const [tool, setTool] = useState<boolean | null>(needed === "none" ? true : null)
+  const [error, setError] = useState<string | null>(null)
+  const [saving, startSave] = useTransition()
+
+  useEffect(() => {
+    let stop = false
+    void checkOnboardingAi(workspaceId)
+      .then((r) => {
+        if (!stop) setAi(r.ok ? { ok: r.connected, label: r.label } : { ok: false, label: null })
+      })
+      .catch(() => !stop && setAi({ ok: false, label: null }))
+    if (needed !== "none") {
+      void checkOnboardingConnection({ workspaceId, connection: needed })
+        .then((r) => {
+          if (!stop) setTool(r.ok ? r.connected : false)
+        })
+        .catch(() => !stop && setTool(false))
+    }
+    return () => {
+      stop = true
+    }
+  }, [workspaceId, needed])
+
+  const ready = ai?.ok === true && tool === true
+  const loading = ai === null || tool === null
+
+  const saveAndOpen = () => {
+    if (!plan) return
+    setError(null)
+    startSave(async () => {
+      const result = await saveFlowPlan({ workspaceId, flowId: null, plan, fileIds: [] })
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      router.push(`${base}/automatizaciones/${result.flowId}`)
+    })
+  }
+
+  const primary = "inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
+  const secondary = "inline-flex h-11 items-center justify-center rounded-xl border border-ink px-5 font-medium text-ink"
+
+  const items: { label: string; ok: boolean | null; detail: string }[] = [
+    { label: "Tu plan", ok: plan !== null, detail: plan?.name ?? "" },
+    { label: "Tu IA", ok: ai?.ok ?? null, detail: ai?.ok ? (ai.label ?? "Conectada") : "Sin conectar: sin ella no se ejecuta nada" },
+    ...(needed !== "none"
+      ? [{ label: CONNECTION_LABEL[needed], ok: tool, detail: tool ? "Conectado" : "Sin conectar: lo necesita tu plan" }]
+      : []),
+  ]
+
+  return (
+    <section className="setup-panel flex flex-col gap-5">
+      <div>
+        <p className="text-sm font-semibold text-graphite">Paso 5 de 5</p>
+        <h2 className="rotulo text-xl mt-1">{ready ? "Todo listo para ponerlo en marcha" : loading ? "Comprobando…" : "Casi listo"}</h2>
+        <p className="text-graphite mt-1">
+          {ready
+            ? "Guárdalo como automatización: podrás probarlo una vez y, si te convence, activarlo. Nada se envía sin tu aprobación."
+            : loading
+              ? "Miro qué está conectado."
+              : "Para que MarchaSolo haga tu plan de verdad falta conectar lo que ves abajo. Tu progreso queda guardado en este navegador."}
+        </p>
+      </div>
+
+      <ul className="flex flex-col gap-2" aria-label="Qué está listo">
+        {items.map((it) => (
+          <li key={it.label} className="flex items-start gap-3 rounded-xl border border-rule bg-paper px-4 py-3">
+            <span
+              aria-hidden="true"
+              className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full ${it.ok ? "bg-stroke text-stroke-ink" : it.ok === false ? "border border-alert text-alert" : "border border-rule"}`}
+            >
+              {it.ok ? <Check /> : it.ok === false ? "!" : ""}
+            </span>
+            <span className="flex flex-col">
+              <span className="text-sm font-semibold text-ink">
+                {it.label}
+                <span className="sr-only">{it.ok ? " (listo)" : it.ok === false ? " (pendiente)" : ""}</span>
+              </span>
+              {it.detail ? <span className="text-sm text-graphite">{it.detail}</span> : null}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {isAdmin && ai?.ok && tool && needed === "email" ? <InboxResult workspaceId={workspaceId} base={base} /> : null}
+
+      {error && <p className="text-sm text-alert">{error}</p>}
+
+      {!loading ? (
+        <div className="flex flex-col gap-3">
+          {ready && plan ? (
+            <button type="button" onClick={saveAndOpen} disabled={saving} className={primary}>
+              {saving ? "Guardando…" : "Guardar y probar esta automatización →"}
+            </button>
+          ) : isAdmin && ai?.ok === false ? (
+            <button type="button" onClick={onConnectAi} className={primary}>
+              Conectar mi IA →
+            </button>
+          ) : isAdmin && tool === false ? (
+            <button type="button" onClick={onConnectTool} className={primary}>
+              Conectar {CONNECTION_LABEL[needed]} →
+            </button>
+          ) : null}
+          {ai?.ok ? (
+            <Link href={chatLink} className={secondary}>
+              Seguir con este plan en el chat
+            </Link>
+          ) : null}
+          <Link href={base} className="text-sm font-semibold text-link underline underline-offset-4 text-center">
+            Ir a Hoy
+          </Link>
+        </div>
+      ) : null}
+
+      <p className="text-xs text-graphite">
+        ¿Quieres probar con otra tarea?{" "}
+        <button type="button" onClick={onRestart} className="font-semibold text-link underline underline-offset-4">
+          Empezar de nuevo
+        </button>
+      </p>
     </section>
   )
 }

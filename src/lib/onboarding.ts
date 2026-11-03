@@ -36,9 +36,10 @@ export function chatHref(base: string, conversationId: string | null, task: stri
   return q ? `${base}/asistente?q=${encodeURIComponent(q)}` : `${base}/asistente`
 }
 
-// Progreso del onboarding en esta pestaña (sessionStorage), para no perder el
-// plan al ir a Integraciones (o a Google) y volver. Se borra al terminar; al
-// cerrar la pestaña se pierde a propósito.
+// Progreso del onboarding en este navegador (localStorage, 7 días), para no
+// perder el plan al ir a la web del proveedor de IA, a Integraciones o a
+// Google: crear la cuenta de IA y cargar saldo puede llevar más de una visita.
+// Se borra al terminar o al caducar.
 export type OnboardingSource = "assistant" | "trial" | "local"
 export type OnboardingStep = "task" | "plan" | "ai" | "connect" | "done"
 
@@ -54,14 +55,28 @@ export type OnboardingSnapshot = {
 }
 
 const STORAGE_PREFIX = "ms_onboarding:"
+const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
+
+function storage(): Storage | null {
+  try {
+    return window.localStorage
+  } catch {
+    return null
+  }
+}
 const STEPS: OnboardingStep[] = ["task", "plan", "ai", "connect", "done"]
 
 export function loadOnboarding(workspaceId: string): OnboardingSnapshot | null {
   if (typeof window === "undefined") return null
   try {
-    const raw = window.sessionStorage.getItem(STORAGE_PREFIX + workspaceId)
+    // Lo de antes del 3 nov estaba en sessionStorage.
+    const raw = storage()?.getItem(STORAGE_PREFIX + workspaceId) ?? window.sessionStorage.getItem(STORAGE_PREFIX + workspaceId)
     if (!raw) return null
-    const v = JSON.parse(raw) as Partial<OnboardingSnapshot>
+    const v = JSON.parse(raw) as Partial<OnboardingSnapshot> & { savedAt?: number }
+    if (typeof v.savedAt === "number" && Date.now() - v.savedAt > MAX_AGE_MS) {
+      clearOnboarding(workspaceId)
+      return null
+    }
     // Lo guardado se valida: si algo no cuadra, se empieza de cero.
     const plan = v.plan ? asPlan(v.plan as never) : null
     // «supervised» era el paso 4 antiguo: ahora va dentro del plan.
@@ -86,7 +101,7 @@ export function loadOnboarding(workspaceId: string): OnboardingSnapshot | null {
 export function saveOnboarding(workspaceId: string, data: OnboardingSnapshot): void {
   if (typeof window === "undefined") return
   try {
-    window.sessionStorage.setItem(STORAGE_PREFIX + workspaceId, JSON.stringify(data))
+    storage()?.setItem(STORAGE_PREFIX + workspaceId, JSON.stringify({ ...data, savedAt: Date.now() }))
   } catch {
     // Sin espacio o modo privado: el onboarding sigue funcionando sin guardar.
   }
@@ -95,6 +110,7 @@ export function saveOnboarding(workspaceId: string, data: OnboardingSnapshot): v
 export function clearOnboarding(workspaceId: string): void {
   if (typeof window === "undefined") return
   try {
+    storage()?.removeItem(STORAGE_PREFIX + workspaceId)
     window.sessionStorage.removeItem(STORAGE_PREFIX + workspaceId)
   } catch {
     // Nada que hacer.
