@@ -73,19 +73,36 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   redirect("/check-email")
 }
 
-export async function signInWithGoogle(formData: FormData): Promise<void> {
+export async function signUp(_prev: FormState, formData: FormData): Promise<FormState> {
+  const name = text(formData, "name", 120)
+  const email = text(formData, "email").toLowerCase()
+  const pass = password(formData, "password")
   const next = safeNext(formData.get("next"))
+  const planRaw = text(formData, "plan", 32)
+  const plan = ["solo", "pro", "business"].includes(planRaw) ? planRaw : undefined
+
+  if (!EMAIL_RE.test(email)) return { error: "Ese correo no es válido.", email }
+  if (pass.length < MIN_PASSWORD) {
+    return { error: `La contraseña necesita al menos ${MIN_PASSWORD} caracteres.`, email }
+  }
+
   const supabase = await createClient()
   const origin = await siteUrl()
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
+  const { error } = await supabase.auth.signUp({
+    email,
+    password: pass,
     options: {
-      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      queryParams: { prompt: "select_account" },
+      emailRedirectTo: `${origin}/auth/confirm?next=${encodeURIComponent(next)}`,
+      data: {
+        ...(name ? { full_name: name } : {}),
+        ...(plan ? { preferred_plan: plan } : {}),
+      },
+      captchaToken: captcha(formData),
     },
   })
-  if (error || !data.url) redirect("/auth/error?reason=oauth")
-  redirect(data.url)
+  if (error) return { error: authErrorMessage(error.code), email }
+
+  redirect("/check-email")
 }
 
 export async function requestPasswordReset(_prev: FormState, formData: FormData): Promise<FormState> {
