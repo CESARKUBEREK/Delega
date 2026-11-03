@@ -38,39 +38,14 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({ email, password: pass, options: { captchaToken: captcha(formData) } })
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password: pass,
+    options: { captchaToken: captcha(formData) },
+  })
   if (error) return { error: authErrorMessage(error.code), email }
 
   redirect(next)
-}
-
-export async function signUp(_prev: FormState, formData: FormData): Promise<FormState> {
-  const name = text(formData, "name", 120)
-  const email = text(formData, "email").toLowerCase()
-  const pass = password(formData, "password")
-  const next = safeNext(formData.get("next"))
-
-  if (!EMAIL_RE.test(email)) return { error: "Ese correo no es válido.", email }
-  if (pass.length < MIN_PASSWORD) {
-    return { error: `La contraseña necesita al menos ${MIN_PASSWORD} caracteres.`, email }
-  }
-
-  const supabase = await createClient()
-  const origin = await siteUrl()
-  const { error } = await supabase.auth.signUp({
-    email,
-    password: pass,
-    options: {
-      emailRedirectTo: `${origin}/auth/confirm?next=${encodeURIComponent(next)}`,
-      data: name ? { full_name: name } : undefined,
-      captchaToken: captcha(formData),
-    },
-  })
-  // Con la confirmación de correo activa, Supabase responde igual si el correo
-  // ya existe: mostramos el mismo mensaje para no revelar cuentas.
-  if (error) return { error: authErrorMessage(error.code), email }
-
-  redirect("/check-email")
 }
 
 export async function signUp(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -100,9 +75,26 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
       captchaToken: captcha(formData),
     },
   })
+  // Con la confirmación de correo activa, Supabase responde igual si el correo
+  // ya existe: mostramos el mismo mensaje para no revelar cuentas.
   if (error) return { error: authErrorMessage(error.code), email }
 
   redirect("/check-email")
+}
+
+export async function signInWithGoogle(formData: FormData): Promise<void> {
+  const next = safeNext(formData.get("next"))
+  const supabase = await createClient()
+  const origin = await siteUrl()
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      queryParams: { prompt: "select_account" },
+    },
+  })
+  if (error || !data.url) redirect("/auth/error?reason=oauth")
+  redirect(data.url)
 }
 
 export async function requestPasswordReset(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -115,7 +107,12 @@ export async function requestPasswordReset(_prev: FormState, formData: FormData)
     redirectTo: `${origin}/auth/confirm?next=/reset-password`,
     captchaToken: captcha(formData),
   })
-  if (error && (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit" || error.code === "captcha_failed")) {
+  if (
+    error &&
+    (error.code === "over_email_send_rate_limit" ||
+      error.code === "over_request_rate_limit" ||
+      error.code === "captcha_failed")
+  ) {
     return { error: authErrorMessage(error.code), email }
   }
   // Mismo mensaje exista o no la cuenta.
@@ -128,7 +125,9 @@ export async function requestPasswordReset(_prev: FormState, formData: FormData)
 export async function updatePassword(_prev: FormState, formData: FormData): Promise<FormState> {
   const pass = password(formData, "password")
   const confirm = password(formData, "confirm")
-  if (pass.length < MIN_PASSWORD) return { error: `La contraseña necesita al menos ${MIN_PASSWORD} caracteres.` }
+  if (pass.length < MIN_PASSWORD) {
+    return { error: `La contraseña necesita al menos ${MIN_PASSWORD} caracteres.` }
+  }
   if (pass !== confirm) return { error: "Las dos contraseñas no coinciden." }
 
   const supabase = await createClient()
