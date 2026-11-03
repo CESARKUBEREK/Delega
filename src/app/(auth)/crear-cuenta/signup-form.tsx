@@ -8,8 +8,10 @@ import { signUp, type FormState } from "../actions"
 import { GoogleButton } from "../google-button"
 import { Captcha } from "@/components/captcha"
 
-export function SignupForm() {
-  const next = safeNext(useSearchParams().get("next"))
+export function SignupForm({ initialPlan }: { initialPlan?: string }) {
+  const params = useSearchParams()
+  const next = safeNext(params.get("next"))
+  const plan = initialPlan ?? params.get("plan") ?? ""
   const [state, action] = useActionState<FormState, FormData>(signUp, {})
 
   return (
@@ -18,8 +20,17 @@ export function SignupForm() {
       <Divider>o con tu correo</Divider>
       <form action={action} className="flex flex-col gap-4" noValidate>
         <input type="hidden" name="next" value={next} />
+        {plan ? <input type="hidden" name="plan" value={plan} /> : null}
         <Field id="name" name="name" type="text" label="Nombre" autoComplete="name" maxLength={120} />
-        <Field id="email" name="email" type="email" label="Correo" autoComplete="email" required defaultValue={state.email} />
+        <Field
+          id="email"
+          name="email"
+          type="email"
+          label="Correo"
+          autoComplete="email"
+          required
+          defaultValue={state.email}
+        />
         <Field
           id="password"
           name="password"
