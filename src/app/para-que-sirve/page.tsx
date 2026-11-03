@@ -1,15 +1,14 @@
-import type { Metadata } from "next"
 import Link from "next/link"
 import { MarketingLayout } from "@/components/marketing-layout"
 import { Panel, type PanelRow } from "@/components/site/panel"
+import { publicPageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = {
-  title: "Qué puedes hacer",
+export const metadata = publicPageMetadata({
+  title: "Qué puedes hacer con MarchaSolo",
   description:
-    "WhatsApp del negocio, asistente de voz y reservas, correo, clientes y rutinas: lo que MarchaSolo prepara por ti, con tu aprobación.",
-  robots: { index: true, follow: true },
-  alternates: { canonical: "/para-que-sirve" },
-}
+    "Canales del negocio, clientes y rutinas: MarchaSolo prepara el trabajo con las aplicaciones que ya usas. En todos, lo que se envía o se cambia espera tu aprobación.",
+  path: "/para-que-sirve",
+})
 
 type Capability = {
   id: string

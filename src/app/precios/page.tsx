@@ -1,15 +1,17 @@
-import type { Metadata } from "next"
 import Link from "next/link"
 import { MarketingLayout } from "@/components/marketing-layout"
+import { publicPageMetadata } from "@/lib/seo"
 import { PLANS, TRIAL } from "@/lib/pricing"
 
-export const metadata: Metadata = {
+const pricingIntro = PLANS.length
+  ? `Planes MarchaSolo desde ${PLANS[0].price}${PLANS[0].period}. La IA se paga directamente a tu proveedor.`
+  : "Hoy MarchaSolo no tiene planes de pago: crear la cuenta y usarlo no cuesta nada. Lo único que pagas es la inteligencia artificial, directamente a tu proveedor."
+
+export const metadata = publicPageMetadata({
   title: "Precios",
-  description:
-    "Planes MarchaSolo desde 19 €/mes. La cuenta prepara el trabajo; tú apruebas antes de enviar o cambiar nada. La IA la pagas a tu proveedor.",
-  robots: { index: true, follow: true },
-  alternates: { canonical: "/precios" },
-}
+  description: pricingIntro,
+  path: "/precios",
+})
 
 const tokens = TRIAL.tokens.toLocaleString("es-ES")
 
@@ -20,10 +22,7 @@ export default function PricingPage() {
         <section className="page-intro">
           <div className="site-container">
             <h1 className="site-h1">Precios</h1>
-            <p className="site-lead">
-              Elige el plan que encaje con tu ritmo de trabajo. En todos, MarchaSolo prepara las tareas y espera tu
-              aprobación antes de enviar o cambiar nada. La inteligencia artificial la pagas directamente a tu proveedor.
-            </p>
+            <p className="site-lead">{pricingIntro}</p>
           </div>
         </section>
 

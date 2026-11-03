@@ -3,7 +3,7 @@ import { PwaRegister } from "@/components/pwa-register"
 import "@fontsource-variable/outfit/wght.css"
 import "./globals.css"
 
-const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://delega-five.vercel.app").replace(/\/+$/, "")
+const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://marchasolo.com").replace(/\/+$/, "")
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),

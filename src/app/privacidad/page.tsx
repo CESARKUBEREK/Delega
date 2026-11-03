@@ -1,13 +1,13 @@
-import type { Metadata } from "next"
 import Link from "next/link"
 import { MarketingLayout } from "@/components/marketing-layout"
 import { LEGAL } from "@/lib/legal"
+import { publicPageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = {
+export const metadata = publicPageMetadata({
   title: "Política de privacidad",
   description: "Qué datos trata MarchaSolo, para qué, con quién se comparten y cómo ejercer tus derechos.",
-  robots: { index: true, follow: true },
-}
+  path: "/privacidad",
+})
 
 // Política de privacidad pública. Google la revisa al verificar la app:
 // debe describir con exactitud el uso de los datos de las API de Google.

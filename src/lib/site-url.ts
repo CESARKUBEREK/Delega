@@ -2,8 +2,8 @@ import "server-only"
 import { headers } from "next/headers"
 
 // URL pública de la app para los enlaces de los correos y el retorno de OAuth.
-// Orden: NEXT_PUBLIC_SITE_URL (producción) → URL estable de la rama en los
-// previews de Vercel → cabeceras de la petición solo en desarrollo local.
+// En producción, NEXT_PUBLIC_SITE_URL debe ser https://marchasolo.com. Orden:
+// NEXT_PUBLIC_SITE_URL → URL estable de la rama en Vercel → cabeceras locales.
 // Supabase solo acepta las URLs incluidas en su lista de redirecciones.
 export async function siteUrl(): Promise<string> {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL

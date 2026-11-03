@@ -1,13 +1,13 @@
-import type { Metadata } from "next"
 import Link from "next/link"
 import { MarketingLayout } from "@/components/marketing-layout"
 import { LEGAL } from "@/lib/legal"
+import { publicPageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = {
+export const metadata = publicPageMetadata({
   title: "Términos de uso",
-  description: "Condiciones para usar MarchaSolo.",
-  robots: { index: true, follow: true },
-}
+  description: `Estos términos regulan el uso de MarchaSolo, que ofrece ${LEGAL.owner} (${LEGAL.country}).`,
+  path: "/terminos",
+})
 
 export default function TermsPage() {
   return (

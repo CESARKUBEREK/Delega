@@ -46,7 +46,7 @@ select is((select refresh_token from public.integration_secret((select v::uuid f
           'pat-eu1-00000000-test', 'service_role lee la clave de HubSpot');
 select lives_ok($$ insert into public.oauth_states (state_hash, workspace_id, user_id, provider, code_verifier, redirect_uri)
                    values (repeat('a', 64), (select v::uuid from t_ctx where k = 'org'), '00000000-0000-0000-0000-0000000000a5',
-                           'calendar', repeat('v', 43), 'https://delega-five.vercel.app/integraciones/google/callback') $$,
+                           'calendar', repeat('v', 43), 'https://marchasolo.com/integraciones/google/callback') $$,
                 'oauth_states admite calendar');
 select pg_temp.logout();
 

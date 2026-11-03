@@ -55,7 +55,9 @@ npm run dev                  # http://localhost:3000
 
 ### Variables en Vercel
 
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SITE_URL` y `VAPID_PUBLIC_KEY` (la clave pública de los avisos, ver «App móvil»). Son valores públicos; ninguna variable secreta hace falta en Vercel.
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SITE_URL` y `VAPID_PUBLIC_KEY` (la clave pública de los avisos, ver «App móvil»). En producción, `NEXT_PUBLIC_SITE_URL` debe ser `https://marchasolo.com`. Son valores públicos; ninguna variable secreta hace falta en Vercel.
+
+Configura también `DELEGA_SITE_URL=https://marchasolo.com` en las Edge Functions de Supabase. Asigna y verifica el dominio en Vercel y actualiza la URL de sitio y las redirecciones permitidas en Supabase. El redireccionamiento del dominio antiguo `delega-five.vercel.app` debe configurarse en Vercel; no se realiza desde Next.js.
 
 ## Base de datos
 
@@ -148,7 +150,7 @@ El asistente devuelve `{ reply, plan }`, donde `plan` es `null` o un objeto con 
 - **Acceso a Google:** permiso `drive.file` (no sensible). Delega solo abre las planillas que un administrador elige con el selector de Google. El refresh token se guarda cifrado en Vault; al navegador solo llega un token de una hora para abrir el selector.
 - **Ejecución:** la Edge Function `run-flow` sigue el plan con un agente (Responses API, `store: false`) y cinco herramientas: `list_sheets`, `read_range`, `append_rows`, `update_range` y `finish`. Leer no requiere permiso; **cada escritura se pausa** (`awaiting_approval`) y el usuario ve las filas exactas antes de aprobar. Se escribe en modo `RAW`, así que nada se interpreta como fórmula.
 - **Por tramos:** cada petición avanza como mucho 90 s; el panel pide `continue` hasta terminar. Un *lease* en `flow_runs` impide avanzar la misma ejecución dos veces a la vez. Límites: 40 acciones, 3.000 celdas por lectura y 5.000 por escritura.
-- **Configuración:** secretos `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en las Edge Functions; en Vercel, `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY` (restringida a la Picker API y al dominio) y `NEXT_PUBLIC_GOOGLE_APP_ID` (número del proyecto). URI de redirección: `https://delega-five.vercel.app/integraciones/google/callback`.
+- **Configuración:** secretos `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en las Edge Functions; en Vercel, `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY` (restringida a la Picker API y al dominio) y `NEXT_PUBLIC_GOOGLE_APP_ID` (número del proyecto). Registra en el cliente OAuth la URI de redirección `https://marchasolo.com/integraciones/google/callback`.
 
 ```bash
 supabase functions deploy google-connection

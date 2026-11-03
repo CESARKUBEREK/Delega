@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next"
 
-const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://delega-five.vercel.app").replace(/\/+$/, "")
+const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://marchasolo.com").replace(/\/+$/, "")
 
 // Solo las páginas públicas; la app (/w) y los retornos de OAuth, fuera.
 export default function robots(): MetadataRoute.Robots {

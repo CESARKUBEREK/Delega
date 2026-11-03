@@ -1,14 +1,50 @@
-import type { Metadata } from "next"
 import Link from "next/link"
 import { MarketingLayout } from "@/components/marketing-layout"
 import { CommandDemo } from "@/components/site/command-demo"
+import { publicPageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = {
+export const metadata = publicPageMetadata({
   title: "Cómo funciona",
-  description:
-    "Se lo pides como a un compañero. MarchaSolo prepara el trabajo con tus aplicaciones y se detiene antes de enviar o cambiar nada. Tú decides.",
-  robots: { index: true, follow: true },
-  alternates: { canonical: "/como-funciona" },
+  description: "Cuatro pasos, siempre los mismos. MarchaSolo prepara el trabajo; la decisión final es siempre tuya.",
+  path: "/como-funciona",
+})
+
+const FAQS = [
+  {
+    question: "¿Puede enviar algo sin que yo lo vea?",
+    answer:
+      "No. Correos, mensajes, cambios en planillas, documentos, CRM y agenda esperan tu aprobación. Las excepciones son los avisos que te manda a ti y, solo si lo activas, las citas que reserva dentro del horario que tú fijes.",
+  },
+  {
+    question: "¿Es un agente que actúa solo?",
+    answer:
+      "No. MarchaSolo prepara el trabajo como un compañero: lee, consulta y deja listo el borrador o el cambio. La decisión de enviar o modificar es siempre tuya.",
+  },
+  {
+    question: "¿Tengo que saber de inteligencia artificial?",
+    answer:
+      "No. Describes la tarea con tus palabras. Si quieres, puedes elegir entre los modos Ahorro, Inteligente o Máxima calidad, pero Inteligente funciona bien sin tocar nada.",
+  },
+  {
+    question: "¿Qué pasa si una ejecución falla?",
+    answer:
+      "La ejecución te dice por qué ha fallado y qué hacer, con un botón para abrir la conexión que toque o volver a intentarlo. Si tu proveedor de IA se queda sin saldo, MarchaSolo puede seguir con otra IA que tengas conectada.",
+  },
+  {
+    question: "¿Puedo usarlo desde el móvil?",
+    answer:
+      "Sí. MarchaSolo se instala en el móvil desde el navegador, te avisa cuando algo espera tu aprobación y puedes dictar las peticiones.",
+  },
+] as const
+
+const FAQ_STRUCTURED_DATA = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQS.map(({ question, answer }) => ({
+    "@type": "Question",
+    name: question,
+    acceptedAnswer: { "@type": "Answer", text: answer },
+  })),
 }
 
 export default function HowItWorksPage() {
@@ -187,6 +223,11 @@ export default function HowItWorksPage() {
             </div>
           </div>
         </section>
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_STRUCTURED_DATA).replace(/</g, "\\u003c") }}
+        />
 
         <section className="site-section pt-0">
           <div className="site-container">

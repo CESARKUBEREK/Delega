@@ -1,16 +1,15 @@
-import type { Metadata } from "next"
 import Link from "next/link"
 import { MarketingLayout } from "@/components/marketing-layout"
 import { CaseTrail } from "@/components/site/case-trail"
 import { USE_CASES, type UseCase } from "@/lib/site-content"
+import { publicPageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = {
+export const metadata = publicPageMetadata({
   title: "Casos de uso",
   description:
     "WhatsApp del negocio, voz y reservas, ventas, atención al cliente y soporte técnico. MarchaSolo prepara el trabajo; tú apruebas antes de enviar o cambiar nada.",
-  robots: { index: true, follow: true },
-  alternates: { canonical: "/casos-de-uso" },
-}
+  path: "/casos-de-uso",
+})
 
 const GROUPS: { id: string; title: string; ids: string[] }[] = [
   {
