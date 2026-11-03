@@ -115,7 +115,15 @@ export async function checkOnboardingConnection(input: {
 
   const status = await setupStatus(input.workspaceId)
   const connected =
-    input.connection === "email" ? status.correo : input.connection === "spreadsheet" ? status.drive : input.connection === "calendar" ? status.calendario : false
+    input.connection === "email"
+      ? status.correo
+      : input.connection === "messaging"
+        ? status.mensajeria
+        : input.connection === "spreadsheet"
+          ? status.drive
+          : input.connection === "calendar"
+            ? status.calendario
+            : false
   return { ok: true, connected, label }
 }
 
