@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
 import { AiCard } from "../integraciones/ai-card"
 import { DriveCard } from "../integraciones/google-card"
-import { ImapCard } from "../integraciones/inbox-cards"
+import { ImapCard, WhatsAppCard } from "../integraciones/inbox-cards"
 import { CalendarCard } from "../integraciones/work-cards"
 import { HelpPanel } from "@/components/help-panel"
 import { OnboardingClient } from "./onboarding-client"
@@ -49,6 +49,7 @@ async function Onboarding({ params, searchParams }: Pick<PageProps<"/w/[workspac
         }}
         cards={{
           email: <ImapCard workspaceId={workspaceId} isAdmin={isAdmin} />,
+          messaging: <WhatsAppCard workspaceId={workspaceId} isAdmin={isAdmin} />,
           spreadsheet: <DriveCard workspaceId={workspaceId} isAdmin={isAdmin} notice={googleNotice} />,
           calendar: <CalendarCard workspaceId={workspaceId} isAdmin={isAdmin} notice={sp.calendar === "conectado"} />,
         }}
