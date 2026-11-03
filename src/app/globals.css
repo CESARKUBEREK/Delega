@@ -1103,3 +1103,18 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
 /* El pie también dentro de la app: en el móvil deja sitio a la barra inferior. */
 .site-footer.is-app { margin-top:56px; }
 @media (max-width:1023px) { .site-footer.is-app { padding-bottom:calc(84px + env(safe-area-inset-bottom)); } }
+
+/* Tarjetas de «Qué puedes hacer» y «Casos de uso»: cada una en su tarjeta,
+   alternando blanco y turquesa claro para que se distingan entre sí. */
+.site .case, .site .capability {
+  position:relative; padding:clamp(24px, 4vw, 48px); border:1px solid var(--ms-line); border-radius:var(--ms-r-lg);
+  background:var(--ms-white); box-shadow:var(--ms-shadow);
+}
+.site .case:first-of-type, .site .capability:first-of-type { padding-top:clamp(24px, 4vw, 48px); border-top:1px solid var(--ms-line); }
+.site .case:nth-child(even), .site .capability:nth-of-type(even) { border-color:#bfe9df; background:var(--ms-teal-wash); }
+.site .case::before, .site .capability::before {
+  position:absolute; top:clamp(24px, 4vw, 48px); left:0; width:4px; height:48px; border-radius:0 4px 4px 0; background:var(--ms-navy); content:"";
+}
+.site .case:nth-child(even)::before, .site .capability:nth-of-type(even)::before { background:var(--ms-teal); }
+.site .capability + .capability { margin-top:24px; }
+.site .case:nth-child(even) .case-tags span { border-color:#bfe9df; }

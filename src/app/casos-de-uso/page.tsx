@@ -70,7 +70,7 @@ export default function UseCasesPage() {
                 <h2 id={`${g.id}-h`} className="site-h2 mb-10">
                   {g.title}
                 </h2>
-                <div className="grid gap-16">
+                <div className="grid gap-6">
                   {items.map((c) => (
                     <article key={c.id} id={c.id} className="case scroll-mt-24" aria-labelledby={`${c.id}-t`}>
                       <div>
