@@ -26,7 +26,7 @@ export async function HelpVoiceCard({ workspaceId, isAdmin }: { workspaceId: str
       </summary>
       <div className="flex flex-col gap-4 px-5 py-5 text-sm text-graphite">
         <ul className="list-disc pl-5">
-          <li>Usa tu clave de Grok (xAI): el consumo, por minuto de conversación, se cobra en tu cuenta de xAI. No usa créditos de prueba.</li>
+          <li>Usa tu clave de Grok (xAI): el consumo, por minuto de conversación, se cobra en tu cuenta de xAI.</li>
           <li>Cada conversación dura como mucho 8 minutos; hay un máximo de 20 al día en el espacio y de 6 por persona y hora.</li>
           <li>Por voz solo te guía y te abre tarjetas: no aprueba nada, no cambia nada y nunca te pedirá claves ni contraseñas.</li>
           <li>La conversación no se guarda.</li>

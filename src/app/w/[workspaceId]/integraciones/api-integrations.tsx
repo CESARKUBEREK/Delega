@@ -1,5 +1,7 @@
 "use client"
 
+import { ExternalLink } from "@/components/external-link"
+import { PROVIDER_LINKS } from "@/lib/provider-links"
 import { useActionState, useRef, useState } from "react"
 import { FormMessage, SubmitButton } from "@/components/form"
 import { disconnectApiConnection, saveApiConnection, type ApiConnectionState } from "./api-actions"
@@ -61,7 +63,7 @@ export function ApiIntegrationCard({
         ) : null}
         {isAdmin ? (
           supabase
-            ? <SupabaseForm workspaceId={workspaceId} />
+            ? <><ExternalLink link={PROVIDER_LINKS.supabase} compact /><SupabaseForm workspaceId={workspaceId} /></>
             : <CustomApiForm workspaceId={workspaceId} provider={provider} slot={slot} currentName={typeof config.name === "string" ? config.name : ""} />
         ) : (
           <p className="text-sm text-graphite">Solo un administrador puede gestionar esta conexión.</p>

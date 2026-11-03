@@ -69,5 +69,7 @@ export const PLANS: Plan[] = [
   },
 ]
 
-// Créditos de IA de prueba (por espacio personal): chat y onboarding.
-export const TRIAL = { tokens: 50_000, scope: "el asistente del chat y el onboarding" }
+// Planes de prueba del onboarding (por espacio personal): MarchaSolo prepara
+// los primeros planes con un modelo de IA avanzado, sin que el cliente
+// conecte nada. Para ejecutarlos hace falta su propia IA.
+export const TRIAL = { plans: 2 }

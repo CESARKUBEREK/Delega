@@ -1,3 +1,5 @@
+import { ExternalLink } from "@/components/external-link"
+import { PROVIDER_LINKS } from "@/lib/provider-links"
 import { AI_PROVIDERS, type AiProvider, modelLabel } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { formatDateTime } from "../format"
@@ -9,7 +11,7 @@ const AI_HELP: Record<AiProvider, { description: string; steps: string[]; note: 
   openai: {
     description: "Modelos GPT. Es también la que transcribe el dictado por voz.",
     steps: [
-      "Entra en platform.openai.com con tu cuenta y abre «API keys».",
+      "Pulsa «Crear mi clave en OpenAI»: se abre la página de claves (API keys) en otra pestaña. Entra con tu cuenta o crea una.",
       "Crea una clave nueva para MarchaSolo y cópiala. Tu cuenta de OpenAI necesita saldo o un método de pago.",
     ],
     note: "MarchaSolo pide a OpenAI que no conserve las conversaciones (store: false).",
@@ -17,7 +19,7 @@ const AI_HELP: Record<AiProvider, { description: string; steps: string[]; note: 
   anthropic: {
     description: "Modelos Claude, de Anthropic.",
     steps: [
-      "Entra en platform.claude.com con tu cuenta y abre «API Keys».",
+      "Pulsa «Crear mi clave en Anthropic»: se abre la página de claves (Settings → API keys) en otra pestaña. Entra con tu cuenta o crea una.",
       "Crea una clave nueva para MarchaSolo y cópiala (empieza por sk-ant-). Tu cuenta necesita créditos.",
     ],
     note: "Anthropic no usa los datos de la API para entrenar sus modelos.",
@@ -25,7 +27,7 @@ const AI_HELP: Record<AiProvider, { description: string; steps: string[]; note: 
   deepseek: {
     description: "Modelos DeepSeek: muy económicos.",
     steps: [
-      "Entra en platform.deepseek.com con tu cuenta y abre «API keys».",
+      "Pulsa «Crear mi clave en DeepSeek»: se abre la página de claves (API keys) en otra pestaña. Entra con tu cuenta o crea una.",
       "Crea una clave nueva para MarchaSolo y cópiala. Tu cuenta necesita saldo.",
     ],
     note: "DeepSeek procesa los datos en servidores fuera de la UE: tenlo en cuenta con datos sensibles de clientes.",
@@ -33,7 +35,7 @@ const AI_HELP: Record<AiProvider, { description: string; steps: string[]; note: 
   xai: {
     description: "Modelos Grok, de xAI.",
     steps: [
-      "Entra en console.x.ai con tu cuenta y abre «API Keys».",
+      "Pulsa «Crear mi clave en xAI»: se abre su consola en otra pestaña. Entra con tu cuenta y abre «API Keys».",
       "Crea una clave nueva para MarchaSolo y cópiala (empieza por xai-). Tu cuenta necesita créditos.",
     ],
     note: "MarchaSolo pide a xAI que no guarde las conversaciones (store: false). xAI procesa los datos en Estados Unidos.",
@@ -73,6 +75,8 @@ export async function AiCard({ workspaceId, isAdmin, provider }: { workspaceId: 
           </p>
         ) : null}
 
+        {isAdmin && !connection ? <ExternalLink link={PROVIDER_LINKS[provider]} /> : null}
+
         {isAdmin ? (
           <>
             {connection && !connection.is_default && connection.status === "active" ? <DefaultForm workspaceId={workspaceId} provider={provider} /> : null}
@@ -86,6 +90,9 @@ export async function AiCard({ workspaceId, isAdmin, provider }: { workspaceId: 
 
         <details className="text-sm text-graphite">
           <summary className="cursor-pointer text-ink">Cómo consigo una clave y qué se hace con ella</summary>
+          <div className="mt-2">
+            <ExternalLink link={PROVIDER_LINKS[provider]} compact />
+          </div>
           <ol className="mt-2 list-decimal pl-5">
             {help.steps.map((step) => (
               <li key={step}>{step}</li>

@@ -38,7 +38,7 @@ export function providerOf(model: string | null | undefined): Provider | null {
   return null
 }
 
-// trial = clave de MarchaSolo (créditos de prueba), no la del espacio.
+// trial = clave de MarchaSolo (planes de prueba del onboarding), no la del espacio.
 export type Ai = { provider: Provider; model: string; apiKey: string; trial?: boolean }
 
 export class LlmError extends Error {
@@ -71,17 +71,19 @@ export async function resolveAi(admin: SupabaseClient, workspaceId: string, pref
 export const NO_AI_MESSAGE = "Conecta una IA (OpenAI, Anthropic, DeepSeek o Grok) en Integraciones."
 
 // ---------------------------------------------------------------------------
-// Créditos de prueba (decisión de Cesar, 1 nov): clave de MarchaSolo, DeepSeek
-// Flash, solo para el chat y el onboarding (función assistant). El resto de
-// funciones siguen usando resolveAi, que nunca devuelve la clave de prueba.
+// Planes de prueba del onboarding (decisión de Cesar, 3 nov): con una clave de
+// MarchaSolo y un modelo potente (Claude Sonnet 5.5), solo para preparar el
+// plan del onboarding cuando el espacio aún no tiene IA propia. Como mucho 2
+// planes por espacio personal. El chat, el ayudante y todo lo demás usan
+// siempre la IA del espacio.
 // ---------------------------------------------------------------------------
-const TRIAL_PROVIDER: Provider = "deepseek"
-const TRIAL_MODEL = "deepseek-flash"
+export const TRIAL_PROVIDER: Provider = "anthropic"
+export const TRIAL_MODEL = "claude-sonnet-5-5"
 
 export const TRIAL_EXHAUSTED_MESSAGE =
-  "Se han acabado los créditos de prueba de este espacio. Conecta tu propia IA (OpenAI, Anthropic, DeepSeek o Grok) en Integraciones para seguir."
+  "Ya has usado los planes de prueba de MarchaSolo. Conecta tu propia IA (OpenAI, Anthropic, DeepSeek o Grok) en Integraciones para seguir."
 
-// La IA del espacio si la hay; si no, la de prueba mientras quede saldo.
+// La IA del espacio si la hay; si no, la de prueba mientras queden planes.
 // Devuelve el motivo cuando no hay ninguna, para dar el mensaje adecuado.
 export async function resolveAiOrTrial(
   admin: SupabaseClient,
@@ -90,15 +92,17 @@ export async function resolveAiOrTrial(
 ): Promise<{ ai: Ai } | { ai: null; message: string }> {
   const own = await resolveAi(admin, workspaceId, preferredModel)
   if (own) return { ai: own }
-  const key = Deno.env.get("TRIAL_LLM_API_KEY")?.trim()
+  const key = Deno.env.get("TRIAL_ANTHROPIC_API_KEY")?.trim()
   if (!key) return { ai: null, message: NO_AI_MESSAGE }
   const { data } = await admin
     .from("workspace_trial_credits")
-    .select("allowance_tokens, used_tokens")
+    .select("allowance_tokens, used_tokens, allowance_plans, used_plans")
     .eq("workspace_id", workspaceId)
     .maybeSingle()
   if (!data) return { ai: null, message: NO_AI_MESSAGE }
-  if (Number(data.used_tokens) >= Number(data.allowance_tokens)) return { ai: null, message: TRIAL_EXHAUSTED_MESSAGE }
+  if (Number(data.used_plans) >= Number(data.allowance_plans) || Number(data.used_tokens) >= Number(data.allowance_tokens)) {
+    return { ai: null, message: TRIAL_EXHAUSTED_MESSAGE }
+  }
   return { ai: { provider: TRIAL_PROVIDER, model: TRIAL_MODEL, apiKey: key, trial: true } }
 }
 
@@ -392,7 +396,7 @@ export async function recordUsage(
     latencyMs?: number | null
   },
 ): Promise<number> {
-  // Lo gastado con los créditos de prueba no cuenta en el gasto del cliente.
+  // Lo gastado con los planes de prueba no cuenta en el gasto del cliente.
   const cost = ai.trial ? 0 : costUsd(await modelInfo(admin, ai.model), usage)
   await admin.from("usage_events").insert({
     workspace_id: extra.workspaceId,

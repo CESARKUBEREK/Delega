@@ -114,10 +114,11 @@ Deno.serve(async (req) => {
     return fail(429, "rate_limited", "Has enviado muchos mensajes seguidos. Espera un minuto.")
   }
 
-  // IA del espacio (la principal) o, si no hay, los créditos de prueba; la
-  // clave se descifra solo en memoria.
-  // Router: diseñar automatizaciones; créditos de prueba si no hay IA propia.
-  const routed = await routeAi(ctx.admin, workspaceId, "plan", { allowTrial: true })
+  // IA del espacio (la principal); la clave se descifra solo en memoria. Solo
+  // el primer plan del onboarding (onboarding: true, conversación nueva) puede
+  // usar los planes de prueba de MarchaSolo si aún no hay IA propia.
+  const onboarding = body?.onboarding === true && conversationId === null
+  const routed = await routeAi(ctx.admin, workspaceId, "plan", { allowTrial: onboarding })
   if (isRouteError(routed)) {
     const msg = routed.error === NO_AI_MESSAGE ? `${NO_AI_MESSAGE} Así podrás usar el asistente.` : routed.error
     return fail(409, routed.code === "budget" ? "budget" : "no_connection", msg)
@@ -246,7 +247,7 @@ async function suggestStep(ctx: AuthContext, body: Record<string, unknown>): Pro
   if ((count ?? 0) >= 12) return fail(429, "rate_limited", "Has pedido muchas cosas seguidas. Espera un minuto.")
 
   // Un paso: tarea sencilla del editor (complejidad 2).
-  const routed = await routeAi(ctx.admin, workspaceId, "plan", { allowTrial: true, complexity: 2 })
+  const routed = await routeAi(ctx.admin, workspaceId, "plan", { complexity: 2 })
   if (isRouteError(routed)) return fail(409, routed.code === "budget" ? "budget" : "no_connection", routed.error)
 
   const context = typeof body.context === "string" ? body.context.slice(0, 2000) : ""

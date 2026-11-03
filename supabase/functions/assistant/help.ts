@@ -98,16 +98,16 @@ export async function helpReply(ctx: AuthContext, body: Record<string, unknown>)
     .gte("created_at", since)
   if ((count ?? 0) >= PER_MINUTE) return fail(429, "rate_limited", "Has hecho muchas preguntas seguidas. Espera un minuto.")
 
-  // Router: dudas = tarea sencilla (modelo económico); créditos de prueba si no hay IA propia.
-  const routed = await routeAi(ctx.admin, workspaceId, "help", { allowTrial: true })
+  // Router: dudas = tarea sencilla (modelo económico). Sin IA propia, el panel
+  // muestra las fichas como preguntas frecuentes.
+  const routed = await routeAi(ctx.admin, workspaceId, "help")
   if (isRouteError(routed)) return fail(409, routed.code === "budget" ? "budget" : "no_connection", routed.error)
   const ai = routed.ai
 
   // Estado del espacio, sin credenciales.
-  const [{ data: integrations }, { data: ais }, { data: trial }] = await Promise.all([
+  const [{ data: integrations }, { data: ais }] = await Promise.all([
     ctx.admin.from("integrations").select("provider, status").eq("workspace_id", workspaceId),
     ctx.admin.from("ai_connections").select("provider, status, is_default").eq("workspace_id", workspaceId),
-    ctx.admin.from("workspace_trial_credits").select("allowance_tokens, used_tokens").eq("workspace_id", workspaceId).maybeSingle(),
   ])
   const state = {
     pagina: page,
@@ -115,7 +115,6 @@ export async function helpReply(ctx: AuthContext, body: Record<string, unknown>)
     rol: role,
     ia_conectada: (ais ?? []).map((a) => `${a.provider}: ${a.status}${a.is_default ? " (principal)" : ""}`),
     integraciones: (integrations ?? []).map((i) => `${i.provider}: ${i.status}`),
-    creditos_de_prueba: trial ? `${Math.max(0, Number(trial.allowance_tokens) - Number(trial.used_tokens))} tokens de ${trial.allowance_tokens} (solo chat)` : "no",
   }
 
   const recent = [...history.map((h) => h.content), message, run?.error ?? ""].join("\n")

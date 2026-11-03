@@ -18,6 +18,7 @@ import {
 } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
 import {
+  checkOnboardingAi,
   checkOnboardingConnection,
   completeOnboarding,
   generateOnboardingPlan,
@@ -31,8 +32,8 @@ type Step = OnboardingStep
 const ONBOARDING_STEPS: { id: Step; short: string }[] = [
   { id: "task", short: "Tarea" },
   { id: "plan", short: "Plan" },
+  { id: "ai", short: "Tu IA" },
   { id: "connect", short: "Conectar" },
-  { id: "supervised", short: "Supervisar" },
   { id: "done", short: "Listo" },
 ]
 const STEP_ORDER = ONBOARDING_STEPS.map((s) => s.id)
@@ -78,8 +79,10 @@ type OnboardingProps = {
   isAdmin: boolean
   userName: string
   // Tarjetas de conexión de Integraciones (componentes de servidor), para
-  // conectar en el paso 3 sin salir del onboarding.
+  // conectar sin salir del onboarding: las IAs en el paso 3 y la herramienta
+  // del plan en el paso 4.
   cards: Record<Exclude<OnboardingConnection, "none">, ReactNode>
+  aiCards: ReactNode
 }
 
 const noopSubscribe = () => () => {}
@@ -94,7 +97,7 @@ export function OnboardingClient(props: OnboardingProps) {
   return <OnboardingFlow {...props} />
 }
 
-function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards }: OnboardingProps) {
+function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, aiCards }: OnboardingProps) {
   const base = `/w/${workspaceId}`
   // Lo guardado al ir a Integraciones (o a Google) y volver.
   const [saved] = useState(() => loadOnboarding(workspaceId))
@@ -105,10 +108,10 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards }
   const [plan, setPlan] = useState<FlowPlan | null>(saved?.plan ?? null)
   const [source, setSource] = useState<OnboardingSource | null>(saved?.source ?? null)
   const [conversationId, setConversationId] = useState<string | null>(saved?.conversationId ?? null)
-  const [supervisedAccepted, setSupervisedAccepted] = useState(saved?.supervisedAccepted ?? false)
+  const [trialRemaining, setTrialRemaining] = useState<number | null>(saved?.trialRemaining ?? null)
   const [pending, startTransition] = useTransition()
 
-  // Borra una cookie de vuelta antigua; el paso 3 la vuelve a poner si hace falta.
+  // Borra una cookie de vuelta antigua; el paso 4 la vuelve a poner si hace falta.
   useEffect(() => {
     document.cookie = "ms_setup=; path=/; max-age=0; samesite=lax"
   }, [])
@@ -119,8 +122,8 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards }
       clearOnboarding(workspaceId)
       return
     }
-    saveOnboarding(workspaceId, { step, task, reply, plan, source, conversationId, supervisedAccepted })
-  }, [workspaceId, step, task, reply, plan, source, conversationId, supervisedAccepted])
+    saveOnboarding(workspaceId, { step, task, reply, plan, source, conversationId, trialRemaining })
+  }, [workspaceId, step, task, reply, plan, source, conversationId, trialRemaining])
 
   const needed = plan ? primaryConnection(plan) : "none"
 
@@ -174,24 +177,27 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards }
       setPlan(result.plan)
       setSource(result.source)
       setConversationId(result.conversationId)
+      setTrialRemaining(result.trialRemaining)
       setStep("plan")
     })
   }
 
+  // Plan aceptado → siempre la IA primero (sin ella no se ejecuta nada).
   const acceptPlan = () => {
     if (!plan) return
-    if (needed === "none") {
-      setStep("supervised")
-    } else {
-      setStep("connect")
-    }
+    setError(null)
+    setStep("ai")
   }
 
-  const goToSupervised = () => setStep("supervised")
+  // Después de la IA, la herramienta que pide el plan (si pide alguna).
+  const afterAi = () => {
+    if (needed === "none") finish()
+    else setStep("connect")
+  }
 
+  // Al llegar a «Listo» se marca el onboarding como terminado.
   const finish = () => {
     setError(null)
-    setSupervisedAccepted(true)
     startTransition(async () => {
       const result = await completeOnboarding(workspaceId)
       if (!result.ok) {
@@ -210,7 +216,6 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards }
     setPlan(null)
     setSource(null)
     setConversationId(null)
-    setSupervisedAccepted(false)
     setError(null)
   }
 
@@ -328,24 +333,32 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards }
             {reply && <p className="text-graphite mt-1 whitespace-pre-wrap">{reply}</p>}
             {source === "trial" && (
               <p className="mt-2 text-xs text-graphite">
-                Plan preparado con los créditos de prueba de MarchaSolo. Para ejecutarlo, conecta tu propia IA.
+                Plan preparado con un modelo de IA avanzado, por cuenta de MarchaSolo
+                {trialRemaining !== null
+                  ? trialRemaining > 0
+                    ? ` (te queda ${trialRemaining} ${trialRemaining === 1 ? "plan" : "planes"} de prueba)`
+                    : " (era tu último plan de prueba)"
+                  : ""}
+                . Para ejecutarlo, en el paso siguiente conectas tu propia IA.
               </p>
             )}
             {source === "local" && (
               <p className="mt-2 text-xs text-graphite">
-                Propuesta generada sin IA conectada. Cuando conectes una clave, los planes serán más precisos.
+                Propuesta basada en patrones habituales, sin IA. Con tu IA conectada, los planes se adaptan a tu negocio.
               </p>
             )}
           </div>
 
           <PlanView plan={plan} />
 
+          <SupervisedNote plan={plan} />
+
           <div className="flex flex-wrap gap-3">
             <button
               onClick={acceptPlan}
               className="inline-flex h-11 items-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
             >
-              Me gusta, continuar →
+              Me gusta, conectar mi IA →
             </button>
             <button
               onClick={() => {
@@ -363,7 +376,22 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards }
         </section>
       )}
 
-      {/* PASO 3 — Solo la conexión necesaria */}
+      {/* PASO 3 — Tu IA: lo primero que se conecta */}
+      {step === "ai" && plan && (
+        <AiStep
+          workspaceId={workspaceId}
+          base={base}
+          isAdmin={isAdmin}
+          cards={aiCards}
+          error={error}
+          pending={pending}
+          lastStep={needed === "none"}
+          onBack={() => setStep("plan")}
+          onContinue={afterAi}
+        />
+      )}
+
+      {/* PASO 4 — La herramienta que pide el plan */}
       {step === "connect" && plan && (
         <ConnectStep
           workspaceId={workspaceId}
@@ -371,19 +399,10 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards }
           needed={needed}
           label={CONNECTION_LABEL[needed]}
           card={needed === "none" ? null : cards[needed]}
-          onBack={() => setStep("plan")}
-          onContinue={goToSupervised}
-        />
-      )}
-
-      {/* PASO 4 — Supervisado, con el plan real */}
-      {step === "supervised" && (
-        <SupervisedStep
-          plan={plan}
           error={error}
-          onBack={() => setStep(needed === "none" ? "plan" : "connect")}
-          onContinue={finish}
           pending={pending}
+          onBack={() => setStep("ai")}
+          onContinue={finish}
         />
       )}
 
@@ -443,7 +462,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards }
   )
 }
 
-// Paso 3: comprueba si ya está conectado lo que hace falta y, si no, enseña
+// Paso 4: comprueba si ya está conectado lo que hace falta y, si no, enseña
 // aquí mismo la tarjeta de conexión (la misma que en Integraciones). Vuelve a
 // comprobar sola cada pocos segundos, al volver a la pestaña y al volver de
 // Google (la cookie ms_setup trae de vuelta a esta página).
@@ -453,6 +472,8 @@ function ConnectStep({
   needed,
   label,
   card,
+  error: finishError,
+  pending,
   onBack,
   onContinue,
 }: {
@@ -461,6 +482,8 @@ function ConnectStep({
   needed: OnboardingConnection
   label: string
   card: ReactNode
+  error: string | null
+  pending: boolean
   onBack: () => void
   onContinue: () => void
 }) {
@@ -473,7 +496,10 @@ function ConnectStep({
   // para no borrar lo que se esté escribiendo en la tarjeta.
   const check = useCallback(async () => {
     const result = await checkOnboardingConnection({ workspaceId, connection: needed }).catch(() => null)
-    if (!result) return
+    if (!result) {
+      setStatus((s) => (s === "loading" ? "missing" : s))
+      return
+    }
     if (!result.ok) {
       setError(result.error)
       setStatus((s) => (s === "loading" ? "missing" : s))
@@ -515,8 +541,8 @@ function ConnectStep({
   return (
     <section className="setup-panel flex flex-col gap-5">
       <div>
-        <p className="text-sm font-semibold text-graphite">Paso 3 de 5</p>
-        <h2 className="rotulo text-xl mt-1">Solo necesito una cosa</h2>
+        <p className="text-sm font-semibold text-graphite">Paso 4 de 5</p>
+        <h2 className="rotulo text-xl mt-1">Solo falta una cosa</h2>
         <p className="text-graphite mt-1">
           Para este plan necesito acceso a <strong>{label}</strong>. Conéctalo aquí mismo; el resto puede esperar.
         </p>
@@ -532,9 +558,10 @@ function ConnectStep({
           <button
             type="button"
             onClick={onContinue}
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink"
+            disabled={pending}
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
           >
-            Continuar →
+            {pending ? "Guardando…" : "Terminar →"}
           </button>
         </div>
       ) : (
@@ -562,80 +589,190 @@ function ConnectStep({
         </div>
       )}
 
+      {finishError && <p className="text-sm text-alert">{finishError}</p>}
+
       <div className="flex flex-wrap gap-3">
-        <button type="button" onClick={onContinue} className="text-sm font-semibold text-link underline underline-offset-4">
-          Continuar sin conectar (modo demo)
-        </button>
+        {status !== "connected" ? (
+          <button type="button" onClick={onContinue} disabled={pending} className="text-sm font-semibold text-link underline underline-offset-4">
+            Lo conecto más tarde
+          </button>
+        ) : null}
         <button type="button" onClick={onBack} className="text-sm text-graphite">
-          ← Volver al plan
+          ← Volver a tu IA
         </button>
       </div>
     </section>
   )
 }
 
-// Paso 4: qué hará MarchaSolo con este plan y qué no hará sin permiso.
-function SupervisedStep({
-  plan,
-  error,
+// Paso 2 (debajo del plan): qué hará MarchaSolo con él y qué no hará sin
+// permiso. Antes era un paso entero; es información, no una decisión.
+function SupervisedNote({ plan }: { plan: FlowPlan }) {
+  const preview = supervisedPreview(plan)
+  return (
+    <div className="rounded-2xl border border-stroke bg-paper p-5 flex flex-col gap-3">
+      <p className="font-medium text-ink">Tú apruebas cada acción</p>
+      <blockquote className="border-l-2 border-stroke pl-4 text-sm text-graphite">
+        <p>«{preview.will}</p>
+        <p className="mt-1">
+          <strong>{preview.wont}</strong>»
+        </p>
+      </blockquote>
+      {preview.approvals.length > 0 ? (
+        <div>
+          <p className="text-xs font-semibold text-ink">Esperarán tu aprobación</p>
+          <ul className="mt-1 list-disc pl-5 text-sm text-graphite">
+            {preview.approvals.map((a) => (
+              <li key={a.id}>{a.title}</li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="text-sm text-graphite">Este plan no escribe ni envía nada: solo tendrás que revisar el resultado.</p>
+      )}
+    </div>
+  )
+}
+
+// Paso 3: la IA del cliente, lo primero que se conecta. Sin ella MarchaSolo no
+// ejecuta nada (ni la bandeja ni las automatizaciones). Comprueba sola cada
+// pocos segundos y al volver a la pestaña (la clave se saca en otra pestaña).
+function AiStep({
+  workspaceId,
+  base,
+  isAdmin,
+  cards,
+  error: finishError,
+  pending,
+  lastStep,
   onBack,
   onContinue,
-  pending,
 }: {
-  plan: FlowPlan | null
+  workspaceId: string
+  base: string
+  isAdmin: boolean
+  cards: ReactNode
   error: string | null
+  pending: boolean
+  lastStep: boolean
   onBack: () => void
   onContinue: () => void
-  pending: boolean
 }) {
-  const preview = supervisedPreview(plan)
+  const [status, setStatus] = useState<"loading" | "connected" | "missing">("loading")
+  const [label, setLabel] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [checking, startCheck] = useTransition()
+
+  const check = useCallback(async () => {
+    const result = await checkOnboardingAi(workspaceId).catch(() => null)
+    // Si no se puede comprobar, se enseñan las tarjetas igualmente.
+    if (!result) {
+      setStatus((s) => (s === "loading" ? "missing" : s))
+      return
+    }
+    if (!result.ok) {
+      setError(result.error)
+      setStatus((s) => (s === "loading" ? "missing" : s))
+      return
+    }
+    setError(null)
+    setLabel(result.label)
+    setStatus((s) => (result.connected ? "connected" : s === "loading" ? "missing" : s))
+  }, [workspaceId])
+
+  useEffect(() => {
+    const first = window.setTimeout(() => void check(), 0)
+    const id = window.setInterval(() => void check(), 8000)
+    const onFocus = () => void check()
+    window.addEventListener("focus", onFocus)
+    return () => {
+      window.clearTimeout(first)
+      window.clearInterval(id)
+      window.removeEventListener("focus", onFocus)
+    }
+  }, [check])
+
+  useEffect(() => {
+    if (status === "connected") void trackOnboardingStep(workspaceId, "ai_connected")
+  }, [status, workspaceId])
+
+  const next = lastStep ? (pending ? "Guardando…" : "Terminar →") : "Continuar →"
 
   return (
     <section className="setup-panel flex flex-col gap-5">
       <div>
-        <p className="text-sm font-semibold text-graphite">Paso 4 de 5</p>
-        <h2 className="rotulo text-xl mt-1">Tú apruebas cada acción</h2>
+        <p className="text-sm font-semibold text-graphite">Paso 3 de 5</p>
+        <h2 className="rotulo text-xl mt-1">Conecta tu IA</h2>
         <p className="text-graphite mt-1">
-          MarchaSolo lee y prepara solo. Antes de escribir o enviar algo, te enseña exactamente qué va a hacer y espera tu aprobación. Siempre, no solo al principio.
+          Es el motor de MarchaSolo: con ella lee, ordena y redacta. Usas tu propia cuenta de IA, así que el consumo se paga allí,
+          directamente al proveedor, y tus datos no pasan por la cuenta de nadie más.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-stroke bg-paper p-5 flex flex-col gap-3">
-        <p className="font-medium text-ink">Con este plan, te dirá:</p>
-        <blockquote className="border-l-2 border-stroke pl-4 text-sm text-graphite">
-          <p>«{preview.will}</p>
-          <p className="mt-1">
-            <strong>{preview.wont}</strong>»
+      {status === "loading" ? (
+        <p className="text-sm text-graphite" role="status">
+          Comprobando tu IA…
+        </p>
+      ) : status === "connected" ? (
+        <div className="rounded-2xl border border-ok bg-paper p-5 flex flex-col gap-3" role="status">
+          <p className="font-medium text-ink">✓ {label ? `${label} está conectada` : "Tu IA está conectada"}</p>
+          <button
+            type="button"
+            onClick={onContinue}
+            disabled={pending}
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
+          >
+            {next}
+          </button>
+        </div>
+      ) : isAdmin ? (
+        <div className="flex flex-col gap-3">
+          <ol className="grid gap-2 text-sm text-graphite sm:grid-cols-3">
+            <li className="rounded-xl border border-rule bg-paper p-3">
+              <strong className="block text-ink">1. Elige un proveedor</strong>
+              ¿No tienes ninguno? Anthropic u OpenAI dan los mejores resultados; DeepSeek es el más económico.
+            </li>
+            <li className="rounded-xl border border-rule bg-paper p-3">
+              <strong className="block text-ink">2. Crea una clave</strong>
+              Abre su web con el botón de la tarjeta (se abre en otra pestaña) y carga algo de saldo.
+            </li>
+            <li className="rounded-xl border border-rule bg-paper p-3">
+              <strong className="block text-ink">3. Pégala aquí</strong>
+              MarchaSolo la comprueba y la guarda cifrada. Nadie puede volver a verla.
+            </li>
+          </ol>
+          <div className="setup-cards flex flex-col gap-3">{cards}</div>
+          <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            <button
+              type="button"
+              onClick={() => startCheck(check)}
+              disabled={checking}
+              className="font-semibold text-link underline underline-offset-4 disabled:opacity-60"
+            >
+              {checking ? "Comprobando…" : "Ya la conecté, comprobar"}
+            </button>
+            <Link href={`${base}/integraciones#llms`} className="text-graphite underline underline-offset-4">
+              Abrir en Integraciones
+            </Link>
           </p>
-        </blockquote>
+          {error && <p className="text-sm text-alert">{error}</p>}
+        </div>
+      ) : (
+        <p className="rounded-2xl border border-rule bg-paper p-5 text-sm text-graphite">
+          Solo un administrador del espacio puede conectar la IA. Pídeselo; mientras tanto puedes seguir.
+        </p>
+      )}
 
-        {preview.approvals.length > 0 ? (
-          <div>
-            <p className="text-xs font-semibold text-ink">Pasos que esperarán tu aprobación</p>
-            <ul className="mt-1 list-disc pl-5 text-sm text-graphite">
-              {preview.approvals.map((a) => (
-                <li key={a.id}>{a.title}</li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p className="text-sm text-graphite">Este plan no escribe ni envía nada: solo tendrás que revisar el resultado.</p>
-        )}
-      </div>
-
-      {error && <p className="text-sm text-alert">{error}</p>}
+      {finishError && <p className="text-sm text-alert">{finishError}</p>}
 
       <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={onContinue}
-          disabled={pending}
-          className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
-        >
-          {pending ? "Guardando…" : "Perfecto, continuar →"}
-        </button>
-        <button type="button" onClick={onBack} className="inline-flex h-11 items-center rounded-xl border border-ink px-5 font-medium text-ink">
-          ← Volver
+        {status !== "connected" ? (
+          <button type="button" onClick={onContinue} disabled={pending} className="text-sm text-graphite underline underline-offset-4">
+            Lo conecto más tarde (sin IA no se ejecuta nada)
+          </button>
+        ) : null}
+        <button type="button" onClick={onBack} className="text-sm text-graphite">
+          ← Volver al plan
         </button>
       </div>
     </section>

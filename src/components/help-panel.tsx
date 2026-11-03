@@ -271,7 +271,6 @@ export function HelpPanel({ workspaceId, page, runId = null }: { workspaceId: st
                           )}
                         </div>
                       ) : null}
-                      {m.trial ? <p className="text-xs text-graphite">Respondido con créditos de prueba.</p> : null}
                     </div>
                   ),
                 )}

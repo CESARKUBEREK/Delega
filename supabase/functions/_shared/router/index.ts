@@ -182,7 +182,7 @@ export async function routeAi(
     complexity?: number
     needsTools?: boolean
     inputTokens?: number
-    // Solo el chat y el onboarding (decisión del 1 nov).
+    // Solo el plan del onboarding (decisión del 3 nov).
     allowTrial?: boolean
   } = {},
 ): Promise<Routed | RouteError> {
@@ -193,12 +193,12 @@ export async function routeAi(
     if (!trial.ai) return { error: trial.message, code: "no_ai" }
     const plan: RoutePlan = {
       task,
-      mode: "eco",
+      mode: "expert",
       fixed: true,
       primary: trial.ai.model,
       fallbacks: [],
       estimatedCostUsd: 0,
-      reason: "Créditos de prueba de MarchaSolo.",
+      reason: "Plan de prueba de MarchaSolo (onboarding).",
       scores: [],
     }
     return { workspaceId, task, plan, ai: trial.ai, trial: true, next: () => Promise.resolve(null) }

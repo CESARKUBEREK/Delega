@@ -3,7 +3,6 @@ import type { ReactNode } from "react"
 import { Suspense } from "react"
 import { AI_PROVIDERS } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
-import { getTrialStatus } from "@/lib/trial"
 import { getWorkspace } from "@/lib/workspace"
 import { DOC_MIMES, DriveCard, EXCEL_MIMES, FilesCard, SHEET_MIMES } from "./google-card"
 import { ImapCard, TelegramCard, WhatsAppCard } from "./inbox-cards"
@@ -109,8 +108,6 @@ async function Integrations({
   const supabase = await createClient()
   const { data: apiConnections } = await supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["supabase", "custom_1", "custom_2"])
   const connection = (provider: string) => apiConnections?.find((item) => item.provider === provider) ?? null
-  const { data: ownAi } = await supabase.from("ai_connections").select("status").eq("workspace_id", workspaceId).eq("status", "active").limit(1)
-  const trial = ownAi?.length ? null : await getTrialStatus(workspaceId)
 
   return (
     <div className="flex flex-col gap-10">
@@ -131,13 +128,7 @@ async function Integrations({
       <Category
         id="llms"
         title="LLMs"
-        description={
-          trial
-            ? trial.exhausted
-              ? "Se han acabado los créditos de prueba. Conecta tu propia clave para seguir usando el asistente, la bandeja y las automatizaciones."
-              : `Tienes créditos de prueba de MarchaSolo (te queda el ${trial.pctLeft} %) para preparar planes en el chat. Para ejecutarlos, la bandeja y las automatizaciones, conecta tu propia clave.`
-            : "La IA que prepara y ejecuta tus automatizaciones, con tu propia clave. MarchaSolo elige el modelo de cada tarea según el modo y tu presupuesto (en «Cómo elige la IA»)."
-        }
+        description="La IA que prepara y ejecuta tus automatizaciones, con tu propia clave. Es lo primero que hay que conectar: sin ella MarchaSolo no puede trabajar. MarchaSolo elige el modelo de cada tarea según el modo y tu presupuesto (en «Cómo elige la IA»)."
       >
         {AI_PROVIDERS.map((p) => (
           <AiCard key={p.id} workspaceId={workspaceId} isAdmin={isAdmin} provider={p.id} />

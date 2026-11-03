@@ -40,21 +40,21 @@ export function chatHref(base: string, conversationId: string | null, task: stri
 // plan al ir a Integraciones (o a Google) y volver. Se borra al terminar; al
 // cerrar la pestaña se pierde a propósito.
 export type OnboardingSource = "assistant" | "trial" | "local"
-export type OnboardingStep = "task" | "plan" | "connect" | "supervised" | "done"
+export type OnboardingStep = "task" | "plan" | "ai" | "connect" | "done"
 
 export type OnboardingSnapshot = {
   step: OnboardingStep
   task: string
   reply: string | null
   plan: FlowPlan | null
-  // trial = el asistente real, con los créditos de prueba de MarchaSolo.
+  // trial = el asistente real, con un plan de prueba de MarchaSolo.
   source: OnboardingSource | null
   conversationId: string | null
-  supervisedAccepted: boolean
+  trialRemaining: number | null
 }
 
 const STORAGE_PREFIX = "ms_onboarding:"
-const STEPS: OnboardingStep[] = ["task", "plan", "connect", "supervised", "done"]
+const STEPS: OnboardingStep[] = ["task", "plan", "ai", "connect", "done"]
 
 export function loadOnboarding(workspaceId: string): OnboardingSnapshot | null {
   if (typeof window === "undefined") return null
@@ -64,7 +64,9 @@ export function loadOnboarding(workspaceId: string): OnboardingSnapshot | null {
     const v = JSON.parse(raw) as Partial<OnboardingSnapshot>
     // Lo guardado se valida: si algo no cuadra, se empieza de cero.
     const plan = v.plan ? asPlan(v.plan as never) : null
-    let step: OnboardingStep = STEPS.includes(v.step as OnboardingStep) ? (v.step as OnboardingStep) : "task"
+    // «supervised» era el paso 4 antiguo: ahora va dentro del plan.
+    const rawStep = (v.step as string) === "supervised" ? "connect" : v.step
+    let step: OnboardingStep = STEPS.includes(rawStep as OnboardingStep) ? (rawStep as OnboardingStep) : "task"
     if (step !== "task" && !plan) step = "task"
     if (step === "done") return null
     return {
@@ -74,7 +76,7 @@ export function loadOnboarding(workspaceId: string): OnboardingSnapshot | null {
       plan,
       source: v.source === "assistant" || v.source === "trial" || v.source === "local" ? v.source : null,
       conversationId: typeof v.conversationId === "string" ? v.conversationId : null,
-      supervisedAccepted: v.supervisedAccepted === true,
+      trialRemaining: typeof v.trialRemaining === "number" ? v.trialRemaining : null,
     }
   } catch {
     return null
@@ -99,7 +101,7 @@ export function clearOnboarding(workspaceId: string): void {
   }
 }
 
-// Paso 4: lo que MarchaSolo dirá antes de ejecutar este plan, sacado del plan
+// Paso 2: lo que MarchaSolo dirá antes de ejecutar este plan, sacado del plan
 // real (pasos y conexiones), en primera persona.
 export type SupervisedPreview = {
   will: string

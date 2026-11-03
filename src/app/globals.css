@@ -458,7 +458,6 @@ button.bg-stroke:disabled { color:#0b1f3b; }
 .today-hero-state { display:inline-flex; width:fit-content; align-items:center; gap:8px; padding:7px 10px; border:1px solid rgb(255 255 255 / 13%); border-radius:999px; color:#e9f1fb; font-size:12px; font-weight:650; }
 .today-hero-state i { width:7px; height:7px; border-radius:50%; background:#55d6a5; box-shadow:0 0 12px rgb(85 214 165 / 60%); }
 .today-hero-state.is-setup i { background:#5ee6cf; box-shadow:0 0 12px rgb(94 230 207 / 50%); }
-.today-hero-state.is-trial i { background:#fbbf24; box-shadow:0 0 12px rgb(251 191 36 / 50%); }
 .today-hero-pending { display:flex; align-items:baseline; gap:8px; color:#c3cedc; font-size:11px; }
 .today-hero-pending strong { color:#fff; font-size:27px; font-weight:750; letter-spacing:-.04em; }
 .today .today-hero + .today-callout { border-left:3px solid #00c2a8; }
@@ -1118,3 +1117,11 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
 .site .case:nth-child(even)::before, .site .capability:nth-of-type(even)::before { background:var(--ms-teal); }
 .site .capability + .capability { margin-top:24px; }
 .site .case:nth-child(even) .case-tags span { border-color:#bfe9df; }
+
+/* Enlace a la web de un proveedor (Integraciones y onboarding), en otra pestaña. */
+.external-link { display:inline-flex; align-self:flex-start; align-items:center; gap:8px; min-height:40px; padding:0 14px; border:1px solid #b9c7d6; border-radius:10px; background:#fff; color:#0b1f3b; font-size:14px; font-weight:650; text-decoration:none; transition:border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
+.external-link:hover { border-color:#00c2a8; box-shadow:0 6px 16px rgb(11 31 59 / 8%); transform:translateY(-1px); }
+.external-link:focus-visible { outline:3px solid #00c2a8; outline-offset:2px; }
+.external-link svg { color:#007a6c; }
+.external-link.is-compact { min-height:34px; padding:0 10px; font-size:13px; }
+.external-links { display:flex; flex-wrap:wrap; gap:8px; }

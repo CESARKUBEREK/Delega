@@ -10,7 +10,15 @@ import { createClient } from "@/lib/supabase/server"
 import { UUID_RE } from "@/lib/workspace"
 
 export type OnboardingPlanResult =
-  | { ok: true; source: OnboardingSource; reply: string; plan: FlowPlan; conversationId: string | null }
+  | {
+      ok: true
+      source: OnboardingSource
+      reply: string
+      plan: FlowPlan
+      conversationId: string | null
+      // Planes de prueba que quedan (solo si el plan salió de ellos).
+      trialRemaining: number | null
+    }
   | { ok: false; error: string }
 
 export async function generateOnboardingPlan(input: {
@@ -36,9 +44,11 @@ export async function generateOnboardingPlan(input: {
     .eq("status", "active")
     .limit(1)
 
-  const trial = (ai ?? []).length ? null : await getTrialStatus(input.workspaceId)
-  // IA propia o créditos de prueba: el plan lo hace el asistente real.
-  const hasAi = (ai ?? []).length > 0 || (trial !== null && !trial.exhausted)
+  const ownAi = (ai ?? []).length > 0
+  const trial = ownAi ? null : await getTrialStatus(input.workspaceId)
+  // IA propia o plan de prueba de MarchaSolo (modelo potente, como mucho 2
+  // por espacio): el plan lo hace el asistente real.
+  const hasAi = ownAi || (trial !== null && !trial.exhausted)
 
   if (hasAi) {
     const result = await callEdgeFunction<{
@@ -50,14 +60,17 @@ export async function generateOnboardingPlan(input: {
       workspace_id: input.workspaceId,
       conversation_id: null,
       message: `Quiero automatizar esto: ${message}. Propón un plan claro y concreto, con los pasos necesarios y las conexiones mínimas.`,
+      onboarding: true,
     })
 
     if (!result.error) {
       const plan = asPlan(result.data.plan as never)
       if (plan) {
+        const after = ownAi ? null : await getTrialStatus(input.workspaceId)
         return {
           ok: true,
-          source: (ai ?? []).length ? "assistant" : "trial",
+          source: ownAi ? "assistant" : "trial",
+          trialRemaining: after ? after.remaining : null,
           reply: result.data.reply,
           plan,
           // La conversación que crea el asistente: el onboarding termina en ella.
@@ -76,9 +89,10 @@ export async function generateOnboardingPlan(input: {
     reply:
       hasAi
         ? "He preparado una propuesta a partir de tu descripción. Puedes afinarla después en el chat."
-        : "Todavía no hay una IA conectada en este espacio, así que te muestro una propuesta basada en patrones habituales. Cuando conectes una clave, MarchaSolo podrá generar planes más precisos.",
+        : "Así lo haría con lo que me has contado. Podrás afinarlo después en el chat.",
     plan,
     conversationId: null,
+    trialRemaining: null,
   }
 }
 
@@ -171,7 +185,7 @@ export async function getOnboardingResult(workspaceId: string): Promise<Onboardi
 // Nunca falla hacia fuera (si la tabla aún no existe, no pasa nada).
 export async function trackOnboardingStep(
   workspaceId: string,
-  step: "task" | "plan" | "connect" | "connected" | "supervised" | "done",
+  step: "task" | "plan" | "ai" | "ai_connected" | "connect" | "connected" | "done",
   detail: { source?: string; plan?: string; needed?: string } = {},
 ): Promise<void> {
   if (!UUID_RE.test(workspaceId)) return
@@ -182,3 +196,20 @@ export async function trackOnboardingStep(
     // Medir no puede romper el onboarding.
   }
 }
+
+// Paso 3: ¿hay ya una IA propia activa en el espacio? Devuelve su nombre.
+export async function checkOnboardingAi(workspaceId: string): Promise<{ ok: true; connected: boolean; label: string | null } | { ok: false; error: string }> {
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("ai_connections")
+    .select("provider, is_default")
+    .eq("workspace_id", workspaceId)
+    .eq("status", "active")
+  if (error) return { ok: false, error: "No se pudo comprobar la IA." }
+  const rows = data ?? []
+  const pick = rows.find((r) => r.is_default) ?? rows[0]
+  return { ok: true, connected: rows.length > 0, label: pick ? (AI_LABELS[pick.provider] ?? pick.provider) : null }
+}
+
+const AI_LABELS: Record<string, string> = { openai: "OpenAI", anthropic: "Anthropic", deepseek: "DeepSeek", xai: "Grok (xAI)" }

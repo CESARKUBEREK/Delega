@@ -147,15 +147,16 @@ export default function HowItWorksPage() {
               <div className="fact is-key">
                 <h3 className="site-h3">Para probarlo: solo una cuenta</h3>
                 <p>
-                  Al crearla te preguntamos qué tarea te quita más tiempo y MarchaSolo te prepara el plan. Usa créditos de
-                  IA de prueba: no hace falta conectar nada. Tú decides si lo pones en marcha.
+                  Al crearla te preguntamos qué tarea te quita más tiempo y MarchaSolo te prepara el plan con un modelo de
+                  IA avanzado, por nuestra cuenta: no hace falta conectar nada. Tú decides si lo pones en marcha.
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Para que trabaje: tus aplicaciones</h3>
+                <h3 className="site-h3">Para que trabaje: tu IA y tus aplicaciones</h3>
                 <p>
-                  Conecta solo lo que pida tu tarea: el correo, Drive, la agenda o el CRM. El propio plan te dice cuáles, y
-                  cada tarjeta de conexión explica cómo hacerlo paso a paso.
+                  Primero tu IA (OpenAI, Anthropic, DeepSeek o Grok), con tu propia clave. Después, solo lo que pida tu
+                  tarea: el correo, Drive, la agenda o el CRM. Cada tarjeta te lleva a la web del proveedor y explica cómo
+                  hacerlo paso a paso.
                 </p>
               </div>
               <div className="fact">

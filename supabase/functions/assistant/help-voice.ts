@@ -2,7 +2,7 @@
 // temporal de xAI (5 min, solo para conectarse) y la configuración de la
 // sesión para que el navegador hable con Grok Voice. Opcional: solo si un
 // administrador la activó en el espacio. Usa la clave de xAI del espacio
-// (nunca los créditos de prueba) y tiene límites de uso. El agente solo puede
+// (nunca la clave de prueba) y tiene límites de uso. El agente solo puede
 // abrir la tarjeta de una integración (herramienta «open_card», que ejecuta
 // el navegador): nada de claves, aprobaciones ni cambios por voz.
 import { type AuthContext, fail, isUuid, json, membershipRole } from "../_shared/core.ts"

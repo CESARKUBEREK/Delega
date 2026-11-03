@@ -13,7 +13,6 @@ export const metadata = publicPageMetadata({
   path: "/precios",
 })
 
-const tokens = TRIAL.tokens.toLocaleString("es-ES")
 
 export default function PricingPage() {
   return (
@@ -74,10 +73,10 @@ export default function PricingPage() {
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Créditos de prueba para empezar</h3>
+                <h3 className="site-h3">Tus primeros planes, por nuestra cuenta</h3>
                 <p>
-                  Tu espacio personal recibe {tokens} tokens de IA de MarchaSolo para {TRIAL.scope}: suficiente para
-                  contarle tus tareas y ver los planes que te propone sin conectar nada.
+                  Al empezar, MarchaSolo te prepara hasta {TRIAL.plans} planes con un modelo de IA avanzado, sin que
+                  conectes nada. Para ponerlos en marcha, conectas tu propia IA.
                 </p>
               </div>
               <div className="fact">
@@ -112,10 +111,10 @@ export default function PricingPage() {
                 </div>
               </details>
               <details>
-                <summary>¿Qué pasa cuando se acaban los créditos de prueba?</summary>
+                <summary>¿Qué pasa después de los planes de prueba?</summary>
                 <div>
-                  Tu cuenta y lo que hayas preparado siguen ahí. Para seguir con el asistente y las automatizaciones,
-                  conecta tu propia clave de IA en Integraciones.
+                  Tu cuenta y lo que hayas preparado siguen ahí. Para el asistente, la bandeja y las automatizaciones,
+                  conecta tu propia clave de IA: el propio onboarding te guía y te lleva a la web del proveedor.
                 </div>
               </details>
               <details>

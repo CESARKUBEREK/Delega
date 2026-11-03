@@ -1,3 +1,5 @@
+import { ExternalLink } from "@/components/external-link"
+import { PROVIDER_LINKS } from "@/lib/provider-links"
 import { fileKindLabel } from "@/lib/plan"
 import { supabaseUrl } from "@/lib/supabase/env"
 import { createClient } from "@/lib/supabase/server"
@@ -183,8 +185,12 @@ export async function HubSpotCard({ workspaceId, isAdmin }: { workspaceId: strin
             <HubSpotForm workspaceId={workspaceId} replacing={Boolean(integration)} />
             <details className="text-sm text-graphite" open={!integration}>
               <summary className="cursor-pointer text-ink">Cómo consigo la clave</summary>
+              <div className="external-links mt-2">
+                <ExternalLink link={PROVIDER_LINKS.hubspot} compact />
+                <ExternalLink link={PROVIDER_LINKS.hubspotEu} compact />
+              </div>
               <ol className="mt-2 list-decimal pl-5">
-                <li>En HubSpot, abre Desarrollo → Claves → Claves de servicio y pulsa «Crear clave de servicio».</li>
+                <li>Entra en HubSpot (si tu cuenta está en Europa, con el segundo botón). Abre Desarrollo → Claves → Claves de servicio y pulsa «Crear clave de servicio».</li>
                 <li>
                   Ponle de nombre «MarchaSolo» y añade estos permisos: <span className="font-mono text-xs">crm.objects.contacts</span>,{" "}
                   <span className="font-mono text-xs">crm.objects.companies</span> y <span className="font-mono text-xs">crm.objects.deals</span>, cada uno
@@ -238,6 +244,9 @@ export async function TokkoCard({ workspaceId, isAdmin }: { workspaceId: string;
             <TokkoForm workspaceId={workspaceId} replacing={Boolean(integration)} />
             <details className="text-sm text-graphite" open={!integration}>
               <summary className="cursor-pointer text-ink">Cómo consigo la clave</summary>
+              <div className="mt-2">
+                <ExternalLink link={PROVIDER_LINKS.tokko} compact />
+              </div>
               <ol className="mt-2 list-decimal pl-5">
                 <li>Entra en Tokko Broker con un usuario administrador.</li>
                 <li>Abre «Mi empresa» → «Permisos» y copia la clave de API («API Key»).</li>
@@ -286,8 +295,11 @@ export async function XubioCard({ workspaceId, isAdmin }: { workspaceId: string;
             <XubioForm workspaceId={workspaceId} replacing={Boolean(integration)} />
             <details className="text-sm text-graphite" open={!integration}>
               <summary className="cursor-pointer text-ink">Cómo consigo las credenciales</summary>
+              <div className="mt-2">
+                <ExternalLink link={PROVIDER_LINKS.xubio} compact />
+              </div>
               <ol className="mt-2 list-decimal pl-5">
-                <li>En Xubio, abre «Configuración» → «Integraciones» → «API de Xubio».</li>
+                <li>Entra en Xubio y abre «Configuración» → «Integraciones» → «API de Xubio».</li>
                 <li>Pulsa «Nueva App Cliente», ponle de nombre «MarchaSolo» y guarda.</li>
                 <li>Copia el Client ID y el Secret ID y pégalos aquí.</li>
               </ol>
@@ -335,9 +347,12 @@ export async function BufferCard({ workspaceId, isAdmin }: { workspaceId: string
             <BufferForm workspaceId={workspaceId} replacing={Boolean(integration)} />
             <details className="text-sm text-graphite" open={!integration}>
               <summary className="cursor-pointer text-ink">Cómo consigo la clave</summary>
+              <div className="mt-2">
+                <ExternalLink link={PROVIDER_LINKS.buffer} compact />
+              </div>
               <ol className="mt-2 list-decimal pl-5">
-                <li>Entra en buffer.com con tu cuenta. Conecta allí tus redes sociales si aún no lo has hecho.</li>
-                <li>Abre «Settings» → «API» y crea una clave para MarchaSolo. Cópiala.</li>
+                <li>Entra en Buffer con tu cuenta (el botón abre directamente «Settings» → «API»). Conecta allí tus redes sociales si aún no lo has hecho.</li>
+                <li>En la pestaña «Personal Access», pulsa «+ New Key», ponle de nombre «MarchaSolo» y copia la clave.</li>
                 <li>Pégala aquí. Da acceso a todos los canales de tu cuenta de Buffer. El plan gratuito de Buffer incluye la API.</li>
               </ol>
               <p className="mt-2">Por ahora, MarchaSolo publica solo texto: las imágenes y los vídeos se añaden desde Buffer.</p>

@@ -134,6 +134,10 @@ export default function PrivacyPage() {
             transcribe con OpenAI.
           </li>
           <li>
+            <strong>Los planes de prueba del onboarding:</strong> mientras no conectes tu IA, la tarea que nos cuentas al empezar (y nada
+            más) se envía a Anthropic con una clave de MarchaSolo para prepararte el plan, como mucho dos veces.
+          </li>
+          <li>
             <strong>Proveedores que hacen funcionar el servicio:</strong> Supabase (base de datos y funciones del servidor, en Estados
             Unidos) y Vercel (alojamiento de la web). Tratan los datos por cuenta nuestra y solo para prestar el servicio.
           </li>

@@ -4,8 +4,6 @@ import { runOrigin } from "@/lib/labels"
 import { asPending, pendingKind, pendingTitle } from "@/lib/pending"
 import { createClient } from "@/lib/supabase/server"
 import { setupStatus } from "@/lib/setup"
-import { TrialBanner } from "@/components/trial-banner"
-import { getTrialStatus } from "@/lib/trial"
 import { getWorkspace } from "@/lib/workspace"
 import { formatToday, formatWhen, greeting } from "./format"
 
@@ -66,8 +64,6 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
   const firstName = (profile?.display_name ?? "").trim().split(/\s+/)[0]
   const aiActive = (connections ?? []).some((c) => c.status === "active")
   const onboarded = Boolean(ws?.onboarding_completed_at)
-  const trial = aiActive ? null : await getTrialStatus(workspaceId)
-  const onTrial = trial !== null && !trial.exhausted
   const setup = await setupStatus(workspaceId)
   const pendingTotal = waitingCount ?? (waiting ?? []).length
 
@@ -85,17 +81,14 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
         </div>
         <aside className="today-hero-status" aria-label="Estado del espacio">
           <span className="today-hero-status-label">ESTADO DEL ASISTENTE</span>
-          <span className={`today-hero-state ${aiActive ? "is-ready" : onTrial ? "is-trial" : "is-setup"}`}>
-            <i aria-hidden="true" /> {aiActive ? "IA conectada" : onTrial ? "Créditos de prueba" : "IA por conectar"}
+          <span className={`today-hero-state ${aiActive ? "is-ready" : "is-setup"}`}>
+            <i aria-hidden="true" /> {aiActive ? "IA conectada" : "IA por conectar"}
           </span>
           <span className="today-hero-pending"><strong>{pendingTotal}</strong><span>{pendingTotal === 1 ? "aprobación pendiente" : "aprobaciones pendientes"}</span></span>
         </aside>
       </header>
 
-      {isAdmin && !setup.ia && onboarded && trial ? (
-        // Sin IA propia, con el onboarding hecho y créditos de prueba: su aviso.
-        <TrialBanner base={base} trial={trial} />
-      ) : isAdmin && !setup.ia ? (
+      {isAdmin && !setup.ia ? (
         // Sin IA: antes del onboarding, al onboarding; después, a conectar la IA.
         <Link href={onboarded ? `${base}/integraciones#llms` : `${base}/onboarding`} className="setup-banner">
           <span className="setup-banner-ring" aria-hidden="true" style={{ ["--pct" as string]: `${Math.round((setup.done / setup.total) * 100)}%` }}>

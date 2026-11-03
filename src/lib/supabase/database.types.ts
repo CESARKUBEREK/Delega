@@ -1190,23 +1190,29 @@ export type Database = {
       }
       workspace_trial_credits: {
         Row: {
+          allowance_plans: number
           allowance_tokens: number
           created_at: string
           updated_at: string
+          used_plans: number
           used_tokens: number
           workspace_id: string
         }
         Insert: {
+          allowance_plans?: number
           allowance_tokens?: number
           created_at?: string
           updated_at?: string
+          used_plans?: number
           used_tokens?: number
           workspace_id: string
         }
         Update: {
+          allowance_plans?: number
           allowance_tokens?: number
           created_at?: string
           updated_at?: string
+          used_plans?: number
           used_tokens?: number
           workspace_id?: string
         }

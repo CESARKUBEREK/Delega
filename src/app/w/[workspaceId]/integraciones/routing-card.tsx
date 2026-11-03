@@ -69,7 +69,7 @@ export async function RoutingCard({ workspaceId, isAdmin }: { workspaceId: strin
             )}
             <p className="text-xs text-graphite">
               Estimación con los tokens que informa cada proveedor y sus precios oficiales{pricesDate ? ` del ${formatDay(pricesDate)}` : ""}. La factura que
-              vale es la de tu cuenta de cada proveedor. Los créditos de prueba no cuentan.
+              vale es la de tu cuenta de cada proveedor. Los planes de prueba del onboarding no cuentan.
             </p>
           </section>
         ) : null}
