@@ -1,11 +1,10 @@
 import Link from "next/link"
 import { Logo } from "@/components/logo"
-import { LEGAL } from "@/lib/legal"
 import { FooterAccountLinks } from "./account-hint"
-import { SITE_LINKS } from "./nav-links"
+import { CONTACT_EMAIL, SITE_LINKS, SOCIAL_LINKS } from "./nav-links"
 
-// Pie del sitio público. Solo datos confirmados: el responsable y el correo
-// de contacto son los de las páginas legales (src/lib/legal.ts).
+// Pie del sitio público: enlaces del producto (sin Precios ni Cómo funciona),
+// contacto y redes.
 // inApp: dentro de la app deja sitio para la barra inferior del móvil.
 export function SiteFooter({ inApp = false }: { inApp?: boolean }) {
   return (
@@ -20,7 +19,7 @@ export function SiteFooter({ inApp = false }: { inApp?: boolean }) {
         <div>
           <h2>Producto</h2>
           <ul>
-            {SITE_LINKS.map((l) => (
+            {SITE_LINKS.filter((l) => l.href !== "/precios" && l.href !== "/como-funciona").map((l) => (
               <li key={l.href}>
                 <Link href={l.href}>{l.label}</Link>
               </li>
@@ -31,10 +30,21 @@ export function SiteFooter({ inApp = false }: { inApp?: boolean }) {
           <h2>Empresa</h2>
           <ul>
             <li>
-              <a href={`mailto:${LEGAL.email}`}>Contacto: {LEGAL.email}</a>
+              <a href={`mailto:${CONTACT_EMAIL}`}>Contacto: {CONTACT_EMAIL}</a>
             </li>
             <li>
-              {LEGAL.owner} ({LEGAL.country})
+              {SOCIAL_LINKS.map((s, i) => (
+                <span key={s.label}>
+                  {i > 0 ? ", " : null}
+                  {s.href ? (
+                    <a href={s.href} target="_blank" rel="noopener noreferrer">
+                      {s.label}
+                    </a>
+                  ) : (
+                    s.label
+                  )}
+                </span>
+              ))}
             </li>
           </ul>
         </div>
@@ -51,7 +61,7 @@ export function SiteFooter({ inApp = false }: { inApp?: boolean }) {
         </div>
       </div>
       <div className="site-container site-footer-bottom">
-        <span>© 2026 {LEGAL.owner}</span>
+        <span>© 2026 MarchaSolo</span>
         <FooterAccountLinks />
       </div>
     </footer>

@@ -5,3 +5,13 @@ export const SITE_LINKS = [
   { href: "/casos-de-uso", label: "Casos de uso" },
   { href: "/precios", label: "Precios" },
 ] as const
+
+// Contacto y redes del pie. Las redes sin dirección se muestran como texto
+// hasta que se rellene su enlace.
+export const CONTACT_EMAIL = "hola@MarchaSolo.com"
+
+export const SOCIAL_LINKS: { label: string; href: string }[] = [
+  { label: "LinkedIn", href: "" },
+  { label: "Instagram", href: "" },
+  { label: "X", href: "" },
+]

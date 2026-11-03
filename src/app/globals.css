@@ -1074,7 +1074,19 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
 .state.is-done { background:var(--ms-teal-wash); color:#005a50; }
 .state.is-wait { background:var(--ms-amber-wash); color:var(--ms-amber); }
 .state.is-info { background:#e9eef5; color:var(--ms-navy); }
-.page-intro { padding-block:clamp(56px, 8vw, 96px) clamp(32px, 4vw, 48px); border-bottom:1px solid var(--ms-line); background:var(--ms-white); }
+/* Mismo fondo que la portada (gris claro con la cuadrícula que se desvanece)
+   en la cabecera de cada página, en las páginas legales y en el acceso. */
+.page-intro { position:relative; overflow:hidden; padding-block:clamp(56px, 8vw, 96px) clamp(32px, 4vw, 48px); border-bottom:1px solid var(--ms-line); background:var(--ms-paper); }
+.page-intro > * { position:relative; }
+.site #contenido:has(> .legal-page) { position:relative; }
+.site #contenido:has(> .legal-page) > .legal-page { position:relative; }
+.access-form { position:relative; }
+.access-form > * { position:relative; }
+.page-intro::before, .site #contenido:has(> .legal-page)::before, .access-form::before {
+  position:absolute; inset:0; background-image:linear-gradient(#e2e9f1 1px, transparent 1px), linear-gradient(90deg, #e2e9f1 1px, transparent 1px);
+  background-size:40px 40px; content:""; mask-image:linear-gradient(180deg, #000 30%, transparent 100%); pointer-events:none;
+}
+.site #contenido:has(> .legal-page)::before { bottom:auto; height:640px; }
 
 /* Elevación al pasar el ratón: botones y tarjetas del sitio público. */
 .btn { transition:background-color .18s var(--ms-ease), border-color .18s var(--ms-ease), color .18s var(--ms-ease), box-shadow .25s var(--ms-ease), transform .25s var(--ms-ease); }
@@ -1091,3 +1103,18 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
 /* El pie también dentro de la app: en el móvil deja sitio a la barra inferior. */
 .site-footer.is-app { margin-top:56px; }
 @media (max-width:1023px) { .site-footer.is-app { padding-bottom:calc(84px + env(safe-area-inset-bottom)); } }
+
+/* Tarjetas de «Qué puedes hacer» y «Casos de uso»: cada una en su tarjeta,
+   alternando blanco y turquesa claro para que se distingan entre sí. */
+.site .case, .site .capability {
+  position:relative; padding:clamp(24px, 4vw, 48px); border:1px solid var(--ms-line); border-radius:var(--ms-r-lg);
+  background:var(--ms-white); box-shadow:var(--ms-shadow);
+}
+.site .case:first-of-type, .site .capability:first-of-type { padding-top:clamp(24px, 4vw, 48px); border-top:1px solid var(--ms-line); }
+.site .case:nth-child(even), .site .capability:nth-of-type(even) { border-color:#bfe9df; background:var(--ms-teal-wash); }
+.site .case::before, .site .capability::before {
+  position:absolute; top:clamp(24px, 4vw, 48px); left:0; width:4px; height:48px; border-radius:0 4px 4px 0; background:var(--ms-navy); content:"";
+}
+.site .case:nth-child(even)::before, .site .capability:nth-of-type(even)::before { background:var(--ms-teal); }
+.site .capability + .capability { margin-top:24px; }
+.site .case:nth-child(even) .case-tags span { border-color:#bfe9df; }
