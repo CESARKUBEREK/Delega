@@ -1,3 +1,5 @@
+import { ExternalLink } from "@/components/external-link"
+import { PROVIDER_LINKS } from "@/lib/provider-links"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { formatDateTime } from "../format"
@@ -85,6 +87,9 @@ export async function WhatsAppCard({ workspaceId, isAdmin }: { workspaceId: stri
             <WhatsAppForm workspaceId={workspaceId} replacing={Boolean(integration)} />
             <details className="text-sm text-graphite" open={!integration}>
               <summary className="cursor-pointer text-ink">Cómo lo conecto (entorno de pruebas, gratis)</summary>
+              <div className="mt-2">
+                <ExternalLink link={PROVIDER_LINKS.twilio} compact />
+              </div>
               <ol className="mt-2 flex list-decimal flex-col gap-1 pl-5">
                 <li>Crea una cuenta en twilio.com (te pedirá verificar tu correo y tu teléfono).</li>
                 <li>En la consola, copia el Account SID y el Auth Token y pégalos aquí. Deja vacío el número.</li>
@@ -155,6 +160,9 @@ export async function TelegramCard({ workspaceId, isAdmin }: { workspaceId: stri
             {!integration ? (
               <details className="text-sm text-graphite">
                 <summary className="cursor-pointer text-ink">Cómo creo el bot</summary>
+                <div className="mt-2">
+                  <ExternalLink link={PROVIDER_LINKS.telegram} compact />
+                </div>
                 <ol className="mt-2 list-decimal pl-5">
                   <li>En Telegram, abre una conversación con @BotFather (tiene la marca de verificación azul).</li>
                   <li>Envía /newbot, elige un nombre visible y un usuario que termine en «bot».</li>

@@ -1,5 +1,7 @@
 "use client"
 
+import { ExternalLink } from "@/components/external-link"
+import { PROVIDER_LINKS } from "@/lib/provider-links"
 import { useActionState, useRef, useState } from "react"
 import { FormMessage, SubmitButton } from "@/components/form"
 import {
@@ -337,6 +339,9 @@ export function ImapForm({ workspaceId, current }: { workspaceId: string; curren
           Gmail no admite tu contraseña normal: activa la verificación en dos pasos en tu cuenta de Google y crea una
           «contraseña de aplicación» (Cuenta de Google → Seguridad → Contraseñas de aplicación). En Google Workspace, el
           administrador tiene que permitir IMAP.
+          <span className="mt-2 block">
+            <ExternalLink link={PROVIDER_LINKS.gmailAppPassword} compact />
+          </span>
         </p>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2">

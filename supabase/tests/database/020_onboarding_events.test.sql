@@ -4,7 +4,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(5);
+select plan(6);
 
 insert into auth.users (id, email, email_confirmed_at) values
   ('00000000-0000-0000-0000-0000000000a6', 'a6@test.dev', now()),
@@ -28,15 +28,16 @@ end $$;
 select pg_temp.login('00000000-0000-0000-0000-0000000000a6');
 select lives_ok(format('select public.onboarding_track(%L, ''plan'', ''{"source":"local","plan":"Responder","otro":"x"}'')', (select id from t_ws)), 'el owner registra un paso');
 select lives_ok(format('select public.onboarding_track(%L, ''plan'', ''{}'')', (select id from t_ws)), 'repetir no falla');
+select lives_ok(format('select public.onboarding_track(%L, ''ai'', ''{}'')', (select id from t_ws)), 'el paso «Tu IA» (3 nov) se puede registrar');
 select pg_temp.logout();
 
-select is((select count(*) from public.onboarding_events where workspace_id = (select id from t_ws)), 1::bigint, 'solo la primera vez');
-select is((select detail from public.onboarding_events where workspace_id = (select id from t_ws)), '{"plan": "Responder", "source": "local"}'::jsonb, 'solo las claves conocidas');
+select is((select count(*) from public.onboarding_events where workspace_id = (select id from t_ws)), 2::bigint, 'solo la primera vez de cada paso');
+select is((select detail from public.onboarding_events where workspace_id = (select id from t_ws) and step = 'plan'), '{"plan": "Responder", "source": "local"}'::jsonb, 'solo las claves conocidas');
 
 select pg_temp.login('00000000-0000-0000-0000-0000000000b6');
 select public.onboarding_track((select id from t_ws), 'task', '{}');
 select pg_temp.logout();
-select is((select count(*) from public.onboarding_events where workspace_id = (select id from t_ws)), 1::bigint, 'quien no es miembro no registra nada');
+select is((select count(*) from public.onboarding_events where workspace_id = (select id from t_ws)), 2::bigint, 'quien no es miembro no registra nada');
 
 select * from finish();
 rollback;

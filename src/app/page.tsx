@@ -42,7 +42,7 @@ export default function HomePage() {
               <ul className="site-hero-note">
                 <li>Crear la cuenta no cuesta nada</li>
                 <li>Nada se envía sin tu aprobación</li>
-                <li>50.000 tokens de prueba incluidos</li>
+                <li>Tus 2 primeros planes, con IA avanzada</li>
               </ul>
             </div>
             <AppPreview />
@@ -194,7 +194,7 @@ export default function HomePage() {
                 </p>
                 <ul className="site-hero-note" style={{ marginTop: "0.75rem" }}>
                   <li>Sin tarjeta</li>
-                  <li>50.000 tokens de prueba</li>
+                  <li>2 planes de prueba con IA avanzada</li>
                   <li>Nada se envía sin tu aprobación</li>
                 </ul>
               </div>

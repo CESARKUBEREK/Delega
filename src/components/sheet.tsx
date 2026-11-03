@@ -42,11 +42,11 @@ export function Sheet({
                   </li>
                   <li>
                     <b>Ves el plan que te prepara</b>
-                    Con créditos de prueba de MarchaSolo, sin conectar nada.
+                    Con IA avanzada por cuenta de MarchaSolo, sin conectar nada.
                   </li>
                   <li>
-                    <b>Conectas solo lo que haga falta</b>
-                    El correo, Drive o la agenda. Y nada se envía sin tu aprobación.
+                    <b>Conectas tu IA y lo que haga falta</b>
+                    Primero tu IA; después el correo, Drive o la agenda. Y nada se envía sin tu aprobación.
                   </li>
                 </ol>
               </>

@@ -3,8 +3,6 @@ import { Suspense } from "react"
 import { asPending } from "@/lib/pending"
 import { asPlan, fileKindLabel } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
-import { TrialMeter } from "@/components/trial-meter"
-import { getTrialStatus } from "@/lib/trial"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { formatDateTime } from "../format"
 import { Chat, type ChatMessage, type ChatRun } from "./chat"
@@ -56,8 +54,6 @@ async function Assistant({
   ])
 
   const aiActive = (connections ?? []).some((c) => c.status === "active")
-  const trial = aiActive ? null : await getTrialStatus(workspaceId)
-  const onTrial = trial !== null && !trial.exhausted
   // Solo se abre la conversación si la RLS la devuelve en la lista.
   const conversationId = requested && conversations?.some((x) => x.id === requested) ? requested : null
   const messages: ChatMessage[] = conversationId
@@ -136,23 +132,8 @@ async function Assistant({
           <div className="border-t border-rule">{list}</div>
         </details>
 
-        {onTrial ? (
-          <div className="mb-4 border-l-2 border-stroke bg-paper px-4 py-3 text-sm text-ink" role="status">
-            Estás usando créditos de prueba de MarchaSolo (te queda el {trial.pctLeft} %). Sirven para preparar planes en el chat; para ejecutarlos y
-            usar la bandeja,{" "}
-            {isAdmin ? (
-              <Link href={`${base}/integraciones#llms`} className="font-semibold text-link underline underline-offset-4">
-                conecta tu propia IA
-              </Link>
-            ) : (
-              "un administrador tiene que conectar una IA"
-            )}
-            .
-            <TrialMeter pctLeft={trial.pctLeft} />
-          </div>
-        ) : !aiActive ? (
+        {!aiActive ? (
           <div className="mb-4 border-l-2 border-alert bg-alert-bg px-4 py-3 text-sm text-alert" role="status">
-            {trial?.exhausted ? "Se han acabado los créditos de prueba de este espacio. " : null}
             {connections?.length ? "La clave de la IA de este espacio dejó de funcionar. " : "Este espacio aún no tiene una IA conectada. "}
             {isAdmin ? (
               <Link href={`${base}/integraciones`} className="underline underline-offset-4">
