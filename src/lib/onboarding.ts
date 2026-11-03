@@ -1,12 +1,14 @@
 import { asPlan, type FlowPlan } from "@/lib/plan"
 
-export type OnboardingConnection = "email" | "spreadsheet" | "calendar" | "none"
+export type OnboardingConnection = "email" | "messaging" | "spreadsheet" | "calendar" | "none"
 
 // Detecta la conexión principal que necesita un plan del onboarding.
 // Vive fuera de actions.ts porque un archivo "use server" solo puede exportar
 // funciones async, y esta se usa también en el cliente.
 export function primaryConnection(plan: FlowPlan): OnboardingConnection {
   const kinds = new Set([...plan.connections.map((c) => c.kind), ...plan.steps.map((s) => s.connection)])
+  // Canales del negocio primero: es lo que más vende en la web.
+  if (kinds.has("whatsapp") || kinds.has("telegram")) return "messaging"
   if (kinds.has("email")) return "email"
   if (kinds.has("spreadsheet") || kinds.has("drive") || kinds.has("documents")) return "spreadsheet"
   if (kinds.has("calendar")) return "calendar"
@@ -15,6 +17,7 @@ export function primaryConnection(plan: FlowPlan): OnboardingConnection {
 
 export const CONNECTION_LABEL: Record<OnboardingConnection, string> = {
   email: "Correo (IMAP)",
+  messaging: "WhatsApp / Telegram",
   spreadsheet: "Google Drive / Planillas",
   calendar: "Google Calendar",
   none: "Ninguna por ahora",
@@ -23,6 +26,7 @@ export const CONNECTION_LABEL: Record<OnboardingConnection, string> = {
 // Sección de Integraciones donde está la tarjeta que hace falta.
 export const CONNECTION_ANCHOR: Record<OnboardingConnection, string> = {
   email: "comunicaciones",
+  messaging: "comunicaciones",
   spreadsheet: "drives",
   calendar: "calendar",
   none: "llms",
@@ -52,6 +56,8 @@ export type OnboardingSnapshot = {
   source: OnboardingSource | null
   conversationId: string | null
   trialRemaining: number | null
+  // Borrador de automatización creado al aceptar el plan (si se pudo guardar).
+  flowId: string | null
 }
 
 const STORAGE_PREFIX = "ms_onboarding:"
@@ -92,6 +98,7 @@ export function loadOnboarding(workspaceId: string): OnboardingSnapshot | null {
       source: v.source === "assistant" || v.source === "trial" || v.source === "local" ? v.source : null,
       conversationId: typeof v.conversationId === "string" ? v.conversationId : null,
       trialRemaining: typeof v.trialRemaining === "number" ? v.trialRemaining : null,
+      flowId: typeof v.flowId === "string" ? v.flowId : null,
     }
   } catch {
     return null
