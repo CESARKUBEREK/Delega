@@ -76,7 +76,7 @@ function loadVapid(): Promise<Vapid | null> {
       false,
       ["sign"],
     )
-    const site = (Deno.env.get("DELEGA_SITE_URL") ?? "https://delega-five.vercel.app").replace(/\/+$/, "")
+    const site = (Deno.env.get("DELEGA_SITE_URL") ?? "https://marchasolo.com").replace(/\/+$/, "")
     const subject = Deno.env.get("VAPID_SUBJECT")?.trim() || site
     return { publicKey: b64urlEncode(p), privateKey, subject }
   })()

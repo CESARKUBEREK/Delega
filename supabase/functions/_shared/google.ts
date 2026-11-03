@@ -26,7 +26,7 @@ export function googleConfigured(): boolean {
 
 // Dirección pública de la app. Debe coincidir con la URI de redirección
 // registrada en el cliente OAuth de Google.
-const SITE_URL = (Deno.env.get("DELEGA_SITE_URL") ?? "https://delega-five.vercel.app").replace(/\/+$/, "")
+const SITE_URL = (Deno.env.get("DELEGA_SITE_URL") ?? "https://marchasolo.com").replace(/\/+$/, "")
 
 export function redirectUri(): string {
   return `${SITE_URL}/integraciones/google/callback`

@@ -2,24 +2,29 @@ import Link from "next/link"
 import { Suspense } from "react"
 import { Sheet } from "@/components/sheet"
 import { PLANS } from "@/lib/pricing"
+import { publicPageMetadata } from "@/lib/seo"
 import { SignupForm } from "./signup-form"
 
-export const metadata = {
+export const metadata = publicPageMetadata({
   title: "Crear cuenta",
   description:
     "Crea tu cuenta de MarchaSolo sin coste. Cuéntale una tarea y mira el plan que te prepara antes de conectar nada.",
-  robots: { index: true, follow: true },
-  alternates: { canonical: "/crear-cuenta" },
+  path: "/crear-cuenta",
+})
+
+type SignupPageProps = { searchParams: Promise<{ plan?: string | string[] }> }
+
+export default function SignupPage({ searchParams }: SignupPageProps) {
+  return (
+    <Suspense fallback={<SignupPageFallback />}>
+      <SignupContent searchParams={searchParams} />
+    </Suspense>
+  )
 }
 
-export default async function SignupPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ plan?: string }>
-}) {
-  const sp = await searchParams
-  const planId = typeof sp.plan === "string" ? sp.plan : undefined
-  const plan = PLANS.find((p) => p.id === planId)
+async function SignupContent({ searchParams }: SignupPageProps) {
+  const { plan: planId } = await searchParams
+  const plan = typeof planId === "string" ? PLANS.find((item) => item.id === planId) : undefined
 
   return (
     <Sheet
@@ -30,18 +35,28 @@ export default async function SignupPage({
           : "Sin coste y sin tarjeta. En dos minutos estás contándole tu primera tarea."
       }
       story="signup"
-      footer={
-        <>
-          ¿Ya tienes cuenta?{" "}
-          <Link href="/entrar" className="text-link underline underline-offset-4">
-            Entrar
-          </Link>
-        </>
-      }
+      footer={<SignupFooter />}
     >
-      <Suspense fallback={<div className="h-96" aria-busy="true" />}>
-        <SignupForm initialPlan={plan?.id} />
-      </Suspense>
+      <SignupForm initialPlan={plan?.id} />
     </Sheet>
+  )
+}
+
+function SignupPageFallback() {
+  return (
+    <Sheet title="Crea tu cuenta" intro="Sin coste y sin tarjeta. En dos minutos estás contándole tu primera tarea." story="signup">
+      <div className="h-96" aria-busy="true" />
+    </Sheet>
+  )
+}
+
+function SignupFooter() {
+  return (
+    <>
+      ¿Ya tienes cuenta?{" "}
+      <Link href="/entrar" className="text-link underline underline-offset-4">
+        Entrar
+      </Link>
+    </>
   )
 }

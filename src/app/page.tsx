@@ -1,17 +1,17 @@
-import type { Metadata } from "next"
 import Link from "next/link"
 import { MarketingLayout } from "@/components/marketing-layout"
 import { CaseTrail } from "@/components/site/case-trail"
 import { AppPreview, GuaranteeStrip } from "@/components/site/app-preview"
+import { publicPageMetadata } from "@/lib/seo"
 import { USE_CASES } from "@/lib/site-content"
 
-export const metadata: Metadata = {
-  title: { absolute: "MarchaSolo · Tu negocio, en automático" },
+export const metadata = publicPageMetadata({
+  title: "Tu negocio, en automático",
+  absoluteTitle: "MarchaSolo · Tu negocio, en automático",
   description:
-    "MarchaSolo prepara el trabajo de tu negocio con tus aplicaciones y espera tu aprobación antes de enviar o cambiar nada. Las tareas avanzan; tú decides.",
-  robots: { index: true, follow: true },
-  alternates: { canonical: "/" },
-}
+    "Un compañero de trabajo con IA: conecta tus aplicaciones, prepara lo que hay que hacer y se detiene antes de enviar o cambiar nada. Tú revisas y das el visto bueno.",
+  path: "/",
+})
 
 // Portada pública, también con sesión (el logo de la app lleva aquí); la
 // cabecera cambia «Entrar» por «Ir a mi espacio».
