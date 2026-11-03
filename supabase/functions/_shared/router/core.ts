@@ -160,20 +160,25 @@ export type TaskProfile = {
   minTier: Tier
   // 1–5. Por debajo de 3, la calidad por encima de lo necesario no puntúa.
   complexity: number
-  // Tokens de una llamada típica y llamadas por tarea (para comparar costes).
+  // Tokens de una llamada típica, parte de la entrada que sale de la caché y
+  // llamadas por tarea (para estimar y comparar costes). Calibrado el 3 nov
+  // con usage_events de producción (agent: 21 llamadas en 6 ejecuciones;
+  // classify: 17; draft_reply: 4; plan: 1). Sin datos aún: summarize, help y
+  // review (valores de partida). Recalibrar cuando haya más (8-4).
   typicalIn: number
   typicalOut: number
+  cachedShare: number
   calls: number
 }
 
 export const TASKS: Record<Task, TaskProfile> = {
-  classify: { label: "clasificar la bandeja", needs: ["json"], minTier: "economy", complexity: 1, typicalIn: 8000, typicalOut: 1500, calls: 1 },
-  summarize: { label: "resumir", needs: [], minTier: "economy", complexity: 2, typicalIn: 6000, typicalOut: 800, calls: 1 },
-  help: { label: "responder dudas", needs: ["json"], minTier: "economy", complexity: 1, typicalIn: 4000, typicalOut: 500, calls: 1 },
-  plan: { label: "diseñar automatizaciones", needs: ["json"], minTier: "standard", complexity: 3, typicalIn: 6000, typicalOut: 1500, calls: 1 },
-  draft_reply: { label: "redactar respuestas", needs: [], minTier: "standard", complexity: 2, typicalIn: 5000, typicalOut: 600, calls: 1 },
-  agent: { label: "trabajar con tus herramientas", needs: ["tools"], minTier: "standard", complexity: 3, typicalIn: 8000, typicalOut: 600, calls: 8 },
-  review: { label: "revisar propuestas", needs: ["json"], minTier: "standard", complexity: 2, typicalIn: 5000, typicalOut: 400, calls: 1 },
+  classify: { label: "clasificar la bandeja", needs: ["json"], minTier: "economy", complexity: 1, typicalIn: 1000, typicalOut: 200, cachedShare: 0, calls: 1 },
+  summarize: { label: "resumir", needs: [], minTier: "economy", complexity: 2, typicalIn: 6000, typicalOut: 800, cachedShare: 0, calls: 1 },
+  help: { label: "responder dudas", needs: ["json"], minTier: "economy", complexity: 1, typicalIn: 4000, typicalOut: 500, cachedShare: 0, calls: 1 },
+  plan: { label: "diseñar automatizaciones", needs: ["json"], minTier: "standard", complexity: 3, typicalIn: 4000, typicalOut: 1100, cachedShare: 0, calls: 1 },
+  draft_reply: { label: "redactar respuestas", needs: [], minTier: "standard", complexity: 2, typicalIn: 7000, typicalOut: 450, cachedShare: 0.35, calls: 1 },
+  agent: { label: "trabajar con tus herramientas", needs: ["tools"], minTier: "standard", complexity: 3, typicalIn: 6000, typicalOut: 250, cachedShare: 0.55, calls: 4 },
+  review: { label: "revisar propuestas", needs: ["json"], minTier: "standard", complexity: 2, typicalIn: 5000, typicalOut: 400, cachedShare: 0, calls: 1 },
 }
 
 // ---------------------------------------------------------------------------
@@ -229,7 +234,9 @@ export type RoutePlan = {
 
 function taskCost(info: ModelInfo, profile: TaskProfile, inputTokens?: number): number {
   const input = inputTokens && inputTokens > 0 ? inputTokens : profile.typicalIn
-  return costUsd(info, { input, output: profile.typicalOut }) * profile.calls
+  // Los proveedores sin precio de caché cobran esa parte como entrada normal (costUsd).
+  const cached = Math.round(input * profile.cachedShare)
+  return costUsd(info, { input, cached, output: profile.typicalOut }) * profile.calls
 }
 
 function scoreAll(
