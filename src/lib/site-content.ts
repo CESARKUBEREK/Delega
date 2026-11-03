@@ -139,7 +139,7 @@ export const USE_CASES: UseCase[] = [
     id: "diagnostico",
     title: "Reunir contexto antes de diagnosticar",
     before:
-      "Antes de tocar un caso abres correo, CRM, documentación y capturas. Pierdes tiempo armando el contexto.",
+      `Antes de tocar un caso abres correo, CRM, documentación y capturas. Pierdes tiempo armando el contexto.`,
     ask: "Cuando abra una incidencia, reúne el historial del cliente, los últimos mensajes y los documentos relacionados en un solo resumen.",
     does: "Consulta correo, CRM y archivos vinculados y deja un resumen listo para que empieces a diagnosticar.",
     waits: null,
