@@ -52,9 +52,9 @@ export default function PricingPage() {
                       <li key={i}>{i}</li>
                     ))}
                   </ul>
-                  <Link href="/crear-cuenta" className="btn btn-primary mt-6">
-                    {p.cta}
-                  </Link>
+                 <Link href={`/crear-cuenta?plan=${p.id}`} className="btn btn-primary mt-6">
+  {p.cta}
+</Link>
                 </div>
               ))}
             </div>
