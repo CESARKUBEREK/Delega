@@ -4,8 +4,10 @@ import { test } from "node:test"
 import { KIND_CONNECTIONS, needsApproval } from "../src/lib/plan-edit.ts"
 import { findTemplate, ROUTINES, SECTOR_TEMPLATES, TEMPLATES } from "../src/lib/templates.ts"
 
-test("hay 10 rutinas numeradas del 1 al 10", () => {
-  assert.deepEqual(ROUTINES.map((r) => r.number), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+test("las rutinas se muestran numeradas del 1 al 10 en orden", () => {
+  const tiers = ["personal", "negocio", "avanzado"]
+  const displayedNumbers = tiers.flatMap((tier) => ROUTINES.filter((routine) => routine.tier === tier).map((routine) => routine.number))
+  assert.deepEqual(displayedNumbers, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 })
 
 test("cada plantilla está en una sola rutina (o en su sector) y todas existen", () => {
