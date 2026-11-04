@@ -409,10 +409,10 @@ a.flow-node-trigger:hover { border-color:var(--ink); box-shadow:0 0 0 3px rgb(0 
    no llega al contraste mínimo. */
 
 
-/* Más coral (el color de la llave del logo). Sobre blanco, el coral solo
-   como relleno o detalle; para texto pequeño, su tono oscuro #B93A27
-   (5,7:1). Encima de un relleno coral, la letra es marina (4,4:1, en
-   negrita) o blanca solo en tamaños grandes. */
+/* Compatibilidad visual: los nombres históricos --coral y --coral-*
+   se conservan como alias del turquesa. No representan un color coral.
+   Para el marketing, los tokens --ms-* se aíslan en .site y admiten
+   valores propios de esa superficie sin alterar el panel autenticado. */
 :root { --coral-ink:var(--link); --coral-soft:var(--turquesa-soft); }
 .app-topbar { border-bottom:0; box-shadow:inset 0 -3px 0 var(--turquesa), 0 5px 22px rgb(11 31 59 / 4%); }
 .app-eyebrow, .auth-form-kicker { color:var(--coral-ink); }
@@ -424,7 +424,7 @@ a.flow-node-trigger:hover { border-color:var(--ink); box-shadow:0 0 0 3px rgb(0 
 .app-mobile-tab-link[aria-current="page"]::after { position:absolute; bottom:7px; left:50%; width:18px; height:3px; transform:translateX(-50%); border-radius:999px; background:var(--turquesa); content:""; }
 .app-mobile-tab-link[aria-current="page"] > svg { color:var(--link); }
 
-/* Lo que espera tu aprobación:acento coral (tarjetas, avisos, Hoy). */
+/* Lo que espera tu aprobación:acento turquesa (tarjetas, avisos y Hoy). */
 .panel-content section.border-2.border-stroke { overflow:hidden; border-color:var(--turquesa); border-radius:16px; box-shadow:0 0 0 4px var(--coral-soft); }
 .panel-content section.border-2.border-stroke > div.border-b { border-color:#a8e8dc; background:var(--coral-soft); }
 .panel-content section.border-2.border-stroke > div.border-b h2 { color:var(--coral-ink); }
