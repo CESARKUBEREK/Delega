@@ -13,6 +13,7 @@ import { HelpPanel } from "@/components/help-panel"
 import { HELP_GUIDES } from "@/lib/help"
 import { diagnoseRun, type LiveStatus } from "@/lib/run-diagnosis"
 import { DiagnosisActions } from "./diagnosis"
+import { PageHeader, PanelCard } from "@/components/ui"
 
 export const metadata = { title: "Ejecución" }
 // Cada tramo del agente puede tardar hasta ~90 s.
@@ -71,33 +72,16 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
   return (
     <div className="flex flex-col gap-6">
       <HelpPanel workspaceId={workspaceId} page="ejecucion" runId={run.id} />
-      <div>
-        <p className="text-sm">
-          {run.flow_id ? (
-            <Link href={`${base}/automatizaciones/${run.flow_id}`} className="text-link underline underline-offset-4">
-              {run.flow_name}
-            </Link>
-          ) : chat ? (
-            <Link href={`${base}/asistente?c=${chat.conversation_id}`} className="text-link underline underline-offset-4">
-              {run.flow_name} (pedida en el chat)
-            </Link>
-          ) : (
-            <span className="text-graphite">{run.flow_name} (automatización borrada)</span>
-          )}
-        </p>
-        <h1 className="rotulo mt-2 text-2xl">Ejecución del {formatDateTime(run.started_at)}</h1>
-        <p className="mt-1 text-sm text-graphite">
+      <PageHeader eyebrow={run.flow_id ? <Link href={`${base}/automatizaciones/${run.flow_id}`} className="text-link underline underline-offset-4">{run.flow_name}</Link> : chat ? <Link href={`${base}/asistente?c=${chat.conversation_id}`} className="text-link underline underline-offset-4">{run.flow_name} (pedida en el chat)</Link> : <span className="text-graphite">{run.flow_name} (automatización borrada)</span>} title={<>Ejecución del {formatDateTime(run.started_at)}</>} description={<span className="text-sm text-graphite">
           {RUN_STATUS_LABEL[run.status] ?? run.status} · {runOrigin(run.trigger)} · {run.tool_calls} acciones · {formatNumber(run.input_tokens + run.output_tokens)} tokens
-        </p>
-      </div>
+        </span>} />
 
       {pending ? <ApprovalCard runId={run.id} pending={pending} /> : null}
 
       {run.status === "succeeded" && run.summary ? (
-        <section className="border border-ok bg-sheet">
-          <h2 className="border-b border-ok px-5 py-3 font-semibold text-ok">Resultado</h2>
+        <PanelCard className="run-detail-card is-success" title="Resultado">
           <p className="px-5 py-4 whitespace-pre-wrap text-ink">{run.summary}</p>
-        </section>
+        </PanelCard>
       ) : null}
 
       {run.status === "failed" ? <Diagnosis workspaceId={workspaceId} flowId={run.flow_id} error={run.error} /> : null}
@@ -106,8 +90,7 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
 
       <RunAi run={run} calls={calls ?? []} models={models ?? []} />
 
-      <section className="border border-ink bg-sheet">
-        <h2 className="border-b border-ink px-5 py-3 font-semibold">Bitácora</h2>
+      <PanelCard className="run-detail-card" title="Bitácora">
         <ol className="divide-y divide-rule">
           {(events ?? []).map((e) => (
             <li key={e.id} className="grid grid-cols-[5.5rem_1fr_auto] items-baseline gap-3 px-5 py-2.5 text-sm">
@@ -124,7 +107,7 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
             </li>
           ))}
         </ol>
-      </section>
+      </PanelCard>
 
       {run.note ? <p className="text-sm text-graphite">Indicaciones: {run.note}</p> : null}
       {(run.trigger as { type?: string; text?: string } | null)?.type === "telegram_message" ? (
@@ -197,10 +180,7 @@ async function Diagnosis({ workspaceId, flowId, error }: { workspaceId: string; 
   const fileIds = Array.isArray(settings.file_ids) ? settings.file_ids.filter((id): id is string => typeof id === "string") : []
 
   return (
-    <section className="border border-alert bg-sheet" aria-labelledby="por-que-fallo">
-      <h2 id="por-que-fallo" className="border-b border-alert bg-alert-bg px-5 py-3 font-semibold text-alert">
-        Por qué falló
-      </h2>
+    <PanelCard className="run-detail-card is-danger" title="Por qué falló">
       <div className="flex flex-col gap-3 px-5 py-4">
         <p className="text-ink">{d.cause}</p>
         {error ? <p className="border-l-2 border-rule pl-3 text-sm text-graphite">{error}</p> : null}
@@ -220,7 +200,7 @@ async function Diagnosis({ workspaceId, flowId, error }: { workspaceId: string; 
           <p className="text-xs text-graphite">El ayudante puede proponerte cómo reescribir los pasos; los cambios se guardan solo si los aplicas.</p>
         ) : null}
       </div>
-    </section>
+    </PanelCard>
   )
 }
 
@@ -263,8 +243,7 @@ function RunAi({
   const switches = Array.isArray(routing.switches) ? routing.switches : []
 
   return (
-    <section className="border border-ink bg-sheet">
-      <h2 className="border-b border-ink px-5 py-3 font-semibold">IA de esta ejecución</h2>
+    <PanelCard className="run-detail-card" title="IA de esta ejecución">
       <div className="flex flex-col gap-2 px-5 py-4 text-sm text-graphite">
         <p>
           {used.length ? (
@@ -295,6 +274,6 @@ function RunAi({
         ) : null}
         <p className="text-xs">Estimación con los tokens que informa el proveedor y sus precios oficiales; la factura que vale es la de tu cuenta.</p>
       </div>
-    </section>
+    </PanelCard>
   )
 }
