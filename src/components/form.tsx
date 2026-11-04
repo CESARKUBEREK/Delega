@@ -1,6 +1,7 @@
 "use client"
 
 import { useFormStatus } from "react-dom"
+import { PrimaryButton as SharedPrimaryButton, SecondaryButton as SharedSecondaryButton } from "@/components/ui"
 import type { InputHTMLAttributes, ReactNode } from "react"
 
 export function Field({
@@ -33,27 +34,27 @@ export function Field({
 export function SubmitButton({ children, pendingLabel }: { children: ReactNode; pendingLabel: string }) {
   const { pending } = useFormStatus()
   return (
-    <button
+    <SharedPrimaryButton
       type="submit"
       disabled={pending}
       aria-disabled={pending}
-      className="h-11 w-full bg-stroke px-4 text-base font-semibold text-stroke-ink transition-opacity hover:opacity-90 disabled:cursor-wait disabled:opacity-70"
+      className="w-full disabled:cursor-wait disabled:opacity-70"
     >
       {pending ? pendingLabel : children}
-    </button>
+    </SharedPrimaryButton>
   )
 }
 
 export function SecondaryButton({ children, pendingLabel }: { children: ReactNode; pendingLabel: string }) {
   const { pending } = useFormStatus()
   return (
-    <button
+    <SharedSecondaryButton
       type="submit"
       disabled={pending}
-      className="flex h-11 w-full items-center justify-center gap-3 border border-ink bg-sheet px-4 text-base font-medium text-ink hover:bg-paper disabled:cursor-wait disabled:opacity-70"
+      className="w-full disabled:cursor-wait disabled:opacity-70"
     >
       {pending ? pendingLabel : children}
-    </button>
+    </SharedSecondaryButton>
   )
 }
 

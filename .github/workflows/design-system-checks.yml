@@ -1,0 +1,30 @@
+name: Design system checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [chore/marchasolo-design-system-phase-1]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate Next.js route types
+        run: npx next typegen
+      - name: ESLint
+        run: npm run lint
+      - name: TypeScript
+        run: npx tsc --noEmit
