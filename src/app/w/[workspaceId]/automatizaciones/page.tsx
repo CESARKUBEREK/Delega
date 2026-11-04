@@ -7,6 +7,7 @@ import { findTemplate, ROUTINES, type Routine, type RoutineTier, routineOfFlow, 
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime } from "../format"
 import { HelpPanel } from "@/components/help-panel"
+import { EmptyState, PageHeader, PanelCard } from "@/components/ui"
 
 export const metadata = { title: "Automatizaciones" }
 
@@ -39,14 +40,11 @@ const ROUTINE_ICONS: Record<string, string> = {
 export default function FlowsPage({ params }: PageProps<"/w/[workspaceId]/automatizaciones">) {
   return (
     <div className="automation-page flex flex-col gap-6">
-      <header className="automation-page-intro">
-        <p className="app-eyebrow">TU EQUIPO DIGITAL</p>
-        <h1 className="rotulo text-2xl">Automatizaciones</h1>
-        <p className="automation-page-description">
-          Tus automatizaciones, organizadas por las rutinas de tu negocio. Puedes ejecutarlas cuando quieras, programarlas o activarlas cuando recibas un mensaje.
-          Lo que escriban o envíen a otros espera tu aprobación.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="TU EQUIPO DIGITAL"
+        title="Automatizaciones"
+        description={<>Tus automatizaciones, organizadas por las rutinas de tu negocio. Puedes ejecutarlas cuando quieras, programarlas o activarlas cuando recibas un mensaje. Lo que escriban o envíen a otros espera tu aprobación.</>}
+      />
       <Suspense fallback={<div className="automation-loading h-48 border border-rule bg-sheet" aria-busy="true" />}>
         <FlowList params={params} />
       </Suspense>
@@ -121,18 +119,12 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
       </section>
 
       {!flows.length ? (
-        <section className="automation-empty-state" aria-labelledby="automation-empty-title">
-          <span className="automation-empty-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 12h4l2-7 4 14 2-7h4" />
-            </svg>
-          </span>
-          <div>
-            <h2 id="automation-empty-title">Tu equipo digital está listo para empezar.</h2>
-            <p>Elige una rutina de tu negocio y MarchaSolo te propondrá automatizaciones que puedes utilizar inmediatamente.</p>
-          </div>
-          <a href="#rutinas" className="automation-empty-link">Explorar las rutinas <span aria-hidden="true">↓</span></a>
-        </section>
+        <EmptyState
+          title="Tu equipo digital está listo para empezar."
+          description="Elige una rutina de tu negocio y MarchaSolo te propondrá automatizaciones que puedes utilizar inmediatamente."
+          action={<a href="#rutinas" className="automation-empty-link">Explorar las rutinas <span aria-hidden="true">↓</span></a>}
+          icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h4l2-7 4 14 2-7h4" /></svg>}
+        />
       ) : (
         <section className="automation-owned" aria-labelledby="automation-owned-title">
           <div className="automation-section-heading">
@@ -199,11 +191,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
             </div>
           </div>
           <div className="automation-activity-grid">
-            <div className="automation-activity-card">
-              <div className="automation-activity-card-heading">
-                <h3>Ejecuciones</h3>
-                <Link href={`${base}/historial`}>Ver historial <span aria-hidden="true">→</span></Link>
-              </div>
+            <PanelCard className="automation-activity-card" title="Ejecuciones" actions={<Link href={`${base}/historial`}>Ver historial <span aria-hidden="true">→</span></Link>}>
               {activity.length ? (
                 <ul className="automation-activity-list">
                   {activity.map((run) => (
@@ -222,12 +210,8 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
               ) : (
                 <p className="automation-activity-empty">Aún no se ha ejecutado ninguna automatización.</p>
               )}
-            </div>
-            <div className="automation-activity-card">
-              <div className="automation-activity-card-heading">
-                <h3>Por revisar</h3>
-                <Link href={`${base}/aprobaciones`}>Ir a Aprobaciones <span aria-hidden="true">→</span></Link>
-              </div>
+            </PanelCard>
+            <PanelCard className="automation-activity-card" title="Por revisar" actions={<Link href={`${base}/aprobaciones`}>Ir a Aprobaciones <span aria-hidden="true">→</span></Link>}>
               {pending.length ? (
                 <ul className="automation-activity-list">
                   {pending.map((run) => (
@@ -244,7 +228,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
               ) : (
                 <p className="automation-activity-empty">No tienes aprobaciones pendientes.</p>
               )}
-            </div>
+            </PanelCard>
           </div>
         </section>
       ) : null}
