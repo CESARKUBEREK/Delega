@@ -4,19 +4,14 @@ import { modelLabel, RUN_STATUS_LABEL } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime, formatNumber } from "../format"
+import { EmptyState, PageHeader, PanelCard } from "@/components/ui"
 
 export const metadata = { title: "Historial" }
 
 export default function HistoryPage({ params }: PageProps<"/w/[workspaceId]/historial">) {
   return (
     <div className="automation-page flex flex-col">
-      <header className="automation-page-intro">
-        <p className="app-eyebrow">ACTIVIDAD DEL ESPACIO</p>
-        <h1 className="rotulo">Historial</h1>
-        <p className="automation-page-description">
-          Ejecuciones de automatizaciones, conversaciones con el asistente y consumo de IA de este espacio.
-        </p>
-      </header>
+      <PageHeader eyebrow="ACTIVIDAD DEL ESPACIO" title="Historial" description="Ejecuciones de automatizaciones, conversaciones con el asistente y consumo de IA de este espacio." />
       <Suspense fallback={<div className="automation-loading h-64 border border-rule bg-sheet" aria-busy="true" />}>
         <History params={params} />
       </Suspense>
@@ -66,13 +61,7 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
 
   return (
     <div className="automation-history">
-      <section className="automation-activity-card">
-        <div className="automation-activity-card-heading">
-          <div>
-            <p className="automation-section-eyebrow">TRABAJO REALIZADO</p>
-            <h2>Últimas ejecuciones {isAdmin ? "del espacio" : "tuyas"}</h2>
-          </div>
-        </div>
+      <PanelCard className="automation-activity-card history-panel" title="Últimas ejecuciones" description={isAdmin ? "Trabajo realizado en todo el espacio" : "Trabajo realizado por ti"}>
         {runs && runs.length > 0 ? (
           <ul className="automation-history-list">
             {runs.map((r) => (
@@ -92,17 +81,11 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
             ))}
           </ul>
         ) : (
-          <p className="automation-history-empty">Aún no se ha ejecutado ninguna automatización.</p>
+          <EmptyState title="Aún no hay ejecuciones" description="Cuando una automatización se ejecute, su actividad aparecerá aquí." />
         )}
-      </section>
+      </PanelCard>
 
-      <section className="automation-activity-card">
-        <div className="automation-activity-card-heading">
-          <div>
-            <p className="automation-section-eyebrow">USO DE IA</p>
-            <h2>Consumo de este mes {isAdmin ? "(todo el espacio)" : "(tuyo)"}</h2>
-          </div>
-        </div>
+      <PanelCard className="automation-activity-card history-panel" title="Consumo de este mes" description={isAdmin ? "Uso de IA en todo el espacio" : "Tu uso de IA"}>
         {byModel.size > 0 ? (
           <div className="automation-history-table-wrap">
             <table className="automation-history-table">
@@ -128,17 +111,11 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
             <p className="automation-history-note">El importe lo factura cada proveedor (OpenAI, Anthropic, DeepSeek o xAI) en tu cuenta según su tarifa.</p>
           </div>
         ) : (
-          <p className="automation-history-empty">Sin consumo este mes.</p>
+          <EmptyState title="Sin consumo este mes" description="Aquí verás las peticiones y los tokens utilizados por cada modelo." />
         )}
-      </section>
+      </PanelCard>
 
-      <section className="automation-activity-card">
-        <div className="automation-activity-card-heading">
-          <div>
-            <p className="automation-section-eyebrow">CHAT CON MARCHASOLO</p>
-            <h2>Conversaciones recientes {isAdmin ? "del espacio" : "tuyas"}</h2>
-          </div>
-        </div>
+      <PanelCard className="automation-activity-card history-panel" title="Conversaciones recientes" description={isAdmin ? "Conversaciones del espacio" : "Tus conversaciones"}>
         {conversations && conversations.length > 0 ? (
           <ul className="automation-history-list">
             {conversations.map((c) => (
@@ -154,9 +131,9 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
             ))}
           </ul>
         ) : (
-          <p className="automation-history-empty">Aún no hay conversaciones.</p>
+          <EmptyState title="Aún no hay conversaciones" description="Las conversaciones que mantengas con MarchaSolo aparecerán aquí." />
         )}
-      </section>
+      </PanelCard>
     </div>
   )
 }
