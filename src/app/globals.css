@@ -320,6 +320,20 @@ a.flow-node-trigger:hover { border-color:var(--ink); box-shadow:0 0 0 3px rgb(0 
   .flow-node { width:200px; min-height:96px; }
 }
 
+/* Tarjeta de aprobación compartida: jerarquía clara sin alterar su comportamiento. */
+.approval-card { overflow:hidden; border:1px solid var(--border); border-radius:var(--radius-lg, 12px); background:var(--sheet); box-shadow:var(--shadow-card, 0 1px 3px rgb(11 31 59 / 6%)); }
+.approval-card-header { border-bottom:1px solid var(--rule); background:var(--paper); }
+.approval-card-header h2 { line-height:1.35; }
+.approval-card .approval-actions > button { min-height:44px; border-radius:8px; }
+.approval-card .approval-actions > button:first-child { box-shadow:0 1px 2px rgb(11 31 59 / 10%); }
+.approval-card .approval-actions > button:focus-visible { outline:2px solid var(--state-focus); outline-offset:2px; }
+@media (max-width:1023px) {
+  .approval-card .approval-actions { border-top:1px solid var(--rule); }
+}
+@media (max-width:480px) {
+  .approval-card .approval-actions > button { flex:1 1 100%; }
+}
+
 /* Aprobaciones:en el móvil, Aprobar y Rechazar quedan al alcance del pulgar,
    encima de la barra inferior, mientras se lee la vista previa. */
 @media (max-width:1023px) {
