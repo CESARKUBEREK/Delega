@@ -12,24 +12,24 @@ export const metadata = publicPageMetadata({
 type AppIcon = {
   id: string
   name: string
-  mark: string
-  tone: string
+  /** Ruta en /public/brand */
+  logo: string
   status?: "soon"
 }
 
 const APPS: AppIcon[] = [
-  { id: "gmail", name: "Gmail", mark: "Gm", tone: "#EA4335" },
-  { id: "calendar", name: "Google Calendar", mark: "Cal", tone: "#4285F4" },
-  { id: "drive", name: "Google Drive", mark: "Dr", tone: "#0F9D58" },
-  { id: "whatsapp", name: "WhatsApp", mark: "Wa", tone: "#25D366" },
-  { id: "telegram", name: "Telegram", mark: "Tg", tone: "#229ED9" },
-  { id: "hubspot", name: "HubSpot", mark: "Hs", tone: "#FF7A59" },
-  { id: "sheets", name: "Google Sheets", mark: "Sh", tone: "#0F9D58" },
-  { id: "docs", name: "Google Docs", mark: "Do", tone: "#4285F4" },
-  { id: "outlook", name: "Outlook", mark: "Ou", tone: "#0078D4", status: "soon" },
-  { id: "openai", name: "OpenAI", mark: "AI", tone: "#10A37F" },
-  { id: "anthropic", name: "Anthropic", mark: "An", tone: "#D4A27C" },
-  { id: "grok", name: "Grok", mark: "X", tone: "#111111" },
+  { id: "gmail", name: "Gmail", logo: "/brand/gmail.svg" },
+  { id: "calendar", name: "Google Calendar", logo: "/brand/googlecalendar.svg" },
+  { id: "drive", name: "Google Drive", logo: "/brand/googledrive.svg" },
+  { id: "whatsapp", name: "WhatsApp", logo: "/brand/whatsapp.svg" },
+  { id: "telegram", name: "Telegram", logo: "/brand/telegram.svg" },
+  { id: "hubspot", name: "HubSpot", logo: "/brand/hubspot.svg" },
+  { id: "sheets", name: "Google Sheets", logo: "/brand/googlesheets.svg" },
+  { id: "docs", name: "Google Docs", logo: "/brand/googledocs.svg" },
+  { id: "outlook", name: "Outlook", logo: "/brand/microsoftoutlook.svg", status: "soon" },
+  { id: "openai", name: "OpenAI", logo: "/brand/openai.svg" },
+  { id: "anthropic", name: "Anthropic", logo: "/brand/anthropic.svg" },
+  { id: "grok", name: "Grok", logo: "/brand/x.svg" },
 ]
 
 const CAPABILITIES = [
@@ -78,37 +78,40 @@ export default function IntegrationsMarketingPage() {
               </p>
             </div>
 
-            <ul
-              className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-              style={{ listStyle: "none", padding: 0, margin: 0 }}
-            >
+            <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {APPS.map((app) => (
-                <li
-                  key={app.id}
-                  className="flex items-center gap-3 rounded-2xl border border-[var(--ms-rule,rgba(15,23,42,0.08))] bg-[var(--ms-paper,#fff)] px-4 py-3"
-                >
+                <li key={app.id} className="flex items-center gap-3 rounded-2xl border border-rule bg-paper px-4 py-3">
                   <span
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-rule bg-sheet p-2.5"
                     aria-hidden="true"
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xs font-bold text-white"
-                    style={{ background: app.tone }}
                   >
-                    {app.mark}
+                    {/* Logos en /public/brand (mismo origen: pasan el CSP). */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={app.logo}
+                      alt=""
+                      width={28}
+                      height={28}
+                      className="h-7 w-7 object-contain"
+                      loading="lazy"
+                      decoding="async"
+                    />
                   </span>
                   <span className="flex min-w-0 flex-col">
-                    <span className="font-semibold text-[var(--ms-navy,#0f172a)]">{app.name}</span>
+                    <span className="font-semibold text-ink">{app.name}</span>
                     {app.status === "soon" ? (
-                      <span className="text-xs text-[var(--ms-muted,#64748b)]">Próximamente</span>
+                      <span className="text-xs text-graphite">Próximamente</span>
                     ) : (
-                      <span className="text-xs text-[var(--ms-muted,#64748b)]">Disponible</span>
+                      <span className="text-xs text-graphite">Disponible</span>
                     )}
                   </span>
                 </li>
               ))}
             </ul>
 
-            <p className="mt-8 text-[var(--ms-muted)]">
-              También: Telegram, HubSpot, Google Contacts, Tokko Broker, Xubio (lectura), Buffer, asistente de voz en web
-              y teléfono, y APIs a medida.
+            <p className="mt-8 text-graphite">
+              También: Google Contacts, Tokko Broker, Xubio (lectura), Buffer, asistente de voz en web y teléfono, y APIs
+              a medida.
             </p>
           </div>
         </section>
@@ -145,7 +148,10 @@ export default function IntegrationsMarketingPage() {
             <ul className="audience">
               <li>
                 <h3 className="site-h3">APIs REST a medida</h3>
-                <p>Dos conectores personalizados por espacio, con tus credenciales. Lecturas libres; escrituras con aprobación.</p>
+                <p>
+                  Dos conectores personalizados por espacio, con tus credenciales. Lecturas libres; escrituras con
+                  aprobación.
+                </p>
               </li>
               <li>
                 <h3 className="site-h3">Bases de datos</h3>
