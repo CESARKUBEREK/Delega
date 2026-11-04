@@ -184,8 +184,8 @@ body {
 .auth-form-content input:focus, .auth-form-content select:focus, .auth-form-content textarea:focus { border-color:#00c2a8; box-shadow:0 0 0 3px rgb(0 194 168 / 11%); outline:none; }
 .panel-content details.border { overflow:hidden; border-radius:12px; }
 .app-eyebrow { margin:0 0 8px; color:#007a6c; font-size:10px; font-weight:700; letter-spacing:.15em; }
-.app-workspaces-page .workspaces-grid > section > h1 { margin:0; font-size:clamp(32px, 4vw, 42px); }
-.app-workspaces-page .workspaces-grid > section > p:not(.app-eyebrow) { line-height:1.7; }
+.app-workspaces-page .workspaces-intro-title { margin:0; font-size:clamp(32px, 4vw, 42px); }
+.app-workspaces-page .workspaces-intro-description { line-height:1.7; }
 .workspaces-create-card { border-color:#e0e8ee; border-radius:17px; background:linear-gradient(145deg, #fff, #f5f8fb); box-shadow:0 16px 38px rgb(11 31 59 / 5%); }
 .workspace-list { overflow:hidden; border-color:#e1e9ef; border-radius:16px; box-shadow:0 14px 34px rgb(11 31 59 / 4%); }
 .workspace-list a { transition:background-color .16s ease, padding .16s ease; }
@@ -1038,8 +1038,8 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
 .settings-invite-card > .settings-invite-title::before { display:none; }
 .settings-management { display:grid; gap:15px; padding-top:18px; border-top:1px solid #e1e8ef; }
 .settings-management > section { display:grid; gap:10px; min-width:0; padding:15px; border:1px solid #e1e8ef; border-radius:13px; background:#fff; box-shadow:0 4px 14px rgb(11 31 59 / 3%); }
-.settings-management > section > h2 { margin:0; color:#0b1f3b; font-size:14px; font-weight:700; }
-.settings-management > section > h2.is-danger { color:#b42318; }
+.settings-management-title { margin:0; color:#0b1f3b; font-size:14px; font-weight:700; }
+.settings-management-title.is-danger { color:#b42318; }
 @media (max-width:900px) {
   .settings-page-with-invite { grid-template-columns:minmax(0, 1fr); }
 }
