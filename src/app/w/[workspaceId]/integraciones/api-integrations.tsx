@@ -43,16 +43,24 @@ export function ApiIntegrationCard({
   const subtitle = supabase
     ? "Consulta tus tablas usando tu clave pública y las políticas RLS de tu proyecto."
     : "Conecta una API REST propia. Las consultas se ejecutan desde tus automatizaciones; las escrituras esperan tu aprobación."
-  const badge = active ? "Conectado" : connection?.status === "invalid" ? "Revisar conexión" : "Sin conectar"
+  const badge = active ? "Conectado" : connection?.status === "invalid" ? "Revisar conexión" : connection ? "Requiere configuración" : "Sin conectar"
+  const status = !connection ? "available" : active ? "connected" : connection.status === "invalid" ? "attention" : "setup"
 
   return (
-    <details name="integrations" className="integration-accordion border border-rule bg-sheet" open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
+    <details
+      data-integration-icon={provider === "supabase" ? "supabase" : "api"}
+      data-integration-status={status}
+      name="integrations"
+      className="integration-accordion border border-rule bg-sheet"
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">{title}</h3>
           <p className="text-sm text-graphite">{subtitle}</p>
         </div>
-        <span className={`shrink-0 border px-2 py-0.5 text-xs ${active ? "border-ok bg-ok-bg text-ok" : "border-rule text-graphite"}`}>{badge}</span>
+        <span className={`shrink-0 border px-2 py-0.5 text-xs ${active ? "border-ok bg-ok-bg text-ok" : connection?.status === "invalid" ? "border-alert bg-alert-bg text-alert" : connection ? "integration-state-setup" : "border-rule text-graphite"}`}>{badge}</span>
       </summary>
       <div className="flex flex-col gap-4 border-t border-rule px-4 py-4">
         {active ? (
