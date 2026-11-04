@@ -9,31 +9,27 @@ export const metadata = publicPageMetadata({
   path: "/integraciones",
 })
 
-// Logos oficiales vía Simple Icons (SVG). Uso nominativo en la página de
-// integraciones para identificar cada servicio.
 type AppIcon = {
   id: string
   name: string
+  /** Ruta en /public/brand */
   logo: string
   status?: "soon"
 }
 
-const SI = "https://cdn.jsdelivr.net/npm/simple-icons@13/icons"
-const SI11 = "https://cdn.jsdelivr.net/npm/simple-icons@11.4.0/icons"
-
 const APPS: AppIcon[] = [
-  { id: "gmail", name: "Gmail", logo: `${SI}/gmail.svg` },
-  { id: "calendar", name: "Google Calendar", logo: `${SI}/googlecalendar.svg` },
-  { id: "drive", name: "Google Drive", logo: `${SI}/googledrive.svg` },
-  { id: "whatsapp", name: "WhatsApp", logo: `${SI}/whatsapp.svg` },
-  { id: "telegram", name: "Telegram", logo: `${SI}/telegram.svg` },
-  { id: "hubspot", name: "HubSpot", logo: `${SI}/hubspot.svg` },
-  { id: "sheets", name: "Google Sheets", logo: `${SI}/googlesheets.svg` },
-  { id: "docs", name: "Google Docs", logo: `${SI}/googledocs.svg` },
-  { id: "outlook", name: "Outlook", logo: `${SI11}/microsoftoutlook.svg`, status: "soon" },
-  { id: "openai", name: "OpenAI", logo: `${SI}/openai.svg` },
-  { id: "anthropic", name: "Anthropic", logo: "https://cdn.simpleicons.org/anthropic" },
-  { id: "grok", name: "Grok", logo: `${SI}/x.svg` },
+  { id: "gmail", name: "Gmail", logo: "/brand/gmail.svg" },
+  { id: "calendar", name: "Google Calendar", logo: "/brand/googlecalendar.svg" },
+  { id: "drive", name: "Google Drive", logo: "/brand/googledrive.svg" },
+  { id: "whatsapp", name: "WhatsApp", logo: "/brand/whatsapp.svg" },
+  { id: "telegram", name: "Telegram", logo: "/brand/telegram.svg" },
+  { id: "hubspot", name: "HubSpot", logo: "/brand/hubspot.svg" },
+  { id: "sheets", name: "Google Sheets", logo: "/brand/googlesheets.svg" },
+  { id: "docs", name: "Google Docs", logo: "/brand/googledocs.svg" },
+  { id: "outlook", name: "Outlook", logo: "/brand/microsoftoutlook.svg", status: "soon" },
+  { id: "openai", name: "OpenAI", logo: "/brand/openai.svg" },
+  { id: "anthropic", name: "Anthropic", logo: "/brand/anthropic.svg" },
+  { id: "grok", name: "Grok", logo: "/brand/x.svg" },
 ]
 
 const CAPABILITIES = [
@@ -86,10 +82,10 @@ export default function IntegrationsMarketingPage() {
               {APPS.map((app) => (
                 <li key={app.id} className="flex items-center gap-3 rounded-2xl border border-rule bg-paper px-4 py-3">
                   <span
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-rule bg-sheet p-2"
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-rule bg-sheet p-2.5"
                     aria-hidden="true"
                   >
-                    {/* Logos de marca (Simple Icons). img nativo: URLs externas SVG. */}
+                    {/* Logos en /public/brand (mismo origen: pasan el CSP). */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={app.logo}
