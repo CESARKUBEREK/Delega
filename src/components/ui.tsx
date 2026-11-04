@@ -60,10 +60,6 @@ export function PrimaryButton({ className = "", ...props }: ButtonProps) {
   return <button className={`ms-button ms-button-primary ${className}`.trim()} {...props} />
 }
 
-export function SecondaryButton({ className = "", ...props }: ButtonProps) {
-  return <button className={`ms-button ms-button-secondary ${className}`.trim()} {...props} />
-}
-
 export function StatusBadge({
   children,
   tone = "neutral",
