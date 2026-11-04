@@ -4,16 +4,33 @@ import Link from "next/link"
 import { useParams, usePathname } from "next/navigation"
 import { useState } from "react"
 
-const SECTIONS = [
-  { slug: "", label: "Hoy" },
-  { slug: "asistente", label: "Chat" },
-  { slug: "aprobaciones", label: "Aprobaciones" },
-  { slug: "bandeja", label: "Bandeja" },
-  { slug: "automatizaciones", label: "Automatizaciones" },
-  { slug: "integraciones", label: "Integraciones" },
-  { slug: "historial", label: "Historial" },
-  { slug: "configuracion", label: "Configuración" },
-]
+const NAV_GROUPS = [
+  {
+    label: "Mi trabajo",
+    items: [
+      { slug: "", label: "Hoy" },
+      { slug: "asistente", label: "Chat" },
+      { slug: "aprobaciones", label: "Aprobaciones" },
+      { slug: "bandeja", label: "Bandeja" },
+    ],
+  },
+  {
+    label: "Equipo digital",
+    items: [
+      { slug: "automatizaciones", label: "Automatizaciones" },
+      { slug: "integraciones", label: "Integraciones" },
+    ],
+  },
+  {
+    label: "Gestión",
+    items: [
+      { slug: "historial", label: "Historial" },
+      { slug: "configuracion", label: "Configuración" },
+    ],
+  },
+] as const
+
+const SECTIONS = NAV_GROUPS.flatMap((group) => group.items)
 
 function useSection() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
@@ -46,25 +63,29 @@ export function PanelNav({ pending = 0 }: { pending?: number }) {
         <Icon name="asistente" />
         <span>Pide algo a MarchaSolo</span>
       </Link>
-      <p className="app-nav-heading">TU ESPACIO</p>
-      <ul className="app-sidebar-list flex flex-col divide-y divide-rule border border-ink bg-sheet">
-        {SECTIONS.map(({ slug, label }) => {
-          const active = isActive(slug)
-          return (
-            <li key={slug}>
-              <Link
-                href={slug ? `${base}/${slug}` : base}
-                aria-current={active ? "page" : undefined}
-                className="app-sidebar-link"
-              >
-                <span className="app-nav-icon"><Icon name={slug || "hoy"} /></span>
-                <span className="app-nav-label">{label}</span>
-                {slug === "aprobaciones" || slug === "" ? <Badge count={pending} /> : null}
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
+      {NAV_GROUPS.map(({ label: groupLabel, items }) => (
+        <section className="ms-nav-group" key={groupLabel} aria-label={groupLabel}>
+          <p className="ms-nav-group-heading">{groupLabel}</p>
+          <ul className="app-sidebar-list flex flex-col divide-y divide-rule border border-ink bg-sheet">
+            {items.map(({ slug, label }) => {
+              const active = isActive(slug)
+              return (
+                <li key={slug}>
+                  <Link
+                    href={slug ? `${base}/${slug}` : base}
+                    aria-current={active ? "page" : undefined}
+                    className="app-sidebar-link"
+                  >
+                    <span className="app-nav-icon"><Icon name={slug || "hoy"} /></span>
+                    <span className="app-nav-label">{label}</span>
+                    {slug === "aprobaciones" || slug === "" ? <Badge count={pending} /> : null}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ))}
     </nav>
   )
 }
@@ -109,18 +130,29 @@ export function MobileTabBar({ pending = 0 }: { pending?: number }) {
         <>
           <button type="button" aria-label="Cerrar el menú" className="fixed inset-0 -z-10 bg-ink/30" onClick={() => setOpen(false)} />
           <ul id="menu-mas" className="mobile-more-menu mx-3 mb-2 divide-y divide-rule border border-ink bg-sheet shadow-lg">
-            {MORE.map(({ slug, label }) => (
-              <li key={slug}>
-                <Link
-                  href={slug ? `${base}/${slug}` : base}
-                  onClick={() => setOpen(false)}
-                  aria-current={isActive(slug) ? "page" : undefined}
-                  className={`block px-4 py-3 ${isActive(slug) ? "font-semibold text-link" : "text-ink"}`}
-                >
-                  {label}
-                </Link>
-              </li>
-            ))}
+            {NAV_GROUPS.map(({ label: groupLabel, items }) => {
+              const visibleItems = items.filter((item) => MORE.some((more) => more.slug === item.slug))
+              if (!visibleItems.length) return null
+              return (
+                <li key={groupLabel}>
+                  <p className="mobile-more-group-heading">{groupLabel}</p>
+                  <ul>
+                    {visibleItems.map(({ slug, label }) => (
+                      <li key={slug}>
+                        <Link
+                          href={slug ? `${base}/${slug}` : base}
+                          onClick={() => setOpen(false)}
+                          aria-current={isActive(slug) ? "page" : undefined}
+                          className={`block px-4 py-3 ${isActive(slug) ? "font-semibold text-link" : "text-ink"}`}
+                        >
+                          {label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              )
+            })}
             <li>
               <Link href="/w" onClick={() => setOpen(false)} className="block px-4 py-3 text-ink">
                 Cambiar de espacio
