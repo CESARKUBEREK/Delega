@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { findTemplate, NEED_LABEL, ROUTINES, type RoutineTier, TIER_INFO, type TemplateNeed, VERTICALS } from "@/lib/templates"
 import { getWorkspace } from "@/lib/workspace"
 import { RoutineCard, TemplateRow } from "./routine-card"
+import { PageHeader } from "@/components/ui"
 
 export const metadata = { title: "Rutinas" }
 
@@ -24,15 +25,11 @@ const PROVIDER_NEED: Record<string, TemplateNeed> = {
 export default function TemplatesPage({ params }: PageProps<"/w/[workspaceId]/automatizaciones/plantillas">) {
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <p className="app-eyebrow">TU NEGOCIO, EN AUTOMÁTICO</p>
-        <h1 className="rotulo text-2xl">Rutinas</h1>
-        <p className="mt-1 max-w-prose text-graphite">
-          Empieza por tu sector o elige entre las diez rutinas para el día a día de un negocio. Cada una agrupa plantillas listas para usar: al
-          elegir una se crea un borrador que ajustas (archivos, horario, filtros) o cambias hablando con el chat. Lo que escriba o envíe a otros
-          espera tu aprobación.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="TU NEGOCIO, EN AUTOMÁTICO"
+        title="Rutinas"
+        description="Empieza por tu sector o elige entre las diez rutinas para el día a día de un negocio. Cada una agrupa plantillas listas para usar: al elegir una se crea un borrador que ajustas (archivos, horario, filtros) o cambias hablando con el chat. Lo que escriba o envíe a otros espera tu aprobación."
+      />
       <Suspense fallback={<div className="h-96 rounded-2xl border border-rule bg-sheet" aria-busy="true" />}>
         <RoutineList params={params} />
       </Suspense>
