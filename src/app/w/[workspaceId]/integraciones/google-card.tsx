@@ -1,4 +1,5 @@
 import { fileKindLabel } from "@/lib/plan"
+import { StatusBadge } from "@/components/ui"
 import { createClient } from "@/lib/supabase/server"
 import { connectGoogle, removeSheet } from "../run-actions"
 import { DisconnectGoogleForm, PickSheetsButton } from "./google-client"
@@ -21,9 +22,9 @@ const LISTED_ELSEWHERE = [...SHEET_MIMES, ...EXCEL_MIMES, ...DOC_MIMES]
 type FileRow = { id: string; name: string; url: string | null; mime_type: string | null }
 
 function Badge({ status }: { status: string | null | undefined }) {
-  if (status === "active") return <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">Conectado</span>
-  if (status) return <span className="shrink-0 border border-alert px-2 py-0.5 text-xs text-alert">Acceso retirado</span>
-  return <span className="shrink-0 border border-rule px-2 py-0.5 text-xs text-graphite">Sin conectar</span>
+  if (status === "active") return <StatusBadge tone="success">Conectado</StatusBadge>
+  if (status) return <StatusBadge tone="danger">Acceso retirado</StatusBadge>
+  return <StatusBadge tone="neutral">Sin conectar</StatusBadge>
 }
 
 function FileList({ files, workspaceId, isAdmin }: { files: FileRow[]; workspaceId: string; isAdmin: boolean }) {
