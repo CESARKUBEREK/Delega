@@ -60,6 +60,10 @@ export function PrimaryButton({ className = "", ...props }: ButtonProps) {
   return <button className={`ms-button ms-button-primary ${className}`.trim()} {...props} />
 }
 
+export function SecondaryButton({ className = "", ...props }: ButtonProps) {
+  return <button className={`ms-button ms-button-secondary ${className}`.trim()} {...props} />
+}
+
 export function StatusBadge({
   children,
   tone = "neutral",
@@ -106,16 +110,18 @@ export function InfoBanner({
 }
 
 export function SearchInput({
+  label,
   className = "",
   ...props
-}: Omit<InputHTMLAttributes<HTMLInputElement>, "type">) {
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & { label: string }) {
   return (
     <label className={`ms-search-input ${className}`.trim()}>
+      <span className="sr-only">{label}</span>
       <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <circle cx="11" cy="11" r="7" />
         <path d="m20 20-4-4" />
       </svg>
-      <input type="search" {...props} />
+      <input type="search" aria-label={label} {...props} />
     </label>
   )
 }
