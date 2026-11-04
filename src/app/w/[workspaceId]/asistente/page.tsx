@@ -5,6 +5,7 @@ import { asPlan, fileKindLabel } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { formatDateTime } from "../format"
+import { InfoBanner, PageHeader, PanelCard } from "@/components/ui"
 import { Chat, type ChatMessage, type ChatRun } from "./chat"
 
 export const metadata = { title: "Chat" }
@@ -116,18 +117,16 @@ async function Assistant({
 
   return (
     <div className="automation-page flex flex-col">
-      <header className="automation-page-intro">
-        <p className="app-eyebrow">TU ASISTENTE</p>
-        <h1 className="rotulo">Chat</h1>
-        <p className="automation-page-description">
-          Cuéntale qué necesitas. MarchaSolo prepara el trabajo y tú decides qué se ejecuta o se envía.
-        </p>
-        {conversationId ? (
+      <PageHeader
+        eyebrow="TU ASISTENTE"
+        title="Chat"
+        description="Cuéntale qué necesitas. MarchaSolo prepara el trabajo y tú decides qué se ejecuta o se envía."
+        actions={conversationId ? (
           <Link href={`${base}/asistente`} className="automation-text-link">
             Nueva conversación <span aria-hidden="true">→</span>
           </Link>
-        ) : null}
-      </header>
+        ) : undefined}
+      />
 
       <div className="assistant-page">
         <section className="min-w-0">
@@ -138,7 +137,7 @@ async function Assistant({
           </details>
 
           {!aiActive ? (
-            <div className="mb-4 border-l-2 border-alert bg-alert-bg px-4 py-3 text-sm text-alert" role="status">
+            <InfoBanner className="mb-4" tone="danger" role="status">
               {connections?.length ? "La clave de la IA de este espacio dejó de funcionar. " : "Este espacio aún no tiene una IA conectada. "}
               {isAdmin ? (
                 <Link href={`${base}/integraciones`} className="underline underline-offset-4">
@@ -147,7 +146,7 @@ async function Assistant({
               ) : (
                 "Pide a un administrador que la conecte."
               )}
-            </div>
+            </InfoBanner>
           ) : null}
 
           <Chat
@@ -162,10 +161,9 @@ async function Assistant({
           />
         </section>
 
-        <aside className="assistant-history hidden h-fit border border-ink bg-sheet xl:block">
-          <h2 className="border-b border-ink px-4 py-2.5 text-sm font-semibold">Conversaciones</h2>
+        <PanelCard className="assistant-history hidden h-fit xl:block" title="Conversaciones">
           {list}
-        </aside>
+        </PanelCard>
       </div>
     </div>
   )

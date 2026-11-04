@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { editorData } from "../../editor-data"
 import { FlowEditor } from "../../flow-editor"
+import { PageHeader } from "@/components/ui"
 
 export const metadata = { title: "Editar pasos" }
 
@@ -34,8 +35,7 @@ async function EditFlow({ params }: { params: PageProps<"/w/[workspaceId]/automa
   if (!isAdmin && flow.created_by !== user.id) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="rotulo text-2xl">{flow.name}</h1>
-        <p className="text-graphite">Solo quien creó esta automatización o un administrador puede cambiar sus pasos.</p>
+        <PageHeader title={flow.name} description="Solo quien creó esta automatización o un administrador puede cambiar sus pasos." />
         <Link href={back} className="text-link underline underline-offset-4">
           Volver
         </Link>
@@ -50,19 +50,11 @@ async function EditFlow({ params }: { params: PageProps<"/w/[workspaceId]/automa
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <p className="text-sm">
-          <Link href={back} className="text-link underline underline-offset-4">
-            {flow.name}
-          </Link>
-        </p>
-        <h1 className="rotulo mt-2 text-2xl">Editar pasos</h1>
-        {flow.status === "active" ? (
-          <p className="mt-1 max-w-prose text-sm text-graphite">
-            Está activa: los cambios se aplican desde la próxima ejecución. Si cambias cuándo empieza, se pausará para que revises su activación.
-          </p>
-        ) : null}
-      </div>
+      <PageHeader
+        eyebrow={<Link href={back} className="text-link underline underline-offset-4">{flow.name}</Link>}
+        title="Editar pasos"
+        description={flow.status === "active" ? "Está activa: los cambios se aplican desde la próxima ejecución. Si cambias cuándo empieza, se pausará para que revises su activación." : undefined}
+      />
       <FlowEditor
         workspaceId={workspaceId}
         flowId={flow.id}

@@ -8,6 +8,7 @@ import { InviteForm } from "../invite-form"
 import { DeleteForm, LeaveForm, RenameForm } from "../manage-panel"
 import { NoticePrefsForm, TelegramLink, TimezoneForm } from "../notice-forms"
 import { PushToggle } from "../push-toggle"
+import { PageHeader } from "@/components/ui"
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -85,11 +86,7 @@ async function Workspace({ params }: { params: PageProps<"/w/[workspaceId]/confi
 
   return (
     <div className="automation-page flex flex-col">
-      <header className="automation-page-intro">
-        <p className="app-eyebrow">TU ESPACIO, A TU MANERA</p>
-        <h1 className="rotulo">Configuración</h1>
-        <p className="automation-page-description">Gestiona miembros, avisos y preferencias del espacio.</p>
-      </header>
+      <PageHeader eyebrow="TU ESPACIO, A TU MANERA" title="Configuración" description="Gestiona miembros, avisos y preferencias del espacio." />
 
       <div className={`settings-page ${canInvite ? "settings-page-with-invite" : ""}`}>
         <section>

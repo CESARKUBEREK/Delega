@@ -10,7 +10,7 @@ export function PageHeader({
   description,
   actions,
 }: {
-  eyebrow?: string
+  eyebrow?: ReactNode
   title: ReactNode
   description?: ReactNode
   actions?: ReactNode
@@ -101,12 +101,14 @@ export function InfoBanner({
   children,
   tone = "info",
   role,
+  className,
 }: {
   children: ReactNode
   tone?: "info" | "success" | "warning" | "danger"
   role?: "status" | "alert"
+  className?: string
 }) {
-  return <div className="ms-info-banner" data-tone={tone} role={role ?? (tone === "danger" ? "alert" : "status")}>{children}</div>
+  return <div className={`ms-info-banner ${className ?? ""}`.trim()} data-tone={tone} role={role ?? (tone === "danger" ? "alert" : "status")}>{children}</div>
 }
 
 export function SearchInput({

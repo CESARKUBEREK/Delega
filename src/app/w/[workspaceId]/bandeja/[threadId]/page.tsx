@@ -10,6 +10,7 @@ import { ClassifyButton } from "../classify-button"
 import { ReplyComposer } from "./reply-composer"
 import { SenderProfileCard } from "./sender-profile"
 import { ThreadForm } from "./thread-form"
+import { PageHeader, PanelCard } from "@/components/ui"
 
 export const metadata = { title: "Conversación" }
 export const maxDuration = 120
@@ -74,23 +75,16 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_20rem]">
-      <section className="min-w-0">
-        <p className="text-sm">
-          <Link href={base} className="text-link underline underline-offset-4">
-            Bandeja
-          </Link>
-        </p>
-        <div className="mt-2">
-          <CategoryChip workspaceId={workspaceId} threadId={thread.id} category={thread.category} categories={categories} source={thread.category_source} />
-        </div>
-        <h1 className="rotulo mt-2 text-2xl">{thread.subject || who}</h1>
-        <p className="mt-1 text-sm text-graphite">
-          {CHANNEL_LABEL[thread.channel]} · {who}
-          {thread.contact_address && thread.contact_address !== who ? ` (${thread.contact_address})` : ""} · {thread.message_count} mensajes
-        </p>
-        {thread.summary ? <p className="mt-4 border-l-2 border-stroke pl-3 text-ink">{thread.summary}</p> : null}
+      <section className="min-w-0 flex flex-col gap-4">
+        <PageHeader
+          eyebrow={<Link href={base} className="text-link underline underline-offset-4">Bandeja</Link>}
+          title={thread.subject || who}
+          description={<>{CHANNEL_LABEL[thread.channel]} · {who}{thread.contact_address && thread.contact_address !== who ? ` (${thread.contact_address})` : ""} · {thread.message_count} mensajes</>}
+        />
+        <div><CategoryChip workspaceId={workspaceId} threadId={thread.id} category={thread.category} categories={categories} source={thread.category_source} /></div>
+        {thread.summary ? <PanelCard title="Resumen"><p className="text-sm leading-relaxed text-ink">{thread.summary}</p></PanelCard> : null}
 
-        <div className="mt-6">
+        <div>
           {thread.channel === "phone" || thread.channel === "web" ? (
             <p className="text-sm text-graphite">
               {thread.channel === "web" ? "Conversación atendida por el asistente de voz de tu web." : "Llamada atendida por el agente telefónico."}{" "}
@@ -116,7 +110,7 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
         <ol className="mt-6 flex flex-col gap-3" aria-label="Mensajes, del más reciente al más antiguo">
           {(messages ?? []).map((m) => (
             <li key={m.id} className={m.direction === "out" ? "flex justify-end" : ""}>
-              <div className={`max-w-[85%] border px-3 py-2 ${m.direction === "out" ? "border-rule bg-paper" : "border-ink bg-sheet"}`}>
+              <div className={`thread-message max-w-[85%] border px-3 py-2 ${m.direction === "out" ? "is-outgoing border-rule bg-paper" : "is-incoming border-ink bg-sheet"}`}>
                 <p className="mb-1 text-xs text-graphite">
                   {m.direction === "out" ? `Tú${m.recipients ? ` → ${m.recipients}` : ""}` : (m.sender_name ?? m.sender_address ?? "Contacto")}
                 </p>
@@ -133,10 +127,7 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
 
       <aside className="flex h-fit flex-col gap-4">
         {thread.contact_address && thread.channel === "email" ? (
-          <section className="border border-ink bg-sheet p-5" aria-labelledby="ficha">
-            <h2 id="ficha" className="rotulo mb-3 text-lg">
-              {who}
-            </h2>
+          <PanelCard title={who} className="thread-sidebar-card">
             <SenderProfileCard workspaceId={workspaceId} threadId={thread.id} />
             {recent.length ? (
               <div className="mt-4 border-t border-rule pt-3">
@@ -153,10 +144,9 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
                 </ul>
               </div>
             ) : null}
-          </section>
+          </PanelCard>
         ) : null}
-      <div className="border border-ink bg-sheet p-5">
-        <h2 className="rotulo text-lg">Clasificación</h2>
+      <PanelCard title="Clasificación" className="thread-sidebar-card">
         <p className="mt-1 mb-4 text-xs text-graphite">
           {thread.manually_edited
             ? "Corregida a mano: la IA solo actualiza el resumen."
@@ -180,7 +170,7 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
         <div className="mt-4 border-t border-rule pt-4">
           <ClassifyButton workspaceId={workspaceId} pending={1} threadId={thread.id} />
         </div>
-      </div>
+      </PanelCard>
       </aside>
     </div>
   )

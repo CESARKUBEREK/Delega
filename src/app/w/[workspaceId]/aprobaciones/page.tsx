@@ -7,6 +7,7 @@ import { getWorkspace } from "@/lib/workspace"
 import { ApprovalCard, RunControls } from "../ejecuciones/[runId]/run-live"
 import { formatDateTime } from "../format"
 import { PushToggle } from "../push-toggle"
+import { EmptyState, PageHeader, PanelCard } from "@/components/ui"
 
 export const metadata = { title: "Aprobaciones" }
 // Las ejecuciones en curso avanzan desde aquí por tramos de hasta ~90 s.
@@ -40,26 +41,18 @@ async function Approvals({ params }: { params: PageProps<"/w/[workspaceId]/aprob
 
   return (
     <div className="automation-page flex flex-col">
-      <header className="automation-page-intro">
-        <p className="app-eyebrow">TU CONTROL, SIEMPRE</p>
-        <h1 className="rotulo">Aprobaciones</h1>
-        <p className="automation-page-description">
-          Revisa lo que MarchaSolo quiere escribir o enviar. Nada sale del espacio sin tu aprobación.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="TU CONTROL, SIEMPRE"
+        title="Aprobaciones"
+        description="Revisa lo que MarchaSolo quiere escribir o enviar. Nada sale del espacio sin tu aprobación."
+      />
 
       {waiting.length === 0 && running.length === 0 ? (
-        <section className="automation-empty-state" aria-label="Sin tareas pendientes">
-          <span className="automation-empty-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m5 12 4 4L19 6" />
-            </svg>
-          </span>
-          <div>
-            <h2>Todo al día</h2>
-            <p>Cuando una tarea necesite escribir o enviar algo, aparecerá aquí para que la revises.</p>
-          </div>
-        </section>
+        <EmptyState
+          title="Todo al día"
+          description="Cuando una tarea necesite escribir o enviar algo, aparecerá aquí para que la revises."
+          icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 6" /></svg>}
+        />
       ) : waiting.length > 0 ? (
         <section className="automation-approvals" aria-labelledby="approvals-pending-title">
           <div className="automation-section-heading">
@@ -99,14 +92,11 @@ async function Approvals({ params }: { params: PageProps<"/w/[workspaceId]/aprob
       ) : null}
 
       {running.length > 0 ? (
-        <section className="automation-activity-card" aria-labelledby="approvals-running-title">
-          <div className="automation-activity-card-heading">
-            <div>
-              <p className="automation-section-eyebrow">EN PROCESO</p>
-              <h2 id="approvals-running-title">Tareas en curso</h2>
-            </div>
-            <span className="automation-count">{running.length}</span>
-          </div>
+        <PanelCard
+          className="automation-activity-card"
+          title="Tareas en curso"
+          actions={<span className="automation-count">{running.length}</span>}
+        >
           <ul className="automation-running-list">
             {running.map((run) => (
               <li key={run.id}>
@@ -117,20 +107,14 @@ async function Approvals({ params }: { params: PageProps<"/w/[workspaceId]/aprob
               </li>
             ))}
           </ul>
-        </section>
+        </PanelCard>
       ) : null}
 
-      <section className="automation-activity-card" aria-labelledby="approvals-notifications-title">
-        <div className="automation-activity-card-heading">
-          <div>
-            <p className="automation-section-eyebrow">MANTENTE AL TANTO</p>
-            <h2 id="approvals-notifications-title">Avisos en este dispositivo</h2>
-          </div>
-        </div>
+      <PanelCard className="automation-activity-card" title="Avisos en este dispositivo">
         <div className="automation-notifications-content">
           <PushToggle vapidPublicKey={process.env.VAPID_PUBLIC_KEY?.trim() || null} />
         </div>
-      </section>
+      </PanelCard>
     </div>
   )
 }
