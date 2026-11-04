@@ -1,28 +1,53 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { FLOW_STATUS_LABEL } from "@/lib/plan"
+import { asPlan, FLOW_STATUS_LABEL, RUN_STATUS_LABEL, TRIGGER_LABEL } from "@/lib/plan"
+import type { Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
-import { ROUTINES, type Routine, type RoutineTier, routineOfFlow, TIER_INFO, VERTICALS, verticalOfFlow } from "@/lib/templates"
+import { findTemplate, ROUTINES, type Routine, type RoutineTier, routineOfFlow, TIER_INFO, verticalOfFlow } from "@/lib/templates"
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime } from "../format"
 import { HelpPanel } from "@/components/help-panel"
 
 export const metadata = { title: "Automatizaciones" }
 
-type FlowRow = { id: string; name: string; summary: string | null; status: string; updated_at: string; next_run_at: string | null; settings: unknown }
+type FlowRow = {
+  id: string
+  name: string
+  summary: string | null
+  status: string
+  updated_at: string
+  next_run_at: string | null
+  settings: Json | null
+  definition: Json
+}
+
+type RunRow = { id: string; flow_id: string | null; flow_name: string; status: string; started_at: string; summary: string | null }
+
+const ROUTINE_ICONS: Record<string, string> = {
+  bandeja: "M3 7h18v13H3z M3 8l9 6 9-6 M7 4h10",
+  secretaria: "M4 5h16v15H4z M8 3v4m8-4v4M4 10h16 M8 14h3m2 0h3m-8 3h3",
+  agenda: "M4 5h16v15H4z M8 3v4m8-4v4M4 10h16 M8 14h2m4 0h2m-8 3h2",
+  tareas: "M9 6h11M9 12h11M9 18h11 M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2",
+  seguimiento: "M4 19V5m0 14h16 M7 15l4-4 3 2 5-7 M15 6h4v4",
+  presupuestos: "M6 3h8l5 5v13H6z M14 3v6h5 M9 13h7m-7 4h7",
+  informes: "M4 20V4m0 16h17 M8 16v-5m5 5V7m5 9V3",
+  redes: "M4 5h16v12H9l-5 4z M8 9h8m-8 4h5",
+  facturas: "M6 3h12v18l-3-2-3 2-3-2-3 2z M9 8h6m-6 4h6",
+  recepcionista: "M4 13v-2a8 8 0 0 1 16 0v2 M4 13h3v6H6a2 2 0 0 1-2-2zm16 0h-3v6h1a2 2 0 0 0 2-2z M10 21h4",
+}
 
 export default function FlowsPage({ params }: PageProps<"/w/[workspaceId]/automatizaciones">) {
   return (
     <div className="automation-page flex flex-col gap-6">
       <header className="automation-page-intro">
-        <p className="app-eyebrow">FLUJOS Y AGENTES</p>
+        <p className="app-eyebrow">TU EQUIPO DIGITAL</p>
         <h1 className="rotulo text-2xl">Automatizaciones</h1>
-        <p className="mt-1 max-w-prose text-graphite">
-          Tus automatizaciones, ordenadas por las 10 rutinas del negocio. Se ejecutan a mano, a una hora fija o al llegar un correo o un mensaje de
-          Telegram. Lo que escriban o envíen a otros espera tu aprobación.
+        <p className="automation-page-description">
+          Tus automatizaciones, organizadas por las rutinas de tu negocio. Puedes ejecutarlas cuando quieras, programarlas o activarlas cuando recibas un mensaje.
+          Lo que escriban o envíen a otros espera tu aprobación.
         </p>
       </header>
-      <Suspense fallback={<div className="h-48 border border-rule bg-sheet" aria-busy="true" />}>
+      <Suspense fallback={<div className="automation-loading h-48 border border-rule bg-sheet" aria-busy="true" />}>
         <FlowList params={params} />
       </Suspense>
     </div>
@@ -33,172 +58,269 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
   const { workspaceId } = await params
   await getWorkspace(workspaceId, `/w/${workspaceId}/automatizaciones`)
   const supabase = await createClient()
-  const { data } = await supabase
-    .from("flows")
-    .select("id, name, summary, status, updated_at, next_run_at, settings")
-    .eq("workspace_id", workspaceId)
-    .order("updated_at", { ascending: false })
+  const [{ data }, { data: recentRuns }, { data: pendingRuns }] = await Promise.all([
+    supabase
+      .from("flows")
+      .select("id, name, summary, status, updated_at, next_run_at, settings, definition")
+      .eq("workspace_id", workspaceId)
+      .order("updated_at", { ascending: false }),
+    supabase
+      .from("flow_runs")
+      .select("id, flow_id, flow_name, status, started_at, summary")
+      .eq("workspace_id", workspaceId)
+      .order("started_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("flow_runs")
+      .select("id, flow_name, started_at, summary")
+      .eq("workspace_id", workspaceId)
+      .eq("status", "awaiting_approval")
+      .order("started_at", { ascending: false })
+      .limit(5),
+  ])
   const flows = (data ?? []) as FlowRow[]
+  const activity = (recentRuns ?? []) as RunRow[]
+  const pending = pendingRuns ?? []
   const base = `/w/${workspaceId}`
-
-  // Cada automatización va con su rutina; las que no salen de una plantilla,
-  // en «Otras».
-  const byRoutine = new Map<string, FlowRow[]>()
-  const byVertical = new Map<string, FlowRow[]>()
-  const others: FlowRow[] = []
-  for (const f of flows) {
-    const r = routineOfFlow(f)
-    const v = r ? undefined : verticalOfFlow(f)
-    if (r) byRoutine.set(r.id, [...(byRoutine.get(r.id) ?? []), f])
-    else if (v) byVertical.set(v.id, [...(byVertical.get(v.id) ?? []), f])
-    else others.push(f)
+  const latestRunByFlow = new Map<string, RunRow>()
+  for (const run of activity) {
+    if (run.flow_id && !latestRunByFlow.has(run.flow_id)) latestRunByFlow.set(run.flow_id, run)
   }
   const tiers: RoutineTier[] = ["personal", "negocio", "avanzado"]
+  const flowGroups = ["active", "paused", "draft"].map((status) => ({
+    status,
+    flows: flows.filter((flow) => flow.status === status),
+  }))
+  const knownFlowIds = new Set(flowGroups.flatMap((group) => group.flows.map((flow) => flow.id)))
+  const ungroupedFlows = flows.filter((flow) => !knownFlowIds.has(flow.id))
 
   return (
     <div className="flex flex-col gap-8">
       <HelpPanel workspaceId={workspaceId} page="automatizaciones" />
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Link
-          href={`${base}/asistente`}
-          className="automation-action-primary inline-flex h-11 items-center justify-center px-5 text-base font-semibold"
-        >
-          Pedírsela al asistente
-        </Link>
-        <Link
-          href={`${base}/automatizaciones/nueva`}
-          className="automation-action-secondary inline-flex h-11 items-center justify-center px-5 text-base font-semibold"
-        >
-          Crear desde cero
-        </Link>
-        <Link
-          href={`${base}/automatizaciones/plantillas#por-sector`}
-          className="automation-action-secondary inline-flex h-11 items-center justify-center px-5 text-base font-semibold"
-        >
-          Por sector
-        </Link>
-      </div>
 
-      {flows.length === 0 ? (
-        <div className="automation-empty-state">
-          <p className="text-ink">Aún no hay automatizaciones en este espacio.</p>
-          <p className="mt-1 text-sm text-graphite">Empieza por una de las rutinas de abajo: cada una tiene plantillas listas para usar.</p>
+      <section className="automation-start" aria-labelledby="automation-start-title">
+        <div>
+          <p className="automation-section-eyebrow">EMPIEZA POR LO QUE NECESITAS</p>
+          <h2 id="automation-start-title">¿Cómo quieres empezar?</h2>
         </div>
-      ) : null}
+        <div className="automation-actions">
+          <Link href={`${base}/asistente`} className="automation-action-primary">
+            <span className="automation-action-title">Pedirle una automatización a MarchaSolo</span>
+            <span className="automation-action-copy">Describe lo que necesitas. El asistente la prepara.</span>
+            <span className="automation-action-arrow" aria-hidden="true">→</span>
+          </Link>
+          <Link href={`${base}/automatizaciones/nueva`} className="automation-action-secondary">
+            <span className="automation-action-title">Crear desde cero</span>
+            <span className="automation-action-copy">Diseña tu propio flujo.</span>
+          </Link>
+          <Link href={`${base}/automatizaciones/plantillas#por-sector`} className="automation-action-secondary">
+            <span className="automation-action-title">Explorar por sector</span>
+            <span className="automation-action-copy">Encuentra soluciones para tu actividad.</span>
+          </Link>
+        </div>
+      </section>
 
-      {tiers.map((tier) => (
-        <section key={tier} aria-labelledby={`tier-${tier}`} className="flex flex-col gap-3">
+      {!flows.length ? (
+        <section className="automation-empty-state" aria-labelledby="automation-empty-title">
+          <span className="automation-empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12h4l2-7 4 14 2-7h4" />
+            </svg>
+          </span>
           <div>
-            <h2 id={`tier-${tier}`} className="rotulo text-xl">
-              {TIER_INFO[tier].title}
-            </h2>
-            <p className="text-sm text-graphite">{TIER_INFO[tier].promise}</p>
+            <h2 id="automation-empty-title">Tu equipo digital está listo para empezar.</h2>
+            <p>Elige una rutina de tu negocio y MarchaSolo te propondrá automatizaciones que puedes utilizar inmediatamente.</p>
           </div>
-          <ul className="flex flex-col gap-3">
-            {ROUTINES.filter((r) => r.tier === tier).map((r) => (
-              <li key={r.id}>
-                <RoutineGroup routine={r} flows={byRoutine.get(r.id) ?? []} base={base} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-
-      {VERTICALS.some((v) => byVertical.has(v.id)) ? (
-        <section aria-labelledby="sectores" className="flex flex-col gap-3">
-          <h2 id="sectores" className="rotulo text-xl">
-            De tu sector
-          </h2>
-          {VERTICALS.filter((v) => byVertical.has(v.id)).map((v) => (
-            <article key={v.id} className="routine-card">
-              <header className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="text-lg font-bold text-ink">{v.title}</h3>
-                <Link href={`${base}/automatizaciones/plantillas#sector-${v.id}`} className="text-sm font-semibold text-link underline underline-offset-4">
-                  Más plantillas del sector
-                </Link>
-              </header>
-              <FlowRows flows={byVertical.get(v.id) ?? []} base={base} />
-            </article>
-          ))}
+          <a href="#rutinas" className="automation-empty-link">Explorar las rutinas <span aria-hidden="true">↓</span></a>
         </section>
       ) : (
-        <p className="text-sm text-graphite">
-          ¿Inmobiliaria, clínica o despacho profesional?{" "}
-          <Link href={`${base}/automatizaciones/plantillas#por-sector`} className="font-semibold text-link underline underline-offset-4">
-            Mira las plantillas de tu sector
-          </Link>
-          .
-        </p>
+        <section className="automation-owned" aria-labelledby="automation-owned-title">
+          <div className="automation-section-heading">
+            <div>
+              <p className="automation-section-eyebrow">TUS FLUJOS CREADOS</p>
+              <h2 id="automation-owned-title">Tus automatizaciones</h2>
+            </div>
+            <span className="automation-count">{flows.length} {flows.length === 1 ? "automatización" : "automatizaciones"}</span>
+          </div>
+          <div className="automation-flow-groups">
+            {flowGroups.map((group) => group.flows.length ? (
+              <section key={group.status} className="automation-flow-group" aria-labelledby={`flows-${group.status}`}>
+                <h3 id={`flows-${group.status}`}>
+                  {FLOW_STATUS_LABEL[group.status] ?? group.status}
+                  <span>{group.flows.length}</span>
+                </h3>
+                <FlowRows flows={group.flows} base={base} latestRunByFlow={latestRunByFlow} />
+              </section>
+            ) : null)}
+            {ungroupedFlows.length ? (
+              <section className="automation-flow-group" aria-labelledby="flows-other">
+                <h3 id="flows-other">Otras <span>{ungroupedFlows.length}</span></h3>
+                <FlowRows flows={ungroupedFlows} base={base} latestRunByFlow={latestRunByFlow} />
+              </section>
+            ) : null}
+          </div>
+        </section>
       )}
 
-      {others.length ? (
-        <section aria-labelledby="otras" className="flex flex-col gap-3">
+      <section id="rutinas" className="automation-routines" aria-labelledby="automation-routines-title">
+        <div className="automation-section-heading">
           <div>
-            <h2 id="otras" className="rotulo text-xl">
-              Otras automatizaciones
-            </h2>
-            <p className="text-sm text-graphite">Las que no pertenecen a ninguna rutina ni sector: creadas con el asistente o desde cero.</p>
+            <p className="automation-section-eyebrow">CATÁLOGO DE CAPACIDADES</p>
+            <h2 id="automation-routines-title">Rutinas de tu negocio</h2>
+            <p>Explora áreas de trabajo y sus plantillas para elegir qué poner en marcha.</p>
           </div>
-          <FlowRows flows={others} base={base} />
+          <Link href={`${base}/automatizaciones/plantillas`} className="automation-text-link">Ver todas las plantillas <span aria-hidden="true">→</span></Link>
+        </div>
+        <div className="automation-tier-list">
+          {tiers.map((tier) => (
+            <section key={tier} aria-labelledby={`tier-${tier}`} className="automation-tier">
+              <div className="automation-tier-heading">
+                <h3 id={`tier-${tier}`}>{TIER_INFO[tier].title}</h3>
+                <p>{TIER_INFO[tier].promise}</p>
+              </div>
+              <ul className="automation-routine-grid">
+                {ROUTINES.filter((routine) => routine.tier === tier).map((routine) => (
+                  <li key={routine.id}>
+                    <RoutineCard routine={routine} base={base} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </section>
+
+      {activity.length || pending.length ? (
+        <section className="automation-activity" aria-labelledby="automation-activity-title">
+          <div className="automation-section-heading">
+            <div>
+              <p className="automation-section-eyebrow">LO QUE ESTÁ PASANDO</p>
+              <h2 id="automation-activity-title">Actividad reciente</h2>
+            </div>
+          </div>
+          <div className="automation-activity-grid">
+            <div className="automation-activity-card">
+              <div className="automation-activity-card-heading">
+                <h3>Ejecuciones</h3>
+                <Link href={`${base}/historial`}>Ver historial <span aria-hidden="true">→</span></Link>
+              </div>
+              {activity.length ? (
+                <ul className="automation-activity-list">
+                  {activity.map((run) => (
+                    <li key={run.id}>
+                      <Link href={`${base}/ejecuciones/${run.id}`}>
+                        <span className="automation-activity-name">{run.flow_name}</span>
+                        <span className={`automation-activity-status is-${run.status}`}>
+                          {RUN_STATUS_LABEL[run.status] ?? run.status}
+                        </span>
+                        <time dateTime={run.started_at}>{formatDateTime(run.started_at)}</time>
+                        {run.summary ? <span className="automation-activity-summary">{run.summary}</span> : null}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="automation-activity-empty">Aún no se ha ejecutado ninguna automatización.</p>
+              )}
+            </div>
+            <div className="automation-activity-card">
+              <div className="automation-activity-card-heading">
+                <h3>Por revisar</h3>
+                <Link href={`${base}/aprobaciones`}>Ir a Aprobaciones <span aria-hidden="true">→</span></Link>
+              </div>
+              {pending.length ? (
+                <ul className="automation-activity-list">
+                  {pending.map((run) => (
+                    <li key={run.id}>
+                      <Link href={`${base}/ejecuciones/${run.id}`}>
+                        <span className="automation-activity-name">{run.flow_name}</span>
+                        <span className="automation-activity-status is-awaiting_approval">Esperando tu aprobación</span>
+                        <time dateTime={run.started_at}>{formatDateTime(run.started_at)}</time>
+                        {run.summary ? <span className="automation-activity-summary">{run.summary}</span> : null}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="automation-activity-empty">No tienes aprobaciones pendientes.</p>
+              )}
+            </div>
+          </div>
         </section>
       ) : null}
     </div>
   )
 }
 
-function RoutineGroup({ routine: r, flows, base }: { routine: Routine; flows: FlowRow[]; base: string }) {
-  const catalog = `${base}/automatizaciones/plantillas#rutina-${r.id}`
+function RoutineCard({ routine, base }: { routine: Routine; base: string }) {
+  const templateCount = routine.templates.filter((id) => findTemplate(id)).length
   return (
-    <article className="routine-card" aria-labelledby={`rutina-${r.id}-titulo`}>
-      <header className="flex items-start gap-3">
-        <span className="routine-number" aria-hidden="true">
-          {String(r.number).padStart(2, "0")}
+    <article className="automation-routine-card" aria-labelledby={`routine-${routine.id}-title`}>
+      <div className="automation-routine-card-heading">
+        <span className="automation-routine-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d={ROUTINE_ICONS[routine.id] ?? "M4 12h16M12 4v16"} />
+          </svg>
         </span>
-        <div className="min-w-0 flex-1">
-          <h3 id={`rutina-${r.id}-titulo`} className="text-lg font-bold text-ink">
-            {r.title}
-          </h3>
-          <p className="text-sm text-graphite">{r.problem}</p>
-        </div>
-      </header>
-
-      {flows.length ? <FlowRows flows={flows} base={base} /> : null}
-
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-        {r.link ? (
-          <Link href={`${base}/${r.link.path}`} className="font-semibold text-link underline underline-offset-4">
-            {r.link.label}
+        <span className="automation-routine-number">{String(routine.number).padStart(2, "0")}</span>
+      </div>
+      <div className="automation-routine-copy">
+        <h4 id={`routine-${routine.id}-title`}>{routine.title}</h4>
+        <p>{routine.auto}</p>
+      </div>
+      <div className="automation-routine-footer">
+        <span>{templateCount} {templateCount === 1 ? "plantilla" : "plantillas"}</span>
+        {templateCount ? (
+          <Link href={`${base}/automatizaciones/plantillas#rutina-${routine.id}`}>
+            Explorar {templateCount === 1 ? "plantilla" : `${templateCount} plantillas`} <span aria-hidden="true">→</span>
           </Link>
+        ) : routine.link ? (
+          <Link href={`${base}/${routine.link.path}`}>{routine.link.label} <span aria-hidden="true">→</span></Link>
         ) : null}
-        {r.templates.length ? (
-          <Link href={catalog} className="font-semibold text-link underline underline-offset-4">
-            {flows.length ? "Añadir otra plantilla" : r.templates.length === 1 ? "Ver la plantilla" : `Ver las ${r.templates.length} plantillas`}
-          </Link>
-        ) : null}
-        {!flows.length && !r.link ? <span className="text-graphite">Aún no la usas.</span> : null}
       </div>
     </article>
   )
 }
 
-function FlowRows({ flows, base }: { flows: FlowRow[]; base: string }) {
+function FlowRows({
+  flows,
+  base,
+  latestRunByFlow,
+}: {
+  flows: FlowRow[]
+  base: string
+  latestRunByFlow: Map<string, RunRow>
+}) {
   return (
-    <ul className="automation-list divide-y divide-rule border border-ink bg-sheet">
-      {flows.map((f) => (
-        <li key={f.id}>
-          <Link href={`${base}/automatizaciones/${f.id}`} className="automation-row flex items-start justify-between gap-4 px-5 py-4">
-            <span className="min-w-0">
-              <span className="block font-medium text-ink">{f.name}</span>
-              {f.summary ? <span className="line-clamp-2 text-sm text-graphite">{f.summary}</span> : null}
-            </span>
-            <span className="shrink-0 text-right text-sm text-graphite">
-              <span className="automation-row-status">{FLOW_STATUS_LABEL[f.status] ?? f.status}</span>
-              {f.next_run_at ? <span className="block text-xs text-ink">Próxima: {formatDateTime(f.next_run_at)}</span> : null}
-              <span className="text-xs">{formatDateTime(f.updated_at)}</span>
-            </span>
-          </Link>
-        </li>
-      ))}
+    <ul className="automation-flow-grid">
+      {flows.map((flow) => {
+        const plan = asPlan(flow.definition)
+        const routine = routineOfFlow(flow)
+        const vertical = routine ? undefined : verticalOfFlow(flow)
+        const latestRun = latestRunByFlow.get(flow.id)
+        const status = FLOW_STATUS_LABEL[flow.status] ?? flow.status
+        return (
+          <li key={flow.id}>
+            <Link href={`${base}/automatizaciones/${flow.id}`} className="automation-flow-card">
+              <span className="automation-flow-topline">
+                <span className={`automation-flow-status is-${flow.status}`}>{status}</span>
+                {latestRun?.status === "failed" ? <span className="automation-flow-attention">Última ejecución con error</span> : null}
+              </span>
+              <strong>{flow.name}</strong>
+              {flow.summary ? <span className="automation-flow-summary">{flow.summary}</span> : null}
+              <span className="automation-flow-meta">
+                <span>{routine?.title ?? vertical?.title ?? "Creada desde cero"}</span>
+                <span>{TRIGGER_LABEL[plan?.trigger.type ?? "manual"] ?? "Manual"}</span>
+              </span>
+              <span className="automation-flow-dates">
+                {latestRun ? <span>Última: {formatDateTime(latestRun.started_at)}</span> : null}
+                {flow.next_run_at ? <span>Próxima: {formatDateTime(flow.next_run_at)}</span> : null}
+              </span>
+              <span className="automation-flow-open">Abrir automatización <span aria-hidden="true">→</span></span>
+            </Link>
+          </li>
+        )
+      })}
     </ul>
   )
 }
