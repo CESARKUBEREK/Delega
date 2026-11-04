@@ -125,7 +125,7 @@ export function InboxList({
       ) : null}
       <p className="text-xs text-graphite sm:hidden">Desliza a la derecha para {archived ? "sacar del archivo" : "archivar"} y a la izquierda para cambiar la categoría.</p>
 
-      <ul className="divide-y divide-rule border border-ink bg-sheet">
+      <ul className="inbox-thread-list divide-y divide-rule">
         {visible.map((t) => (
           <li
             key={t.id}
