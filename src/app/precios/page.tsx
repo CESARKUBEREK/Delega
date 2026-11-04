@@ -1,158 +1,74 @@
-import Link from "next/link"
-import { MarketingLayout } from "@/components/marketing-layout"
-import { publicPageMetadata } from "@/lib/seo"
-import { PLANS, TRIAL } from "@/lib/pricing"
+// Condiciones comerciales que se muestran en /precios.
+// La IA se paga aparte al proveedor (BYOK). Los límites de automatizaciones
+// son del plan; el control (aprobación antes de enviar/cambiar) va en todos.
+// Precios en dólares estadounidenses (USD).
 
-const pricingIntro = PLANS.length
-  ? `Planes MarchaSolo desde ${PLANS[0].price}${PLANS[0].period}. La IA se paga directamente a tu proveedor.`
-  : "Hoy MarchaSolo no tiene planes de pago: crear la cuenta y usarlo no cuesta nada. Lo único que pagas es la inteligencia artificial, directamente a tu proveedor."
-
-export const metadata = publicPageMetadata({
-  title: "Precios",
-  description: pricingIntro,
-  path: "/precios",
-})
-
-
-export default function PricingPage() {
-  return (
-    <MarketingLayout>
-      <main>
-        <section className="page-intro">
-          <div className="site-container">
-            <h1 className="site-h1">Precios</h1>
-            <p className="site-lead">{pricingIntro}</p>
-          </div>
-        </section>
-
-        <section className="site-section is-white" aria-labelledby="planes">
-          <div className="site-container">
-            <h2 id="planes" className="sr-only">
-              Planes
-            </h2>
-            <div className="facts">
-              {PLANS.map((p) => (
-                <div key={p.id} className={p.recommended ? "fact is-key" : "fact"}>
-                  {p.recommended ? (
-                    <p className="site-small m-0 mb-2 font-semibold text-[var(--ms-teal,var(--ms-navy))]">
-                      Recomendado para lanzamiento
-                    </p>
-                  ) : null}
-                  <h3 className="site-h3">{p.name}</h3>
-                  <p className="text-[32px] font-semibold text-[var(--ms-navy)]">
-                    {p.price}{" "}
-                    <span className="text-base font-normal text-[var(--ms-muted)]">{p.period}</span>
-                  </p>
-                  {p.priceYear ? <p className="site-small m-0 mt-1">{p.priceYear}</p> : null}
-                  <p className="mt-3 text-[var(--ms-muted)]">{p.tagline}</p>
-                  <ul>
-                    {p.includes.map((i) => (
-                      <li key={i}>{i}</li>
-                    ))}
-                  </ul>
-                 <Link href={`/crear-cuenta?plan=${p.id}`} className="btn btn-primary mt-6">
-  {p.cta}
-</Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="site-section" aria-labelledby="como">
-          <div className="site-container">
-            <h2 id="como" className="site-h2 mb-10">
-              Cómo funciona el coste
-            </h2>
-            <div className="facts">
-              <div className="fact is-key">
-                <h3 className="site-h3">El plan de MarchaSolo</h3>
-                <p>
-                  Cubre el producto: bandeja, asistente, automatizaciones, aprobaciones y conexiones. El control —nada se
-                  envía sin tu visto bueno— va incluido en todos los planes.
-                </p>
-              </div>
-              <div className="fact">
-                <h3 className="site-h3">Tus primeros planes, por nuestra cuenta</h3>
-                <p>
-                  Al empezar, MarchaSolo te prepara hasta {TRIAL.plans} planes con un modelo de IA avanzado, sin que
-                  conectes nada. Para ponerlos en marcha, conectas tu propia IA.
-                </p>
-              </div>
-              <div className="fact">
-                <h3 className="site-h3">La IA, con tu propia clave</h3>
-                <p>
-                  Para ejecutar automatizaciones conectas OpenAI, Anthropic, DeepSeek o Grok. Cada proveedor te factura lo
-                  que consumes; MarchaSolo no cobra nada encima.
-                </p>
-              </div>
-              <div className="fact">
-                <h3 className="site-h3">El gasto, a la vista</h3>
-                <p>
-                  Ves el coste estimado de cada ejecución y lo gastado en el mes. Puedes fijar un presupuesto y usar el
-                  modo Ahorro para gastar menos.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="site-section is-white" aria-labelledby="dudas">
-          <div className="site-container max-w-3xl">
-            <h2 id="dudas" className="site-h2 mb-8">
-              Preguntas sobre el coste
-            </h2>
-            <div className="faq">
-              <details>
-                <summary>¿El precio del plan incluye la IA?</summary>
-                <div>
-                  No. El plan cubre MarchaSolo (producto, aprobaciones y conexiones). La IA la pagas a tu proveedor con tu
-                  propia clave, según lo que consumas.
-                </div>
-              </details>
-              <details>
-                <summary>¿Qué pasa después de los planes de prueba?</summary>
-                <div>
-                  Tu cuenta y lo que hayas preparado siguen ahí. Para el asistente, la bandeja y las automatizaciones,
-                  conecta tu propia clave de IA: el propio onboarding te guía y te lleva a la web del proveedor.
-                </div>
-              </details>
-              <details>
-                <summary>¿Puedo poner un límite de gasto de IA?</summary>
-                <div>
-                  Sí. Al llegar al 80 % te avisamos; al 100 %, MarchaSolo pasa al modo Ahorro, o se para si lo prefieres.
-                </div>
-              </details>
-              <details>
-                <summary>¿Pago algo extra por las aprobaciones?</summary>
-                <div>
-                  No. Revisar y aprobar antes de que se envíe o se cambie nada forma parte de todos los planes.
-                </div>
-              </details>
-              <details>
-                <summary>¿Los precios incluyen IVA?</summary>
-                <div>No. Los importes indicados no incluyen IVA.</div>
-              </details>
-            </div>
-          </div>
-        </section>
-
-        <section className="site-section pt-0">
-          <div className="site-container">
-            <div className="site-cta">
-              <div>
-                <h2 className="site-h2">Empieza con el plan que te encaje</h2>
-                <p>
-                  Crea la cuenta, cuéntale una tarea y mira el plan que te prepara. Tú decides si lo pones en marcha.
-                </p>
-              </div>
-              <Link href="/crear-cuenta" className="btn btn-primary">
-                Probar gratis
-              </Link>
-            </div>
-          </div>
-        </section>
-      </main>
-    </MarketingLayout>
-  )
+export type Plan = {
+  id: string
+  name: string
+  price: string
+  period: string
+  priceYear?: string
+  tagline: string
+  includes: string[]
+  cta: string
+  recommended?: boolean
 }
+
+export const PLANS: Plan[] = [
+  {
+    id: "solo",
+    name: "MarchaSolo Solo",
+    price: "19 $",
+    period: "/mes",
+    priceYear: "228 $/año · USD · impuestos no incluidos",
+    tagline: "Para autónomos que quieren automatizar tareas cotidianas.",
+    includes: [
+      "Asistente de IA",
+      "5 automatizaciones activas",
+      "Integraciones básicas",
+      "1 modelo de IA conectado",
+      "Historial de ejecuciones",
+      "Nada se envía sin tu aprobación",
+    ],
+    cta: "Empezar con Solo",
+    recommended: true,
+  },
+  {
+    id: "pro",
+    name: "MarchaSolo Pro",
+    price: "39 $",
+    period: "/mes",
+    priceYear: "468 $/año · USD · impuestos no incluidos",
+    tagline: "Para profesionales y pequeños negocios que quieren delegar más trabajo.",
+    includes: [
+      "20 automatizaciones activas",
+      "Flujos con múltiples pasos y agentes",
+      "Varias aplicaciones conectadas",
+      "Selección de diferentes modelos de IA",
+      "Mayor capacidad de ejecución",
+      "Nada se envía sin tu aprobación",
+    ],
+    cta: "Empezar con Pro",
+  },
+  {
+    id: "business",
+    name: "MarchaSolo Business",
+    price: "79 $",
+    period: "/mes",
+    priceYear: "948 $/año · USD · impuestos no incluidos",
+    tagline: "Para microempresas y equipos pequeños.",
+    includes: [
+      "50 automatizaciones activas",
+      "Varios usuarios",
+      "Procesos compartidos",
+      "Mayor volumen de ejecuciones",
+      "Gestión y supervisión del equipo",
+      "Nada se envía sin tu aprobación",
+    ],
+    cta: "Empezar con Business",
+  },
+]
+
+// Planes de prueba del onboarding (por espacio personal).
+export const TRIAL = { plans: 2 }
