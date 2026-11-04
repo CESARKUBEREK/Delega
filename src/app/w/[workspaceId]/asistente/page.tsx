@@ -95,7 +95,7 @@ async function Assistant({
   }
   const list =
     conversations && conversations.length > 0 ? (
-      <ul className="max-h-[28rem] divide-y divide-rule overflow-y-auto">
+      <ul className="assistant-conversation-list max-h-[28rem] divide-y divide-rule overflow-y-auto">
         {conversations.map((x) => (
           <li key={x.id}>
             <Link
