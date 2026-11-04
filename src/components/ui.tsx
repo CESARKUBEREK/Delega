@@ -105,8 +105,9 @@ export function InfoBanner({
   children: ReactNode
   tone?: "info" | "success" | "warning" | "danger"
   role?: "status" | "alert"
+  className?: string
 }) {
-  return <div className="ms-info-banner" data-tone={tone} role={role ?? (tone === "danger" ? "alert" : "status")}>{children}</div>
+  return <div className={`ms-info-banner ${className ?? ""}`.trim()} data-tone={tone} role={role ?? (tone === "danger" ? "alert" : "status")}>{children}</div>
 }
 
 export function SearchInput({
