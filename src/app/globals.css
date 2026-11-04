@@ -514,7 +514,6 @@ a.flow-node-trigger:hover { border-color:var(--ink); box-shadow:0 0 0 3px rgb(0 
 .integration-status-filter:focus-visible,
 .integration-search:focus-within,
 .integration-summary:focus-visible { outline:3px solid rgb(0 194 168 / 38%); outline-offset:2px; }
-.integration-search:focus-within { outline-offset:2px; }
 .integration-category { scroll-margin-top:7.5rem; }
 .integration-category-heading { position:relative; display:flex; flex-direction:column; gap:4px; margin-bottom:12px; padding:13px 16px 13px 20px; border:1px solid #c7f0e8; border-left:4px solid var(--turquesa); border-radius:12px; background:linear-gradient(100deg, #ecf9f6, var(--sheet) 78%); transition:box-shadow .2s ease, background-color .2s ease; }
 .integration-category-heading h2 { margin:0; color:var(--ink); font-size:19px; }
