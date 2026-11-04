@@ -1,6 +1,7 @@
 "use client"
 
 import { useFormStatus } from "react-dom"
+import { SecondaryButton as SharedSecondaryButton } from "@/components/ui"
 import type { InputHTMLAttributes, ReactNode } from "react"
 
 export function Field({
@@ -47,13 +48,13 @@ export function SubmitButton({ children, pendingLabel }: { children: ReactNode; 
 export function SecondaryButton({ children, pendingLabel }: { children: ReactNode; pendingLabel: string }) {
   const { pending } = useFormStatus()
   return (
-    <button
+    <SharedSecondaryButton
       type="submit"
       disabled={pending}
-      className="ms-button ms-button-secondary w-full disabled:cursor-wait disabled:opacity-70"
+      className="w-full disabled:cursor-wait disabled:opacity-70"
     >
       {pending ? pendingLabel : children}
-    </button>
+    </SharedSecondaryButton>
   )
 }
 
