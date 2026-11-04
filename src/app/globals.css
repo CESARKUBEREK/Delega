@@ -1659,12 +1659,15 @@ button.setup-step-link:focus-visible { outline:2px solid var(--link); outline-of
 .ms-panel-card-title { margin:0; color:var(--ink); font-size:var(--font-size-base); font-weight:700; }
 .ms-panel-card-body { padding:var(--space-5); }
 .ms-button { display:inline-flex; min-height:44px; align-items:center; justify-content:center; gap:var(--space-2); padding:var(--space-2) var(--space-4); border:1px solid transparent; border-radius:var(--radius-md); font:inherit; font-size:var(--font-size-sm); font-weight:650; line-height:1.25; text-decoration:none; cursor:pointer; transition:background-color .16s ease, border-color .16s ease, box-shadow .16s ease, color .16s ease, transform .16s ease; }
-.ms-button:disabled { cursor:not-allowed; opacity:.65; }
+.ms-button:disabled { cursor:not-allowed; opacity:.6; }
+.ms-button:focus-visible { outline:3px solid var(--state-focus); outline-offset:3px; }
 .ms-button.w-full { width:100%; }
 .ms-button-primary { background:var(--turquesa); color:var(--ink); box-shadow:0 5px 14px rgb(0 194 168 / 15%); }
 .ms-button-primary:hover:not(:disabled) { transform:translateY(-1px); background:#00ad97; box-shadow:0 8px 18px rgb(0 194 168 / 21%); }
+.ms-button-primary:active:not(:disabled) { transform:none; background:#009a86; box-shadow:none; }
 .ms-button-secondary { border-color:var(--rule); background:var(--sheet); color:var(--ink); }
 .ms-button-secondary:hover:not(:disabled) { border-color:var(--turquesa); background:var(--paper); }
+.ms-button-secondary:active:not(:disabled) { background:var(--turquesa-soft); }
 .ms-status-badge { display:inline-flex; min-height:24px; align-items:center; gap:6px; padding:3px 9px; border:1px solid transparent; border-radius:var(--radius-pill); font-size:var(--font-size-xs); font-weight:650; line-height:1.2; white-space:nowrap; }
 .ms-status-badge[data-tone="success"] { border-color:#b8e5d0; background:var(--ok-bg); color:var(--ok); }
 .ms-status-badge[data-tone="warning"] { border-color:#f1d6a5; background:#fff6e5; color:#80520a; }
