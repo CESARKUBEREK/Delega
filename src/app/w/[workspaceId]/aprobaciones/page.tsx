@@ -39,52 +39,78 @@ async function Approvals({ params }: { params: PageProps<"/w/[workspaceId]/aprob
   const running = (runs ?? []).filter((r) => r.status === "running").slice(0, 5)
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="rotulo text-2xl">Aprobaciones</h1>
-        <p className="mt-1 text-sm text-graphite">
-          Todo lo que el asistente quiere escribir o enviar espera aquí. Revísalo antes de aprobarlo.
+    <div className="automation-page flex flex-col">
+      <header className="automation-page-intro">
+        <p className="app-eyebrow">TU CONTROL, SIEMPRE</p>
+        <h1 className="rotulo">Aprobaciones</h1>
+        <p className="automation-page-description">
+          Revisa lo que MarchaSolo quiere escribir o enviar. Nada sale del espacio sin tu aprobación.
         </p>
-      </div>
+      </header>
 
       {waiting.length === 0 && running.length === 0 ? (
-        <p className="border border-rule bg-sheet px-5 py-4 text-graphite">
-          No hay nada pendiente. Cuando una tarea quiera escribir o enviar algo, aparecerá aquí.
-        </p>
+        <section className="automation-empty-state" aria-label="Sin tareas pendientes">
+          <span className="automation-empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m5 12 4 4L19 6" />
+            </svg>
+          </span>
+          <div>
+            <h2>Todo al día</h2>
+            <p>Cuando una tarea necesite escribir o enviar algo, aparecerá aquí para que la revises.</p>
+          </div>
+        </section>
+      ) : waiting.length > 0 ? (
+        <section className="automation-approvals" aria-labelledby="approvals-pending-title">
+          <div className="automation-section-heading">
+            <div>
+              <p className="automation-section-eyebrow">ESPERANDO TU REVISIÓN</p>
+              <h2 id="approvals-pending-title">Pendientes</h2>
+            </div>
+            <span className="automation-count">{waiting.length} {waiting.length === 1 ? "tarea" : "tareas"}</span>
+          </div>
+          <div className="automation-approval-list">
+            {waiting.map((run) => {
+              const pending = asPending(run.pending_action)
+              return (
+                <article key={run.id} className="automation-approval-item">
+                  <p className="automation-approval-meta">
+                    <Link href={`${base}/ejecuciones/${run.id}`} className="automation-approval-name">
+                      {run.flow_name}
+                    </Link>
+                    <span>{runOrigin(run.trigger)}</span>
+                    <time dateTime={run.started_at}>{formatDateTime(run.started_at)}</time>
+                  </p>
+                  {pending ? (
+                    <ApprovalCard runId={run.id} pending={pending} />
+                  ) : (
+                    <p className="automation-approval-unavailable">
+                      Esta acción no se puede mostrar aquí.{" "}
+                      <Link href={`${base}/ejecuciones/${run.id}`} className="automation-text-link">
+                        Ábrela
+                      </Link>
+                    </p>
+                  )}
+                </article>
+              )
+            })}
+          </div>
+        </section>
       ) : null}
 
-      {waiting.map((run) => {
-        const pending = asPending(run.pending_action)
-        return (
-          <article key={run.id} className="flex flex-col gap-2">
-            <p className="text-sm text-graphite">
-              <Link href={`${base}/ejecuciones/${run.id}`} className="font-medium text-link underline underline-offset-4">
-                {run.flow_name}
-              </Link>{" "}
-              · {runOrigin(run.trigger)} · {formatDateTime(run.started_at)}
-            </p>
-            {pending ? (
-              <ApprovalCard runId={run.id} pending={pending} />
-            ) : (
-              <p className="border border-rule bg-sheet px-4 py-3 text-sm text-graphite">
-                Esta acción no se puede mostrar aquí.{" "}
-                <Link href={`${base}/ejecuciones/${run.id}`} className="text-link underline underline-offset-4">
-                  Ábrela
-                </Link>
-                .
-              </p>
-            )}
-          </article>
-        )
-      })}
-
       {running.length > 0 ? (
-        <section className="border border-ink bg-sheet">
-          <h2 className="border-b border-ink px-5 py-3 font-semibold">En curso</h2>
-          <ul className="divide-y divide-rule">
+        <section className="automation-activity-card" aria-labelledby="approvals-running-title">
+          <div className="automation-activity-card-heading">
+            <div>
+              <p className="automation-section-eyebrow">EN PROCESO</p>
+              <h2 id="approvals-running-title">Tareas en curso</h2>
+            </div>
+            <span className="automation-count">{running.length}</span>
+          </div>
+          <ul className="automation-running-list">
             {running.map((run) => (
-              <li key={run.id} className="flex flex-col gap-2 px-5 py-3">
-                <Link href={`${base}/ejecuciones/${run.id}`} className="text-ink underline-offset-4 hover:underline">
+              <li key={run.id}>
+                <Link href={`${base}/ejecuciones/${run.id}`} className="automation-approval-name">
                   {run.flow_name}
                 </Link>
                 <RunControls runId={run.id} status={run.status} workingText="Trabajando… Si necesita algo más, aparecerá arriba." />
@@ -94,9 +120,14 @@ async function Approvals({ params }: { params: PageProps<"/w/[workspaceId]/aprob
         </section>
       ) : null}
 
-      <section className="border border-ink bg-sheet">
-        <h2 className="border-b border-ink px-5 py-3 font-semibold">Avisos en este dispositivo</h2>
-        <div className="px-5 py-4">
+      <section className="automation-activity-card" aria-labelledby="approvals-notifications-title">
+        <div className="automation-activity-card-heading">
+          <div>
+            <p className="automation-section-eyebrow">MANTENTE AL TANTO</p>
+            <h2 id="approvals-notifications-title">Avisos en este dispositivo</h2>
+          </div>
+        </div>
+        <div className="automation-notifications-content">
           <PushToggle vapidPublicKey={process.env.VAPID_PUBLIC_KEY?.trim() || null} />
         </div>
       </section>
