@@ -1709,3 +1709,12 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
   .history-panel .ms-panel-card-header,
   .flow-detail-card .ms-panel-card-header { padding: 12px; }
 }
+
+/* Fase 2 · detalle de ejecución con paneles compartidos. */
+.run-detail-card .ms-panel-card-body { padding: 0; }
+.run-detail-card .ms-panel-card-header { padding: 13px 15px; }
+.run-detail-card.is-success { border-color: var(--ok); }
+.run-detail-card.is-success .ms-panel-card-header { border-color: var(--ok); color: var(--ok); }
+.run-detail-card.is-danger { border-color: var(--alert); }
+.run-detail-card.is-danger .ms-panel-card-header { border-color: var(--alert); background: var(--alert-bg); color: var(--alert); }
+@media (max-width: 700px) { .run-detail-card .ms-panel-card-header { padding: 12px; } }
