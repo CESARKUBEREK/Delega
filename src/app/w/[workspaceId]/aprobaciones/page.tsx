@@ -93,7 +93,7 @@ async function Approvals({ params }: { params: PageProps<"/w/[workspaceId]/aprob
 
       {running.length > 0 ? (
         <PanelCard
-          className="automation-activity-card"
+          className="automation-activity-card" bodyPadding="none" headerDensity="compact"
           title="Tareas en curso"
           actions={<span className="automation-count">{running.length}</span>}
         >
@@ -110,7 +110,7 @@ async function Approvals({ params }: { params: PageProps<"/w/[workspaceId]/aprob
         </PanelCard>
       ) : null}
 
-      <PanelCard className="automation-activity-card" title="Avisos en este dispositivo">
+      <PanelCard className="automation-activity-card" bodyPadding="none" headerDensity="compact" title="Avisos en este dispositivo">
         <div className="automation-notifications-content">
           <PushToggle vapidPublicKey={process.env.VAPID_PUBLIC_KEY?.trim() || null} />
         </div>
