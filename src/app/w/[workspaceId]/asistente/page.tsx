@@ -131,9 +131,10 @@ async function Assistant({
       <div className="assistant-page">
         <section className="min-w-0">
           {/* En el móvil y la tableta, las conversaciones anteriores van plegadas aquí. */}
-          <PanelCard className="assistant-history-mobile mb-4 xl:hidden" title="Conversaciones anteriores">
-            {list}
-          </PanelCard>
+          <details className="assistant-history-mobile mb-4 border border-ink bg-sheet xl:hidden">
+            <summary className="cursor-pointer px-4 py-2.5 text-sm font-semibold">Conversaciones anteriores</summary>
+            <div className="border-t border-rule">{list}</div>
+          </details>
 
           {!aiActive ? (
             <InfoBanner className="mb-4" tone="danger" role="status">
