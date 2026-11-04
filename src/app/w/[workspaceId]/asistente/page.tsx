@@ -115,52 +115,58 @@ async function Assistant({
   const files = (rawFiles ?? []).map((f) => ({ id: f.id, name: f.name, kind: fileKindLabel(f.mime_type).toLowerCase() }))
 
   return (
-    <div className="assistant-page">
-      <section className="min-w-0">
-        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-          <h1 className="rotulo text-2xl">Chat</h1>
-          {conversationId ? (
-            <Link href={`${base}/asistente`} className="text-sm text-link underline underline-offset-4">
-              Nueva conversación
-            </Link>
-          ) : null}
-        </div>
-
-        {/* En el móvil y la tableta, las conversaciones anteriores van plegadas aquí. */}
-        <details className="assistant-history-mobile mb-4 border border-ink bg-sheet xl:hidden">
-          <summary className="cursor-pointer px-4 py-2.5 text-sm font-semibold">Conversaciones anteriores</summary>
-          <div className="border-t border-rule">{list}</div>
-        </details>
-
-        {!aiActive ? (
-          <div className="mb-4 border-l-2 border-alert bg-alert-bg px-4 py-3 text-sm text-alert" role="status">
-            {connections?.length ? "La clave de la IA de este espacio dejó de funcionar. " : "Este espacio aún no tiene una IA conectada. "}
-            {isAdmin ? (
-              <Link href={`${base}/integraciones`} className="underline underline-offset-4">
-                Conéctala en Integraciones
-              </Link>
-            ) : (
-              "Pide a un administrador que la conecte."
-            )}
-          </div>
+    <div className="automation-page flex flex-col">
+      <header className="automation-page-intro">
+        <p className="app-eyebrow">TU ASISTENTE</p>
+        <h1 className="rotulo">Chat</h1>
+        <p className="automation-page-description">
+          Cuéntale qué necesitas. MarchaSolo prepara el trabajo y tú decides qué se ejecuta o se envía.
+        </p>
+        {conversationId ? (
+          <Link href={`${base}/asistente`} className="automation-text-link">
+            Nueva conversación <span aria-hidden="true">→</span>
+          </Link>
         ) : null}
+      </header>
 
-        <Chat
-          key={conversationId ?? "new"}
-          workspaceId={workspaceId}
-          conversationId={conversationId}
-          initialMessages={messages}
-          runs={runs}
-          files={files}
-          aiReady={aiActive}
-          initialDraft={initialDraft}
-        />
-      </section>
+      <div className="assistant-page">
+        <section className="min-w-0">
+          {/* En el móvil y la tableta, las conversaciones anteriores van plegadas aquí. */}
+          <details className="assistant-history-mobile mb-4 border border-ink bg-sheet xl:hidden">
+            <summary className="cursor-pointer px-4 py-2.5 text-sm font-semibold">Conversaciones anteriores</summary>
+            <div className="border-t border-rule">{list}</div>
+          </details>
 
-      <aside className="assistant-history hidden h-fit border border-ink bg-sheet xl:block">
-        <h2 className="border-b border-ink px-4 py-2.5 text-sm font-semibold">Conversaciones</h2>
-        {list}
-      </aside>
+          {!aiActive ? (
+            <div className="mb-4 border-l-2 border-alert bg-alert-bg px-4 py-3 text-sm text-alert" role="status">
+              {connections?.length ? "La clave de la IA de este espacio dejó de funcionar. " : "Este espacio aún no tiene una IA conectada. "}
+              {isAdmin ? (
+                <Link href={`${base}/integraciones`} className="underline underline-offset-4">
+                  Conéctala en Integraciones
+                </Link>
+              ) : (
+                "Pide a un administrador que la conecte."
+              )}
+            </div>
+          ) : null}
+
+          <Chat
+            key={conversationId ?? "new"}
+            workspaceId={workspaceId}
+            conversationId={conversationId}
+            initialMessages={messages}
+            runs={runs}
+            files={files}
+            aiReady={aiActive}
+            initialDraft={initialDraft}
+          />
+        </section>
+
+        <aside className="assistant-history hidden h-fit border border-ink bg-sheet xl:block">
+          <h2 className="border-b border-ink px-4 py-2.5 text-sm font-semibold">Conversaciones</h2>
+          {list}
+        </aside>
+      </div>
     </div>
   )
 }

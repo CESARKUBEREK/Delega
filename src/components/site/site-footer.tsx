@@ -30,7 +30,7 @@ export function SiteFooter({ inApp = false }: { inApp?: boolean }) {
           <h2>Empresa</h2>
           <ul>
             <li>
-              <a href={`mailto:${CONTACT_EMAIL}`}>Contacto: {CONTACT_EMAIL}</a>
+              <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
             </li>
             <li>
               {SOCIAL_LINKS.map((s, i) => (
