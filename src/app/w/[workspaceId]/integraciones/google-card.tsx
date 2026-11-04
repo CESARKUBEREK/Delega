@@ -76,7 +76,13 @@ export async function DriveCard({ workspaceId, isAdmin, notice }: { workspaceId:
   const own = files.filter((f) => !LISTED_ELSEWHERE.includes(f.mime_type ?? ""))
 
   return (
-    <details data-help="drive" name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details
+      data-help="drive"
+      data-integration-icon="drive"
+      data-integration-status={!integration ? "available" : integration.status === "active" ? "connected" : "attention"}
+      name="integrations"
+      className="integration-accordion border border-ink bg-sheet"
+    >
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Google Drive</h3>
@@ -92,7 +98,7 @@ export async function DriveCard({ workspaceId, isAdmin, notice }: { workspaceId:
         {notice ? (
           <p
             role="status"
-            className={`border-l-2 px-3 py-2 text-sm ${notice === "connected" ? "border-ok bg-ok-bg text-ok" : "border-alert bg-alert-bg text-alert"}`}
+            className={`integration-notice border-l-2 px-3 py-2 text-sm ${notice === "connected" ? "is-success" : notice === "not_configured" || notice === "forbidden" ? "is-info" : "is-error"}`}
           >
             {NOTICES[notice] ?? "No se pudo conectar con Google. Inténtalo de nuevo."}
           </p>
@@ -162,14 +168,20 @@ export async function FilesCard({
   const active = integration?.status === "active"
 
   return (
-    <details data-help={mimes === SHEET_MIMES ? "sheets" : mimes === EXCEL_MIMES ? "excel" : "docs"} name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details
+      data-help={mimes === SHEET_MIMES ? "sheets" : mimes === EXCEL_MIMES ? "excel" : "docs"}
+      data-integration-icon={mimes === SHEET_MIMES ? "sheets" : mimes === EXCEL_MIMES ? "excel" : "docs"}
+      data-integration-status={!active ? "setup" : mine.length ? "connected" : "setup"}
+      name="integrations"
+      className="integration-accordion border border-ink bg-sheet"
+    >
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">{title}</h3>
           <p className="text-sm text-graphite">{description}</p>
         </div>
-        <span className={`shrink-0 border px-2 py-0.5 text-xs ${active ? "border-ok text-ok" : "border-rule text-graphite"}`}>
-          {active ? `${mine.length} elegido${mine.length === 1 ? "" : "s"}` : "Sin conectar"}
+        <span className={`shrink-0 border px-2 py-0.5 text-xs ${!active ? "border-rule text-graphite" : mine.length ? "border-ok text-ok" : "integration-state-setup border"}`}>
+          {active ? (mine.length ? `${mine.length} elegido${mine.length === 1 ? "" : "s"}` : "Selecciona archivos") : "Requiere Drive"}
         </span>
       </summary>
       <div className="flex flex-col gap-4 px-5 py-5">

@@ -26,7 +26,7 @@ export async function RoutingCard({ workspaceId, isAdmin }: { workspaceId: strin
   const pct = routing.monthlyUsd ? Math.min(100, Math.round((month / routing.monthlyUsd) * 100)) : null
 
   return (
-    <details data-help="llm" name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="llm" data-integration-icon="routing" data-integration-status="settings" name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Cómo elige la IA</h3>

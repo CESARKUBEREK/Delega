@@ -59,7 +59,13 @@ export async function WhatsAppCard({ workspaceId, isAdmin }: { workspaceId: stri
   const sandbox = (integration?.config as { sandbox?: boolean } | null)?.sandbox === true
 
   return (
-    <details data-help="whatsapp" name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details
+      data-help="whatsapp"
+      data-integration-icon="whatsapp"
+      data-integration-status={!integration ? "available" : integration.status === "active" ? "connected" : "attention"}
+      name="integrations"
+      className="integration-accordion border border-ink bg-sheet"
+    >
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">WhatsApp</h3>
@@ -128,7 +134,13 @@ export async function TelegramCard({ workspaceId, isAdmin }: { workspaceId: stri
   const username = integration?.account_email?.replace(/^@/, "")
 
   return (
-    <details data-help="telegram" name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details
+      data-help="telegram"
+      data-integration-icon="telegram"
+      data-integration-status={!integration ? "available" : integration.status === "active" ? "connected" : "attention"}
+      name="integrations"
+      className="integration-accordion border border-ink bg-sheet"
+    >
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Telegram</h3>
@@ -200,7 +212,13 @@ export async function ImapCard({ workspaceId, isAdmin }: { workspaceId: string; 
   }
 
   return (
-    <details data-help="imap" name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details
+      data-help="imap"
+      data-integration-icon="imap"
+      data-integration-status={!integration ? "available" : integration.status === "active" ? "connected" : "attention"}
+      name="integrations"
+      className="integration-accordion border border-ink bg-sheet"
+    >
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Correo IMAP/SMTP</h3>

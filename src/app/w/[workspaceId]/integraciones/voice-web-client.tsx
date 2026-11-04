@@ -48,7 +48,7 @@ export function VoiceWebPanel({ workspaceId, widget, xaiReady }: { workspaceId: 
   return (
     <div className="flex flex-col gap-4">
       {!xaiReady ? (
-        <p className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+        <p className="integration-notice is-info border-l-2 px-3 py-2 text-sm">
           Conecta Grok (xAI) en LLMs, arriba: el asistente de la web habla con tu clave de xAI.
         </p>
       ) : null}

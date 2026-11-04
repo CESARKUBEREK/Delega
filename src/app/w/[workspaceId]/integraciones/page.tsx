@@ -13,6 +13,7 @@ import { ApiIntegrationCard } from "./api-integrations"
 import { OnboardingReturn } from "../onboarding/onboarding-return"
 import { HelpPanel, OpenCardFromQuery } from "@/components/help-panel"
 import { HelpVoiceCard } from "./help-voice-card"
+import { IntegrationExplorer } from "./integration-explorer"
 
 export const metadata = { title: "Integraciones" }
 
@@ -34,34 +35,59 @@ const CATEGORIES = [
 
 export default function IntegrationsPage({ params, searchParams }: PageProps<"/w/[workspaceId]/integraciones">) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="integration-page flex flex-col gap-6">
       <header className="integration-page-intro">
         <p className="app-eyebrow">CONECTA TU ESPACIO</p>
-        <h1 className="rotulo text-2xl">Integraciones</h1>
-        <p className="mt-1 max-w-prose text-graphite">
-          Las conexiones son de este espacio. MarchaSolo usa tu propia cuenta de cada servicio y no guarda tus datos más de lo necesario.
+        <h1 className="rotulo">Conecta las aplicaciones de tu negocio</h1>
+        <p className="integration-page-description">
+          MarchaSolo utiliza tus propias cuentas para trabajar con tus herramientas. Tú controlas los permisos y las conexiones.
         </p>
-        <p className="mt-2 text-sm">
-          ¿No sabes por dónde empezar?{" "}
-          <Link href="onboarding" className="font-semibold text-link underline underline-offset-4">
-            Cuéntanos una tarea y te decimos qué conectar
-          </Link>
-        </p>
+        <Link href="onboarding" className="integration-setup-link">
+          ¿No sabes por dónde empezar? Cuéntanos qué tarea quieres delegar
+          <span aria-hidden="true">→</span>
+        </Link>
       </header>
-      <nav aria-label="Categorías de integraciones" className="integration-category-nav">
-        <span className="integration-category-nav-label">EXPLORA POR CATEGORÍA</span>
-        <div className="integration-category-links">
-          {CATEGORIES.map((c, index) => (
-            <a key={c.id} href={`#${c.id}`} className="integration-category-link">
-              <span className="integration-category-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-              {c.label}
-            </a>
-          ))}
+      <section className="integration-capabilities" aria-labelledby="integration-capabilities-title">
+        <div className="integration-section-title">
+          <p className="app-eyebrow">MENOS TAREAS REPETITIVAS</p>
+          <h2 id="integration-capabilities-title">¿Qué quieres dejar en marcha?</h2>
         </div>
-      </nav>
-      <Suspense fallback={<div className="h-64 border border-rule bg-sheet" aria-busy="true" />}>
-        <Integrations params={params} searchParams={searchParams} />
-      </Suspense>
+        <div className="integration-capability-grid">
+          <article className="integration-capability">
+            <span className="integration-capability-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 5h16v12H4zM8 21h8m-4-4v4M7 9h10m-10 4h6" />
+              </svg>
+            </span>
+            <h3>Atiende y responde</h3>
+            <p>Reúne mensajes y prepara respuestas para que las revises antes de enviarlas.</p>
+          </article>
+          <article className="integration-capability">
+            <span className="integration-capability-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="4" y="5" width="16" height="15" rx="2" />
+                <path d="M8 3v4m8-4v4M4 10h16m-11 4h2m3 0h2m-7 3h2" />
+              </svg>
+            </span>
+            <h3>Organiza agenda y clientes</h3>
+            <p>Consulta disponibilidad, prepara citas y mantén la información de tus clientes al día.</p>
+          </article>
+          <article className="integration-capability">
+            <span className="integration-capability-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 3h8l5 5v13H6zM14 3v6h5M9 13h7m-7 4h7" />
+              </svg>
+            </span>
+            <h3>Trabaja con tus documentos</h3>
+            <p>Conecta tus archivos, planillas y herramientas para preparar el trabajo en un solo espacio.</p>
+          </article>
+        </div>
+      </section>
+      <IntegrationExplorer categories={CATEGORIES}>
+        <Suspense fallback={<div className="integration-loading h-64 border border-rule bg-sheet" aria-busy="true" />}>
+          <Integrations params={params} searchParams={searchParams} />
+        </Suspense>
+      </IntegrationExplorer>
     </div>
   )
 }
@@ -83,7 +109,7 @@ function Category({ id, title, description, children }: { id: string; title: str
 // Integraciones previstas que aún no se pueden conectar.
 function ComingSoon({ title, description }: { title: string; description: string }) {
   return (
-    <details name="integrations" className="integration-accordion border border-dashed border-rule bg-sheet/60">
+    <details name="integrations" data-integration-status="catalog" data-integration-icon="outlook" className="integration-accordion border border-dashed border-rule bg-sheet/60">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg text-graphite">{title}</h3>

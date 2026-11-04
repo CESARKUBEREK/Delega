@@ -11,9 +11,10 @@ export async function HelpVoiceCard({ workspaceId, isAdmin }: { workspaceId: str
   ])
   const enabled = Boolean(ws?.help_voice_enabled)
   const xaiActive = xai?.status === "active"
+  const ready = enabled && xaiActive
 
   return (
-    <details data-help="voice-app" name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="voice-app" data-integration-icon="voice" data-integration-status={ready ? "connected" : "setup"} name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">En la app: habla con el ayudante</h3>
@@ -22,7 +23,9 @@ export async function HelpVoiceCard({ workspaceId, isAdmin }: { workspaceId: str
             tienes las manos ocupadas.
           </p>
         </div>
-        <span className={`shrink-0 border px-2 py-0.5 text-xs ${enabled ? "border-ok text-ok" : "border-rule text-graphite"}`}>{enabled ? "Activada" : "Desactivada"}</span>
+        <span className={`shrink-0 border px-2 py-0.5 text-xs ${ready ? "border-ok text-ok" : "integration-state-setup"}`}>
+          {enabled && !xaiActive ? "Conecta Grok" : enabled ? "Activada" : "Desactivada"}
+        </span>
       </summary>
       <div className="flex flex-col gap-4 px-5 py-5 text-sm text-graphite">
         <ul className="list-disc pl-5">
@@ -32,7 +35,7 @@ export async function HelpVoiceCard({ workspaceId, isAdmin }: { workspaceId: str
           <li>La conversación no se guarda.</li>
         </ul>
         {!xaiActive ? (
-          <p className="border-l-2 border-alert pl-3 text-alert">Antes conecta Grok (xAI) en la sección LLMs.</p>
+          <p className="integration-notice is-info border-l-2 pl-3">Antes conecta Grok (xAI) en la sección LLMs.</p>
         ) : null}
         {isAdmin ? (
           <HelpVoiceToggle workspaceId={workspaceId} enabled={enabled} disabled={!xaiActive && !enabled} />

@@ -11,8 +11,15 @@ import { VoiceWebPanel, type VoiceWebWidget } from "./voice-web-client"
 
 function Badge({ status, invalidLabel }: { status: string | null | undefined; invalidLabel: string }) {
   if (status === "active") return <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">Conectado</span>
+  if (status === "paused") return <span className="integration-state-setup shrink-0 border px-2 py-0.5 text-xs">Requiere configuración</span>
   if (status) return <span className="shrink-0 border border-alert px-2 py-0.5 text-xs text-alert">{invalidLabel}</span>
   return <span className="shrink-0 border border-rule px-2 py-0.5 text-xs text-graphite">Sin conectar</span>
+}
+
+function integrationStatus(status: string | null | undefined, unconfigured: "available" | "setup" = "available") {
+  if (!status) return unconfigured
+  if (status === "active") return "connected"
+  return status === "paused" ? "setup" : "attention"
 }
 
 export async function CalendarCard({ workspaceId, isAdmin, notice }: { workspaceId: string; isAdmin: boolean; notice: boolean }) {
@@ -26,7 +33,7 @@ export async function CalendarCard({ workspaceId, isAdmin, notice }: { workspace
   const tz = ((integration?.config ?? {}) as { timezone?: string }).timezone
 
   return (
-    <details data-help="calendar" name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="calendar" data-integration-icon="calendar" data-integration-status={integrationStatus(integration?.status)} name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Google Calendar</h3>
@@ -39,7 +46,7 @@ export async function CalendarCard({ workspaceId, isAdmin, notice }: { workspace
 
       <div className="flex flex-col gap-5 px-5 py-5">
         {notice ? (
-          <p role="status" className="border-l-2 border-ok bg-ok-bg px-3 py-2 text-sm text-ok">
+          <p role="status" className="integration-notice is-success border-l-2 px-3 py-2 text-sm">
             Google Calendar conectado.
           </p>
         ) : null}
@@ -87,7 +94,7 @@ export async function ContactsCard({ workspaceId, isAdmin, notice }: { workspace
     .maybeSingle()
 
   return (
-    <details data-help="contacts" name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="contacts" data-integration-icon="contacts" data-integration-status={integrationStatus(integration?.status)} name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Google Contacts</h3>
@@ -101,7 +108,7 @@ export async function ContactsCard({ workspaceId, isAdmin, notice }: { workspace
 
       <div className="flex flex-col gap-5 px-5 py-5">
         {notice ? (
-          <p role="status" className="border-l-2 border-ok bg-ok-bg px-3 py-2 text-sm text-ok">
+          <p role="status" className="integration-notice is-success border-l-2 px-3 py-2 text-sm">
             Google Contacts conectado.
           </p>
         ) : null}
@@ -149,7 +156,7 @@ export async function HubSpotCard({ workspaceId, isAdmin }: { workspaceId: strin
   const config = (integration?.config ?? {}) as { portal_id?: number | null }
 
   return (
-    <details data-help="hubspot" name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="hubspot" data-integration-icon="hubspot" data-integration-status={integrationStatus(integration?.status)} name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">HubSpot</h3>
@@ -222,7 +229,7 @@ export async function TokkoCard({ workspaceId, isAdmin }: { workspaceId: string;
     .maybeSingle()
 
   return (
-    <details data-help="tokko" name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="tokko" data-integration-icon="tokko" data-integration-status={integrationStatus(integration?.status)} name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Tokko Broker</h3>
@@ -273,7 +280,7 @@ export async function XubioCard({ workspaceId, isAdmin }: { workspaceId: string;
     .maybeSingle()
 
   return (
-    <details data-help="xubio" name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="xubio" data-integration-icon="xubio" data-integration-status={integrationStatus(integration?.status)} name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Xubio</h3>
@@ -325,7 +332,7 @@ export async function BufferCard({ workspaceId, isAdmin }: { workspaceId: string
     .maybeSingle()
 
   return (
-    <details data-help="buffer" name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="buffer" data-integration-icon="buffer" data-integration-status={integrationStatus(integration?.status)} name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Buffer</h3>
@@ -390,7 +397,7 @@ async function voiceData(workspaceId: string) {
 
 function CalendarWarning() {
   return (
-    <p className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+    <p className="integration-notice is-info border-l-2 px-3 py-2 text-sm">
       Conecta Google Calendar (más abajo, en Calendar) para que el asistente pueda ver huecos y reservar citas. Sin él, solo toma recados.
     </p>
   )
@@ -399,8 +406,9 @@ function CalendarWarning() {
 // Asistente de voz en la web del cliente: lo más visible del bloque.
 export async function VoiceWebCard({ workspaceId, isAdmin }: { workspaceId: string; isAdmin: boolean }) {
   const { integration, calendar, widget, xaiReady } = await voiceData(workspaceId)
+  const ready = Boolean(widget?.enabled && xaiReady)
   return (
-    <details data-help="voice-web" name="integrations" className="integration-accordion border border-ink bg-sheet" open={Boolean(isAdmin && !widget)}>
+    <details data-help="voice-web" data-integration-icon="voice" data-integration-status={ready ? "connected" : "setup"} name="integrations" className="integration-accordion border border-ink bg-sheet" open={Boolean(isAdmin && !widget)}>
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">En tu web</h3>
@@ -409,7 +417,11 @@ export async function VoiceWebCard({ workspaceId, isAdmin }: { workspaceId: stri
             recados y responde con tus documentos. Todo llega a la Bandeja.
           </p>
         </div>
-        <Badge status={widget ? (widget.enabled ? "active" : "paused") : null} invalidLabel="Sin activar" />
+        {widget?.enabled && !xaiReady ? (
+          <span className="integration-state-setup shrink-0 border px-2 py-0.5 text-xs">Conecta Grok</span>
+        ) : (
+          <Badge status={widget ? (widget.enabled ? "active" : "paused") : null} invalidLabel="Sin activar" />
+        )}
       </summary>
       <div className="flex flex-col gap-5 px-5 py-5">
         {!isAdmin ? (
@@ -433,7 +445,7 @@ export async function VoiceHoursCard({ workspaceId, isAdmin }: { workspaceId: st
   const { integration, files, config } = await voiceData(workspaceId)
   if (!integration || !isAdmin) return null
   return (
-    <details name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-integration-icon="schedule" data-integration-status="settings" name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Horario de citas y documentos</h3>
@@ -455,7 +467,7 @@ export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string;
   const connected = Boolean(integration)
 
   return (
-    <details data-help="voice-phone" name="integrations" className="integration-accordion border border-ink bg-sheet">
+    <details data-help="voice-phone" data-integration-icon="voice" data-integration-status={integrationStatus(integration?.status, "setup")} name="integrations" className="integration-accordion border border-ink bg-sheet">
       <summary className="integration-summary flex items-start justify-between gap-4 px-4 py-3">
         <div>
           <h3 className="rotulo text-lg">Por teléfono (Grok Voice)</h3>
