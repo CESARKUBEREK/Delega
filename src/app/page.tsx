@@ -25,11 +25,15 @@ export default function HomePage() {
         {/* 1. Hero */}
         <section className="site-hero">
           <div className="site-container site-hero-grid">
-            <div>
-              <h1 className="site-display">Las tareas avanzan. Tú decides.</h1>
-              <p className="site-lead">
-                Un compañero de trabajo con IA: conecta tus aplicaciones, prepara lo que hay que hacer y se detiene
-                antes de enviar o cambiar nada. Tú revisas y das el visto bueno.
+            <div className="site-hero-copy">
+              <p className="site-kicker site-hero-kicker">TU COMPAÑERO DE TRABAJO CON IA</p>
+              <h1 className="site-display">
+                Tu trabajo. En marcha.
+                <span>Sin hacerlo todo tú.</span>
+              </h1>
+              <p className="site-lead site-hero-lead">
+                Cuéntale una tarea. MarchaSolo consulta tus aplicaciones y deja el trabajo listo. Tú revisas antes de
+                enviar o cambiar nada.
               </p>
               <div className="site-actions">
                 <Link href="/crear-cuenta" className="btn btn-primary">
@@ -40,12 +44,18 @@ export default function HomePage() {
                 </Link>
               </div>
               <ul className="site-hero-note">
-                <li>Crear la cuenta no cuesta nada</li>
-                <li>Nada se envía sin tu aprobación</li>
-                <li>Tus 2 primeros planes, con IA avanzada</li>
+                <li>Crear la cuenta es gratis</li>
+                <li>Tú apruebas antes de enviar</li>
+                <li>2 primeros planes con IA avanzada</li>
               </ul>
             </div>
-            <AppPreview />
+            <div className="site-hero-preview">
+              <AppPreview />
+              <p className="site-preview-caption">
+                <span aria-hidden="true">✓</span>
+                La respuesta queda lista. Tú decides si se envía.
+              </p>
+            </div>
           </div>
         </section>
 
