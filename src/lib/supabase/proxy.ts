@@ -4,13 +4,22 @@ import type { Database } from "./database.types"
 import { supabasePublishableKey, supabaseUrl } from "./env"
 
 // Rutas que exigen sesión y rutas que solo tienen sentido sin ella.
-const PROTECTED_PREFIXES = ["/w", "/reset-password", "/integraciones", "/abrir"]
+// /integraciones es la página pública de marketing; el OAuth de Google
+// vive en /integraciones/google y sí requiere sesión.
+const PROTECTED_PREFIXES = ["/w", "/reset-password", "/abrir"]
+const PROTECTED_EXACT_OR_NESTED = ["/integraciones/google"]
 // /w/<espacio>/…: se recuerda el último espacio para abrir la app instalada en él.
 const WORKSPACE_PATH = /^\/w\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\/|$)/i
 const GUEST_ONLY = ["/entrar", "/crear-cuenta", "/login", "/signup", "/forgot-password"]
 
 function matches(pathname: string, prefixes: string[]) {
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+}
+
+function isProtected(pathname: string) {
+  if (matches(pathname, PROTECTED_PREFIXES)) return true
+  if (matches(pathname, PROTECTED_EXACT_OR_NESTED)) return true
+  return false
 }
 
 export async function updateSession(request: NextRequest) {
@@ -46,7 +55,7 @@ export async function updateSession(request: NextRequest) {
     return redirect
   }
 
-  if (!signedIn && matches(pathname, PROTECTED_PREFIXES)) {
+  if (!signedIn && isProtected(pathname)) {
     const redirect = redirectTo("/entrar")
     const url = new URL(redirect.headers.get("location")!)
     url.searchParams.set("next", `${pathname}${search}`)
