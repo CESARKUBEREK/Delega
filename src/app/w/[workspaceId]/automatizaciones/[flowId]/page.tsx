@@ -130,7 +130,7 @@ async function Flow({
       ) : null}
 
       {autoTrigger ? (
-        <PanelCard className="flow-detail-card" title={{trigger === "schedule" ? "Programación" : "Ejecución automática"}}>
+        <PanelCard className="flow-detail-card" title={trigger === "schedule" ? "Programación" : "Ejecución automática"}>
           <div className="px-5 py-4">
             <ActivationPanel
               workspaceId={workspaceId}
@@ -219,7 +219,7 @@ async function Flow({
         </PanelCard>
       ) : null}
 
-      <PanelCard className="flow-detail-card" title={{autoTrigger ? "Probar a mano" : "Ejecutar"}}>
+      <PanelCard className="flow-detail-card" title={autoTrigger ? "Probar a mano" : "Ejecutar"}>
         <div className="px-5 py-4">
           <RunPanel
             workspaceId={workspaceId}
