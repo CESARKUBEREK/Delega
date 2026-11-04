@@ -180,8 +180,8 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
   }
 
   return (
-    <section className="border-2 border-stroke bg-sheet">
-      <div className="border-b border-stroke px-5 py-3">
+    <section className="approval-card bg-sheet">
+      <div className="approval-card-header px-5 py-3">
         <h2 className="font-semibold text-ink">Necesita tu aprobación</h2>
         <p className="text-sm text-graphite">{describe(pending)}</p>
       </div>
