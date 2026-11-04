@@ -93,15 +93,7 @@ async function Flow({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <p className="text-sm">
-          <Link href={`${base}/automatizaciones`} className="text-link underline underline-offset-4">
-            Automatizaciones
-          </Link>
-        </p>
-        <h1 className="rotulo mt-2 text-2xl">{flow.name}</h1>
-        {plan?.summary ? <p className="mt-2 max-w-3xl text-base text-graphite">{plan.summary}</p> : null}
-        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-graphite">
+      <PageHeader eyebrow={<Link href={`${base}/automatizaciones`} className="text-link underline underline-offset-4">Automatizaciones</Link>} title={flow.name} description={plan?.summary} actions={<p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-graphite">
           <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${flow.status === "active" ? "border-ok text-ok" : "border-rule"}`}>
             {FLOW_STATUS_LABEL[flow.status] ?? flow.status}
             {flow.status === "active" && flow.next_run_at ? ` · próxima: ${formatWhen(flow.next_run_at, timezone)}` : ""}
@@ -113,14 +105,10 @@ async function Flow({
           ) : (
             <span>Guardada el {formatDateTime(flow.created_at)}</span>
           )}
-        </p>
-      </div>
+        </p>}
+      />
 
-      {justPaused ? (
-        <p role="status" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
-          Has cambiado cuándo empieza, así que la he pausado. Revisa su activación más abajo y vuelve a activarla.
-        </p>
-      ) : null}
+      {justPaused ? <InfoBanner tone="warning">Has cambiado cuándo empieza, así que la he pausado. Revisa su activación más abajo y vuelve a activarla.</InfoBanner> : null}
 
       {plan ? (
         <FlowMap
@@ -142,8 +130,7 @@ async function Flow({
       ) : null}
 
       {autoTrigger ? (
-        <section className="border border-ink bg-sheet">
-          <h2 className="border-b border-ink px-5 py-3 font-semibold">{trigger === "schedule" ? "Programación" : "Ejecución automática"}</h2>
+        <PanelCard className="flow-detail-card" title={{trigger === "schedule" ? "Programación" : "Ejecución automática"}}>
           <div className="px-5 py-4">
             <ActivationPanel
               workspaceId={workspaceId}
@@ -160,12 +147,11 @@ async function Flow({
               canEdit={canDelete}
             />
           </div>
-        </section>
+        </PanelCard>
       ) : null}
 
       {plan?.steps.some((st) => st.kind === "write" && st.connection === "calendar") ? (
-        <section className="border border-ink bg-sheet">
-          <h2 className="border-b border-ink px-5 py-3 font-semibold">Citas en tu calendario</h2>
+        <PanelCard className="flow-detail-card" title={Citas en tu calendario}>
           <div className="px-5 py-4">
             {(() => {
               const cal = ((flow.settings ?? {}) as { calendar?: { mode?: string; days?: unknown; ranges?: unknown } }).calendar
@@ -182,12 +168,11 @@ async function Flow({
               )
             })()}
           </div>
-        </section>
+        </PanelCard>
       ) : null}
 
       {(ai ?? []).length > 0 ? (
-        <section className="border border-ink bg-sheet">
-          <h2 className="border-b border-ink px-5 py-3 font-semibold">IA de esta automatización</h2>
+        <PanelCard className="flow-detail-card" title={IA de esta automatización}>
           <div className="px-5 py-4">
             {(() => {
               const wsRouting = readWorkspaceRouting(ws?.ai_routing)
@@ -231,11 +216,10 @@ async function Flow({
               )
             })()}
           </div>
-        </section>
+        </PanelCard>
       ) : null}
 
-      <section className="border border-ink bg-sheet">
-        <h2 className="border-b border-ink px-5 py-3 font-semibold">{autoTrigger ? "Probar a mano" : "Ejecutar"}</h2>
+      <PanelCard className="flow-detail-card" title={{autoTrigger ? "Probar a mano" : "Ejecutar"}}>
         <div className="px-5 py-4">
           <RunPanel
             workspaceId={workspaceId}
@@ -246,11 +230,10 @@ async function Flow({
             isAdmin={isAdmin}
           />
         </div>
-      </section>
+      </PanelCard>
 
       {runs && runs.length > 0 ? (
-        <section className="border border-ink bg-sheet">
-          <h2 className="border-b border-ink px-5 py-3 font-semibold">Ejecuciones de esta automatización</h2>
+        <PanelCard className="flow-detail-card" title={Ejecuciones de esta automatización}>
           <ul className="divide-y divide-rule">
             {runs.map((r) => (
               <li key={r.id}>
@@ -261,7 +244,7 @@ async function Flow({
               </li>
             ))}
           </ul>
-        </section>
+        </PanelCard>
       ) : null}
 
       <p className="text-sm text-graphite">
