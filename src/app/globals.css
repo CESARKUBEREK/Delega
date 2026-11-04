@@ -1053,24 +1053,26 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
   .assistant-page { grid-template-columns:minmax(0, 1fr) 15rem; }
 }
 
-/* Navegación lateral: más aire, estados claros y foco accesible. */
+/* Navegación lateral: iconos en fichas, estado activo destacado y foco accesible. */
 .app-sidebar-nav { padding:2px 0; }
-.app-sidebar-nav .app-nav-heading { margin:0 0 10px 12px; color:#007a6c; font-size:10px; letter-spacing:.16em; }
-.app-sidebar-list { gap:3px; padding:7px; border:1px solid rgb(255 255 255 / 10%); border-radius:18px; background:linear-gradient(155deg, #102746, #0b1f3b 62%, #101a30); box-shadow:0 16px 36px rgb(11 31 59 / 14%), inset 0 1px rgb(255 255 255 / 5%); }
+.app-sidebar-nav .app-nav-heading { display:flex; align-items:center; gap:8px; margin:0 0 10px 12px; color:#007a6c; font-size:10px; letter-spacing:.16em; }
+.app-sidebar-nav .app-nav-heading::before { width:6px; height:6px; border-radius:50%; background:#00c2a8; content:""; }
+.app-sidebar-list { gap:4px; padding:8px; border:1px solid rgb(255 255 255 / 10%); border-radius:18px; background:linear-gradient(155deg, #102746, #0b1f3b 62%, #101a30); box-shadow:0 16px 36px rgb(11 31 59 / 14%), inset 0 1px rgb(255 255 255 / 5%); }
 .app-sidebar-list > li { border:0; }
-.app-sidebar-list .app-sidebar-link { min-height:44px; gap:11px; padding:9px 12px; border-radius:11px; color:#c1cbda; font-size:13px; font-weight:550; transition:background-color .16s ease, color .16s ease, transform .16s ease; }
-.app-sidebar-list .app-sidebar-link:hover { transform:translateX(2px); background:rgb(255 255 255 / 8%); color:#fff; }
+.app-sidebar-list .app-sidebar-link { min-height:46px; gap:11px; padding:8px 11px; border:1px solid transparent; border-radius:12px; color:#c1cbda; font-size:13px; font-weight:550; transition:background-color .16s ease, border-color .16s ease, color .16s ease, transform .16s ease; }
+.app-sidebar-list .app-sidebar-link:hover { transform:translateX(2px); border-color:rgb(255 255 255 / 6%); background:rgb(255 255 255 / 8%); color:#fff; }
 .app-sidebar-list .app-sidebar-link:focus-visible { outline:2px solid #5ee6cf; outline-offset:2px; }
-.app-sidebar-list .app-nav-icon { color:#91a2b9; }
-.app-sidebar-list .app-sidebar-link[aria-current="page"] { background:#00c2a8; box-shadow:inset 3px 0 #087a6c, 0 6px 16px rgb(0 0 0 / 12%); color:#0b1f3b; font-weight:750; }
-.app-sidebar-list .app-sidebar-link[aria-current="page"] .app-nav-icon { color:#0b1f3b; }
+.app-sidebar-list .app-nav-icon { width:29px; height:29px; flex-basis:29px; border:1px solid rgb(255 255 255 / 9%); border-radius:9px; background:rgb(255 255 255 / 5%); color:#aab8ca; transition:background-color .16s ease, color .16s ease, border-color .16s ease; }
+.app-sidebar-list .app-nav-icon svg { width:17px; height:17px; }
+.app-sidebar-list .app-sidebar-link[aria-current="page"] { border-color:rgb(0 122 108 / 16%); background:linear-gradient(105deg, #00c2a8, #16cfb6); box-shadow:inset 3px 0 #087a6c, 0 7px 18px rgb(0 0 0 / 14%); color:#0b1f3b; font-weight:750; }
+.app-sidebar-list .app-sidebar-link[aria-current="page"] .app-nav-icon { border-color:rgb(11 31 59 / 12%); background:rgb(11 31 59 / 10%); color:#0b1f3b; }
 .app-sidebar-list .app-sidebar-link .bg-stroke { border:1px solid rgb(255 255 255 / 16%); background:rgb(255 255 255 / 12%); color:#fff; }
 .app-sidebar-list .app-sidebar-link[aria-current="page"] .bg-stroke { border-color:rgb(11 31 59 / 12%); background:rgb(11 31 59 / 10%); color:#0b1f3b; }
-.app-sidebar-cta { min-height:48px; margin-bottom:18px; border:1px solid rgb(0 122 108 / 14%); border-radius:15px; box-shadow:0 8px 20px rgb(0 194 168 / 20%); transition:transform .16s ease, background-color .16s ease, box-shadow .16s ease; }
+.app-sidebar-cta { min-height:50px; margin-bottom:18px; border:1px solid rgb(0 122 108 / 20%); border-radius:15px; background:linear-gradient(105deg, #00c2a8, #12cdb4); box-shadow:0 8px 20px rgb(0 194 168 / 20%), inset 0 1px rgb(255 255 255 / 25%); transition:transform .16s ease, background-color .16s ease, box-shadow .16s ease; }
 .app-sidebar-cta:hover { transform:translateY(-1px); }
 .app-sidebar-cta:focus-visible { outline:3px solid #0b1f3b; outline-offset:3px; }
 @media (prefers-reduced-motion:reduce) {
-  .app-sidebar-list .app-sidebar-link, .app-sidebar-cta { transition:none; }
+  .app-sidebar-list .app-sidebar-link, .app-sidebar-list .app-nav-icon, .app-sidebar-cta { transition:none; }
   .app-sidebar-list .app-sidebar-link:hover, .app-sidebar-cta:hover { transform:none; }
 }
 
