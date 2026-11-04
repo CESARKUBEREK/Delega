@@ -14,7 +14,7 @@ import { OnboardingReturn } from "../onboarding/onboarding-return"
 import { HelpPanel, OpenCardFromQuery } from "@/components/help-panel"
 import { HelpVoiceCard } from "./help-voice-card"
 import { IntegrationExplorer } from "./integration-explorer"
-import { PageHeader } from "@/components/ui"
+import { PageHeader, StatusBadge } from "@/components/ui"
 
 export const metadata = { title: "Integraciones" }
 
@@ -111,7 +111,7 @@ function ComingSoon({ title, description }: { title: string; description: string
           <h3 className="rotulo text-lg text-graphite">{title}</h3>
           <p className="text-sm text-graphite">{description}</p>
         </div>
-        <span className="shrink-0 border border-rule px-2 py-0.5 text-xs text-graphite">Próximamente</span>
+        <StatusBadge tone="neutral">Próximamente</StatusBadge>
       </summary>
     </details>
   )
