@@ -191,7 +191,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
             </div>
           </div>
           <div className="automation-activity-grid">
-            <PanelCard className="automation-activity-card" title="Ejecuciones" actions={<Link href={`${base}/historial`}>Ver historial <span aria-hidden="true">→</span></Link>}>
+            <PanelCard className="automation-activity-card" bodyPadding="none" headerDensity="compact" title="Ejecuciones" actions={<Link href={`${base}/historial`}>Ver historial <span aria-hidden="true">→</span></Link>}>
               {activity.length ? (
                 <ul className="automation-activity-list">
                   {activity.map((run) => (
@@ -211,7 +211,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
                 <p className="automation-activity-empty">Aún no se ha ejecutado ninguna automatización.</p>
               )}
             </PanelCard>
-            <PanelCard className="automation-activity-card" title="Por revisar" actions={<Link href={`${base}/aprobaciones`}>Ir a Aprobaciones <span aria-hidden="true">→</span></Link>}>
+            <PanelCard className="automation-activity-card" bodyPadding="none" headerDensity="compact" title="Por revisar" actions={<Link href={`${base}/aprobaciones`}>Ir a Aprobaciones <span aria-hidden="true">→</span></Link>}>
               {pending.length ? (
                 <ul className="automation-activity-list">
                   {pending.map((run) => (

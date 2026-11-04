@@ -61,7 +61,7 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
 
   return (
     <div className="automation-history">
-      <PanelCard className="automation-activity-card history-panel" title="Últimas ejecuciones" description={isAdmin ? "Trabajo realizado en todo el espacio" : "Trabajo realizado por ti"}>
+      <PanelCard className="automation-activity-card history-panel" bodyPadding="none" headerDensity="compact" title="Últimas ejecuciones" description={isAdmin ? "Trabajo realizado en todo el espacio" : "Trabajo realizado por ti"}>
         {runs && runs.length > 0 ? (
           <ul className="automation-history-list">
             {runs.map((r) => (
@@ -85,7 +85,7 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
         )}
       </PanelCard>
 
-      <PanelCard className="automation-activity-card history-panel" title="Consumo de este mes" description={isAdmin ? "Uso de IA en todo el espacio" : "Tu uso de IA"}>
+      <PanelCard className="automation-activity-card history-panel" bodyPadding="none" headerDensity="compact" title="Consumo de este mes" description={isAdmin ? "Uso de IA en todo el espacio" : "Tu uso de IA"}>
         {byModel.size > 0 ? (
           <div className="automation-history-table-wrap">
             <table className="automation-history-table">
@@ -115,7 +115,7 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
         )}
       </PanelCard>
 
-      <PanelCard className="automation-activity-card history-panel" title="Conversaciones recientes" description={isAdmin ? "Conversaciones del espacio" : "Tus conversaciones"}>
+      <PanelCard className="automation-activity-card history-panel" bodyPadding="none" headerDensity="compact" title="Conversaciones recientes" description={isAdmin ? "Conversaciones del espacio" : "Tus conversaciones"}>
         {conversations && conversations.length > 0 ? (
           <ul className="automation-history-list">
             {conversations.map((c) => (

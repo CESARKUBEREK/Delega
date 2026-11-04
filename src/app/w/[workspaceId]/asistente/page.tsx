@@ -161,7 +161,7 @@ async function Assistant({
           />
         </section>
 
-        <PanelCard className="assistant-history hidden h-fit xl:block" title="Conversaciones">
+        <PanelCard className="assistant-history hidden h-fit xl:block" bodyPadding="none" title="Conversaciones">
           {list}
         </PanelCard>
       </div>
