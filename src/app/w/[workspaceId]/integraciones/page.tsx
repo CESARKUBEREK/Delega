@@ -14,6 +14,7 @@ import { OnboardingReturn } from "../onboarding/onboarding-return"
 import { HelpPanel, OpenCardFromQuery } from "@/components/help-panel"
 import { HelpVoiceCard } from "./help-voice-card"
 import { IntegrationExplorer } from "./integration-explorer"
+import { PageHeader } from "@/components/ui"
 
 export const metadata = { title: "Integraciones" }
 
@@ -36,17 +37,12 @@ const CATEGORIES = [
 export default function IntegrationsPage({ params, searchParams }: PageProps<"/w/[workspaceId]/integraciones">) {
   return (
     <div className="integration-page flex flex-col gap-6">
-      <header className="integration-page-intro">
-        <p className="app-eyebrow">CONECTA TU ESPACIO</p>
-        <h1 className="rotulo">Conecta las aplicaciones de tu negocio</h1>
-        <p className="integration-page-description">
-          MarchaSolo utiliza tus propias cuentas para trabajar con tus herramientas. Tú controlas los permisos y las conexiones.
-        </p>
-        <Link href="onboarding" className="integration-setup-link">
-          ¿No sabes por dónde empezar? Cuéntanos qué tarea quieres delegar
-          <span aria-hidden="true">→</span>
-        </Link>
-      </header>
+      <PageHeader
+        eyebrow="CONECTA TU ESPACIO"
+        title="Conecta las aplicaciones de tu negocio"
+        description="MarchaSolo utiliza tus propias cuentas para trabajar con tus herramientas. Tú controlas los permisos y las conexiones."
+        actions={<Link href="onboarding" className="integration-setup-link">¿No sabes por dónde empezar? Cuéntanos qué tarea quieres delegar <span aria-hidden="true">→</span></Link>}
+      />
       <section className="integration-capabilities" aria-labelledby="integration-capabilities-title">
         <div className="integration-section-title">
           <p className="app-eyebrow">MENOS TAREAS REPETITIVAS</p>
