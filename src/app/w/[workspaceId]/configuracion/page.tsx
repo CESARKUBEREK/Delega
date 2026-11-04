@@ -84,127 +84,133 @@ async function Workspace({ params }: { params: PageProps<"/w/[workspaceId]/confi
     : { data: [] }
 
   return (
-    <div className={`settings-page ${canInvite ? "settings-page-with-invite" : ""}`}>
-      <section>
-        <h1 className="rotulo text-2xl">Configuración</h1>
-        <p className="mt-2 text-sm text-graphite">Gestiona miembros, avisos y preferencias del espacio.</p>
+    <div className="automation-page flex flex-col">
+      <header className="automation-page-intro">
+        <p className="app-eyebrow">TU ESPACIO, A TU MANERA</p>
+        <h1 className="rotulo">Configuración</h1>
+        <p className="automation-page-description">Gestiona miembros, avisos y preferencias del espacio.</p>
+      </header>
 
-        <div className="settings-card mt-6">
-          <h2 className="border-b border-ink px-5 py-3 font-semibold">Miembros</h2>
-          <ul className="divide-y divide-rule">
-            {(members ?? []).map((m) => (
-              <li key={m.user_id} className="flex items-center justify-between gap-4 px-5 py-3">
-                <span className="text-ink">
-                  {nameById.get(m.user_id) || "Sin nombre"}
-                  {m.user_id === user.id ? <span className="text-graphite"> (tú)</span> : null}
-                </span>
-                <span className="text-sm text-graphite">
-                  {ROLE_LABEL[m.role]}
-                  {m.status === "suspended" ? ", suspendido" : ""}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="settings-card mt-6">
-          <h2 className="border-b border-ink px-5 py-3 font-semibold">Avisos en este dispositivo</h2>
-          <div className="px-5 py-4">
-            <PushToggle vapidPublicKey={process.env.VAPID_PUBLIC_KEY?.trim() || null} />
-          </div>
-        </div>
-
-        <div className="settings-card mt-6">
-          <h2 className="border-b border-ink px-5 py-3 font-semibold">Mis avisos</h2>
-          <div className="flex flex-col gap-6 px-5 py-4">
-            <NoticePrefsForm
-              workspaceId={workspace.id}
-              prefs={{
-                push: channel?.notify_push ?? true,
-                email: channel?.notify_email ?? true,
-                telegram: channel?.notify_telegram ?? true,
-              }}
-              mailReady={mailReady}
-              telegramLinked={Boolean(channel?.telegram_chat_id)}
-            />
-            <div className="border-t border-rule pt-4">
-              <TelegramLink
-                workspaceId={workspace.id}
-                botUsername={botUsername}
-                linkedName={channel?.telegram_chat_id ? (channel.telegram_name ?? "") : null}
-              />
-            </div>
-          </div>
-        </div>
-
-        {isAdmin ? (
-          <div className="settings-card mt-6">
-            <h2 className="border-b border-ink px-5 py-3 font-semibold">Zona horaria del espacio</h2>
-            <div className="px-5 py-4">
-              <p className="mb-3 text-sm text-graphite">
-                La hora a la que se ejecutan las automatizaciones programadas y la que usa el agente para fechas y agenda.
-              </p>
-              <TimezoneForm workspaceId={workspace.id} current={workspace.timezone} zones={zones} />
-            </div>
-          </div>
-        ) : null}
-
-        {canInvite && pending && pending.length > 0 ? (
-          <div className="settings-card mt-6">
-            <h2 className="border-b border-ink px-5 py-3 font-semibold">Invitaciones pendientes</h2>
+      <div className={`settings-page ${canInvite ? "settings-page-with-invite" : ""}`}>
+        <section>
+          <div className="settings-card">
+            <h2 className="border-b border-ink px-5 py-3 font-semibold">Miembros</h2>
             <ul className="divide-y divide-rule">
-              {pending.map((inv) => (
-                <li key={inv.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
-                  <span>
-                    <span className="block text-ink">{inv.email}</span>
-                    <span className="text-sm text-graphite">
-                      {ROLE_LABEL[inv.role]}, caduca el {formatDate(inv.expires_at)}
-                    </span>
+              {(members ?? []).map((m) => (
+                <li key={m.user_id} className="flex items-center justify-between gap-4 px-5 py-3">
+                  <span className="text-ink">
+                    {nameById.get(m.user_id) || "Sin nombre"}
+                    {m.user_id === user.id ? <span className="text-graphite"> (tú)</span> : null}
                   </span>
-                  <form action={revokeInvitation}>
-                    <input type="hidden" name="invitationId" value={inv.id} />
-                    <input type="hidden" name="workspaceId" value={workspace.id} />
-                    <button type="submit" className="text-sm text-alert underline underline-offset-4">
-                      Revocar
-                    </button>
-                  </form>
+                  <span className="text-sm text-graphite">
+                    {ROLE_LABEL[m.role]}
+                    {m.status === "suspended" ? ", suspendido" : ""}
+                  </span>
                 </li>
               ))}
             </ul>
           </div>
-        ) : null}
 
-        {isOrg ? (
-          <div className="mt-10 flex flex-col gap-8 border-t border-rule pt-8">
-            {canInvite ? (
-              <section>
-                <h2 className="rotulo mb-4 text-lg">Nombre de la organización</h2>
-                <RenameForm workspaceId={workspace.id} name={workspace.name} />
-              </section>
-            ) : null}
-            {canLeave ? (
-              <section>
-                <h2 className="rotulo mb-2 text-lg">Salir</h2>
-                <LeaveForm workspaceId={workspace.id} />
-              </section>
-            ) : null}
-            {isOwner ? (
-              <section>
-                <h2 className="rotulo mb-2 text-lg text-alert">Borrar la organización</h2>
-                <DeleteForm workspaceId={workspace.id} name={workspace.name} />
-              </section>
-            ) : null}
+          <div className="settings-card">
+            <h2 className="border-b border-ink px-5 py-3 font-semibold">Avisos en este dispositivo</h2>
+            <div className="px-5 py-4">
+              <PushToggle vapidPublicKey={process.env.VAPID_PUBLIC_KEY?.trim() || null} />
+            </div>
           </div>
-        ) : null}
-      </section>
 
-      {canInvite ? (
-        <aside className="settings-card h-fit p-6">
-          <h2 className="rotulo text-lg">Invitar a alguien</h2>
-          <p className="mt-1 mb-5 text-sm text-graphite">Tendrá que entrar con el mismo correo al que le invitas.</p>
-          <InviteForm workspaceId={workspace.id} />
-        </aside>
-      ) : null}
+          <div className="settings-card">
+            <h2 className="border-b border-ink px-5 py-3 font-semibold">Mis avisos</h2>
+            <div className="flex flex-col gap-6 px-5 py-4">
+              <NoticePrefsForm
+                workspaceId={workspace.id}
+                prefs={{
+                  push: channel?.notify_push ?? true,
+                  email: channel?.notify_email ?? true,
+                  telegram: channel?.notify_telegram ?? true,
+                }}
+                mailReady={mailReady}
+                telegramLinked={Boolean(channel?.telegram_chat_id)}
+              />
+              <div className="border-t border-rule pt-4">
+                <TelegramLink
+                  workspaceId={workspace.id}
+                  botUsername={botUsername}
+                  linkedName={channel?.telegram_chat_id ? (channel.telegram_name ?? "") : null}
+                />
+              </div>
+            </div>
+          </div>
+
+          {isAdmin ? (
+            <div className="settings-card">
+              <h2 className="border-b border-ink px-5 py-3 font-semibold">Zona horaria del espacio</h2>
+              <div className="px-5 py-4">
+                <p className="mb-3 text-sm text-graphite">
+                  La hora a la que se ejecutan las automatizaciones programadas y la que usa el agente para fechas y agenda.
+                </p>
+                <TimezoneForm workspaceId={workspace.id} current={workspace.timezone} zones={zones} />
+              </div>
+            </div>
+          ) : null}
+
+          {canInvite && pending && pending.length > 0 ? (
+            <div className="settings-card">
+              <h2 className="border-b border-ink px-5 py-3 font-semibold">Invitaciones pendientes</h2>
+              <ul className="divide-y divide-rule">
+                {pending.map((inv) => (
+                  <li key={inv.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+                    <span>
+                      <span className="block text-ink">{inv.email}</span>
+                      <span className="text-sm text-graphite">
+                        {ROLE_LABEL[inv.role]}, caduca el {formatDate(inv.expires_at)}
+                      </span>
+                    </span>
+                    <form action={revokeInvitation}>
+                      <input type="hidden" name="invitationId" value={inv.id} />
+                      <input type="hidden" name="workspaceId" value={workspace.id} />
+                      <button type="submit" className="text-sm text-alert underline underline-offset-4">
+                        Revocar
+                      </button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {isOrg ? (
+            <div className="settings-management">
+              {canInvite ? (
+                <section>
+                  <h2>Nombre de la organización</h2>
+                  <RenameForm workspaceId={workspace.id} name={workspace.name} />
+                </section>
+              ) : null}
+              {canLeave ? (
+                <section>
+                  <h2>Salir</h2>
+                  <LeaveForm workspaceId={workspace.id} />
+                </section>
+              ) : null}
+              {isOwner ? (
+                <section>
+                  <h2 className="is-danger">Borrar la organización</h2>
+                  <DeleteForm workspaceId={workspace.id} name={workspace.name} />
+                </section>
+              ) : null}
+            </div>
+          ) : null}
+        </section>
+
+        {canInvite ? (
+          <aside className="settings-card settings-invite-card h-fit p-6">
+            <p className="automation-section-eyebrow">AMPLÍA TU EQUIPO</p>
+            <h2 className="settings-invite-title">Invitar a alguien</h2>
+            <p className="mt-1 mb-5 text-sm text-graphite">Tendrá que entrar con el mismo correo al que le invitas.</p>
+            <InviteForm workspaceId={workspace.id} />
+          </aside>
+        ) : null}
+      </div>
     </div>
   )
 }
