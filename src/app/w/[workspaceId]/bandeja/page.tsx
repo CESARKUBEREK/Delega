@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
 import { ApprovalCard, RunControls } from "../ejecuciones/[runId]/run-live"
 import { formatDateTime } from "../format"
+import { EmptyState, InfoBanner, PageHeader, PanelCard, SearchInput } from "@/components/ui"
 import { CardActions } from "./card-actions"
 import { InboxSettingsForm, SyncButton } from "./classify-button"
 import { deleteInboxRule } from "./inbox-actions"
@@ -19,13 +20,11 @@ type InboxSettings = { categories?: string[]; retention_days?: number | null; dr
 export default function InboxPage({ params, searchParams }: PageProps<"/w/[workspaceId]/bandeja">) {
   return (
     <div className="inbox-page flex flex-col gap-6">
-      <div className="inbox-page-intro">
-        <p className="app-eyebrow">MENSAJES Y SEGUIMIENTO</p>
-        <h1 className="rotulo text-2xl">Bandeja</h1>
-        <p className="mt-1 max-w-prose text-graphite">
-          Lo que hay que hacer hoy con tus mensajes, con las respuestas ya preparadas. Nada se envía sin que lo apruebes.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="MENSAJES Y SEGUIMIENTO"
+        title="Bandeja"
+        description="Lo que hay que hacer hoy con tus mensajes, con las respuestas ya preparadas. Nada se envía sin que lo apruebes."
+      />
       <Suspense fallback={<div className="h-64 border border-rule bg-sheet" aria-busy="true" />}>
         <Inbox params={params} searchParams={searchParams} />
       </Suspense>
@@ -54,13 +53,11 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
   const categories = settings.categories?.length ? settings.categories : DEFAULT_CATEGORIES
   if (!integrations?.length) {
     return (
-      <p className="text-graphite">
-        Conecta tu correo, WhatsApp o un bot de Telegram en{" "}
-        <Link href={`/w/${workspaceId}/integraciones`} className="text-link underline underline-offset-4">
-          Integraciones
-        </Link>{" "}
-        para ver aquí tus conversaciones.
-      </p>
+      <EmptyState
+        title="Conecta tus canales de comunicación"
+        description="Conecta tu correo, WhatsApp o un bot de Telegram para ver aquí tus conversaciones."
+        action={<Link href={`/w/${workspaceId}/integraciones`} className="text-link underline underline-offset-4">Ir a Integraciones</Link>}
+      />
     )
   }
 
@@ -79,7 +76,7 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 border border-ink bg-sheet px-4 py-3">
+      <PanelCard className="inbox-status-panel" title="Estado de la bandeja" actions={mailActive ? <SyncButton workspaceId={workspaceId} /> : undefined}>
         <p className="text-sm text-graphite" role="status">
           {pending > 0 ? (
             <>
@@ -92,16 +89,15 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
             `${total} conversaciones, todas ordenadas.`
           )}
         </p>
-        {mailActive ? <SyncButton workspaceId={workspaceId} /> : null}
-      </div>
+      </PanelCard>
       {imap && imap.status !== "active" ? (
-        <p className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+        <InfoBanner tone="danger">
           Tu servidor de correo rechazó la contraseña.{" "}
           <Link href={`/w/${workspaceId}/integraciones#comunicaciones`} className="underline underline-offset-4">
             Vuelve a escribirla
           </Link>
           .
-        </p>
+        </InfoBanner>
       ) : null}
 
       <nav className="inbox-tabs" aria-label="Vistas de la bandeja">
@@ -271,15 +267,11 @@ function TodayView({
   return (
     <div className="flex flex-col gap-3">
       {empty ? (
-        <div className="today-empty">
-          <p className="font-semibold text-ink">Nada pendiente para hoy</p>
-          <p className="text-sm text-graphite">
-            Cuando alguien espere tu respuesta, aparecerá aquí con el borrador listo.{" "}
-            <Link href={`${base}?vista=todo`} className="text-link underline underline-offset-4">
-              Ver todos los mensajes
-            </Link>
-          </p>
-        </div>
+        <EmptyState
+          title="Nada pendiente para hoy"
+          description={<>Cuando alguien espere tu respuesta, aparecerá aquí con el borrador listo.</>}
+          action={<Link href={`${base}?vista=todo`} className="text-link underline underline-offset-4">Ver todos los mensajes</Link>}
+        />
       ) : null}
 
       {data.replies.map((t) => {
@@ -489,15 +481,13 @@ async function AllList({
         {urg ? <input type="hidden" name="urg" value={urg} /> : null}
         {reply ? <input type="hidden" name="reply" value="1" /> : null}
         {archived ? <input type="hidden" name="arch" value="1" /> : null}
-        <label htmlFor="inbox-q" className="sr-only">
-          Buscar
-        </label>
-        <input
+        <SearchInput
           id="inbox-q"
           name="q"
+          label="Buscar en la bandeja"
           defaultValue={q}
           placeholder="Buscar contacto, asunto, cliente u obra…"
-          className="h-9 min-w-0 flex-1 border border-rule bg-sheet px-3 text-sm text-ink focus:border-link focus:outline-none"
+          className="min-w-0 flex-1"
         />
         <button type="submit" className="h-9 border border-ink px-3 text-sm text-ink hover:bg-paper">
           Buscar
@@ -543,13 +533,14 @@ async function AllList({
       {rows.length > 0 ? (
         <InboxList workspaceId={workspaceId} base={base} threads={rows} categories={categories} archived={archived} />
       ) : (
-        <p className="text-sm text-graphite">
-          {total === 0
+        <EmptyState
+          title={total === 0 ? "Todavía no hay conversaciones" : "No hay resultados"}
+          description={total === 0
             ? mailActive
-              ? "Aún no hay conversaciones. Pulsa «Traer correo» para importar los 400 correos más recientes de los últimos 30 días."
+              ? "Pulsa «Traer correo» para importar los 400 correos más recientes de los últimos 30 días."
               : "Aún no ha llegado ningún mensaje a tu bot."
-            : "Ninguna conversación coincide con los filtros."}
-        </p>
+            : "Prueba a cambiar o quitar alguno de los filtros aplicados."}
+        />
       )}
     </div>
   )
