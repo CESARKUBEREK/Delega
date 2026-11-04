@@ -168,12 +168,9 @@ body {
 .panel-content .border-ink { border-color:#dfe7ee; }
 .panel-content .border-rule { border-color:#e6ecf1; }
 .panel-content .bg-sheet { background-color:#fff; }
-.panel-content section.border-ink,
-.panel-content section[class*="border-ink"] { overflow:hidden; border-radius:17px; box-shadow:0 12px 32px rgb(11 31 59 / 4%); }
-.panel-content ul.border-ink,
-.panel-content ul[class*="border-ink"] { overflow:hidden; border-radius:14px; background:#fff; box-shadow:0 10px 26px rgb(11 31 59 / 3%); }
-.panel-content section > h2.border-b,
-.panel-content section > div.border-b { border-color:#e8eef2; background:linear-gradient(90deg, #f2faf8, #fff 74%); }
+.panel-content section.border-ink { overflow:hidden; border-radius:17px; box-shadow:0 12px 32px rgb(11 31 59 / 4%); }
+.panel-content ul.border-ink { overflow:hidden; border-radius:14px; background:#fff; box-shadow:0 10px 26px rgb(11 31 59 / 3%); }
+.panel-content .settings-card > h2 { border-color:#e8eef2; background:#fff; }
 .panel-content button.border-ink,
 .panel-content a.border-ink { border-color:#d8e2ea; border-radius:10px; transition:border-color .16s ease, background-color .16s ease, transform .16s ease; }
 .panel-content button.border-ink:hover,
@@ -222,8 +219,7 @@ body {
   .app-switch-link { font-size:11px; }
   .app-frame { padding:22px 16px 30px; }
   .panel-content { gap:18px; }
-  .panel-content section.border-ink,
-  .panel-content section[class*="border-ink"] { border-radius:14px; }
+  .panel-content section.border-ink { border-radius:14px; }
   .dashboard-intro { align-items:flex-start; flex-direction:column; }
   .dashboard-intro h1 { font-size:32px; }
   .app-workspaces-page .workspaces-grid { gap:28px; }
@@ -365,10 +361,8 @@ a.flow-node-trigger:hover { border-color:#0b1f3b; box-shadow:0 0 0 3px rgb(0 194
 .app-mobile-tab-link[aria-current="page"]::before { position:absolute; top:9px; left:50%; width:52px; height:30px; transform:translateX(-50%); border-radius:999px; background:#e3f8f4; content:""; }
 
 /* Tarjetas, listas y tablas de todas las páginas. */
-.panel-content section.border-ink,
-.panel-content section[class*="border-ink"] { border-color:#dfe7ee; border-radius:16px; box-shadow:0 10px 28px rgb(11 31 59 / 4%); }
-.panel-content section > h2.border-b,
-.panel-content section > div.border-b { border-color:#e8eef2; background:#fff; color:#0b1f3b; font-weight:700; }
+.panel-content section.border-ink { border-color:#dfe7ee; border-radius:16px; box-shadow:0 10px 28px rgb(11 31 59 / 4%); }
+.panel-content .settings-card > h2 { border-color:#e8eef2; background:#fff; color:#0b1f3b; font-weight:700; }
 .panel-content ul.divide-y > li > a { transition:background-color .14s ease; }
 .panel-content ul.divide-y > li > a:hover { background-color:#f2faf8; }
 .panel-content table th { color:#4a5b73; }
@@ -440,7 +434,7 @@ button.bg-stroke:disabled { color:#0b1f3b; }
 .panel-content section.border-2.border-stroke { overflow:hidden; border-color:#00c2a8; border-radius:16px; box-shadow:0 0 0 4px var(--coral-soft); }
 .panel-content section.border-2.border-stroke > div.border-b { border-color:#a8e8dc; background:var(--coral-soft); }
 .panel-content section.border-2.border-stroke > div.border-b h2 { color:var(--coral-ink); }
-.dashboard-approval { border-color:#00c2a8 !important; border-radius:13px; background:var(--coral-soft) !important; color:#0b1f3b !important; }
+.dashboard-approval { border-color:#00c2a8; border-radius:13px; background:var(--coral-soft); color:#0b1f3b; }
 .today-card-icon { background:var(--coral-soft); color:var(--coral-ink); }
 .today-card:hover { border-color:#00c2a8; box-shadow:0 10px 24px rgb(0 194 168 / 14%); }
 .today-summary::before { border-color:rgb(0 194 168 / 30%); }
@@ -449,8 +443,7 @@ button.bg-stroke:disabled { color:#0b1f3b; }
 .today-ask:focus-within { border-color:#00c2a8; box-shadow:0 0 0 3px rgb(0 194 168 / 18%), 0 12px 30px rgb(11 31 59 / 10%); }
 
 /* Cabeceras de tarjeta con una marca coral a la izquierda. */
-.panel-content section > h2.border-b { position:relative; padding-left:1.6rem; }
-.panel-content section > h2.border-b::before { position:absolute; top:50%; left:1rem; width:4px; height:16px; transform:translateY(-50%); border-radius:999px; background:#00c2a8; content:""; }
+
 
 /* Mapa:el número de paso y el disparador con el coral de la llave. */
 .flow-node-number { border-color:#a8e8dc; background:var(--coral-soft); color:var(--coral-ink); }
