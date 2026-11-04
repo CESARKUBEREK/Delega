@@ -910,6 +910,10 @@ a.flow-node-trigger:hover { border-color:var(--ink); box-shadow:0 0 0 3px rgb(0 
 .inbox-bulk-bar button, .inbox-bulk-bar select { min-height:40px; padding:0 12px; border:1px solid var(--link); border-radius:9px; background:var(--sheet); color:#005a50; font-size:14px; font-weight:600; }
 .inbox-row { background:var(--sheet); transition:transform .12s ease; touch-action:pan-y; }
 .inbox-row.is-selected { background:#f2faf8; }
+.inbox-thread-list { overflow:hidden; border:1px solid var(--border); border-radius:14px; background:var(--sheet); box-shadow:0 8px 22px rgb(11 31 59 / 4%); }
+.inbox-thread-list .inbox-row:hover { background:var(--paper); }
+.inbox-thread-list .inbox-row.is-selected { background:var(--turquesa-soft); }
+.inbox-thread-list .inbox-row a:focus-visible { border-radius:6px; outline:2px solid var(--link); outline-offset:3px; }
 @media (prefers-reduced-motion:reduce) { .inbox-row { transition:none; } }
 .inbox-filter-chip:focus-visible { outline:3px solid rgb(0 194 168 / 35%); outline-offset:2px; }
 .inbox-filters > span[aria-hidden="true"] { height:24px; margin-inline:3px; }
