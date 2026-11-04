@@ -367,7 +367,7 @@ a.flow-node-trigger:hover { border-color:#0b1f3b; box-shadow:0 0 0 3px rgb(0 194
 .panel-content [role="alert"].border-l-2 { border-radius:0 10px 10px 0; }
 .panel-content p.border.border-rule.bg-sheet { border-radius:14px; }
 
-/* Logotipo:robot + «MarchaSolo» en dos líneas, en Montserrat negrita. */
+/* Logotipo:robot + «MarchaSolo» en dos líneas, en Outfit negrita. */
 .brand-logo { display:inline-flex; align-items:center; color:var(--ink); line-height:1; text-decoration:none; }
 .brand-logo svg { flex:0 0 auto; }
 .brand-text { display:flex; flex-direction:column; gap:4px; }
@@ -923,20 +923,10 @@ a.flow-node-trigger:hover { border-color:#0b1f3b; box-shadow:0 0 0 3px rgb(0 194
 
 
 
-/* Fondo común del sitio:la retícula clara y los reflejos coral/azul de la portada. */
-body {
-  background-color:var(--paper);
-  background-image:radial-gradient(ellipse at 9% 0%, rgb(0 194 168 / 7%), transparent 32rem),
-    radial-gradient(ellipse at 92% 3%, rgb(0 194 168 / 6%), transparent 34rem),
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size:auto, auto, 40px 40px, 40px 40px;
-  background-repeat:no-repeat, no-repeat, repeat, repeat;
-  background-attachment:fixed;
-}
+/* El fondo global es liso; la retícula se limita al sitio público (.site). */
 .app-shell {
   min-height:100dvh;
-  background:transparent;
+  background:var(--paper);
 }
 
 /* Barra superior en marino, como el fondo del logo: «Marcha» en blanco y
@@ -1019,9 +1009,6 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
   .setup-banner { flex-wrap:wrap; }
   .setup-banner-cta { width:100%; text-align:center; }
 }
-
-/* El espacio autenticado comparte la superficie clara de Integraciones y Automatizaciones. */
-.app-shell:has(.today, .settings-page, .assistant-page) { background:#f3f6fa; }
 
 /* Configuración: aprovecha el ancho disponible cuando no hay invitaciones que mostrar. */
 .settings-page { width:min(100%, 880px); margin:0 auto; }
