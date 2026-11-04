@@ -101,6 +101,7 @@ export function InfoBanner({
   children,
   tone = "info",
   role,
+  className,
 }: {
   children: ReactNode
   tone?: "info" | "success" | "warning" | "danger"
