@@ -50,7 +50,7 @@ export function SecondaryButton({ children, pendingLabel }: { children: ReactNod
     <button
       type="submit"
       disabled={pending}
-      className="flex h-11 w-full items-center justify-center gap-3 border border-ink bg-sheet px-4 text-base font-medium text-ink hover:bg-paper disabled:cursor-wait disabled:opacity-70"
+      className="ms-button ms-button-secondary w-full disabled:cursor-wait disabled:opacity-70"
     >
       {pending ? pendingLabel : children}
     </button>
