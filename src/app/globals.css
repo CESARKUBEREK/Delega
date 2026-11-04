@@ -175,17 +175,14 @@ body {
 .panel-content a.border-ink { border-color:#d8e2ea; border-radius:10px; transition:border-color .16s ease, background-color .16s ease, transform .16s ease; }
 .panel-content button.border-ink:hover,
 .panel-content a.border-ink:hover { border-color:#9ee6da; }
-.panel-content button.bg-stroke,
-.panel-content a.bg-stroke { border-radius:10px; box-shadow:0 5px 14px rgb(0 194 168 / 15%); transition:transform .16s ease, box-shadow .16s ease, opacity .16s ease; }
-.panel-content button.bg-stroke:hover,
-.panel-content a.bg-stroke:hover { transform:translateY(-1px); box-shadow:0 8px 18px rgb(0 194 168 / 21%); }
+
 .panel-content input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
 .panel-content select, .panel-content textarea,
 .auth-form-content input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
 .auth-form-content select, .auth-form-content textarea { border-color:#d9e3ea; border-radius:10px; background-color:#fff; }
 .panel-content input:focus, .panel-content select:focus, .panel-content textarea:focus,
 .auth-form-content input:focus, .auth-form-content select:focus, .auth-form-content textarea:focus { border-color:#00c2a8; box-shadow:0 0 0 3px rgb(0 194 168 / 11%); outline:none; }
-.panel-content details.border, .panel-content details[class*="border-"] { overflow:hidden; border-radius:12px; }
+.panel-content details.border { overflow:hidden; border-radius:12px; }
 .app-eyebrow { margin:0 0 8px; color:#007a6c; font-size:10px; font-weight:700; letter-spacing:.15em; }
 .app-workspaces-page .workspaces-grid > section > h1 { margin:0; font-size:clamp(32px, 4vw, 42px); }
 .app-workspaces-page .workspaces-grid > section > p:not(.app-eyebrow) { line-height:1.7; }
@@ -202,8 +199,7 @@ body {
 .mobile-more-menu { overflow:hidden; border-color:#dfe7ee; border-radius:15px; box-shadow:0 16px 38px rgb(11 31 59 / 13%); }
 .auth-form-content input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]) { transition:border-color .16s ease, box-shadow .16s ease; }
 .auth-form-content button { border-radius:10px; transition:transform .16s ease, box-shadow .16s ease, background-color .16s ease; }
-.auth-form-content button.bg-stroke { box-shadow:0 7px 18px rgb(0 194 168 / 17%); }
-.auth-form-content button.bg-stroke:hover { transform:translateY(-1px); box-shadow:0 10px 22px rgb(0 194 168 / 22%); }
+
 
 @media (max-width:1023px) {
   .app-layout-grid { grid-template-columns:minmax(0, 1fr); }
@@ -368,8 +364,7 @@ a.flow-node-trigger:hover { border-color:#0b1f3b; box-shadow:0 0 0 3px rgb(0 194
 .panel-content table th { color:#4a5b73; }
 .panel-content .text-link { color:#007a6c; }
 .panel-content .border-stroke { border-color:#00c2a8; }
-.panel-content button.bg-stroke, .panel-content a.bg-stroke { background:#00c2a8; color:#0b1f3b; font-weight:700; }
-.panel-content button.bg-stroke:hover, .panel-content a.bg-stroke:hover { background:#00a892; }
+
 .panel-content [role="alert"].border-l-2 { border-radius:0 10px 10px 0; }
 .panel-content p.border.border-rule.bg-sheet { border-radius:14px; }
 
@@ -412,8 +407,7 @@ a.flow-node-trigger:hover { border-color:#0b1f3b; box-shadow:0 0 0 3px rgb(0 194
 
 /* Botones azules:siempre con letra blanca (6,2:1). El marino sobre azul
    no llega al contraste mínimo. */
-button.bg-stroke, a.bg-stroke, .auth-form-content button.bg-stroke { color:#0b1f3b; }
-button.bg-stroke:disabled { color:#0b1f3b; }
+
 
 /* Más coral (el color de la llave del logo). Sobre blanco, el coral solo
    como relleno o detalle; para texto pequeño, su tono oscuro #B93A27
@@ -1659,7 +1653,8 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
 .ms-button { display:inline-flex; min-height:44px; align-items:center; justify-content:center; gap:var(--space-2); padding:var(--space-2) var(--space-4); border:1px solid transparent; border-radius:var(--radius-md); font:inherit; font-size:var(--font-size-sm); font-weight:650; line-height:1.25; text-decoration:none; cursor:pointer; transition:background-color .16s ease, border-color .16s ease, box-shadow .16s ease, color .16s ease; }
 .ms-button:disabled { cursor:not-allowed; opacity:.65; }
 .ms-button.w-full { width:100%; }
-.ms-button-primary { background:var(--turquesa); color:var(--ink); }
+.ms-button-primary { background:var(--turquesa); color:var(--ink); box-shadow:0 5px 14px rgb(0 194 168 / 15%); }
+.ms-button-primary:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 8px 18px rgb(0 194 168 / 21%); }
 .ms-button-primary:hover:not(:disabled) { background:#00ad97; }
 .ms-button-secondary { border-color:var(--rule); background:var(--sheet); color:var(--ink); }
 .ms-button-secondary:hover:not(:disabled) { border-color:var(--turquesa); background:var(--paper); }
