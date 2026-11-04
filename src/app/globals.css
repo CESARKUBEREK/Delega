@@ -128,10 +128,8 @@ body {
 /* App shell:navegación, espacios y todas las vistas autenticadas. */
 .app-shell {
   min-height:100dvh;
-  background:radial-gradient(ellipse at 13% 0%, rgb(0 194 168 / 5%), transparent 24rem),
-    radial-gradient(ellipse at 95% 9%, rgb(0 194 168 / 4%), transparent 25rem),
-    #f3f6fa;
-  color:#0b1f3b;
+  background:var(--paper);
+  color:var(--ink);
 }
 .app-topbar {
   position:sticky; z-index:30; top:0; border-bottom:1px solid #e3eaf1;
@@ -325,9 +323,7 @@ a.flow-node-trigger:hover { border-color:#0b1f3b; box-shadow:0 0 0 3px rgb(0 194
   .approval-actions > button { flex:1 1 140px; }
 }
 
-/* Tema claro de MarchaSolo: fondo gris claro, marino para el texto,
-   turquesa para acciones y navegación activa, y verde para estados correctos. */
-.app-shell { background:radial-gradient(ellipse at 10% -10%, rgb(0 194 168 / 7%), transparent 30rem), #f3f6fa; }
+/* Tema claro: superficie y texto definidos por los tokens de la aplicación. */
 .app-topbar { border-bottom-color:#e3eaf1; background:rgb(255 255 255 / 92%); }
 .app-switch-link { padding:7px 12px; border:1px solid #dfe7ee; border-radius:999px; background:#fff; color:#007a6c; }
 .app-switch-link:hover { border-color:#00c2a8; color:#005a50; }
@@ -547,7 +543,6 @@ a.flow-node-trigger:hover { border-color:#0b1f3b; box-shadow:0 0 0 3px rgb(0 194
 }
 
 /* Integraciones: primero la tarea; después, las conexiones que la hacen posible. */
-.app-shell:has(.integration-page) { background:#f3f6fa; }
 .integration-page { gap:22px; }
 .integration-page-intro {
   display:grid;
@@ -922,12 +917,6 @@ a.flow-node-trigger:hover { border-color:#0b1f3b; box-shadow:0 0 0 3px rgb(0 194
 }
 
 
-
-/* El fondo global es liso; la retícula se limita al sitio público (.site). */
-.app-shell {
-  min-height:100dvh;
-  background:var(--paper);
-}
 
 /* Barra superior en marino, como el fondo del logo: «Marcha» en blanco y
    «Solo» en turquesa. */
