@@ -1,6 +1,7 @@
 // Condiciones comerciales que se muestran en /precios.
 // La IA se paga aparte al proveedor (BYOK). Los límites de automatizaciones
-// son los del plan; el control (aprobación antes de enviar/cambiar) va en todos.
+// son del plan; el control (aprobación antes de enviar/cambiar) va en todos.
+// Precios en dólares estadounidenses (USD).
 
 export type Plan = {
   id: string
@@ -18,9 +19,9 @@ export const PLANS: Plan[] = [
   {
     id: "solo",
     name: "MarchaSolo Solo",
-    price: "19 €",
+    price: "19 $",
     period: "/mes",
-    priceYear: "228 €/año · IVA no incluido",
+    priceYear: "228 $/año · USD · impuestos no incluidos",
     tagline: "Para autónomos que quieren automatizar tareas cotidianas.",
     includes: [
       "Asistente de IA",
@@ -36,9 +37,9 @@ export const PLANS: Plan[] = [
   {
     id: "pro",
     name: "MarchaSolo Pro",
-    price: "39 €",
+    price: "39 $",
     period: "/mes",
-    priceYear: "468 €/año · IVA no incluido",
+    priceYear: "468 $/año · USD · impuestos no incluidos",
     tagline: "Para profesionales y pequeños negocios que quieren delegar más trabajo.",
     includes: [
       "20 automatizaciones activas",
@@ -53,9 +54,9 @@ export const PLANS: Plan[] = [
   {
     id: "business",
     name: "MarchaSolo Business",
-    price: "79 €",
+    price: "79 $",
     period: "/mes",
-    priceYear: "948 €/año · IVA no incluido",
+    priceYear: "948 $/año · USD · impuestos no incluidos",
     tagline: "Para microempresas y equipos pequeños.",
     includes: [
       "50 automatizaciones activas",
@@ -69,7 +70,5 @@ export const PLANS: Plan[] = [
   },
 ]
 
-// Planes de prueba del onboarding (por espacio personal): MarchaSolo prepara
-// los primeros planes con un modelo de IA avanzado, sin que el cliente
-// conecte nada. Para ejecutarlos hace falta su propia IA.
+// Planes de prueba del onboarding (por espacio personal).
 export const TRIAL = { plans: 2 }
