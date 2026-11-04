@@ -63,29 +63,31 @@ export function PanelNav({ pending = 0 }: { pending?: number }) {
         <Icon name="asistente" />
         <span>Pide algo a MarchaSolo</span>
       </Link>
-      {NAV_GROUPS.map(({ label: groupLabel, items }) => (
-        <section className="ms-nav-group" key={groupLabel} aria-label={groupLabel}>
-          <p className="ms-nav-group-heading">{groupLabel}</p>
-          <ul className="app-sidebar-list flex flex-col divide-y divide-rule border border-ink bg-sheet">
-            {items.map(({ slug, label }) => {
-              const active = isActive(slug)
-              return (
-                <li key={slug}>
-                  <Link
-                    href={slug ? `${base}/${slug}` : base}
-                    aria-current={active ? "page" : undefined}
-                    className="app-sidebar-link"
-                  >
-                    <span className="app-nav-icon"><Icon name={slug || "hoy"} /></span>
-                    <span className="app-nav-label">{label}</span>
-                    {slug === "aprobaciones" || slug === "" ? <Badge count={pending} /> : null}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
-      ))}
+      <div className="app-sidebar-list flex flex-col">
+        {NAV_GROUPS.map(({ label: groupLabel, items }) => (
+          <section className="ms-nav-group" key={groupLabel} aria-label={groupLabel}>
+            <p className="ms-nav-group-heading">{groupLabel}</p>
+            <ul className="flex flex-col divide-y divide-rule">
+              {items.map(({ slug, label }) => {
+                const active = isActive(slug)
+                return (
+                  <li key={slug}>
+                    <Link
+                      href={slug ? `${base}/${slug}` : base}
+                      aria-current={active ? "page" : undefined}
+                      className="app-sidebar-link"
+                    >
+                      <span className="app-nav-icon"><Icon name={slug || "hoy"} /></span>
+                      <span className="app-nav-label">{label}</span>
+                      {slug === "aprobaciones" || slug === "" ? <Badge count={pending} /> : null}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+        ))}
+      </div>
     </nav>
   )
 }
