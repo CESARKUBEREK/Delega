@@ -115,7 +115,7 @@ async function Assistant({
   const files = (rawFiles ?? []).map((f) => ({ id: f.id, name: f.name, kind: fileKindLabel(f.mime_type).toLowerCase() }))
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_15rem]">
+    <div className="assistant-page">
       <section className="min-w-0">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
           <h1 className="rotulo text-2xl">Chat</h1>
@@ -127,7 +127,7 @@ async function Assistant({
         </div>
 
         {/* En el móvil y la tableta, las conversaciones anteriores van plegadas aquí. */}
-        <details className="mb-4 border border-ink bg-sheet xl:hidden">
+        <details className="assistant-history-mobile mb-4 border border-ink bg-sheet xl:hidden">
           <summary className="cursor-pointer px-4 py-2.5 text-sm font-semibold">Conversaciones anteriores</summary>
           <div className="border-t border-rule">{list}</div>
         </details>
@@ -157,7 +157,7 @@ async function Assistant({
         />
       </section>
 
-      <aside className="hidden h-fit border border-ink bg-sheet xl:block">
+      <aside className="assistant-history hidden h-fit border border-ink bg-sheet xl:block">
         <h2 className="border-b border-ink px-4 py-2.5 text-sm font-semibold">Conversaciones</h2>
         {list}
       </aside>
