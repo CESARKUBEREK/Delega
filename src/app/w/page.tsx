@@ -37,10 +37,10 @@ export default function WorkspacesPage() {
 function Workspaces() {
   return (
     <div className="workspaces-grid grid gap-10 lg:grid-cols-[1fr_22rem]">
-      <section>
+      <section className="workspaces-intro">
         <p className="app-eyebrow">TU ESPACIO DE TRABAJO</p>
-        <h1 className="rotulo text-3xl">Tus espacios</h1>
-        <p className="mt-2 max-w-prose text-graphite">
+        <h1 className="workspaces-intro-title rotulo text-3xl">Tus espacios</h1>
+        <p className="workspaces-intro-description mt-2 max-w-prose text-graphite">
           Cada espacio guarda sus propios flujos, conexiones y claves. Lo que haces en uno no se ve en los demás.
         </p>
         <Suspense fallback={<div className="mt-6 h-40 border border-rule bg-sheet" aria-busy="true" />}>
