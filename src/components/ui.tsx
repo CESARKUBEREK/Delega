@@ -33,17 +33,21 @@ export function PanelCard({
   actions,
   children,
   className = "",
+  bodyPadding = "default",
+  headerDensity = "default",
 }: {
   title?: ReactNode
   description?: ReactNode
   actions?: ReactNode
   children: ReactNode
   className?: string
+  bodyPadding?: "default" | "none"
+  headerDensity?: "default" | "compact"
 }) {
   return (
     <section className={`ms-panel-card ${className}`.trim()}>
       {title || description || actions ? (
-        <header className="ms-panel-card-header">
+        <header className="ms-panel-card-header" data-density={headerDensity}>
           <div>
             {title ? <h2 className="ms-panel-card-title">{title}</h2> : null}
             {description ? <p className="ms-page-header-description">{description}</p> : null}
@@ -51,7 +55,7 @@ export function PanelCard({
           {actions}
         </header>
       ) : null}
-      <div className="ms-panel-card-body">{children}</div>
+      <div className="ms-panel-card-body" data-padding={bodyPadding}>{children}</div>
     </section>
   )
 }
