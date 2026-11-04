@@ -79,7 +79,7 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
       {pending ? <ApprovalCard runId={run.id} pending={pending} /> : null}
 
       {run.status === "succeeded" && run.summary ? (
-        <PanelCard className="run-detail-card is-success" title="Resultado">
+        <PanelCard className="run-detail-card is-success" bodyPadding="none" headerDensity="compact" title="Resultado">
           <p className="px-5 py-4 whitespace-pre-wrap text-ink">{run.summary}</p>
         </PanelCard>
       ) : null}
@@ -90,7 +90,7 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
 
       <RunAi run={run} calls={calls ?? []} models={models ?? []} />
 
-      <PanelCard className="run-detail-card" title="Bitácora">
+      <PanelCard className="run-detail-card" bodyPadding="none" headerDensity="compact" title="Bitácora">
         <ol className="divide-y divide-rule">
           {(events ?? []).map((e) => (
             <li key={e.id} className="grid grid-cols-[5.5rem_1fr_auto] items-baseline gap-3 px-5 py-2.5 text-sm">
@@ -180,7 +180,7 @@ async function Diagnosis({ workspaceId, flowId, error }: { workspaceId: string; 
   const fileIds = Array.isArray(settings.file_ids) ? settings.file_ids.filter((id): id is string => typeof id === "string") : []
 
   return (
-    <PanelCard className="run-detail-card is-danger" title="Por qué falló">
+    <PanelCard className="run-detail-card is-danger" bodyPadding="none" headerDensity="compact" title="Por qué falló">
       <div className="flex flex-col gap-3 px-5 py-4">
         <p className="text-ink">{d.cause}</p>
         {error ? <p className="border-l-2 border-rule pl-3 text-sm text-graphite">{error}</p> : null}
@@ -243,7 +243,7 @@ function RunAi({
   const switches = Array.isArray(routing.switches) ? routing.switches : []
 
   return (
-    <PanelCard className="run-detail-card" title="IA de esta ejecución">
+    <PanelCard className="run-detail-card" bodyPadding="none" headerDensity="compact" title="IA de esta ejecución">
       <div className="flex flex-col gap-2 px-5 py-4 text-sm text-graphite">
         <p>
           {used.length ? (
