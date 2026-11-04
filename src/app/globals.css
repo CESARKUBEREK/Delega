@@ -1004,10 +1004,20 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
 
 /* Configuración: aprovecha el ancho disponible cuando no hay invitaciones que mostrar. */
 .settings-page { width:min(100%, 880px); margin:0 auto; }
-.settings-page > section { min-width:0; }
+.settings-page > section { display:grid; min-width:0; align-content:start; gap:14px; }
 .settings-page-with-invite { display:grid; width:min(100%, 1080px); grid-template-columns:minmax(0, 1fr) 22rem; align-items:start; gap:24px; }
 .settings-card { overflow:hidden; border:1px solid #dfe7ee; border-radius:16px; background:#fff; box-shadow:0 10px 28px rgb(11 31 59 / 4%); }
-.settings-card > h2 { border-color:#e8eef2; background:#fff; color:#0b1f3b; font-weight:700; }
+.settings-card > h2 { position:relative; padding:13px 16px 13px 25px; border-color:#e8eef2; background:#fff; color:#0b1f3b; font-size:13px; font-weight:700; }
+.settings-card > h2::before { position:absolute; top:50%; left:14px; width:3px; height:15px; transform:translateY(-50%); border-radius:999px; background:#00c2a8; content:""; }
+.settings-invite-card { padding:20px; }
+.settings-invite-card .automation-section-eyebrow { margin-bottom:5px; }
+.settings-invite-title { margin:0; color:#0b1f3b; font-size:19px; font-weight:700; letter-spacing:-.02em; }
+.settings-invite-card > .settings-invite-title { padding:0; border:0; background:transparent; }
+.settings-invite-card > .settings-invite-title::before { display:none; }
+.settings-management { display:grid; gap:15px; padding-top:18px; border-top:1px solid #e1e8ef; }
+.settings-management > section { display:grid; gap:10px; min-width:0; padding:15px; border:1px solid #e1e8ef; border-radius:13px; background:#fff; box-shadow:0 4px 14px rgb(11 31 59 / 3%); }
+.settings-management > section > h2 { margin:0; color:#0b1f3b; font-size:14px; font-weight:700; }
+.settings-management > section > h2.is-danger { color:#b42318; }
 @media (max-width:900px) {
   .settings-page-with-invite { grid-template-columns:minmax(0, 1fr); }
 }
@@ -1105,6 +1115,41 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
   .automation-approval-item { padding:11px; }
   .automation-approval-meta { gap:4px 7px; }
   .automation-activity-card-heading h2 { font-size:14px; }
+}
+
+/* Historial: listas legibles y consumo desplazable en pantallas estrechas. */
+.automation-history { display:grid; min-width:0; gap:16px; }
+.automation-history-list { margin:0; padding:0; list-style:none; }
+.automation-history-list > li + li { border-top:1px solid #edf0f3; }
+.automation-history-run { display:flex; min-width:0; align-items:center; justify-content:space-between; gap:16px; padding:12px 15px; color:inherit; text-decoration:none; transition:background-color .15s ease; }
+.automation-history-run:hover { background:#f7faf9; }
+.automation-history-run:focus-visible { outline:3px solid rgb(0 194 168 / 42%); outline-offset:-3px; }
+.automation-history-main { display:grid; min-width:0; gap:3px; }
+.automation-history-title { overflow:hidden; color:#0b1f3b; font-size:12px; font-weight:650; text-overflow:ellipsis; white-space:nowrap; }
+.automation-history-main time { color:#718095; font-size:10px; }
+.automation-history-open { display:inline-flex; flex:0 0 auto; align-items:center; gap:6px; color:#007a6c; font-size:11px; font-weight:700; }
+.automation-history-status { flex:0 0 auto; padding:4px 9px; border:1px solid #dfe7ee; border-radius:999px; background:#f5f7f9; color:#536175; font-size:10px; font-weight:700; }
+.automation-history-status.is-succeeded { border-color:#b8e4d1; background:#eaf8f1; color:#08754f; }
+.automation-history-status.is-failed { border-color:#f1c1bc; background:#fdecea; color:#a61e16; }
+.automation-history-status.is-awaiting_approval { border-color:#f2d3a9; background:#fdf2e3; color:#8a4708; }
+.automation-history-status.is-running { border-color:#cfeae4; background:#f0faf8; color:#007a6c; }
+.automation-history-empty { margin:0; padding:16px 15px; color:#536175; font-size:12px; }
+.automation-history-table-wrap { min-width:0; overflow-x:auto; }
+.automation-history-table { width:100%; border-collapse:collapse; font-size:12px; }
+.automation-history-table th, .automation-history-table td { padding:10px 14px; border-bottom:1px solid #edf0f3; }
+.automation-history-table th { color:#536175; font-size:10px; font-weight:700; text-align:left; white-space:nowrap; }
+.automation-history-table th:not(:first-child), .automation-history-table td:not(:first-child) { text-align:right; font-variant-numeric:tabular-nums; }
+.automation-history-table td { color:#0b1f3b; }
+.automation-history-table tbody tr:last-child td { border-bottom:0; }
+.automation-history-note { margin:0; padding:10px 14px 13px; color:#718095; font-size:10px; line-height:1.5; }
+@media (max-width:560px) {
+  .settings-invite-card { padding:16px; }
+  .automation-history-run { gap:10px; padding:11px 12px; }
+  .automation-history-status { padding:3px 7px; font-size:9px; }
+  .automation-history-table th, .automation-history-table td { padding:9px 10px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .automation-history-run { transition:none; }
 }
 
 /* Rutinas (Plantillas): una ficha por rutina con sus plantillas. */

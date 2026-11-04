@@ -9,14 +9,15 @@ export const metadata = { title: "Historial" }
 
 export default function HistoryPage({ params }: PageProps<"/w/[workspaceId]/historial">) {
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="rotulo text-2xl">Historial</h1>
-        <p className="mt-1 max-w-prose text-graphite">
+    <div className="automation-page flex flex-col">
+      <header className="automation-page-intro">
+        <p className="app-eyebrow">ACTIVIDAD DEL ESPACIO</p>
+        <h1 className="rotulo">Historial</h1>
+        <p className="automation-page-description">
           Ejecuciones de automatizaciones, conversaciones con el asistente y consumo de IA de este espacio.
         </p>
-      </div>
-      <Suspense fallback={<div className="h-64 border border-rule bg-sheet" aria-busy="true" />}>
+      </header>
+      <Suspense fallback={<div className="automation-loading h-64 border border-rule bg-sheet" aria-busy="true" />}>
         <History params={params} />
       </Suspense>
     </div>
@@ -64,20 +65,25 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
   const base = `/w/${workspaceId}`
 
   return (
-    <div className="flex flex-col gap-6">
-      <section className="border border-ink bg-sheet">
-        <h2 className="border-b border-ink px-5 py-3 font-semibold">Ejecuciones {isAdmin ? "del espacio" : "tuyas"}</h2>
+    <div className="automation-history">
+      <section className="automation-activity-card">
+        <div className="automation-activity-card-heading">
+          <div>
+            <p className="automation-section-eyebrow">TRABAJO REALIZADO</p>
+            <h2>Últimas ejecuciones {isAdmin ? "del espacio" : "tuyas"}</h2>
+          </div>
+        </div>
         {runs && runs.length > 0 ? (
-          <ul className="divide-y divide-rule">
+          <ul className="automation-history-list">
             {runs.map((r) => (
               <li key={r.id}>
-                <Link href={`${base}/ejecuciones/${r.id}`} className="flex items-center justify-between gap-4 px-5 py-3 hover:bg-paper">
-                  <span className="min-w-0">
-                    <span className="block truncate text-ink">{r.flow_name}</span>
-                    <span className="text-xs text-graphite">{formatDateTime(r.started_at)}</span>
+                <Link href={`${base}/ejecuciones/${r.id}`} className="automation-history-run">
+                  <span className="automation-history-main">
+                    <span className="automation-history-title">{r.flow_name}</span>
+                    <time dateTime={r.started_at}>{formatDateTime(r.started_at)}</time>
                   </span>
                   <span
-                    className={`shrink-0 text-sm ${r.status === "failed" ? "text-alert" : r.status === "awaiting_approval" ? "font-medium text-link" : "text-graphite"}`}
+                    className={`automation-history-status is-${r.status}`}
                   >
                     {RUN_STATUS_LABEL[r.status] ?? r.status}
                   </span>
@@ -86,60 +92,69 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
             ))}
           </ul>
         ) : (
-          <p className="px-5 py-4 text-sm text-graphite">Aún no se ha ejecutado ninguna automatización.</p>
+          <p className="automation-history-empty">Aún no se ha ejecutado ninguna automatización.</p>
         )}
       </section>
 
-      <section className="border border-ink bg-sheet">
-        <h2 className="border-b border-ink px-5 py-3 font-semibold">
-          Consumo de este mes {isAdmin ? "(todo el espacio)" : "(tuyo)"}
-        </h2>
+      <section className="automation-activity-card">
+        <div className="automation-activity-card-heading">
+          <div>
+            <p className="automation-section-eyebrow">USO DE IA</p>
+            <h2>Consumo de este mes {isAdmin ? "(todo el espacio)" : "(tuyo)"}</h2>
+          </div>
+        </div>
         {byModel.size > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-left text-graphite">
+          <div className="automation-history-table-wrap">
+            <table className="automation-history-table">
+              <thead>
                 <tr className="border-b border-rule">
-                  <th className="px-5 py-2 font-medium">Modelo</th>
-                  <th className="px-5 py-2 text-right font-medium">Peticiones</th>
-                  <th className="px-5 py-2 text-right font-medium">Tokens de entrada</th>
-                  <th className="px-5 py-2 text-right font-medium">Tokens de salida</th>
+                  <th>Modelo</th>
+                  <th>Peticiones</th>
+                  <th>Tokens de entrada</th>
+                  <th>Tokens de salida</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-rule">
                 {[...byModel].map(([model, r]) => (
                   <tr key={model}>
-                    <td className="px-5 py-2 text-ink">{modelLabel(model)}</td>
-                    <td className="px-5 py-2 text-right tabular-nums">{formatNumber(r.requests)}</td>
-                    <td className="px-5 py-2 text-right tabular-nums">{formatNumber(r.input)}</td>
-                    <td className="px-5 py-2 text-right tabular-nums">{formatNumber(r.output)}</td>
+                    <td>{modelLabel(model)}</td>
+                    <td>{formatNumber(r.requests)}</td>
+                    <td>{formatNumber(r.input)}</td>
+                    <td>{formatNumber(r.output)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <p className="px-5 py-3 text-xs text-graphite">El importe lo factura cada proveedor (OpenAI, Anthropic, DeepSeek o xAI) en tu cuenta según su tarifa.</p>
+            <p className="automation-history-note">El importe lo factura cada proveedor (OpenAI, Anthropic, DeepSeek o xAI) en tu cuenta según su tarifa.</p>
           </div>
         ) : (
-          <p className="px-5 py-4 text-sm text-graphite">Sin consumo este mes.</p>
+          <p className="automation-history-empty">Sin consumo este mes.</p>
         )}
       </section>
 
-      <section className="border border-ink bg-sheet">
-        <h2 className="border-b border-ink px-5 py-3 font-semibold">
-          Conversaciones {isAdmin ? "del espacio" : "tuyas"}
-        </h2>
+      <section className="automation-activity-card">
+        <div className="automation-activity-card-heading">
+          <div>
+            <p className="automation-section-eyebrow">CHAT CON MARCHASOLO</p>
+            <h2>Conversaciones recientes {isAdmin ? "del espacio" : "tuyas"}</h2>
+          </div>
+        </div>
         {conversations && conversations.length > 0 ? (
-          <ul className="divide-y divide-rule">
+          <ul className="automation-history-list">
             {conversations.map((c) => (
               <li key={c.id}>
-                <Link href={`${base}/asistente?c=${c.id}`} className="flex items-center justify-between gap-4 px-5 py-3 hover:bg-paper">
-                  <span className="truncate text-ink">{c.title}</span>
-                  <span className="shrink-0 text-sm text-graphite">{formatDateTime(c.updated_at)}</span>
+                <Link href={`${base}/asistente?c=${c.id}`} className="automation-history-run">
+                  <span className="automation-history-main">
+                    <span className="automation-history-title">{c.title}</span>
+                    <time dateTime={c.updated_at}>{formatDateTime(c.updated_at)}</time>
+                  </span>
+                  <span className="automation-history-open" aria-hidden="true">Abrir <span>→</span></span>
                 </Link>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="px-5 py-4 text-sm text-graphite">Aún no hay conversaciones.</p>
+          <p className="automation-history-empty">Aún no hay conversaciones.</p>
         )}
       </section>
     </div>
