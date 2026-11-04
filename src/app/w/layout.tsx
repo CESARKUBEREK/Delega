@@ -1,10 +1,9 @@
-// Las rutas de espacios dependen de la sesión Supabase en cookies.
-// Deben renderizarse por petición: durante el prerender, el SDK de Auth usa
-// Date.now() para cargar la sesión y Next.js bloquea ese acceso dinámico.
-export const dynamic = "force-dynamic"
+import { connection } from "next/server"
 
-// Cada vista de /w pone su propia barra superior (la lista de espacios y cada
-// espacio), para que nunca se muestren dos.
-export default function WorkspacesLayout({ children }: LayoutProps<"/w">) {
+// Las rutas de espacios dependen de la sesión Supabase en cookies.
+// Con Cache Components activo, connection() aplaza el renderizado hasta
+// disponer de una petición real, sin usar la config dinámica incompatible.
+export default async function WorkspacesLayout({ children }: LayoutProps<"/w">) {
+  await connection()
   return children
 }
