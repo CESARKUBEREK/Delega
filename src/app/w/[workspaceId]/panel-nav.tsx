@@ -4,7 +4,10 @@ import Link from "next/link"
 import { useParams, usePathname } from "next/navigation"
 import { useState } from "react"
 
-const NAV_GROUPS = [
+type NavItem = { slug: string; label: string }
+type NavGroup = { label: string; items: NavItem[] }
+
+const NAV_GROUPS: NavGroup[] = [
   {
     label: "Mi trabajo",
     items: [
@@ -28,9 +31,9 @@ const NAV_GROUPS = [
       { slug: "configuracion", label: "Configuración" },
     ],
   },
-] as const
+]
 
-const SECTIONS = NAV_GROUPS.flatMap((group) => group.items)
+const SECTIONS: NavItem[] = NAV_GROUPS.flatMap((group) => group.items)
 
 function useSection() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
