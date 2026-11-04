@@ -1691,3 +1691,11 @@ button.setup-step-link:focus-visible { outline:2px solid #007a6c; outline-offset
   .ms-button { transition:none; }
 }
 
+
+/* Fase 2 · superficies compartidas aplicadas a Chat y Aprobaciones. */
+.assistant-history.ms-panel-card .ms-panel-card-body,
+.automation-activity-card.ms-panel-card .ms-panel-card-body { padding:0; }
+.automation-activity-card.ms-panel-card .ms-panel-card-header { padding:13px 15px; }
+@media (max-width:700px) {
+  .automation-activity-card.ms-panel-card .ms-panel-card-header { padding:12px; }
+}
