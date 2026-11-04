@@ -182,19 +182,19 @@ async function Workspace({ params }: { params: PageProps<"/w/[workspaceId]/confi
             <div className="settings-management">
               {canInvite ? (
                 <section>
-                  <h2>Nombre de la organización</h2>
+                  <h2 className="settings-management-title">Nombre de la organización</h2>
                   <RenameForm workspaceId={workspace.id} name={workspace.name} />
                 </section>
               ) : null}
               {canLeave ? (
                 <section>
-                  <h2>Salir</h2>
+                  <h2 className="settings-management-title">Salir</h2>
                   <LeaveForm workspaceId={workspace.id} />
                 </section>
               ) : null}
               {isOwner ? (
                 <section>
-                  <h2 className="is-danger">Borrar la organización</h2>
+                  <h2 className="settings-management-title is-danger">Borrar la organización</h2>
                   <DeleteForm workspaceId={workspace.id} name={workspace.name} />
                 </section>
               ) : null}
