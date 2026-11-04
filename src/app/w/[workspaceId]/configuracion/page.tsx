@@ -84,11 +84,12 @@ async function Workspace({ params }: { params: PageProps<"/w/[workspaceId]/confi
     : { data: [] }
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[1fr_22rem]">
+    <div className={`settings-page ${canInvite ? "settings-page-with-invite" : ""}`}>
       <section>
         <h1 className="rotulo text-2xl">Configuración</h1>
+        <p className="mt-2 text-sm text-graphite">Gestiona miembros, avisos y preferencias del espacio.</p>
 
-        <div className="mt-6 border border-ink bg-sheet">
+        <div className="settings-card mt-6">
           <h2 className="border-b border-ink px-5 py-3 font-semibold">Miembros</h2>
           <ul className="divide-y divide-rule">
             {(members ?? []).map((m) => (
@@ -106,14 +107,14 @@ async function Workspace({ params }: { params: PageProps<"/w/[workspaceId]/confi
           </ul>
         </div>
 
-        <div className="mt-8 border border-ink bg-sheet">
+        <div className="settings-card mt-6">
           <h2 className="border-b border-ink px-5 py-3 font-semibold">Avisos en este dispositivo</h2>
           <div className="px-5 py-4">
             <PushToggle vapidPublicKey={process.env.VAPID_PUBLIC_KEY?.trim() || null} />
           </div>
         </div>
 
-        <div className="mt-8 border border-ink bg-sheet">
+        <div className="settings-card mt-6">
           <h2 className="border-b border-ink px-5 py-3 font-semibold">Mis avisos</h2>
           <div className="flex flex-col gap-6 px-5 py-4">
             <NoticePrefsForm
@@ -137,7 +138,7 @@ async function Workspace({ params }: { params: PageProps<"/w/[workspaceId]/confi
         </div>
 
         {isAdmin ? (
-          <div className="mt-8 border border-ink bg-sheet">
+          <div className="settings-card mt-6">
             <h2 className="border-b border-ink px-5 py-3 font-semibold">Zona horaria del espacio</h2>
             <div className="px-5 py-4">
               <p className="mb-3 text-sm text-graphite">
@@ -149,7 +150,7 @@ async function Workspace({ params }: { params: PageProps<"/w/[workspaceId]/confi
         ) : null}
 
         {canInvite && pending && pending.length > 0 ? (
-          <div className="mt-8 border border-ink bg-sheet">
+          <div className="settings-card mt-6">
             <h2 className="border-b border-ink px-5 py-3 font-semibold">Invitaciones pendientes</h2>
             <ul className="divide-y divide-rule">
               {pending.map((inv) => (
@@ -198,7 +199,7 @@ async function Workspace({ params }: { params: PageProps<"/w/[workspaceId]/confi
       </section>
 
       {canInvite ? (
-        <aside className="h-fit border border-ink bg-sheet p-6">
+        <aside className="settings-card h-fit p-6">
           <h2 className="rotulo text-lg">Invitar a alguien</h2>
           <p className="mt-1 mb-5 text-sm text-graphite">Tendrá que entrar con el mismo correo al que le invitas.</p>
           <InviteForm workspaceId={workspace.id} />

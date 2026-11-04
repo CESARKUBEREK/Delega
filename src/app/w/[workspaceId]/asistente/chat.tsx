@@ -113,7 +113,7 @@ export function Chat({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="chat-surface flex flex-col gap-4">
       {messages.length === 0 ? (
         <div className="chat-welcome border border-ink bg-sheet p-5 sm:p-7">
           <p className="rotulo text-2xl text-ink sm:text-3xl">¿Qué necesitas hoy?</p>
