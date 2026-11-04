@@ -2,6 +2,7 @@
 export const SITE_LINKS = [
   { href: "/para-que-sirve", label: "Qué puedes hacer" },
   { href: "/como-funciona", label: "Cómo funciona" },
+  { href: "/integraciones", label: "Integraciones" },
   { href: "/casos-de-uso", label: "Casos de uso" },
   { href: "/precios", label: "Precios" },
 ] as const
