@@ -151,7 +151,7 @@ async function Flow({
       ) : null}
 
       {plan?.steps.some((st) => st.kind === "write" && st.connection === "calendar") ? (
-        <PanelCard className="flow-detail-card" title={Citas en tu calendario}>
+        <PanelCard className="flow-detail-card" title="Citas en tu calendario">
           <div className="px-5 py-4">
             {(() => {
               const cal = ((flow.settings ?? {}) as { calendar?: { mode?: string; days?: unknown; ranges?: unknown } }).calendar
@@ -172,7 +172,7 @@ async function Flow({
       ) : null}
 
       {(ai ?? []).length > 0 ? (
-        <PanelCard className="flow-detail-card" title={IA de esta automatización}>
+        <PanelCard className="flow-detail-card" title="IA de esta automatización">
           <div className="px-5 py-4">
             {(() => {
               const wsRouting = readWorkspaceRouting(ws?.ai_routing)
@@ -233,7 +233,7 @@ async function Flow({
       </PanelCard>
 
       {runs && runs.length > 0 ? (
-        <PanelCard className="flow-detail-card" title={Ejecuciones de esta automatización}>
+        <PanelCard className="flow-detail-card" title="Ejecuciones de esta automatización">
           <ul className="divide-y divide-rule">
             {runs.map((r) => (
               <li key={r.id}>
