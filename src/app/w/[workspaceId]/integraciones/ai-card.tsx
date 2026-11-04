@@ -1,4 +1,5 @@
 import { ExternalLink } from "@/components/external-link"
+import { StatusBadge as SharedStatusBadge } from "@/components/ui"
 import { PROVIDER_LINKS } from "@/lib/provider-links"
 import { AI_PROVIDERS, type AiProvider, modelLabel } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
@@ -67,8 +68,8 @@ export async function AiCard({ workspaceId, isAdmin, provider }: { workspaceId: 
           <p className="text-sm text-graphite">{help.description}</p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <StatusBadge status={connection ? connection.status : null} />
-          {connection?.is_default ? <span className="border border-stroke px-2 py-0.5 text-xs text-ink">Principal</span> : null}
+          <SharedStatusBadge tone={connection?.status === "active" ? "success" : connection?.status === "invalid" ? "danger" : connection ? "warning" : "neutral"}>{connection?.status === "active" ? "Conectado" : connection?.status === "invalid" ? "Clave rechazada" : connection ? "Requiere configuración" : "Sin conectar"}</SharedStatusBadge>
+          {connection?.is_default ? <SharedStatusBadge tone="info">Principal</SharedStatusBadge> : null}
         </div>
       </summary>
 
@@ -114,9 +115,3 @@ export async function AiCard({ workspaceId, isAdmin, provider }: { workspaceId: 
   )
 }
 
-function StatusBadge({ status }: { status: string | null }) {
-  if (status === "active") return <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">Conectado</span>
-  if (status === "invalid") return <span className="shrink-0 border border-alert px-2 py-0.5 text-xs text-alert">Clave rechazada</span>
-  if (status) return <span className="integration-state-setup shrink-0 border px-2 py-0.5 text-xs">Requiere configuración</span>
-  return <span className="shrink-0 border border-rule px-2 py-0.5 text-xs text-graphite">Sin conectar</span>
-}

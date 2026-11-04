@@ -1,6 +1,7 @@
 "use client"
 
 import { ExternalLink } from "@/components/external-link"
+import { StatusBadge } from "@/components/ui"
 import { PROVIDER_LINKS } from "@/lib/provider-links"
 import { useActionState, useRef, useState } from "react"
 import { FormMessage, SubmitButton } from "@/components/form"
@@ -44,6 +45,7 @@ export function ApiIntegrationCard({
     ? "Consulta tus tablas usando tu clave pública y las políticas RLS de tu proyecto."
     : "Conecta una API REST propia. Las consultas se ejecutan desde tus automatizaciones; las escrituras esperan tu aprobación."
   const badge = active ? "Conectado" : connection?.status === "invalid" ? "Revisar conexión" : connection ? "Requiere configuración" : "Sin conectar"
+  const badgeTone = active ? "success" : connection?.status === "invalid" ? "danger" : connection ? "warning" : "neutral"
   const status = !connection ? "available" : active ? "connected" : connection.status === "invalid" ? "attention" : "setup"
 
   return (
@@ -60,7 +62,7 @@ export function ApiIntegrationCard({
           <h3 className="rotulo text-lg">{title}</h3>
           <p className="text-sm text-graphite">{subtitle}</p>
         </div>
-        <span className={`shrink-0 border px-2 py-0.5 text-xs ${active ? "border-ok bg-ok-bg text-ok" : connection?.status === "invalid" ? "border-alert bg-alert-bg text-alert" : connection ? "integration-state-setup" : "border-rule text-graphite"}`}>{badge}</span>
+        <StatusBadge tone={badgeTone}>{badge}</StatusBadge>
       </summary>
       <div className="flex flex-col gap-4 border-t border-rule px-4 py-4">
         {active ? (

@@ -1,4 +1,5 @@
 import { ExternalLink } from "@/components/external-link"
+import { StatusBadge } from "@/components/ui"
 import { PROVIDER_LINKS } from "@/lib/provider-links"
 import { fileKindLabel } from "@/lib/plan"
 import { supabaseUrl } from "@/lib/supabase/env"
@@ -10,10 +11,10 @@ import { DisconnectVoiceForm, VoiceAccess, VoicePlaybook, VoiceSettingsForm } fr
 import { VoiceWebPanel, type VoiceWebWidget } from "./voice-web-client"
 
 function Badge({ status, invalidLabel }: { status: string | null | undefined; invalidLabel: string }) {
-  if (status === "active") return <span className="shrink-0 border border-ok px-2 py-0.5 text-xs text-ok">Conectado</span>
-  if (status === "paused") return <span className="integration-state-setup shrink-0 border px-2 py-0.5 text-xs">Requiere configuración</span>
-  if (status) return <span className="shrink-0 border border-alert px-2 py-0.5 text-xs text-alert">{invalidLabel}</span>
-  return <span className="shrink-0 border border-rule px-2 py-0.5 text-xs text-graphite">Sin conectar</span>
+  if (status === "active") return <StatusBadge tone="success">Conectado</StatusBadge>
+  if (status === "paused") return <StatusBadge tone="warning">Requiere configuración</StatusBadge>
+  if (status) return <StatusBadge tone="danger">{invalidLabel}</StatusBadge>
+  return <StatusBadge tone="neutral">Sin conectar</StatusBadge>
 }
 
 function integrationStatus(status: string | null | undefined, unconfigured: "available" | "setup" = "available") {
