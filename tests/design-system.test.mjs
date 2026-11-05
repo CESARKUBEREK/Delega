@@ -15,6 +15,9 @@ const inboxIntegrationsClient = readFileSync(new URL("../src/app/w/[workspaceId]
 const routingForm = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/routing-form.tsx", import.meta.url), "utf8")
 const voiceClient = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/voice-client.tsx", import.meta.url), "utf8")
 const helpPanel = readFileSync(new URL("../src/components/help-panel.tsx", import.meta.url), "utf8")
+const cardActions = readFileSync(new URL("../src/app/w/[workspaceId]/bandeja/card-actions.tsx", import.meta.url), "utf8")
+const diagnosis = readFileSync(new URL("../src/app/w/[workspaceId]/ejecuciones/[runId]/diagnosis.tsx", import.meta.url), "utf8")
+const helpVoiceToggle = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/help-voice-toggle.tsx", import.meta.url), "utf8")
 const replyComposer = readFileSync(new URL("../src/app/w/[workspaceId]/bandeja/[threadId]/reply-composer.tsx", import.meta.url), "utf8")
 const runLive = readFileSync(new URL("../src/app/w/[workspaceId]/ejecuciones/[runId]/run-live.tsx", import.meta.url), "utf8")
 const runPanel = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/[flowId]/run-panel.tsx", import.meta.url), "utf8")
@@ -211,4 +214,14 @@ test("Fase 4: paneles, grupos de navegación y estados vacíos comparten ritmo v
   assert.ok(css.includes(".ms-nav-group-heading,"))
   assert.ok(css.includes(".ms-empty-state > div {"))
   assert.match(css, /@media\s*\(max-width:480px\)\s*\{[\s\S]*?\.ms-empty-state\s*\{/)
+})
+
+
+test("Fase 5: los errores de acciones contextuales usan el aviso compartido", () => {
+  for (const source of [cardActions, diagnosis, helpVoiceToggle]) {
+    assert.ok(source.includes('import { InfoBanner } from "@/components/ui"'))
+    assert.ok(source.includes('<InfoBanner tone="danger" role="alert">{error}</InfoBanner>'))
+    assert.ok(!source.includes('className="text-sm text-alert" role="alert"'))
+    assert.ok(!source.includes('className="text-alert" role="alert"'))
+  }
 })

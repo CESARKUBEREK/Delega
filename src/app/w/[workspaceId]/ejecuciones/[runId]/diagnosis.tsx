@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 import { askHelpPanel } from "@/components/help-panel"
+import { InfoBanner } from "@/components/ui"
 import { startRun } from "../../run-actions"
 
 // Botones de «Por qué falló»: volver a ejecutar la automatización y
@@ -54,11 +55,7 @@ export function DiagnosisActions({
           Pregúntale al ayudante
         </button>
       </div>
-      {error ? (
-        <p className="text-sm text-alert" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <InfoBanner tone="danger" role="alert">{error}</InfoBanner> : null}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { InfoBanner } from "@/components/ui"
 import { dismissCard, muteFollowup, prepareReply } from "./inbox-actions"
 
 // Botones de una tarjeta de «Para hoy» (fase 6G-3 y 6G-4).
@@ -44,11 +45,7 @@ export function CardActions({
           {mode === "followup" ? "No recordar" : "Descartar"}
         </button>
       </div>
-      {error ? (
-        <p className="text-sm text-alert" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <InfoBanner tone="danger" role="alert">{error}</InfoBanner> : null}
     </div>
   )
 }
