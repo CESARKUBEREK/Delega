@@ -14,6 +14,9 @@ const inboxIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integ
 const replyComposer = readFileSync(new URL("../src/app/w/[workspaceId]/bandeja/[threadId]/reply-composer.tsx", import.meta.url), "utf8")
 const runLive = readFileSync(new URL("../src/app/w/[workspaceId]/ejecuciones/[runId]/run-live.tsx", import.meta.url), "utf8")
 const runPanel = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/[flowId]/run-panel.tsx", import.meta.url), "utf8")
+const flowEditor = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/flow-editor.tsx", import.meta.url), "utf8")
+const invitePage = readFileSync(new URL("../src/app/invite/page.tsx", import.meta.url), "utf8")
+const googleCard = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/google-card.tsx", import.meta.url), "utf8")
 
 
 function rule(selector) {
@@ -119,4 +122,20 @@ test("Bandeja, Ejecuciones y panel de automatización usan avisos compartidos", 
     assert.ok(!/border-l-2 border-alert bg-alert-bg/.test(source))
   }
   assert.ok(replyComposer.includes('<InfoBanner tone="success" role="status"'))
+})
+
+
+test("acciones principales reutilizan los botones del sistema de diseño", () => {
+  assert.ok(flowEditor.includes('import { PrimaryButton, SecondaryButton } from "@/components/ui"'))
+  assert.ok(flowEditor.includes("<PrimaryButton"))
+  assert.ok(flowEditor.includes("<SecondaryButton"))
+  assert.ok(runLive.includes("<PrimaryButton"))
+  assert.ok(runLive.includes("<SecondaryButton"))
+  assert.ok(runPanel.includes("<PrimaryButton"))
+  assert.ok(runPanel.includes("<SecondaryButton"))
+  assert.ok(googleCard.includes("<PrimaryButton"))
+  assert.ok(invitePage.includes("<PrimaryButton"))
+  for (const source of [flowEditor, runLive, runPanel, googleCard, invitePage]) {
+    assert.ok(!/h-11 bg-stroke px-\d+ text-base font-semibold text-stroke-ink/.test(source))
+  }
 })
