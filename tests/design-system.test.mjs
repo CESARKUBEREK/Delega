@@ -176,6 +176,6 @@ test("formularios de integraciones de bandeja reutilizan Field compartido", () =
 
 test("presupuesto del router de IA utiliza los campos compartidos", () => {
   assert.ok(routingForm.includes('import { Field, FormMessage, SubmitButton } from "@/components/form"'))
-  assert.equal((routingForm.match(/<Field\\b/g) ?? []).length, 3)
+  assert.equal((routingForm.match(/<Field\b/g) ?? []).length, 3)
   assert.ok(!routingForm.includes("function UsdField("))
 })
