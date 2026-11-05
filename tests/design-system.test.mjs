@@ -6,6 +6,9 @@ import { test } from "node:test"
 
 const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8")
 const ui = readFileSync(new URL("../src/components/ui.tsx", import.meta.url), "utf8")
+const plan = readFileSync(new URL("../src/lib/plan.ts", import.meta.url), "utf8")
+const automation = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/page.tsx", import.meta.url), "utf8")
+const history = readFileSync(new URL("../src/app/w/[workspaceId]/historial/page.tsx", import.meta.url), "utf8")
 
 
 function rule(selector) {
@@ -55,4 +58,27 @@ test("los encabezados y las tarjetas usan sus hooks de descripción correspondie
 
 test("Bandeja reduce el espacio entre secciones en móvil como el resto del espacio", () => {
   assert.ok(css.includes("@media (max-width:640px) {\n  .inbox-page { gap:16px; }"))
+})
+
+test("los estados de ejecución comparten etiquetas y tonos semánticos", () => {
+  for (const [status, tone] of [
+    ["running", "info"],
+    ["awaiting_approval", "warning"],
+    ["succeeded", "success"],
+    ["failed", "danger"],
+    ["cancelled", "neutral"],
+  ]) {
+    assert.match(plan, new RegExp(status + ': "' + tone + '"'))
+  }
+  assert.match(plan, /return RUN_STATUS_TONE\[status\] \?\? "neutral"/)
+  assert.ok(ui.includes("export function RunStatusBadge("))
+  assert.ok(ui.includes("tone={runStatusTone(status)}"))
+})
+
+test("Automatizaciones e Historial usan el mismo componente de estado", () => {
+  assert.ok(automation.includes("<RunStatusBadge status={run.status}"))
+  assert.ok(automation.includes('<RunStatusBadge status="awaiting_approval"'))
+  assert.ok(history.includes("<RunStatusBadge status={r.status}"))
+  assert.ok(!css.includes(".automation-activity-status.is-succeeded"))
+  assert.ok(!css.includes(".automation-history-status.is-failed"))
 })
