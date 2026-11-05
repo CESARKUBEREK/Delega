@@ -45,7 +45,7 @@ test("la interfaz respeta la preferencia de movimiento reducido", () => {
 
 
 test("los encabezados y las tarjetas usan sus hooks de descripción correspondientes", () => {
-  assert.match(ui, /<h1 className="ms-page-header-title">[\\s\\S]*?<p className="ms-page-header-description">/)
-  assert.match(ui, /<h2 className="ms-panel-card-title">[\\s\\S]*?<p className="ms-panel-card-description">/)
-  assert.match(css, /\.ms-page-header-description,\\s*\\.ms-panel-card-description\\s*\\{[^}]*max-width:64ch/)
+  assert.match(ui, /<h1 className="ms-page-header-title">[\s\S]*?<p className="ms-page-header-description">/)
+  assert.match(ui, /<h2 className="ms-panel-card-title">[\s\S]*?<p className="ms-panel-card-description">/)
+  assert.match(css, /\.ms-page-header-description,\s*\.ms-panel-card-description\s*\{[^}]*max-width:64ch/)
 })
