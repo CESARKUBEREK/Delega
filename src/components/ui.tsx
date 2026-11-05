@@ -1,6 +1,7 @@
 "use client"
 
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react"
+import { RUN_STATUS_LABEL, runStatusTone } from "@/lib/plan"
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement>
 
@@ -71,11 +72,29 @@ export function SecondaryButton({ className = "", ...props }: ButtonProps) {
 export function StatusBadge({
   children,
   tone = "neutral",
+  className = "",
 }: {
   children: ReactNode
   tone?: "success" | "warning" | "danger" | "info" | "neutral"
+  className?: string
 }) {
-  return <span className="ms-status-badge" data-tone={tone}>{children}</span>
+  return <span className={`ms-status-badge ${className}`.trim()} data-tone={tone}>{children}</span>
+}
+
+export function RunStatusBadge({
+  status,
+  label,
+  className,
+}: {
+  status: string
+  label?: ReactNode
+  className?: string
+}) {
+  return (
+    <StatusBadge tone={runStatusTone(status)} className={className}>
+      {label ?? RUN_STATUS_LABEL[status] ?? status}
+    </StatusBadge>
+  )
 }
 
 export function EmptyState({
