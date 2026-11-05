@@ -6,6 +6,13 @@ export type WebsiteSnapshot = {
   text: string
 }
 
+function decodeCodePoint(raw: string, radix = 10): string {
+  const point = parseInt(raw, radix)
+  return Number.isInteger(point) && point >= 0 && point <= 0x10ffff && !(point >= 0xd800 && point <= 0xdfff)
+    ? String.fromCodePoint(point)
+    : "�"
+}
+
 function decodeEntities(value: string): string {
   return value
     .replace(/&nbsp;/gi, " ")
