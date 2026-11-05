@@ -1013,10 +1013,6 @@ function DoneStep({
             <button type="button" onClick={saveAndOpen} disabled={saving} className={primary}>
               {saving ? "Guardando…" : "Abrir y probar esta automatización →"}
             </button>
-          ) : flowId ? (
-            <Link href={`${base}/automatizaciones/${flowId}`} className={primary}>
-              Ver el borrador de la automatización →
-            </Link>
           ) : isAdmin && ai?.ok === false ? (
             <button type="button" onClick={onConnectAi} className={primary}>
               Conectar mi IA para ejecutarla →
@@ -1032,6 +1028,10 @@ function DoneStep({
             >
               Conectar la siguiente herramienta →
             </button>
+          ) : flowId ? (
+            <Link href={`${base}/automatizaciones/${flowId}`} className={primary}>
+              Ver el borrador de la automatización →
+            </Link>
           ) : (
             <Link href={base} className={primary}>
               Ir a Hoy →
