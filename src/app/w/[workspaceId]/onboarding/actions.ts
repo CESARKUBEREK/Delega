@@ -251,9 +251,9 @@ export async function analyzeOnboardingWebsite(input: {
   if (!rawUrl || rawUrl.length > 2_048) {
     return { ok: false, error: "Introduce una dirección web válida (máximo 2.048 caracteres)." }
   }
+  const workspace = await getWorkspace(input.workspaceId, `/w/${input.workspaceId}/onboarding`)
+  if (!workspace.isAdmin) return { ok: false, error: "Solo un administrador del espacio puede analizar la web." }
   try {
-    const workspace = await getWorkspace(input.workspaceId, `/w/${input.workspaceId}/onboarding`)
-    if (!workspace.isAdmin) return { ok: false, error: "Solo un administrador del espacio puede analizar la web." }
     const snapshot = await fetchPublicWebsite(rawUrl)
     return { ok: true, snapshot }
   } catch (error) {
