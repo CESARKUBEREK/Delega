@@ -1,16 +1,61 @@
 import { asPlan, type FlowPlan } from "@/lib/plan"
 
-export type OnboardingConnection = "email" | "messaging" | "spreadsheet" | "calendar" | "none"
+export type OnboardingConnection =
+  | "email"
+  | "messaging"
+  | "whatsapp"
+  | "telegram"
+  | "spreadsheet"
+  | "documents"
+  | "drive"
+  | "calendar"
+  | "crm"
+  | "contacts"
+  | "properties"
+  | "accounting"
+  | "social"
+  | "database"
+  | "none"
+
+// Cada capability del plan apunta al proveedor real que la satisface.
+// Mantener este catálogo alineado con los providers de Integraciones.
+export const ONBOARDING_CONNECTIONS: Exclude<OnboardingConnection, "none">[] = [
+  "email", "whatsapp", "telegram", "spreadsheet", "documents", "drive", "calendar",
+  "crm", "contacts", "properties", "accounting", "social", "database",
+]
+
+const CONNECTION_KIND_MAP: Record<string, OnboardingConnection[]> = {
+  email: ["email"],
+  email_message: ["email"],
+  whatsapp: ["whatsapp"],
+  whatsapp_message: ["whatsapp"],
+  telegram: ["telegram"],
+  telegram_message: ["telegram"],
+  spreadsheet: ["spreadsheet"],
+  documents: ["documents"],
+  drive: ["drive"],
+  calendar: ["calendar"],
+  crm: ["crm"],
+  contacts: ["contacts"],
+  properties: ["properties"],
+  accounting: ["accounting"],
+  social: ["social"],
+  database: ["database"],
+}
 
 // Devuelve todas las conexiones distintas que necesita el plan, en orden estable.
+// También contempla el canal de entrada declarado en el disparador.
 export function requiredConnections(plan: FlowPlan): OnboardingConnection[] {
-  const kinds = new Set([...plan.connections.map((c) => c.kind), ...plan.steps.map((s) => s.connection)])
-  const required: OnboardingConnection[] = []
-  if (kinds.has("whatsapp") || kinds.has("telegram")) required.push("messaging")
-  if (kinds.has("email")) required.push("email")
-  if (kinds.has("spreadsheet") || kinds.has("drive") || kinds.has("documents")) required.push("spreadsheet")
-  if (kinds.has("calendar")) required.push("calendar")
-  return required
+  const kinds = new Set([
+    ...plan.connections.map((c) => c.kind),
+    ...plan.steps.map((s) => s.connection),
+    plan.trigger.type,
+  ])
+  const required = new Set<OnboardingConnection>()
+  for (const kind of kinds) {
+    for (const connection of CONNECTION_KIND_MAP[kind] ?? []) required.add(connection)
+  }
+  return ONBOARDING_CONNECTIONS.filter((connection) => required.has(connection))
 }
 
 // Compatibilidad para pantallas que solo muestran la primera conexión.
@@ -21,17 +66,37 @@ export function primaryConnection(plan: FlowPlan): OnboardingConnection {
 export const CONNECTION_LABEL: Record<OnboardingConnection, string> = {
   email: "Correo (IMAP)",
   messaging: "WhatsApp / Telegram",
-  spreadsheet: "Google Drive / Planillas",
+  whatsapp: "WhatsApp",
+  telegram: "Telegram",
+  spreadsheet: "Google Sheets / Excel",
+  documents: "Google Docs",
+  drive: "Google Drive",
   calendar: "Google Calendar",
+  crm: "HubSpot",
+  contacts: "Google Contacts",
+  properties: "Tokko Broker",
+  accounting: "Xubio",
+  social: "Buffer",
+  database: "Base de datos Supabase",
   none: "Ninguna por ahora",
 }
 
-// Sección de Integraciones donde está la tarjeta que hace falta.
+// Sección de Integraciones donde está la tarjeta o el proveedor requerido.
 export const CONNECTION_ANCHOR: Record<OnboardingConnection, string> = {
   email: "comunicaciones",
   messaging: "comunicaciones",
-  spreadsheet: "drives",
+  whatsapp: "comunicaciones",
+  telegram: "comunicaciones",
+  spreadsheet: "calculos",
+  documents: "textos",
+  drive: "drives",
   calendar: "calendar",
+  crm: "crm",
+  contacts: "crm",
+  properties: "inmobiliaria",
+  accounting: "contabilidad",
+  social: "redes-sociales",
+  database: "bases-de-datos",
   none: "llms",
 }
 
