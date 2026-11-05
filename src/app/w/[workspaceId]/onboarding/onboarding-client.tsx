@@ -199,7 +199,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
 
     startTransition(async () => {
       const websiteContext = websiteConfirmed && websiteSnapshot
-        ? [websiteSnapshot.title, websiteSnapshot.description, websiteSnapshot.headings.join("\\n"), websiteSnapshot.text.slice(0, 4_000)].filter(Boolean).join("\\n").slice(0, 6_000)
+        ? [websiteSnapshot.title, websiteSnapshot.description, websiteSnapshot.headings.join("\n"), websiteSnapshot.text.slice(0, 4_000)].filter(Boolean).join("\n").slice(0, 6_000)
         : undefined
       const result = await generateOnboardingPlan({ workspaceId, message: task, websiteContext })
       if (!result.ok) {
