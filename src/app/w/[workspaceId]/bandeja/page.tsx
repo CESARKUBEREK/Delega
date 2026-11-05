@@ -64,11 +64,12 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
   const view = sp.vista === "todo" ? "todo" : "hoy"
   const { data: all } = await supabase
     .from("inbox_threads")
-    .select("message_count, classified_count, automatic")
+    .select("message_count, classified_count, automatic, needs_reply, last_direction")
     .eq("workspace_id", workspaceId)
     .eq("archived", false)
   const total = (all ?? []).length
   const pending = (all ?? []).filter((t) => t.message_count > t.classified_count).length
+  const needsReply = (all ?? []).filter((t) => t.needs_reply && t.last_direction === "in").length
   const { data: rules } = await supabase.from("inbox_rules").select("id, match_type, value, category").eq("workspace_id", workspaceId).order("created_at")
 
   const today = view === "hoy" ? await todayData(supabase, workspaceId) : null
@@ -89,6 +90,20 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
             `${total} conversaciones, todas ordenadas.`
           )}
         </p>
+        <div className="grid grid-cols-1 gap-2 border-t border-rule pt-3 sm:grid-cols-3">
+          <Link href={`${base}?vista=todo&reply=1`} className="flex items-center justify-between gap-3 rounded-xl border border-rule bg-paper px-3 py-2 hover:border-link">
+            <span className="text-sm text-graphite">Necesitan respuesta</span>
+            <strong className="text-lg tabular-nums text-ink">{needsReply}</strong>
+          </Link>
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-rule bg-paper px-3 py-2">
+            <span className="text-sm text-graphite">Por clasificar</span>
+            <strong className="text-lg tabular-nums text-ink">{pending}</strong>
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-rule bg-paper px-3 py-2">
+            <span className="text-sm text-graphite">Conversaciones ordenadas</span>
+            <strong className="text-lg tabular-nums text-ink">{total - pending}</strong>
+          </div>
+        </div>
       </PanelCard>
       {imap && imap.status !== "active" ? (
         <InfoBanner tone="danger">
@@ -538,7 +553,7 @@ async function AllList({
           description={total === 0
             ? mailActive
               ? "Pulsa «Traer correo» para importar los 400 correos más recientes de los últimos 30 días."
-              : "Aún no ha llegado ningún mensaje a tu bot."
+              : "Cuando llegue un mensaje a alguno de tus canales conectados, aparecerá aquí."
             : "Prueba a cambiar o quitar alguno de los filtros aplicados."}
         />
       )}
