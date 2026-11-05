@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState, useTransition } from "react"
 import { Sheet } from "@/components/sheet"
+import { PrimaryButton } from "@/components/ui"
 import { acceptInvitation } from "@/app/w/actions"
 
 const STORAGE_KEY = "delega:invite"
@@ -78,14 +79,13 @@ export default function InvitePage() {
               {error}
             </p>
           ) : null}
-          <button
+          <PrimaryButton
             type="button"
             onClick={accept}
             disabled={pending}
-            className="h-11 bg-stroke font-semibold text-stroke-ink disabled:opacity-70"
           >
             {pending ? "Aceptando…" : "Aceptar invitación"}
-          </button>
+          </PrimaryButton>
         </div>
       )}
     </Sheet>
