@@ -92,6 +92,16 @@ test("los estados de ejecución comparten etiquetas y tonos semánticos", () => 
   assert.ok(ui.includes("tone={runStatusTone(status)}"))
 })
 
+test("Historial ofrece un resumen de actividad con límites de consulta explícitos", () => {
+  assert.ok(history.includes('aria-label="Resumen de actividad"'))
+  assert.ok(history.includes("Ejecuciones recientes"))
+  assert.ok(history.includes("Últimas 50 del espacio"))
+  assert.ok(history.includes("Conversaciones recientes"))
+  assert.ok(history.includes("Últimas 100 del espacio"))
+  assert.ok(history.includes("Peticiones de IA este mes"))
+  assert.ok(history.includes("const requestCount = [...byModel.values()]"))
+})
+
 test("Automatizaciones e Historial usan el mismo componente de estado", () => {
   assert.ok(automation.includes("<RunStatusBadge status={run.status}"))
   assert.ok(automation.includes('<RunStatusBadge status="awaiting_approval"'))
