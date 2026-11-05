@@ -20,7 +20,7 @@ export function PageHeader({
       <div className="ms-page-header-copy">
         {eyebrow ? <p className="ms-page-header-eyebrow">{eyebrow}</p> : null}
         <h1 className="ms-page-header-title">{title}</h1>
-        {description ? <p className="ms-page-header-description">{description}</p> : null}
+        {description ? <p className="ms-panel-card-description">{description}</p> : null}
       </div>
       {actions ? <div className="ms-page-header-actions">{actions}</div> : null}
     </header>
