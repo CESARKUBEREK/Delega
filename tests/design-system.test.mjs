@@ -11,6 +11,7 @@ const automation = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaci
 const history = readFileSync(new URL("../src/app/w/[workspaceId]/historial/page.tsx", import.meta.url), "utf8")
 const workIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/work-cards.tsx", import.meta.url), "utf8")
 const inboxIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/inbox-cards.tsx", import.meta.url), "utf8")
+const inboxIntegrationsClient = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/inbox-client.tsx", import.meta.url), "utf8")
 const replyComposer = readFileSync(new URL("../src/app/w/[workspaceId]/bandeja/[threadId]/reply-composer.tsx", import.meta.url), "utf8")
 const runLive = readFileSync(new URL("../src/app/w/[workspaceId]/ejecuciones/[runId]/run-live.tsx", import.meta.url), "utf8")
 const runPanel = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/[flowId]/run-panel.tsx", import.meta.url), "utf8")
@@ -162,4 +163,11 @@ test("acciones principales reutilizan los botones del sistema de diseño", () =>
   for (const source of [flowEditor, runLive, runPanel, googleCard, invitePage]) {
     assert.ok(!/h-11 bg-stroke px-\d+ text-base font-semibold text-stroke-ink/.test(source))
   }
+})
+
+
+test("formularios de integraciones de bandeja reutilizan Field compartido", () => {
+  assert.ok(inboxIntegrationsClient.includes('import { Field, FormMessage, SubmitButton } from "@/components/form"'))
+  assert.ok((inboxIntegrationsClient.match(/<Field\\b/g) ?? []).length >= 5)
+  assert.ok(!inboxIntegrationsClient.includes("function Input(props:"))
 })
