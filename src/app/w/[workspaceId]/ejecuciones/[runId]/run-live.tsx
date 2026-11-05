@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { InfoBanner } from "@/components/ui"
 import { useEffect, useRef, useState, useTransition } from "react"
 import type { Cell, Field, Pending } from "@/lib/pending"
 import { cancelRun, continueRun, decideRun } from "../../run-actions"
@@ -118,9 +119,9 @@ export function RunControls({
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="text-sm text-alert">
+        <InfoBanner tone="danger" role="alert" className="py-2">
           {error}
-        </p>
+        </InfoBanner>
       ) : null}
       <button
         type="button"
@@ -204,9 +205,9 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
           />
         )}
         {error ? (
-          <p role="alert" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+          <InfoBanner tone="danger" role="alert">
             {error}
-          </p>
+          </InfoBanner>
         ) : null}
         <div className="approval-actions flex flex-wrap gap-3">
           <button
