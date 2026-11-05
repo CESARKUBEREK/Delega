@@ -1,0 +1,3 @@
+:root { --muted: #536175; --state-focus: #007a6c; }
+:focus-visible { outline: 3px solid var(--state-focus) !important; outline-offset: 3px !important; }
+@media (forced-colors: active) { :focus-visible { outline: 2px solid Highlight !important; } }

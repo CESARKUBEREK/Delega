@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import { PwaRegister } from "@/components/pwa-register"
 import "@fontsource-variable/outfit/wght.css"
 import "./globals.css"
+import "./accessibility.css"
 
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://marchasolo.com").replace(/\/+$/, "")
 
