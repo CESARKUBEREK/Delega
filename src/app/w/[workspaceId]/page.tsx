@@ -57,7 +57,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
         .not("next_run_at", "is", null)
         .order("next_run_at")
         .limit(4),
-      supabase.from("flows").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId).eq("status", "active"),
+      supabase.from("flows").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
     ])
 
   const timezone = ws?.timezone || "Europe/Madrid"
