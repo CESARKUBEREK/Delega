@@ -50,7 +50,7 @@ export function PanelCard({
         <header className="ms-panel-card-header" data-density={headerDensity}>
           <div>
             {title ? <h2 className="ms-panel-card-title">{title}</h2> : null}
-            {description ? <p className="ms-page-header-description">{description}</p> : null}
+            {description ? <p className="ms-panel-card-description">{description}</p> : null}
           </div>
           {actions}
         </header>

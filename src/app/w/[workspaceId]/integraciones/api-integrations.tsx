@@ -4,7 +4,7 @@ import { ExternalLink } from "@/components/external-link"
 import { StatusBadge } from "@/components/ui"
 import { PROVIDER_LINKS } from "@/lib/provider-links"
 import { useActionState, useRef, useState } from "react"
-import { FormMessage, SubmitButton } from "@/components/form"
+import { Field, FormMessage, SubmitButton } from "@/components/form"
 import { disconnectApiConnection, saveApiConnection, type ApiConnectionState } from "./api-actions"
 
 type Provider = "supabase" | "custom_1" | "custom_2"
@@ -14,15 +14,6 @@ function configOf(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {}
 }
 
-function Field({ id, label, hint, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { id: string; label: string; hint?: string }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-ink">{label}</label>
-      <input id={id} className="h-11 border border-rule bg-sheet px-3 text-sm text-ink placeholder:text-graphite/70 focus:border-link focus:outline-none" {...props} />
-      {hint ? <p className="text-xs text-graphite">{hint}</p> : null}
-    </div>
-  )
-}
 
 export function ApiIntegrationCard({
   workspaceId,
