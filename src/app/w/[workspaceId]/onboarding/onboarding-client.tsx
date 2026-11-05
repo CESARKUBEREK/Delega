@@ -195,13 +195,18 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
       return null
     }
     if (flowId) return flowId
-    const savedPlan = await saveFlowPlan({ workspaceId, flowId: null, plan, fileIds: [] })
-    if (!savedPlan.ok) {
-      setError(savedPlan.error || "No se pudo guardar el plan. Inténtalo de nuevo.")
+    try {
+      const savedPlan = await saveFlowPlan({ workspaceId, flowId: null, plan, fileIds: [] })
+      if (!savedPlan.ok) {
+        setError(savedPlan.error || "No se pudo guardar el plan. Inténtalo de nuevo.")
+        return null
+      }
+      setFlowId(savedPlan.flowId)
+      return savedPlan.flowId
+    } catch {
+      setError("No se pudo guardar el plan. Comprueba tu conexión e inténtalo de nuevo.")
       return null
     }
-    setFlowId(savedPlan.flowId)
-    return savedPlan.flowId
   }
 
   // Plan aceptado → persistirlo una sola vez antes de continuar.
@@ -230,12 +235,16 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     startTransition(async () => {
       const savedFlowId = await persistPlan()
       if (!savedFlowId) return
-      const result = await completeOnboarding(workspaceId)
-      if (!result.ok) {
-        setError(result.error)
-        return
+      try {
+        const result = await completeOnboarding(workspaceId)
+        if (!result.ok) {
+          setError(result.error)
+          return
+        }
+        setStep("done") // el efecto de guardado borra el progreso de la pestaña
+      } catch {
+        setError("No se pudo finalizar el onboarding. Inténtalo de nuevo.")
       }
-      setStep("done") // el efecto de guardado borra el progreso de la pestaña
     })
   }
 
