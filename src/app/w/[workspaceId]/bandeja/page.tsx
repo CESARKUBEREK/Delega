@@ -64,12 +64,12 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
   const view = sp.vista === "todo" ? "todo" : "hoy"
   const { data: all } = await supabase
     .from("inbox_threads")
-    .select("message_count, classified_count, automatic, needs_reply")
+    .select("message_count, classified_count, automatic, needs_reply, last_direction")
     .eq("workspace_id", workspaceId)
     .eq("archived", false)
   const total = (all ?? []).length
   const pending = (all ?? []).filter((t) => t.message_count > t.classified_count).length
-  const needsReply = (all ?? []).filter((t) => t.needs_reply).length
+  const needsReply = (all ?? []).filter((t) => t.needs_reply && t.last_direction === "in").length
   const { data: rules } = await supabase.from("inbox_rules").select("id, match_type, value, category").eq("workspace_id", workspaceId).order("created_at")
 
   const today = view === "hoy" ? await todayData(supabase, workspaceId) : null
