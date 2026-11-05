@@ -1694,14 +1694,13 @@ button.setup-step-link:focus-visible { outline:2px solid var(--link); outline-of
 .ms-info-banner[data-tone="warning"] { border-left-color:var(--warning); background:var(--warning-bg); color:var(--warning); }
 .ms-info-banner[data-tone="danger"] { border-left-color:var(--alert); background:var(--alert-bg); color:var(--alert); }
 .ms-search-input { display:flex; min-height:44px; align-items:center; gap:var(--space-2); padding:0 var(--space-3); border:1px solid var(--rule); border-radius:var(--radius-md); background:var(--sheet); color:var(--graphite); }
-.ms-search-input:focus-within { border-color:var(--turquesa); box-shadow:0 0 0 3px rgb(0 194 168 / 13%); }
+.ms-search-input:focus-within { border-color:var(--turquesa); box-shadow:0 0 0 3px rgb(0 194 168 / 13%); outline:2px solid var(--turquesa); outline-offset:2px; }
 .ms-search-input input { width:100%; min-width:0; border:0; outline:0; background:transparent; color:var(--ink); font:inherit; }
 .ms-search-input input::placeholder { color:#75859a; }
 .ms-nav-group { margin-top:var(--space-4); }
 .ms-nav-group-heading { margin:0 0 var(--space-2) var(--space-3); color:var(--graphite); font-size:10px; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
 .app-sidebar-list .app-sidebar-link { min-height:44px; }
 .mobile-more-group-heading { padding:10px 16px 5px; color:var(--graphite); font-size:10px; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
-.ms-button:focus-visible, .ms-search-input:focus-within { outline:2px solid var(--turquesa); outline-offset:2px; }
 @media (max-width:700px) {
   .ms-page-header { align-items:flex-start; flex-direction:column; }
   .ms-page-header-actions { width:100%; }
