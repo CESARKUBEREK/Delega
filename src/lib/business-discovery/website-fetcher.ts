@@ -1,5 +1,3 @@
-"use server"
-
 import "server-only"
 import { lookup } from "node:dns/promises"
 import { isIP } from "node:net"
@@ -129,12 +127,11 @@ function cleanText(html: string): string {
 }
 
 function metaContent(html: string, key: string): string | null {
-  const escaped = key.replace(/[.*+?^$()|[\]\\]/g, "\\$&")
-  const patterns = [
-    new RegExp('<meta\\b[^>]*\\bname=["\\']' + escaped + '["\\'][^>]*\\bcontent=["\\']([^"\\']*)["\\'][^>]*>', "i"),
-    new RegExp('<meta\\b[^>]*\\bcontent=["\\']([^"\\']*)["\\'][^>]*\\bname=["\\']' + escaped + '["\\'][^>]*>', "i"),
-  ]
-  for (const pattern of patterns) { const match = html.match(pattern); if (match?.[1]) return decodeEntities(match[1]).trim().slice(0, 500) }
+  for (const tag of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const name = tag[0].match(/\b(?:name|property)\s*=\s*["']([^"']+)["']/i)?.[1]?.toLowerCase()
+    const value = tag[0].match(/\bcontent\s*=\s*["']([^"']*)["']/i)?.[1]
+    if (name === key.toLowerCase() && value) return decodeEntities(value).trim().slice(0, 500)
+  }
   return null
 }
 
