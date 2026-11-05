@@ -51,3 +51,8 @@ test("los encabezados y las tarjetas usan sus hooks de descripción correspondie
   assert.ok(ui.includes('<p className="ms-panel-card-description">{description}</p>'))
   assert.ok(css.includes(".ms-page-header-description, .ms-panel-card-description {"))
 })
+
+
+test("Bandeja reduce el espacio entre secciones en móvil como el resto del espacio", () => {
+  assert.ok(css.includes("@media (max-width:640px) {\n  .inbox-page { gap:16px; }"))
+})
