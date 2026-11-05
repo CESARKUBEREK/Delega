@@ -17,6 +17,7 @@ const runPanel = readFileSync(new URL("../src/app/w/[workspaceId]/automatizacion
 const flowEditor = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/flow-editor.tsx", import.meta.url), "utf8")
 const invitePage = readFileSync(new URL("../src/app/invite/page.tsx", import.meta.url), "utf8")
 const googleCard = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/google-card.tsx", import.meta.url), "utf8")
+const assistantChat = readFileSync(new URL("../src/app/w/[workspaceId]/asistente/chat.tsx", import.meta.url), "utf8")
 
 
 function rule(selector) {
@@ -124,6 +125,12 @@ test("Bandeja, Ejecuciones y panel de automatización usan avisos compartidos", 
   assert.ok(replyComposer.includes('<InfoBanner tone="success" role="status"'))
 })
 
+
+test("Chat del asistente reutiliza InfoBanner para sus tres errores", () => {
+  assert.ok(assistantChat.includes('import { InfoBanner } from "@/components/ui"'))
+  assert.equal((assistantChat.match(/<InfoBanner tone="danger" role="alert">/g) ?? []).length, 3)
+  assert.ok(!assistantChat.includes("border-l-2 border-alert bg-alert-bg"))
+})
 
 test("FormMessage reutiliza InfoBanner y conserva los roles accesibles", () => {
   const form = readFileSync(new URL("../src/components/form.tsx", import.meta.url), "utf8")
