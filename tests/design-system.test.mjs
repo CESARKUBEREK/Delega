@@ -219,7 +219,7 @@ test("Fase 4: paneles, grupos de navegación y estados vacíos comparten ritmo v
 
 test("Fase 5: los errores de acciones contextuales usan el aviso compartido", () => {
   for (const source of [cardActions, diagnosis, helpVoiceToggle]) {
-    assert.match(source, /import \\{ InfoBanner \\} from "@\\/components\\/ui"/)
+    assert.ok(source.includes('import { InfoBanner } from "@/components/ui"'))
     assert.ok(source.includes('<InfoBanner tone="danger" role="alert">{error}</InfoBanner>'))
     assert.ok(!source.includes('className="text-sm text-alert" role="alert"'))
     assert.ok(!source.includes('className="text-alert" role="alert"'))
