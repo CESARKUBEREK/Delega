@@ -33,7 +33,7 @@ function isPublicAddress(address: string): boolean {
     const normalized = address.toLowerCase()
     // Only global-unicast 2000::/3. This excludes loopback, link-local,
     // unique-local, IPv4-mapped and the documentation range.
-    return normalized.startsWith("2") && !normalized.startsWith("2001:db8")
+    return (normalized.startsWith("2") || normalized.startsWith("3")) && !normalized.startsWith("2001:db8")
   }
   return false
 }
@@ -60,7 +60,7 @@ async function requestPinned(url: URL, address: string, family: number): Promise
   return new Promise((resolve, reject) => {
     const secure = url.protocol === "https:"
     const requestFn = secure ? httpsRequest : httpRequest
-    const options: RequestOptions = {
+    const options: RequestOptions & { servername?: string } = {
       protocol: url.protocol,
       hostname: address,
       family,
