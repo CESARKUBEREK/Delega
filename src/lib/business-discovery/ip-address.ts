@@ -59,8 +59,8 @@ function isPublicIpv4(address: string): boolean {
 
 /**
  * Accepts globally routable unicast addresses only.
- * IPv6 special-purpose blocks are deliberately excluded even when they sit
- * inside the global-unicast allocation (2000::/3).
+ * IPv6 is restricted to prefixes currently allocated in the IANA registry;
+ * special-purpose assignments are excluded even when inside an allocation.
  */
 export function isPublicAddress(address: string): boolean {
   const version = isIP(address)
@@ -70,24 +70,32 @@ export function isPublicAddress(address: string): boolean {
   const parsed = parseIpv6(address)
   if (!parsed) return false
 
-  const globalUnicast = parseIpv6("2000::")!
+  // IANA IPv6 Global Unicast Address Space (2025-10-10).
+  // Unlisted space inside 2000::/3 is reserved for future allocation.
+  const allocatedGlobalUnicast = [
+    ["2001:200::", 23], ["2001:400::", 23], ["2001:600::", 23],
+    ["2001:800::", 22], ["2001:c00::", 23], ["2001:e00::", 23],
+    ["2001:1200::", 23], ["2001:1400::", 22], ["2001:1800::", 23],
+    ["2001:1a00::", 23], ["2001:1c00::", 22], ["2001:2000::", 19],
+    ["2001:4000::", 23], ["2001:4200::", 23], ["2001:4400::", 23],
+    ["2001:4600::", 23], ["2001:4800::", 23], ["2001:4a00::", 23],
+    ["2001:4c00::", 23], ["2001:5000::", 20], ["2001:8000::", 19],
+    ["2001:a000::", 20], ["2001:b000::", 20], ["2003::", 18],
+    ["2400::", 12], ["2410::", 12], ["2600::", 12],
+    ["2610::", 23], ["2620::", 23], ["2630::", 12],
+    ["2800::", 12], ["2a00::", 12], ["2a10::", 12], ["2c00::", 12],
+  ] as const
+
   const ietfProtocolAssignments = parseIpv6("2001::")!
   const documentation2001 = parseIpv6("2001:db8::")!
   const sixToFour = parseIpv6("2002::")!
   const documentation = parseIpv6("3fff::")!
-  const srv6Sids = parseIpv6("5f00::")!
-  const reservedGlobalUnicast = [
-    ["2d00::", 8], ["2e00::", 7], ["3000::", 5], ["3800::", 6],
-    ["3c00::", 7], ["3e00::", 8], ["3f00::", 9], ["3f80::", 10],
-    ["3fc0::", 11], ["3fe0::", 12], ["3ff0::", 13], ["3ff8::", 14],
-    ["3ffc::", 15], ["3ffe::", 16],
-  ] as const
 
-  return inIpv6Range(parsed, globalUnicast, 3)
+  return allocatedGlobalUnicast.some(([network, prefix]) =>
+    inIpv6Range(parsed, parseIpv6(network)!, prefix),
+  )
     && !inIpv6Range(parsed, ietfProtocolAssignments, 23)
     && !inIpv6Range(parsed, documentation2001, 32)
     && !inIpv6Range(parsed, sixToFour, 16)
     && !inIpv6Range(parsed, documentation, 20)
-    && !inIpv6Range(parsed, srv6Sids, 16)
-    && !reservedGlobalUnicast.some(([network, prefix]) => inIpv6Range(parsed, parseIpv6(network)!, prefix))
 }
