@@ -239,8 +239,8 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const stepTotal = visibleSteps.length
 
   return (
-    <div className="setup flex flex-col gap-6 max-w-2xl mx-auto">
-      <div className="flex flex-col gap-2">
+    <div className="setup flex flex-col gap-6 max-w-2xl mx-auto" data-step={step}>
+      <div className="setup-header flex flex-col gap-2">
         <p className="app-eyebrow">ONBOARDING · {workspaceName.toUpperCase()}</p>
         <h1 className="rotulo text-2xl">
           {userName ? `Hola ${userName}, ¡pongamos a rodar MarchaSolo!` : "¡Pongamos a rodar MarchaSolo!"}
@@ -827,11 +827,11 @@ function Intro() {
               <filter id="ms-orb-glow"><feGaussianBlur stdDeviation="9" /></filter>
             </defs>
             <ellipse cx="120" cy="132" rx="67" ry="8" fill="#00c2a8" opacity=".16" filter="url(#ms-orb-glow)" />
-            <ellipse cx="120" cy="77" rx="78" ry="30" fill="none" stroke="url(#ms-orb-ring)" strokeWidth="1.2" opacity=".65" transform="rotate(-18 120 77)" />
-            <ellipse cx="120" cy="77" rx="78" ry="30" fill="none" stroke="#8d9dff" strokeWidth="1" opacity=".35" transform="rotate(34 120 77)" />
+            <ellipse className="onboarding-orbit onboarding-orbit-a" cx="120" cy="77" rx="78" ry="30" fill="none" stroke="url(#ms-orb-ring)" strokeWidth="1.2" opacity=".65" transform="rotate(-18 120 77)" />
+            <ellipse className="onboarding-orbit onboarding-orbit-b" cx="120" cy="77" rx="78" ry="30" fill="none" stroke="#8d9dff" strokeWidth="1" opacity=".35" transform="rotate(34 120 77)" />
             <circle cx="120" cy="72" r="48" fill="#00c2a8" opacity=".22" filter="url(#ms-orb-glow)" /><circle className="onboarding-orb-core" cx="120" cy="72" r="39" fill="url(#ms-orb-core)" />
             <path d="M94 56c8-17 25-23 40-19" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".55" />
-            <circle cx="178" cy="43" r="3" fill="#b5fff5" /><circle cx="62" cy="103" r="2.5" fill="#8d9dff" /><circle cx="164" cy="111" r="2" fill="#00c2a8" />
+            <circle className="onboarding-orb-spark onboarding-orb-spark-a" cx="178" cy="43" r="3" fill="#b5fff5" /><circle className="onboarding-orb-spark onboarding-orb-spark-b" cx="62" cy="103" r="2.5" fill="#8d9dff" /><circle className="onboarding-orb-spark onboarding-orb-spark-c" cx="164" cy="111" r="2" fill="#00c2a8" />
           </svg>
         </div>
         <div className="max-w-xl">
