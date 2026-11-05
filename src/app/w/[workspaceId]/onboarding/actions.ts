@@ -38,7 +38,7 @@ export async function generateOnboardingPlan(input: {
   if (message.length > 500) {
     return { ok: false, error: "Máximo 500 caracteres." }
   }
-  const websiteContext = typeof input.websiteContext === "string" ? input.websiteContext.trim().slice(0, 6_000) : ""
+  const websiteContext = typeof input.websiteContext === "string" ? input.websiteContext.trim().slice(0, 3_000) : ""
 
   const supabase = await createClient()
   const { data: ai } = await supabase
