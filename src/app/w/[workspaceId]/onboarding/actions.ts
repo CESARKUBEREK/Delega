@@ -133,17 +133,37 @@ export async function checkOnboardingConnections(input: {
   try {
     const supabase = await createClient()
     const providers = [...new Set(input.connections.flatMap((connection) => CONNECTION_PROVIDER[connection] ?? []))]
-    const { data, error } = await supabase
-      .from("integrations")
-      .select("provider, status")
-      .eq("workspace_id", input.workspaceId)
-      .in("provider", providers.length ? providers : ["__none__"])
+    const [{ data, error }, { data: selectedFiles, error: filesError }] = await Promise.all([
+      supabase
+        .from("integrations")
+        .select("provider, status")
+        .eq("workspace_id", input.workspaceId)
+        .in("provider", providers.length ? providers : ["__none__"]),
+      input.connections.some((connection) => connection === "spreadsheet" || connection === "documents" || connection === "drive")
+        ? supabase.from("integration_files").select("mime_type").eq("workspace_id", input.workspaceId)
+        : Promise.resolve({ data: [], error: null }),
+    ])
     if (error) throw error
+    if (filesError) throw filesError
     const active = new Set((data ?? []).filter((row) => row.status === "active").map((row) => row.provider))
+    const fileMimes = (selectedFiles ?? []).map((file) => file.mime_type)
+    const hasSpreadsheet = fileMimes.some((mime) =>
+      mime === "application/vnd.google-apps.spreadsheet" ||
+      mime === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      mime === "application/vnd.ms-excel" ||
+      mime === "application/vnd.oasis.opendocument.spreadsheet",
+    )
+    const hasDocument = fileMimes.includes("application/vnd.google-apps.document")
+    const hasDriveFile = fileMimes.length > 0
     const statuses: Partial<Record<OnboardingConnection, boolean>> = {}
     for (const connection of input.connections) {
       const required = CONNECTION_PROVIDER[connection] ?? []
-      statuses[connection] = connection === "none" || (required.length > 0 && required.some((provider) => active.has(provider)))
+      const providerReady = required.length > 0 && required.some((provider) => active.has(provider))
+      const resourceReady =
+        connection === "spreadsheet" ? hasSpreadsheet :
+        connection === "documents" ? hasDocument :
+        connection === "drive" ? hasDriveFile : true
+      statuses[connection] = connection === "none" || (providerReady && resourceReady)
     }
     return { ok: true, statuses }
   } catch {
