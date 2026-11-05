@@ -1919,3 +1919,57 @@ button.setup-step-link:focus-visible { outline:2px solid var(--link); outline-of
   .today-command { grid-template-columns:minmax(0,1fr); gap:12px; padding:16px; }
   .today-command .today-ask { position:static; }
 }
+
+
+/* Fase 7 — Chat como centro de operaciones. */
+.automation-page .chat-welcome {
+  padding:clamp(20px,3vw,32px);
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:linear-gradient(145deg,var(--sheet),var(--paper));
+}
+.automation-page .chat-welcome > p:first-child { max-width:34rem; letter-spacing:-.025em; }
+.automation-page .chat-welcome > p:nth-child(2) { max-width:38rem; font-weight:600; }
+.automation-page .chat-welcome > p:nth-child(3) { max-width:44rem; line-height:1.65; }
+.chat-assistant-message {
+  max-width:min(100%, 58rem);
+  padding:16px 18px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:var(--sheet);
+  box-shadow:0 5px 18px rgb(11 31 59 / 4%);
+}
+.chat-user-message {
+  border-radius:14px;
+  background:var(--turquesa-soft);
+  border-color:transparent;
+  line-height:1.55;
+}
+.chat-thinking {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:10px 13px;
+  border:1px solid var(--rule-soft);
+  border-radius:10px;
+  background:var(--sheet);
+}
+.chat-thinking::before {
+  width:7px;
+  height:7px;
+  flex:0 0 7px;
+  border-radius:50%;
+  background:var(--turquesa);
+  content:"";
+  animation:chat-pulse 1.2s ease-in-out infinite;
+}
+@keyframes chat-pulse { 50% { opacity:.35; transform:scale(.8); } }
+@media (prefers-reduced-motion:reduce) { .chat-thinking::before { animation:none; } }
+.chat-examples ul button:focus-visible {
+  outline:2px solid var(--link);
+  outline-offset:2px;
+}
+@media (max-width:639px) {
+  .chat-assistant-message { padding:13px; }
+  .chat-user-message { max-width:92%; }
+}

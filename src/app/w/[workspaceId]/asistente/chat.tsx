@@ -117,11 +117,10 @@ export function Chat({
     <div className="chat-surface flex flex-col gap-4">
       {messages.length === 0 ? (
         <div className="chat-welcome border border-ink bg-sheet p-5 sm:p-7">
-          <p className="rotulo text-2xl text-ink sm:text-3xl">¿Qué necesitas hoy?</p>
-          <p className="mt-2 text-base text-ink">Escríbelo o díctalo abajo: MarchaSolo se encarga.</p>
+          <p className="rotulo text-2xl text-ink sm:text-3xl">Tu equipo digital está listo.</p>
+          <p className="mt-2 text-base text-ink">Pide una tarea, prepara un trabajo o crea una rutina.</p>
           <p className="mt-1 text-sm text-graphite">
-            Te propondrá un plan. Puedes ejecutarlo al momento o guardarlo como automatización. Lo que tenga que escribir o
-            enviar espera siempre tu aprobación.
+            MarchaSolo entenderá lo que necesitas y te propondrá un plan. Tú decides cuándo ejecutarlo; cualquier acción que tenga que escribir o enviar espera siempre tu aprobación.
           </p>
           <details className="chat-examples mt-4 border border-rule">
             <summary className="chat-examples-summary flex min-h-11 cursor-pointer items-center justify-between gap-3 px-3 text-sm font-semibold text-ink">
@@ -150,9 +149,9 @@ export function Chat({
           {messages.map((m) => (
             <li key={m.key} className={m.role === "user" ? "flex justify-end" : ""}>
               {m.role === "user" ? (
-                <p className="max-w-[85%] border border-rule bg-paper px-4 py-2.5 whitespace-pre-wrap text-ink">{m.content}</p>
+                <p className="chat-user-message max-w-[85%] border border-rule bg-paper px-4 py-2.5 whitespace-pre-wrap text-ink">{m.content}</p>
               ) : (
-                <div className="flex flex-col gap-3">
+                <div className="chat-assistant-message flex flex-col gap-3">
                   <p className="whitespace-pre-wrap text-ink">{m.content}</p>
                   <div className="-mt-1">
                     <ListenButton id={`m-${m.id ?? m.key}`} text={m.content} />
@@ -177,8 +176,8 @@ export function Chat({
             </li>
           ))}
           {pending ? (
-            <li className="text-sm text-graphite" role="status">
-              Preparando el plan… puede tardar hasta un minuto.
+            <li className="chat-thinking text-sm text-graphite" role="status" aria-live="polite">
+              MarchaSolo está preparando tu plan…
             </li>
           ) : null}
         </ol>
@@ -196,6 +195,7 @@ export function Chat({
       ) : null}
 
       <form
+        aria-label="Enviar una petición a MarchaSolo"
         onSubmit={(e) => {
           e.preventDefault()
           send(draft)
@@ -228,7 +228,7 @@ export function Chat({
           }}
           rows={1}
           maxLength={4000}
-          placeholder={messages.length ? "Pide cambios o algo nuevo…" : "Escribe o dicta lo que necesitas…"}
+          placeholder={messages.length ? "Pide cambios o continúa…" : "Escribe o dicta lo que necesitas…"}
           className="chat-composer-input max-h-48 min-h-12 flex-1 resize-none bg-transparent px-2 py-3 text-base leading-6 text-ink placeholder:text-graphite/80 focus:outline-none"
         />
         <button
