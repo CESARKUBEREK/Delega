@@ -114,6 +114,22 @@ export function IntegrationStatusBadge({
   return <StatusBadge tone={tone} className={className}>{label}</StatusBadge>
 }
 
+export function InboxSignalBadge({
+  kind,
+  value,
+}: {
+  kind: "urgency" | "needs_reply" | "pending_classification"
+  value?: string | null
+}) {
+  if (kind === "needs_reply") return <StatusBadge tone="info">Responder</StatusBadge>
+  if (kind === "pending_classification") return <StatusBadge tone="warning">Por clasificar</StatusBadge>
+
+  const urgency = value?.toLowerCase()
+  const tone = urgency === "alta" ? "danger" : urgency === "media" ? "warning" : "neutral"
+  const label = urgency === "alta" ? "Urgente" : urgency === "media" ? "Prioridad media" : urgency === "baja" ? "Prioridad baja" : value ?? "Prioridad sin definir"
+  return <StatusBadge tone={tone}>{label}</StatusBadge>
+}
+
 export function EmptyState({
   title,
   description,
