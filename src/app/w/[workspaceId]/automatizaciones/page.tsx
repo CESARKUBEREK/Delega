@@ -7,7 +7,7 @@ import { findTemplate, ROUTINES, type Routine, type RoutineTier, routineOfFlow, 
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime } from "../format"
 import { HelpPanel } from "@/components/help-panel"
-import { EmptyState, PageHeader, PanelCard } from "@/components/ui"
+import { EmptyState, PageHeader, PanelCard, RunStatusBadge } from "@/components/ui"
 
 export const metadata = { title: "Automatizaciones" }
 
@@ -198,9 +198,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
                     <li key={run.id}>
                       <Link href={`${base}/ejecuciones/${run.id}`}>
                         <span className="automation-activity-name">{run.flow_name}</span>
-                        <span className={`automation-activity-status is-${run.status}`}>
-                          {RUN_STATUS_LABEL[run.status] ?? run.status}
-                        </span>
+                        <RunStatusBadge status={run.status} className="automation-activity-status" />
                         <time dateTime={run.started_at}>{formatDateTime(run.started_at)}</time>
                         {run.summary ? <span className="automation-activity-summary">{run.summary}</span> : null}
                       </Link>
@@ -218,7 +216,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
                     <li key={run.id}>
                       <Link href={`${base}/ejecuciones/${run.id}`}>
                         <span className="automation-activity-name">{run.flow_name}</span>
-                        <span className="automation-activity-status is-awaiting_approval">Esperando tu aprobación</span>
+                        <RunStatusBadge status="awaiting_approval" className="automation-activity-status" />
                         <time dateTime={run.started_at}>{formatDateTime(run.started_at)}</time>
                         {run.summary ? <span className="automation-activity-summary">{run.summary}</span> : null}
                       </Link>
