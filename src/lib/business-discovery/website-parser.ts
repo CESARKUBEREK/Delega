@@ -21,8 +21,8 @@ function decodeEntities(value: string): string {
     .replace(/&#39;|&apos;/gi, "'")
     .replace(/&lt;/gi, "<")
     .replace(/&gt;/gi, ">")
-    .replace(/&#(\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
-    .replace(/&#x([\da-f]+);/gi, (_, n: string) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&#(\d+);/g, (_, n: string) => decodeCodePoint(n))
+    .replace(/&#x([\da-f]+);/gi, (_, n: string) => decodeCodePoint(n, 16))
 }
 
 function cleanText(value: string): string {
