@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { useFormStatus } from "react-dom"
 import { PlanView } from "@/components/plan-view"
+import { InfoBanner } from "@/components/ui"
 import type { Pending } from "@/lib/pending"
 import type { FlowPlan } from "@/lib/plan"
 import { speak, unlockSpeech } from "@/lib/speech"
@@ -184,14 +185,14 @@ export function Chat({
       )}
 
       {error ? (
-        <p role="alert" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+        <InfoBanner tone="danger" role="alert">
           {error.text}{" "}
           {error.code === "no_connection" || error.code === "invalid_key" ? (
             <Link href={`/w/${workspaceId}/integraciones`} className="underline underline-offset-4">
               Ir a Integraciones
             </Link>
           ) : null}
-        </p>
+        </InfoBanner>
       ) : null}
 
       <form
@@ -321,9 +322,9 @@ function PlanActions({
             </p>
           ) : null}
           {error ? (
-            <p role="alert" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+            <InfoBanner tone="danger" role="alert">
               {error}
-            </p>
+            </InfoBanner>
           ) : null}
           <div className="flex flex-wrap items-center gap-3">
             {manual ? (
@@ -387,9 +388,9 @@ function RunInChat({ run, base }: { run: ChatRun; base: string }) {
         </div>
       ) : null}
       {run.status === "failed" && run.error ? (
-        <p role="alert" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+        <InfoBanner tone="danger" role="alert">
           {run.error}
-        </p>
+        </InfoBanner>
       ) : null}
     </section>
   )
