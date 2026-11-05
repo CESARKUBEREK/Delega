@@ -335,8 +335,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
               placeholder="Ej.: cuando un cliente pide presupuesto por correo, prepárame la respuesta con nuestras tarifas para que la revise."
               className="w-full rounded-xl border border-rule bg-paper px-4 py-3 text-ink placeholder:text-graphite focus:border-stroke focus:outline-none"
             />
-            {toolCheck?.ok === false ? <p className="text-sm text-alert" role="alert">{toolCheck.error}</p> : null}
-      {error && <p className="text-sm text-alert">{error}</p>}
+            {error && <p className="text-sm text-alert">{error}</p>}
 
             <div className="flex flex-wrap gap-2">
               {SUGGESTIONS.map((s) => (
@@ -1005,6 +1004,7 @@ function DoneStep({
 
       {isAdmin && ai?.ok && toolReady && neededConnections.includes("email") ? <InboxResult workspaceId={workspaceId} base={base} /> : null}
 
+      {toolCheck?.ok === false ? <p className="text-sm text-alert" role="alert">{toolCheck.error}</p> : null}
       {error && <p className="text-sm text-alert">{error}</p>}
 
       {!loading ? (
