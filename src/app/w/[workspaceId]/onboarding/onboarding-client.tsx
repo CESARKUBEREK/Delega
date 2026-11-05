@@ -396,7 +396,8 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-graphite">Esto es lo que hemos entendido</p>
                     <p className="mt-1 font-semibold text-ink">{websiteSnapshot.title ?? websiteSnapshot.url}</p>
-                    <p className="mt-1 text-xs text-graphite">Información extraída de tu web. Corrige lo que haga falta; los campos vacíos no se han podido verificar.</p>
+                    <p className="mt-1 text-xs text-graphite">{websiteSnapshot.pages.length > 1 ? `Hemos revisado ${websiteSnapshot.pages.length} páginas públicas del mismo dominio.` : "Hemos revisado una página pública."} Corrige lo que haga falta; los campos vacíos no se han podido verificar.</p>
+                    <p className="mt-1 break-all text-xs text-graphite">Páginas consultadas: {websiteSnapshot.pages.map((page) => page.url).join(" · ")}</p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     {BUSINESS_PROFILE_FIELDS.map(({ key, label, hint }) => (
@@ -416,7 +417,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                           className="w-full rounded-lg border border-rule bg-paper px-3 py-2 text-sm text-ink focus:border-stroke focus:outline-none"
                         />
                         {businessProfile[key].evidence.length ? (
-                          <span className="text-xs font-normal text-graphite">Evidencia: {businessProfile[key].evidence[0]}</span>
+                          <span className="text-xs font-normal text-graphite">Evidencia: {businessProfile[key].evidence[0]} <span className="block">Fuente: {businessProfile[key].evidenceSources[0]}</span></span>
                         ) : (
                           <span className="text-xs font-normal text-graphite">Sin información clara en la web</span>
                         )}
