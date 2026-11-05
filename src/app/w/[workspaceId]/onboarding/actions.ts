@@ -105,22 +105,45 @@ export type ConnectionStatusResult =
   | { ok: true; connected: boolean; label: string }
   | { ok: false; error: string }
 
-// Comprueba todas las conexiones con una sola lectura del estado del espacio.
+// Proveedor persistido para cada conexión que puede pedir un plan.
+const CONNECTION_PROVIDER: Partial<Record<OnboardingConnection, string[]>> = {
+  email: ["imap"],
+  messaging: ["whatsapp", "telegram"], // Compatibilidad con planes antiguos.
+  whatsapp: ["whatsapp"],
+  telegram: ["telegram"],
+  spreadsheet: ["google"],
+  documents: ["google"],
+  drive: ["google"],
+  calendar: ["calendar"],
+  crm: ["hubspot"],
+  contacts: ["contacts"],
+  properties: ["tokko"],
+  accounting: ["xubio"],
+  social: ["buffer"],
+  database: ["supabase"],
+}
+
+// Comprueba todos los proveedores en una sola lectura y usa el mismo estado
+// persistido que la página de Integraciones.
 export async function checkOnboardingConnections(input: {
   workspaceId: string
   connections: OnboardingConnection[]
 }): Promise<{ ok: true; statuses: Partial<Record<OnboardingConnection, boolean>> } | { ok: false; error: string }> {
   if (!UUID_RE.test(input.workspaceId)) return { ok: false, error: "Espacio no válido." }
   try {
-    const status = await setupStatus(input.workspaceId)
+    const supabase = await createClient()
+    const providers = [...new Set(input.connections.flatMap((connection) => CONNECTION_PROVIDER[connection] ?? []))]
+    const { data, error } = await supabase
+      .from("integrations")
+      .select("provider, status")
+      .eq("workspace_id", input.workspaceId)
+      .in("provider", providers.length ? providers : ["__none__"])
+    if (error) throw error
+    const active = new Set((data ?? []).filter((row) => row.status === "active").map((row) => row.provider))
     const statuses: Partial<Record<OnboardingConnection, boolean>> = {}
     for (const connection of input.connections) {
-      statuses[connection] =
-        connection === "none" ? true :
-        connection === "email" ? status.correo :
-        connection === "messaging" ? status.mensajeria :
-        connection === "spreadsheet" ? status.drive :
-        connection === "calendar" ? status.calendario : false
+      const required = CONNECTION_PROVIDER[connection] ?? []
+      statuses[connection] = connection === "none" || (required.length > 0 && required.some((provider) => active.has(provider)))
     }
     return { ok: true, statuses }
   } catch {
