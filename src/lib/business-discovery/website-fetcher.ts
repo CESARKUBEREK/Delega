@@ -33,7 +33,7 @@ function isPublicAddress(address: string): boolean {
     const normalized = address.toLowerCase()
     // Only global-unicast 2000::/3. This excludes loopback, link-local,
     // unique-local, IPv4-mapped and the documentation range.
-    return (normalized.startsWith("2") || normalized.startsWith("3")) && !normalized.startsWith("2001:db8")
+    return (normalized.startsWith("2") || normalized.startsWith("3")) && !normalized.startsWith("2001:db8") && !normalized.startsWith("3fff:")
   }
   return false
 }
@@ -49,7 +49,7 @@ function validateUrl(input: string): URL {
   if (url.username || url.password || (url.port && url.port !== (url.protocol === "https:" ? "443" : "80"))) {
     throw new Error("La dirección web contiene datos o un puerto no admitidos.")
   }
-  if (url.hostname === "localhost" || url.hostname.endsWith(".localhost") || isIP(url.hostname)) {
+  if (["localhost", "local", "internal", "test", "example", "invalid", "onion"].some((suffix) => url.hostname === suffix || url.hostname.endsWith(`.${suffix}`)) || isIP(url.hostname)) {
     throw new Error("La dirección debe pertenecer a un dominio público.")
   }
   url.hash = ""
@@ -117,7 +117,9 @@ async function requestPinned(url: URL, address: string, family: number): Promise
 }
 
 export async function fetchPublicWebsite(input: string): Promise<WebsiteSnapshot> {
-  let current = validateUrl(input)
+  const trimmed = input.trim()
+  const normalizedInput = /^[a-z][a-z\\d+.-]*:\\/\\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+  let current = validateUrl(normalizedInput)
 
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
     const records = await lookup(current.hostname, { all: true, verbatim: true })
