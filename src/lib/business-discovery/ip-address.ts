@@ -1,0 +1,75 @@
+import { isIP } from "node:net"
+
+function parseIpv6(input: string): bigint | null {
+  let address = input.toLowerCase()
+  if (!address || address.includes("%") || address.includes(":::")) return null
+
+  // Normalize an embedded IPv4 tail into its two hexadecimal groups.
+  if (address.includes(".")) {
+    const separator = address.lastIndexOf(":")
+    if (separator < 0) return null
+    const ipv4 = address.slice(separator + 1)
+    if (isIP(ipv4) !== 4) return null
+    const octets = ipv4.split(".").map(Number)
+    const high = ((octets[0] << 8) | octets[1]).toString(16)
+    const low = ((octets[2] << 8) | octets[3]).toString(16)
+    address = `${address.slice(0, separator)}:${high}:${low}`
+  }
+
+  const halves = address.split("::")
+  if (halves.length > 2) return null
+  const left = halves[0] ? halves[0].split(":") : []
+  const right = halves.length === 2 && halves[1] ? halves[1].split(":") : []
+  const groups = halves.length === 2
+    ? [...left, ...Array(8 - left.length - right.length).fill("0"), ...right]
+    : left
+
+  if (groups.length !== 8 || groups.some((group) => !/^[\da-f]{1,4}$/.test(group))) return null
+
+  return groups.reduce((value, group) => (value << 16n) | BigInt(`0x${group}`), 0n)
+}
+
+function inIpv6Range(address: bigint, network: bigint, prefixLength: number): boolean {
+  const shift = 128n - BigInt(prefixLength)
+  return (address >> shift) === (network >> shift)
+}
+
+function isPublicIpv4(address: string): boolean {
+  const parts = address.split(".").map(Number)
+  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) return false
+  const [a, b, c] = parts
+  if (a === 0 || a === 10 || a === 127 || a >= 224) return false
+  if (a === 100 && b >= 64 && b <= 127) return false
+  if (a === 169 && b === 254) return false
+  if (a === 172 && b >= 16 && b <= 31) return false
+  if (a === 192 && (b === 0 || b === 168)) return false
+  if (a === 192 && b === 88 && c === 99) return false
+  if (a === 192 && b === 0 && c === 2) return false
+  if (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) return false
+  if (a === 203 && b === 0 && c === 113) return false
+  return true
+}
+
+/**
+ * Accepts globally routable unicast addresses only.
+ * IPv6 special-purpose blocks are deliberately excluded even when they sit
+ * inside the global-unicast allocation (2000::/3).
+ */
+export function isPublicAddress(address: string): boolean {
+  const version = isIP(address)
+  if (version === 4) return isPublicIpv4(address)
+  if (version !== 6) return false
+
+  const parsed = parseIpv6(address)
+  if (parsed === null) return false
+
+  const globalUnicast = parseIpv6("2000::")!
+  const ietfProtocolAssignments = parseIpv6("2001::")!
+  const sixToFour = parseIpv6("2002::")!
+  const documentation = parseIpv6("3fff::")!
+
+  return inIpv6Range(parsed, globalUnicast, 3)
+    && !inIpv6Range(parsed, ietfProtocolAssignments, 23)
+    && !inIpv6Range(parsed, sixToFour, 16)
+    && !inIpv6Range(parsed, documentation, 20)
+}
