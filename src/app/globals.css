@@ -1796,3 +1796,35 @@ button.setup-step-link:focus-visible { outline:2px solid var(--link); outline-of
   .setup-panel button, .setup-panel a, .setup-step-link, .setup-panel textarea { transition:none !important; }
   .setup-panel button:hover:not(:disabled), .setup-panel a:hover { transform:none; }
 }
+
+
+/* Pantalla 2: el equipo digital se revela como una secuencia coordinada. */
+@keyframes plan-team-arrive {
+  from { opacity:0; transform:translate3d(-10px,8px,0) scale(.985); filter:blur(2px); }
+  to { opacity:1; transform:translate3d(0,0,0) scale(1); filter:blur(0); }
+}
+@keyframes plan-team-line {
+  from { transform:scaleY(0); opacity:.15; }
+  to { transform:scaleY(1); opacity:1; }
+}
+@keyframes plan-team-active {
+  0%,100% { box-shadow:0 0 0 0 rgb(0 194 168 / 0%); opacity:.65; }
+  50% { box-shadow:0 0 0 4px rgb(0 194 168 / 10%); opacity:1; }
+}
+.plan-team-stage { position:relative; overflow:hidden; background:linear-gradient(115deg,rgb(0 194 168 / 4%),transparent 55%); }
+.plan-live-indicator { letter-spacing:.08em; }
+.plan-live-dot { animation:plan-team-active 2.4s ease-in-out infinite; }
+.plan-team-flow { position:relative; display:flex; flex-direction:column; gap:9px; }
+.plan-team-spine { position:absolute; z-index:0; left:17px; top:17px; bottom:17px; width:1px; transform-origin:top; background:linear-gradient(to bottom,rgb(0 194 168 / 0%),rgb(0 194 168 / 55%) 15%,rgb(99 116 255 / 45%) 85%,rgb(99 116 255 / 0%)); animation:plan-team-line .9s .2s both; }
+.plan-team-node { position:relative; z-index:1; display:flex; align-items:center; gap:11px; min-height:48px; padding:7px 10px; border:1px solid rgb(120 140 160 / 18%); border-radius:13px; background:rgb(255 255 255 / 92%); box-shadow:0 3px 12px rgb(20 40 60 / 3%); opacity:0; animation:plan-team-arrive .55s cubic-bezier(.2,.75,.25,1) both; transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease; }
+.plan-team-node:hover { transform:translateX(3px); border-color:rgb(0 160 145 / 42%); box-shadow:0 8px 22px rgb(20 40 60 / 8%); }
+.plan-team-node-icon { display:grid; flex:0 0 34px; width:34px; height:34px; place-items:center; border:1px solid rgb(0 160 145 / 22%); border-radius:11px; background:linear-gradient(145deg,rgb(0 194 168 / 13%),rgb(99 116 255 / 8%)); color:#087e78; font-size:10px; font-weight:800; letter-spacing:.04em; }
+.plan-team-node-copy { display:flex; min-width:0; flex:1; flex-direction:column; gap:2px; }
+.plan-team-node-title { overflow:hidden; color:var(--ink,#172536); font-size:13px; font-weight:650; text-overflow:ellipsis; white-space:nowrap; }
+.plan-team-node-meta { color:var(--graphite,#657383); font-size:11px; }
+.plan-team-node-status { width:7px; height:7px; flex:0 0 7px; border-radius:50%; background:#00a995; box-shadow:0 0 0 3px rgb(0 169 149 / 10%); }
+.plan-step-row-animated { opacity:0; animation:plan-team-arrive .55s cubic-bezier(.2,.75,.25,1) both; }
+@media (prefers-reduced-motion:reduce) {
+ .plan-live-dot,.plan-team-spine,.plan-team-node,.plan-step-row-animated { animation:none !important; opacity:1 !important; filter:none !important; }
+ .plan-team-node { transition:none !important; }
+}
