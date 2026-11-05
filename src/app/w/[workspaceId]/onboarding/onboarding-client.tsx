@@ -811,18 +811,38 @@ function AiStep({
   )
 }
 
-// Introducción breve: no compite con el paso 1.
+// Bienvenida visual: presenta MarchaSolo antes de pedir la primera tarea.
 function Intro() {
   return (
-    <section aria-labelledby="intro-title" className="rounded-2xl border border-rule bg-sheet p-5 flex flex-col gap-2">
-      <p className="app-eyebrow">CÓMO FUNCIONA</p>
-      <h2 id="intro-title" className="rotulo text-xl">
-        Una tarea. Un plan. Tú decides.
-      </h2>
-      <p className="text-graphite">
-        Te preparo el plan de una tarea real. Nada se envía sin tu aprobación. Luego conectas solo lo necesario para
-        ejecutarlo.
-      </p>
+    <section aria-labelledby="intro-title" className="relative isolate overflow-hidden rounded-[24px] border border-[#243653] bg-[#0b1f3b] px-6 py-7 text-white shadow-[0_24px_70px_rgba(11,31,59,.16)] sm:px-8 sm:py-9">
+      <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-[#00c2a8]/10 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-28 left-1/4 h-56 w-56 rounded-full bg-[#6478ff]/15 blur-3xl" />
+      <div className="relative flex flex-col gap-5">
+        <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#00c2a8] shadow-[0_0_16px_rgba(0,194,168,.8)]" /><p className="text-[10px] font-bold tracking-[.18em] text-[#9de9df]">TU ESPACIO INTELIGENTE</p></div>
+        <div className="flex items-center justify-center py-1 sm:py-3">
+          <svg viewBox="0 0 240 150" className="h-[112px] w-[210px] sm:h-[145px] sm:w-[250px]" role="img" aria-label="Una esfera luminosa que representa tu equipo digital">
+            <defs>
+              <radialGradient id="ms-orb-core" cx="32%" cy="25%" r="75%"><stop offset="0%" stopColor="#e2fffb" /><stop offset="24%" stopColor="#72e8dc" /><stop offset="58%" stopColor="#00c2a8" /><stop offset="100%" stopColor="#176c83" /></radialGradient>
+              <linearGradient id="ms-orb-ring" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#b5fff5" stopOpacity=".9" /><stop offset="100%" stopColor="#667cff" stopOpacity=".12" /></linearGradient>
+              <filter id="ms-orb-glow"><feGaussianBlur stdDeviation="9" /></filter>
+            </defs>
+            <ellipse cx="120" cy="132" rx="67" ry="8" fill="#00c2a8" opacity=".16" filter="url(#ms-orb-glow)" />
+            <ellipse cx="120" cy="77" rx="78" ry="30" fill="none" stroke="url(#ms-orb-ring)" strokeWidth="1.2" opacity=".65" transform="rotate(-18 120 77)" />
+            <ellipse cx="120" cy="77" rx="78" ry="30" fill="none" stroke="#8d9dff" strokeWidth="1" opacity=".35" transform="rotate(34 120 77)" />
+            <circle cx="120" cy="72" r="48" fill="#00c2a8" opacity=".22" filter="url(#ms-orb-glow)" /><circle cx="120" cy="72" r="39" fill="url(#ms-orb-core)" />
+            <path d="M94 56c8-17 25-23 40-19" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".55" />
+            <circle cx="178" cy="43" r="3" fill="#b5fff5" /><circle cx="62" cy="103" r="2.5" fill="#8d9dff" /><circle cx="164" cy="111" r="2" fill="#00c2a8" />
+          </svg>
+        </div>
+        <div className="max-w-xl">
+          <h2 id="intro-title" className="text-balance text-[clamp(28px,4vw,38px)] font-semibold leading-[1.08] tracking-[-.045em]">Tu negocio. <span className="text-[#8de9df]">Tu equipo.</span><br />Tu manera de trabajar.</h2>
+          <p className="mt-3 max-w-lg text-sm leading-6 text-[#c2cede] sm:text-[15px]">Vamos a crear un equipo digital de IA adaptado a tu negocio. Empezamos por una tarea real; tú mantienes el control y apruebas cada acción.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-4">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/[.07] px-3 py-1.5 text-xs text-[#dce8f4]"><svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="#8de9df" strokeWidth="1.8"><path d="M10 2.5 16 5v4.2c0 3.5-2.5 6.3-6 8.3-3.5-2-6-4.8-6-8.3V5l6-2.5Z"/><path d="m7 9.8 2 2 4-4" /></svg>Tú decides. Nada se ejecuta sin permiso.</span>
+          <span className="text-xs text-[#8fa4bd]">Personalizado · Sin conocimientos técnicos</span>
+        </div>
+      </div>
     </section>
   )
 }
