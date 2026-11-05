@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useRef, useState, useTransition } from "react"
 import { CHANNEL_LABEL } from "@/lib/inbox"
+import { InboxSignalBadge } from "@/components/ui"
 import { CategoryChip } from "./category-chip"
 import { bulkUpdateThreads } from "./inbox-actions"
 
@@ -20,12 +21,6 @@ export type ListThread = {
   summary: string | null
   when: string
   pending: boolean
-}
-
-const URGENCY_STYLE: Record<string, string> = {
-  alta: "border-alert text-alert",
-  media: "border-rule text-ink",
-  baja: "border-rule text-graphite",
 }
 
 // Lista de «Todo» (fase 6G-2): categoría arriba de cada fila y cambiable con un
@@ -157,8 +152,9 @@ export function InboxList({
                       {t.category ?? (t.pending ? "Pendiente" : "Sin categoría")} ▾
                     </button>
                   )}
-                  {t.urgency ? <span className={`border px-1.5 py-0.5 ${URGENCY_STYLE[t.urgency] ?? ""}`}>{t.urgency}</span> : null}
-                  {t.needs_reply ? <span className="font-semibold text-link">Responder</span> : null}
+                  {t.urgency ? <InboxSignalBadge kind="urgency" value={t.urgency} /> : null}
+                  {t.pending ? <InboxSignalBadge kind="pending_classification" /> : null}
+                  {t.needs_reply ? <InboxSignalBadge kind="needs_reply" /> : null}
                 </div>
                 <Link href={`${base}/${t.id}`} className="block hover:underline-offset-4">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
