@@ -609,6 +609,13 @@ a.flow-node-trigger:hover { border-color:var(--ink); box-shadow:0 0 0 3px rgb(0 
 .integration-overview-heading > div { max-width:68ch; }
 .integration-overview-heading > div > p:last-child { margin:6px 0 0; color:var(--graphite); font-size:13px; line-height:1.55; }
 .integration-overview-eyebrow { margin:0 0 5px; color:var(--link); font-size:10px; font-weight:750; letter-spacing:.12em; }
+.integration-health { display:flex; align-items:center; gap:14px; padding:13px 15px; border:1px solid var(--border); border-radius:12px; background:var(--paper); }
+.integration-health-count { display:flex; min-width:100px; flex-direction:column; gap:1px; padding-right:15px; border-right:1px solid var(--border); }
+.integration-health-count strong { color:var(--ink); font-size:25px; font-weight:750; line-height:1.1; font-variant-numeric:tabular-nums; }
+.integration-health-count span { color:var(--graphite); font-size:10px; font-weight:650; }
+.integration-health-copy { min-width:0; }
+.integration-health-copy strong { color:var(--ink); font-size:12px; font-weight:700; }
+.integration-health-copy p { margin:3px 0 0; color:var(--graphite); font-size:12px; line-height:1.45; }
 .integration-status-filters { display:flex; flex-wrap:wrap; gap:8px; }
 .integration-status-filter { display:inline-flex; min-height:40px; align-items:center; gap:8px; padding:5px 10px; border:1px solid var(--border); border-radius:9px; background:var(--sheet); color:var(--neutral-state); font-size:12px; font-weight:600; transition:border-color .15s ease, background-color .15s ease, color .15s ease; }
 .integration-status-filter:hover { border-color:#aab8c7; background:#f7f9fb; color:var(--ink); }
@@ -691,6 +698,10 @@ a.flow-node-trigger:hover { border-color:var(--ink); box-shadow:0 0 0 3px rgb(0 
   .integration-overview, .integration-catalog { padding:15px 12px; border-radius:13px; }
   .integration-overview-heading h2, .integration-catalog-heading h2 { font-size:21px; }
   .integration-status-filters { gap:6px; }
+  .integration-health { align-items:flex-start; gap:11px; padding:12px; }
+  .integration-health-count { min-width:82px; padding-right:11px; }
+  .integration-health-count strong { font-size:23px; }
+  .integration-health-copy strong, .integration-health-copy p { font-size:11px; }
   .integration-status-filter { min-height:44px; padding:6px 10px; font-size:11px; }
   .integration-category-nav { gap:6px; }
   .integration-category-link { min-height:44px; padding:6px 10px; font-size:11px; }
