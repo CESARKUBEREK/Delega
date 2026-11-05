@@ -70,7 +70,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
       .limit(5),
     supabase
       .from("flow_runs")
-      .select("id, flow_name, started_at, summary")
+      .select("id, flow_name, started_at, summary", { count: "exact" })
       .eq("workspace_id", workspaceId)
       .eq("status", "awaiting_approval")
       .order("started_at", { ascending: false })
@@ -95,6 +95,39 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
   return (
     <div className="flex flex-col gap-8">
       <HelpPanel workspaceId={workspaceId} page="automatizaciones" />
+
+      <section className="automation-overview" aria-label="Estado de tus automatizaciones">
+        <div className="automation-overview-heading">
+          <div>
+            <p className="automation-section-eyebrow">VISTA GENERAL</p>
+            <h2>El estado de tu equipo digital</h2>
+          </div>
+          <span>{flows.length} {flows.length === 1 ? "flujo creado" : "flujos creados"}</span>
+        </div>
+        <div className="automation-overview-grid">
+          <div className="automation-metric">
+            <span className="automation-metric-label">En marcha</span>
+            <strong>{flows.filter((flow) => flow.status === "active").length}</strong>
+            <span>Automatizaciones activas</span>
+          </div>
+          <div className="automation-metric">
+            <span className="automation-metric-label">En pausa</span>
+            <strong>{flows.filter((flow) => flow.status === "paused").length}</strong>
+            <span>Esperan a que las reanudes</span>
+          </div>
+          <div className="automation-metric">
+            <span className="automation-metric-label">Borradores</span>
+            <strong>{flows.filter((flow) => flow.status === "draft").length}</strong>
+            <span>Planes todavía sin activar</span>
+          </div>
+          <Link href={`${base}/aprobaciones`} className={`automation-metric automation-metric-link ${(pendingCount ?? pending.length) > 0 ? "has-pending" : ""}`}>
+            <span className="automation-metric-label">Por revisar</span>
+            <strong>{pendingCount ?? pending.length}</strong>
+            <span>{(pendingCount ?? pending.length) === 1 ? "Acción espera tu aprobación" : "Acciones esperan tu aprobación"}</span>
+            <span className="automation-metric-action">Ir a Aprobaciones →</span>
+          </Link>
+        </div>
+      </section>
 
       <section className="automation-start" aria-labelledby="automation-start-title">
         <div>
