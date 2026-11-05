@@ -208,8 +208,11 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     if (!validateTask() || pending) return
 
     startTransition(async () => {
-      const websiteContext = websiteSnapshot
-        ? [websiteSnapshot.title, websiteSnapshot.description, ...websiteSnapshot.headings, websiteSnapshot.text].filter(Boolean).join("\n").slice(0, 3_000)
+      const websiteContext = websiteSnapshot && businessProfile && profileConfirmed
+        ? BUSINESS_PROFILE_FIELDS.map(({ key, label }) => {
+            const value = businessProfile[key].value.trim()
+            return value ? `${label}: ${value}` : ""
+          }).filter(Boolean).join("\\n").slice(0, 3_000)
         : undefined
       const result = await generateOnboardingPlan({ workspaceId, message: task, websiteContext })
       if (!result.ok) {
@@ -378,7 +381,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                   inputMode="url"
                   autoComplete="url"
                   value={websiteUrl}
-                  onChange={(e) => { setWebsiteUrl(e.target.value); setWebsiteSnapshot(null); setWebsiteError(null) }}
+                  onChange={(e) => { setWebsiteUrl(e.target.value); setWebsiteSnapshot(null); setBusinessProfile(null); setProfileConfirmed(false); setWebsiteError(null) }}
                   placeholder="https://www.tunegocio.com"
                   maxLength={2048}
                   className="min-w-0 flex-1 rounded-xl border border-rule bg-paper px-3 py-2 text-ink placeholder:text-graphite focus:border-stroke focus:outline-none"
