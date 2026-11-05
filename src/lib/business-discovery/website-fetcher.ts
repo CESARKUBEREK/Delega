@@ -118,7 +118,8 @@ async function requestPinned(url: URL, address: string, family: number): Promise
 
 export async function fetchPublicWebsite(input: string): Promise<WebsiteSnapshot> {
   const trimmed = input.trim()
-  const normalizedInput = /^[a-z][a-z\\d+.-]*:\\/\\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+  const lowerInput = trimmed.toLowerCase()
+  const normalizedInput = lowerInput.startsWith("http://") || lowerInput.startsWith("https://") ? trimmed : `https://${trimmed}`
   let current = validateUrl(normalizedInput)
 
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
