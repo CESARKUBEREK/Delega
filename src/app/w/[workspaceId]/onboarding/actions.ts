@@ -153,7 +153,14 @@ export async function checkOnboardingConnections(input: {
       mime === "application/vnd.ms-excel" ||
       mime === "application/vnd.oasis.opendocument.spreadsheet",
     )
-    const hasDocument = fileMimes.includes("application/vnd.google-apps.document")
+    const hasDocument = fileMimes.some((mime) =>
+      mime === "application/vnd.google-apps.document" ||
+      mime === "application/pdf" ||
+      mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      mime === "application/msword" ||
+      mime === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+      mime === "application/vnd.ms-powerpoint",
+    )
     const hasDriveFile = fileMimes.length > 0
     const statuses: Partial<Record<OnboardingConnection, boolean>> = {}
     for (const connection of input.connections) {
