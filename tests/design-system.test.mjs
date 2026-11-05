@@ -195,3 +195,20 @@ test("el panel de ayuda utiliza InfoBanner para los errores", () => {
   assert.ok(helpPanel.includes('<InfoBanner tone="danger" role="alert">'))
   assert.ok(!helpPanel.includes('<p className="text-sm text-alert" role="alert">'))
 })
+
+
+test("Fase 4: cabeceras y acciones se adaptan sin desbordar en móvil", () => {
+  assert.ok(css.includes(".ms-page-header-actions {"))
+  assert.ok(css.includes("flex-wrap:wrap;"))
+  assert.match(css, /@media\s*\(max-width:700px\)\s*\{[\s\S]*?\.ms-page-header\s*\{[\s\S]*?flex-direction:column/)
+  assert.ok(css.includes(".ms-page-header-description {"))
+  assert.ok(css.includes("max-width:68ch;"))
+})
+
+test("Fase 4: paneles, grupos de navegación y estados vacíos comparten ritmo visual", () => {
+  assert.ok(css.includes(".ms-panel-card-header {"))
+  assert.ok(css.includes(".ms-nav-group + .ms-nav-group {"))
+  assert.ok(css.includes(".ms-nav-group-heading,"))
+  assert.ok(css.includes(".ms-empty-state > div {"))
+  assert.match(css, /@media\s*\(max-width:480px\)\s*\{[\s\S]*?\.ms-empty-state\s*\{/)
+})
