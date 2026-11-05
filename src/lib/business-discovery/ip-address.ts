@@ -76,6 +76,12 @@ export function isPublicAddress(address: string): boolean {
   const sixToFour = parseIpv6("2002::")!
   const documentation = parseIpv6("3fff::")!
   const srv6Sids = parseIpv6("5f00::")!
+  const reservedGlobalUnicast = [
+    ["2d00::", 8], ["2e00::", 7], ["3000::", 5], ["3800::", 6],
+    ["3c00::", 7], ["3e00::", 8], ["3f00::", 9], ["3f80::", 10],
+    ["3fc0::", 11], ["3fe0::", 12], ["3ff0::", 13], ["3ff8::", 14],
+    ["3ffc::", 15], ["3ffe::", 16],
+  ] as const
 
   return inIpv6Range(parsed, globalUnicast, 3)
     && !inIpv6Range(parsed, ietfProtocolAssignments, 23)
@@ -83,4 +89,5 @@ export function isPublicAddress(address: string): boolean {
     && !inIpv6Range(parsed, sixToFour, 16)
     && !inIpv6Range(parsed, documentation, 20)
     && !inIpv6Range(parsed, srv6Sids, 16)
+    && !reservedGlobalUnicast.some(([network, prefix]) => inIpv6Range(parsed, parseIpv6(network)!, prefix))
 }
