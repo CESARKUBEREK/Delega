@@ -1,7 +1,7 @@
 "use client"
 
 import { useFormStatus } from "react-dom"
-import { PrimaryButton as SharedPrimaryButton, SecondaryButton as SharedSecondaryButton } from "@/components/ui"
+import { InfoBanner, PrimaryButton as SharedPrimaryButton, SecondaryButton as SharedSecondaryButton } from "@/components/ui"
 import type { InputHTMLAttributes, ReactNode } from "react"
 
 export function Field({
@@ -59,20 +59,8 @@ export function SecondaryButton({ children, pendingLabel }: { children: ReactNod
 }
 
 export function FormMessage({ error, message }: { error?: string; message?: string }) {
-  if (error) {
-    return (
-      <p role="alert" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
-        {error}
-      </p>
-    )
-  }
-  if (message) {
-    return (
-      <p role="status" className="border-l-2 border-ok bg-ok-bg px-3 py-2 text-sm text-ok">
-        {message}
-      </p>
-    )
-  }
+  if (error) return <InfoBanner tone="danger" role="alert">{error}</InfoBanner>
+  if (message) return <InfoBanner tone="success" role="status">{message}</InfoBanner>
   return null
 }
 
