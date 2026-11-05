@@ -97,6 +97,23 @@ export function RunStatusBadge({
   )
 }
 
+export function IntegrationStatusBadge({
+  status,
+  invalidLabel,
+  disconnectedLabel = "Sin conectar",
+  className,
+}: {
+  status: string | null | undefined
+  invalidLabel: ReactNode
+  disconnectedLabel?: ReactNode
+  className?: string
+}) {
+  const tone = !status ? "neutral" : status === "active" ? "success" : status === "paused" ? "warning" : "danger"
+  const label = !status ? disconnectedLabel : status === "active" ? "Conectado" : status === "paused" ? "Requiere configuración" : invalidLabel
+
+  return <StatusBadge tone={tone} className={className}>{label}</StatusBadge>
+}
+
 export function EmptyState({
   title,
   description,
