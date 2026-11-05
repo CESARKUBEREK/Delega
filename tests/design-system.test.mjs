@@ -12,6 +12,7 @@ const history = readFileSync(new URL("../src/app/w/[workspaceId]/historial/page.
 const workIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/work-cards.tsx", import.meta.url), "utf8")
 const inboxIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/inbox-cards.tsx", import.meta.url), "utf8")
 const inboxIntegrationsClient = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/inbox-client.tsx", import.meta.url), "utf8")
+const routingForm = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/routing-form.tsx", import.meta.url), "utf8")
 const replyComposer = readFileSync(new URL("../src/app/w/[workspaceId]/bandeja/[threadId]/reply-composer.tsx", import.meta.url), "utf8")
 const runLive = readFileSync(new URL("../src/app/w/[workspaceId]/ejecuciones/[runId]/run-live.tsx", import.meta.url), "utf8")
 const runPanel = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/[flowId]/run-panel.tsx", import.meta.url), "utf8")
@@ -170,4 +171,11 @@ test("formularios de integraciones de bandeja reutilizan Field compartido", () =
   assert.ok(inboxIntegrationsClient.includes('import { Field, FormMessage, SubmitButton } from "@/components/form"'))
   assert.ok((inboxIntegrationsClient.match(/<Field\b/g) ?? []).length >= 5)
   assert.ok(!inboxIntegrationsClient.includes("function Input(props:"))
+})
+
+
+test("presupuesto del router de IA utiliza los campos compartidos", () => {
+  assert.ok(routingForm.includes('import { Field, FormMessage, SubmitButton } from "@/components/form"'))
+  assert.equal((routingForm.match(/<Field\\b/g) ?? []).length, 3)
+  assert.ok(!routingForm.includes("function UsdField("))
 })
