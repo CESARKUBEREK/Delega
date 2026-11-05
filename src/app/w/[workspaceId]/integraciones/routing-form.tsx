@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState } from "react"
-import { FormMessage, SubmitButton } from "@/components/form"
+import { Field, FormMessage, SubmitButton } from "@/components/form"
 import { MODE_HINT, MODE_LABEL, MODES, type WorkspaceRouting } from "@/lib/router"
 import { type AiKeyState, setAiRouting } from "../ai-actions"
 
@@ -41,9 +41,9 @@ export function RoutingForm({ workspaceId, routing }: { workspaceId: string; rou
       <fieldset className="flex flex-col gap-3">
         <legend className="mb-1 font-semibold text-ink">Presupuesto (USD, opcional)</legend>
         <div className="grid gap-3 sm:grid-cols-3">
-          <UsdField name="monthly_usd" label="Al mes" value={usd(routing.monthlyUsd)} />
-          <UsdField name="daily_usd" label="Al día" value={usd(routing.dailyUsd)} />
-          <UsdField name="run_usd" label="Por ejecución" value={usd(routing.runUsd)} placeholder="Automático" />
+          <Field id="monthly-usd" name="monthly_usd" label="Al mes" defaultValue={usd(routing.monthlyUsd)} inputMode="decimal" />
+          <Field id="daily-usd" name="daily_usd" label="Al día" defaultValue={usd(routing.dailyUsd)} inputMode="decimal" />
+          <Field id="run-usd" name="run_usd" label="Por ejecución" defaultValue={usd(routing.runUsd)} inputMode="decimal" placeholder="Automático" />
         </div>
         <p className="text-graphite">
           Al 80 % te avisamos. Al llegar al límite, todo pasa al modo Ahorro y te avisamos. Una ejecución que llega a su presupuesto se pausa y te
@@ -64,17 +64,3 @@ export function RoutingForm({ workspaceId, routing }: { workspaceId: string; rou
   )
 }
 
-function UsdField({ name, label, value, placeholder }: { name: string; label: string; value: string; placeholder?: string }) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="text-ink">{label}</span>
-      <input
-        name={name}
-        defaultValue={value}
-        inputMode="decimal"
-        placeholder={placeholder ?? "Sin límite"}
-        className="h-11 border border-rule bg-sheet px-3 text-base text-ink focus:border-link focus:outline-none"
-      />
-    </label>
-  )
-}
