@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { type ReactNode, useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react"
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react"
 import { PlanView } from "@/components/plan-view"
 import {
   chatHref,
@@ -10,7 +10,7 @@ import {
   CONNECTION_ANCHOR,
   CONNECTION_LABEL,
   loadOnboarding,
-  primaryConnection,
+  requiredConnections,
   saveOnboarding,
   supervisedPreview,
   type OnboardingConnection,
@@ -22,6 +22,7 @@ import { saveFlowPlan } from "../flow-editor-actions"
 import {
   checkOnboardingAi,
   checkOnboardingConnection,
+  checkOnboardingConnections,
   completeOnboarding,
   generateOnboardingPlan,
   getOnboardingResult,
@@ -128,7 +129,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     saveOnboarding(workspaceId, { step, task, reply, plan, source, conversationId, trialRemaining, flowId })
   }, [workspaceId, step, task, reply, plan, source, conversationId, trialRemaining, flowId])
 
-  const needed = plan ? primaryConnection(plan) : "none"
+  const requirements = useMemo(() => (plan ? requiredConnections(plan) : []), [plan])
+  const [connectionIndex, setConnectionIndex] = useState(0)
+  const needed = requirements[connectionIndex] ?? requirements[0] ?? "none"
 
   // Embudo: la primera llegada a cada paso (la base ignora las repeticiones).
   const planName = plan?.name
@@ -185,36 +188,63 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     })
   }
 
-  // Plan aceptado → guardar borrador (si se puede) y pasar a conectar la IA.
+  // El plan solo avanza cuando existe un borrador persistido.
+  const persistPlan = async (): Promise<string | null> => {
+    if (!plan) {
+      setError("No hay un plan que guardar. Vuelve a describir la tarea.")
+      return null
+    }
+    if (flowId) return flowId
+    try {
+      const savedPlan = await saveFlowPlan({ workspaceId, flowId: null, plan, fileIds: [] })
+      if (!savedPlan.ok) {
+        setError(savedPlan.error || "No se pudo guardar el plan. Inténtalo de nuevo.")
+        return null
+      }
+      setFlowId(savedPlan.flowId)
+      return savedPlan.flowId
+    } catch {
+      setError("No se pudo guardar el plan. Comprueba tu conexión e inténtalo de nuevo.")
+      return null
+    }
+  }
+
+  // Plan aceptado → persistirlo una sola vez antes de continuar.
   const acceptPlan = () => {
     if (!plan || pending) return
     setError(null)
     startTransition(async () => {
-      if (!flowId) {
-        const savedPlan = await saveFlowPlan({ workspaceId, flowId: null, plan, fileIds: [] })
-        if (savedPlan.ok) setFlowId(savedPlan.flowId)
-        // Si falla el guardado, el onboarding sigue: el plan está en localStorage.
-      }
+      const savedFlowId = await persistPlan()
+      if (!savedFlowId) return
       setStep("ai")
     })
   }
 
   // Después de la IA, la herramienta que pide el plan (si pide alguna).
   const afterAi = () => {
-    if (needed === "none") finish()
-    else setStep("connect")
+    if (requirements.length === 0) finish()
+    else {
+      setConnectionIndex(0)
+      setStep("connect")
+    }
   }
 
   // Al llegar a «Listo» se marca el onboarding como terminado.
   const finish = () => {
     setError(null)
     startTransition(async () => {
-      const result = await completeOnboarding(workspaceId)
-      if (!result.ok) {
-        setError(result.error)
-        return
+      const savedFlowId = await persistPlan()
+      if (!savedFlowId) return
+      try {
+        const result = await completeOnboarding(workspaceId)
+        if (!result.ok) {
+          setError(result.error)
+          return
+        }
+        setStep("done") // el efecto de guardado borra el progreso de la pestaña
+      } catch {
+        setError("No se pudo finalizar el onboarding. Inténtalo de nuevo.")
       }
-      setStep("done") // el efecto de guardado borra el progreso de la pestaña
     })
   }
 
@@ -231,7 +261,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   }
 
   // Pasos visibles (si el plan no pide herramienta, «Conectar» no cuenta).
-  const visibleSteps = ONBOARDING_STEPS.filter((s) => !(s.id === "connect" && needed === "none"))
+  const visibleSteps = ONBOARDING_STEPS.filter((s) => !(s.id === "connect" && requirements.length === 0))
   const stepOrdinal = (id: Step) => {
     const i = visibleSteps.findIndex((s) => s.id === id)
     return i >= 0 ? i + 1 : 1
@@ -247,11 +277,10 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
         </h1>
         <nav aria-label="Pasos del onboarding" className="setup-steps">
           <ol className="onboarding-steps">
-            {ONBOARDING_STEPS.map((s, i) => {
+            {visibleSteps.map((s, i) => {
               const current = s.id === step
-              // «Conectar» no hace falta si el plan no necesita ninguna conexión.
-              const skipped = s.id === "connect" && needed === "none" && i < currentIndex
-              const done = i < currentIndex
+              const visibleCurrentIndex = visibleSteps.findIndex((item) => item.id === step)
+              const done = visibleCurrentIndex >= 0 && i < visibleCurrentIndex
               const className = `setup-step-link ${done ? "is-done" : ""} ${current ? "is-current" : ""}`
               const content = (
                 <>
@@ -260,7 +289,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                   </span>
                   <span className="setup-step-label">
                     {s.short}
-                    <span className="sr-only">{current ? " (actual)" : skipped ? " (no hace falta)" : done ? " (hecho)" : ""}</span>
+                    <span className="sr-only">{current ? " (actual)" : done ? " (hecho)" : ""}</span>
                   </span>
                 </>
               )
@@ -442,11 +471,16 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           base={base}
           isAdmin={isAdmin}
           plan={plan}
-          needed={needed}
+          neededConnections={requirements}
           flowId={flowId}
           chatLink={chatHref(base, conversationId, task)}
+          stepLabel={`Paso ${stepOrdinal("done")} de ${stepTotal}`}
           onConnectAi={() => setStep("ai")}
-          onConnectTool={() => setStep("connect")}
+          onConnectTool={(connection) => {
+            const index = requirements.indexOf(connection)
+            setConnectionIndex(index >= 0 ? index : 0)
+            setStep("connect")
+          }}
           onRestart={restart}
         />
       )}
@@ -481,7 +515,7 @@ function ConnectStep({
   onBack: () => void
   onContinue: () => void
 }) {
-  const [status, setStatus] = useState<"loading" | "connected" | "missing">("loading")
+  const [status, setStatus] = useState<"loading" | "connected" | "missing" | "error">("loading")
   const [error, setError] = useState<string | null>(null)
   const [checking, startCheck] = useTransition()
   const box = useRef<HTMLDivElement>(null)
@@ -491,16 +525,17 @@ function ConnectStep({
   const check = useCallback(async () => {
     const result = await checkOnboardingConnection({ workspaceId, connection: needed }).catch(() => null)
     if (!result) {
-      setStatus((s) => (s === "loading" ? "missing" : s))
+      setError("No se pudo comprobar la conexión. Inténtalo de nuevo.")
+      setStatus("error")
       return
     }
     if (!result.ok) {
       setError(result.error)
-      setStatus((s) => (s === "loading" ? "missing" : s))
+      setStatus("error")
       return
     }
     setError(null)
-    setStatus((s) => (result.connected ? "connected" : s === "loading" ? "missing" : s))
+    setStatus(result.connected ? "connected" : "missing")
   }, [workspaceId, needed])
 
   useEffect(() => {
@@ -546,6 +581,13 @@ function ConnectStep({
         <p className="text-sm text-graphite" role="status">
           Comprobando la conexión…
         </p>
+      ) : status === "error" ? (
+        <div className="flex flex-col gap-3" role="alert">
+          <p className="text-sm text-alert">{error}</p>
+          <button type="button" onClick={() => startCheck(check)} disabled={checking} className="text-sm font-semibold text-link underline underline-offset-4">
+            {checking ? "Comprobando…" : "Volver a comprobar"}
+          </button>
+        </div>
       ) : status === "connected" ? (
         <div className="rounded-2xl border border-ok bg-paper p-5 flex flex-col gap-3" role="status">
           <p className="font-medium text-ink">✓ {label} está conectado</p>
@@ -855,9 +897,10 @@ function DoneStep({
   base,
   isAdmin,
   plan,
-  needed,
+  neededConnections,
   flowId,
   chatLink,
+  stepLabel,
   onConnectAi,
   onConnectTool,
   onRestart,
@@ -866,16 +909,21 @@ function DoneStep({
   base: string
   isAdmin: boolean
   plan: FlowPlan | null
-  needed: OnboardingConnection
+  neededConnections: OnboardingConnection[]
   flowId: string | null
   chatLink: string
+  stepLabel: string
   onConnectAi: () => void
-  onConnectTool: () => void
+  onConnectTool: (connection: OnboardingConnection) => void
   onRestart: () => void
 }) {
   const router = useRouter()
   const [ai, setAi] = useState<{ ok: boolean; label: string | null } | null>(null)
-  const [tool, setTool] = useState<boolean | null>(needed === "none" ? true : null)
+  const [toolCheck, setToolCheck] = useState<
+    | { ok: true; statuses: Partial<Record<OnboardingConnection, boolean>> }
+    | { ok: false; error: string }
+    | null
+  >(neededConnections.length === 0 ? { ok: true, statuses: {} } : null)
   const [error, setError] = useState<string | null>(null)
   const [saving, startSave] = useTransition()
 
@@ -886,31 +934,31 @@ function DoneStep({
         if (!stop) setAi(r.ok ? { ok: r.connected, label: r.label } : { ok: false, label: null })
       })
       .catch(() => !stop && setAi({ ok: false, label: null }))
-    if (needed !== "none") {
-      void checkOnboardingConnection({ workspaceId, connection: needed })
-        .then((r) => {
-          if (!stop) setTool(r.ok ? r.connected : false)
+    if (neededConnections.length > 0) {
+      void checkOnboardingConnections({ workspaceId, connections: neededConnections })
+        .then((result) => {
+          if (!stop) setToolCheck(result)
         })
-        .catch(() => !stop && setTool(false))
+        .catch(() => !stop && setToolCheck({ ok: false, error: "No se pudieron comprobar las conexiones." }))
     }
     return () => {
       stop = true
     }
-  }, [workspaceId, needed])
+  }, [workspaceId, neededConnections])
 
-  const ready = ai?.ok === true && tool === true
-  const loading = ai === null || tool === null
+  const toolReady = neededConnections.every((connection) => toolCheck?.ok === true && toolCheck.statuses[connection] === true)
+  const ready = ai?.ok === true && toolReady
+  const loading = ai === null || toolCheck === null
 
   const saveAndOpen = () => {
     if (!plan) return
     setError(null)
     startSave(async () => {
-      const result = await saveFlowPlan({ workspaceId, flowId: null, plan, fileIds: [] })
-      if (!result.ok) {
-        setError(result.error)
+      if (!flowId) {
+        setError("El borrador aún no está guardado. Vuelve a intentarlo desde el paso anterior.")
         return
       }
-      router.push(`${base}/automatizaciones/${result.flowId}`)
+      router.push(`${base}/automatizaciones/${flowId}`)
     })
   }
 
@@ -920,15 +968,19 @@ function DoneStep({
   const items: { label: string; ok: boolean | null; detail: string }[] = [
     { label: "Tu plan", ok: plan !== null, detail: plan?.name ?? "" },
     { label: "Tu IA", ok: ai?.ok ?? null, detail: ai?.ok ? (ai.label ?? "Conectada") : "Sin conectar: sin ella no se ejecuta nada" },
-    ...(needed !== "none"
-      ? [{ label: CONNECTION_LABEL[needed], ok: tool, detail: tool ? "Conectado" : "Sin conectar: lo necesita tu plan" }]
-      : []),
+    ...neededConnections.map((connection) => ({
+      label: CONNECTION_LABEL[connection],
+      ok: toolCheck?.ok === true ? toolCheck.statuses[connection] ?? false : null,
+      detail: toolCheck?.ok === false
+        ? toolCheck.error
+        : toolCheck?.statuses[connection] === true ? "Conectado" : "Sin conectar: lo necesita tu plan",
+    })),
   ]
 
   return (
     <section className="setup-panel flex flex-col gap-5">
       <div>
-        <p className="text-sm font-semibold text-graphite">Paso 5 de 5</p>
+        <p className="text-sm font-semibold text-graphite">{stepLabel}</p>
         <h2 className="rotulo text-xl mt-1">{ready ? "Todo listo para ponerlo en marcha" : loading ? "Comprobando…" : "Casi listo"}</h2>
         <p className="text-graphite mt-1">
           {ready
@@ -959,8 +1011,9 @@ function DoneStep({
         ))}
       </ul>
 
-      {isAdmin && ai?.ok && tool && needed === "email" ? <InboxResult workspaceId={workspaceId} base={base} /> : null}
+      {isAdmin && ai?.ok && toolReady && neededConnections.includes("email") ? <InboxResult workspaceId={workspaceId} base={base} /> : null}
 
+      {toolCheck?.ok === false ? <p className="text-sm text-alert" role="alert">{toolCheck.error}</p> : null}
       {error && <p className="text-sm text-alert">{error}</p>}
 
       {!loading ? (
@@ -969,18 +1022,25 @@ function DoneStep({
             <button type="button" onClick={saveAndOpen} disabled={saving} className={primary}>
               {saving ? "Guardando…" : "Abrir y probar esta automatización →"}
             </button>
-          ) : flowId ? (
-            <Link href={`${base}/automatizaciones/${flowId}`} className={primary}>
-              Ver el borrador de la automatización →
-            </Link>
           ) : isAdmin && ai?.ok === false ? (
             <button type="button" onClick={onConnectAi} className={primary}>
               Conectar mi IA para ejecutarla →
             </button>
-          ) : isAdmin && tool === false ? (
-            <button type="button" onClick={onConnectTool} className={primary}>
-              Conectar {CONNECTION_LABEL[needed]} →
+          ) : isAdmin && toolCheck?.ok === true && neededConnections.some((connection) => toolCheck.statuses[connection] === false) ? (
+            <button
+              type="button"
+              onClick={() => {
+                const missing = neededConnections.find((connection) => toolCheck?.ok === true && toolCheck.statuses[connection] === false)
+                if (missing) onConnectTool(missing)
+              }}
+              className={primary}
+            >
+              Conectar la siguiente herramienta →
             </button>
+          ) : flowId ? (
+            <Link href={`${base}/automatizaciones/${flowId}`} className={primary}>
+              Ver el borrador de la automatización →
+            </Link>
           ) : (
             <Link href={base} className={primary}>
               Ir a Hoy →

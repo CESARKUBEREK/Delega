@@ -2,17 +2,20 @@ import { asPlan, type FlowPlan } from "@/lib/plan"
 
 export type OnboardingConnection = "email" | "messaging" | "spreadsheet" | "calendar" | "none"
 
-// Detecta la conexión principal que necesita un plan del onboarding.
-// Vive fuera de actions.ts porque un archivo "use server" solo puede exportar
-// funciones async, y esta se usa también en el cliente.
-export function primaryConnection(plan: FlowPlan): OnboardingConnection {
+// Devuelve todas las conexiones distintas que necesita el plan, en orden estable.
+export function requiredConnections(plan: FlowPlan): OnboardingConnection[] {
   const kinds = new Set([...plan.connections.map((c) => c.kind), ...plan.steps.map((s) => s.connection)])
-  // Canales del negocio primero: es lo que más vende en la web.
-  if (kinds.has("whatsapp") || kinds.has("telegram")) return "messaging"
-  if (kinds.has("email")) return "email"
-  if (kinds.has("spreadsheet") || kinds.has("drive") || kinds.has("documents")) return "spreadsheet"
-  if (kinds.has("calendar")) return "calendar"
-  return "none"
+  const required: OnboardingConnection[] = []
+  if (kinds.has("whatsapp") || kinds.has("telegram")) required.push("messaging")
+  if (kinds.has("email")) required.push("email")
+  if (kinds.has("spreadsheet") || kinds.has("drive") || kinds.has("documents")) required.push("spreadsheet")
+  if (kinds.has("calendar")) required.push("calendar")
+  return required
+}
+
+// Compatibilidad para pantallas que solo muestran la primera conexión.
+export function primaryConnection(plan: FlowPlan): OnboardingConnection {
+  return requiredConnections(plan)[0] ?? "none"
 }
 
 export const CONNECTION_LABEL: Record<OnboardingConnection, string> = {

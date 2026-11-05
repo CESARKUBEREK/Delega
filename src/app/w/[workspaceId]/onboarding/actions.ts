@@ -100,31 +100,40 @@ export type ConnectionStatusResult =
   | { ok: true; connected: boolean; label: string }
   | { ok: false; error: string }
 
-// ¿Ya está conectado lo que necesita el plan? Usa las mismas reglas que el
-// aviso de Hoy (setupStatus). Las planillas viven en Drive, así
-// que basta con Drive conectado.
+// Comprueba todas las conexiones con una sola lectura del estado del espacio.
+export async function checkOnboardingConnections(input: {
+  workspaceId: string
+  connections: OnboardingConnection[]
+}): Promise<{ ok: true; statuses: Partial<Record<OnboardingConnection, boolean>> } | { ok: false; error: string }> {
+  if (!UUID_RE.test(input.workspaceId)) return { ok: false, error: "Espacio no válido." }
+  try {
+    const status = await setupStatus(input.workspaceId)
+    const statuses: Partial<Record<OnboardingConnection, boolean>> = {}
+    for (const connection of input.connections) {
+      statuses[connection] =
+        connection === "none" ? true :
+        connection === "email" ? status.correo :
+        connection === "messaging" ? status.mensajeria :
+        connection === "spreadsheet" ? status.drive :
+        connection === "calendar" ? status.calendario : false
+    }
+    return { ok: true, statuses }
+  } catch {
+    return { ok: false, error: "No se pudieron comprobar las conexiones. Vuelve a intentarlo." }
+  }
+}
+
+// Comprobación individual para la tarjeta de conexión del onboarding.
 export async function checkOnboardingConnection(input: {
   workspaceId: string
   connection: OnboardingConnection
 }): Promise<ConnectionStatusResult> {
-  if (!UUID_RE.test(input.workspaceId)) {
-    return { ok: false, error: "Espacio no válido." }
-  }
+  if (!UUID_RE.test(input.workspaceId)) return { ok: false, error: "Espacio no válido." }
   const label = CONNECTION_LABEL[input.connection] ?? CONNECTION_LABEL.none
   if (input.connection === "none") return { ok: true, connected: true, label }
-
-  const status = await setupStatus(input.workspaceId)
-  const connected =
-    input.connection === "email"
-      ? status.correo
-      : input.connection === "messaging"
-        ? status.mensajeria
-        : input.connection === "spreadsheet"
-          ? status.drive
-          : input.connection === "calendar"
-            ? status.calendario
-            : false
-  return { ok: true, connected, label }
+  const result = await checkOnboardingConnections({ workspaceId: input.workspaceId, connections: [input.connection] })
+  if (!result.ok) return { ok: false, error: result.error }
+  return { ok: true, connected: result.statuses[input.connection] === true, label }
 }
 
 // Marca el onboarding de este espacio como terminado (en la base, para todos
