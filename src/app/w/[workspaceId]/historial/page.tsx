@@ -58,9 +58,27 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
     byModel.set(u.model, row)
   }
   const base = `/w/${workspaceId}`
+  const requestCount = [...byModel.values()].reduce((total, row) => total + row.requests, 0)
 
   return (
     <div className="automation-history">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label="Resumen de actividad">
+        <div className="rounded-xl border border-rule bg-sheet p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-graphite">Ejecuciones recientes</p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-ink">{formatNumber(runs?.length ?? 0)}</p>
+          <p className="mt-1 text-xs text-graphite">Últimas 50 del espacio</p>
+        </div>
+        <div className="rounded-xl border border-rule bg-sheet p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-graphite">Conversaciones recientes</p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-ink">{formatNumber(conversations?.length ?? 0)}</p>
+          <p className="mt-1 text-xs text-graphite">Últimas 100 del espacio</p>
+        </div>
+        <div className="rounded-xl border border-rule bg-sheet p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-graphite">Peticiones de IA este mes</p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-ink">{formatNumber(requestCount)}</p>
+          <p className="mt-1 text-xs text-graphite">{formatNumber(byModel.size)} modelos utilizados</p>
+        </div>
+      </div>
       <PanelCard className="automation-activity-card history-panel" bodyPadding="none" headerDensity="compact" title="Últimas ejecuciones" description={isAdmin ? "Trabajo realizado en todo el espacio" : "Trabajo realizado por ti"}>
         {runs && runs.length > 0 ? (
           <ul className="automation-history-list">
