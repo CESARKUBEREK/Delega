@@ -7,10 +7,13 @@ import type { InputHTMLAttributes, ReactNode } from "react"
 export function Field({
   label,
   hint,
+  error,
   id,
   ...input
-}: { label: string; hint?: string; id: string } & InputHTMLAttributes<HTMLInputElement>) {
+}: { label: string; hint?: string; error?: string; id: string } & InputHTMLAttributes<HTMLInputElement>) {
   const hintId = hint ? `${id}-hint` : undefined
+  const errorId = error ? `${id}-error` : undefined
+  const describedBy = [hintId, errorId].filter(Boolean).join(" ") || undefined
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-medium text-ink">
@@ -18,13 +21,19 @@ export function Field({
       </label>
       <input
         id={id}
-        aria-describedby={hintId}
+        aria-describedby={describedBy}
+        aria-invalid={error ? true : undefined}
         className="h-11 border border-rule bg-sheet px-3 text-base text-ink placeholder:text-graphite/70 focus:border-link focus:outline-none focus-visible:outline-2 focus-visible:outline-stroke"
         {...input}
       />
       {hint ? (
         <p id={hintId} className="text-xs text-graphite">
           {hint}
+        </p>
+      ) : null}
+      {error ? (
+        <p id={errorId} className="text-xs text-alert" role="alert">
+          {error}
         </p>
       ) : null}
     </div>
