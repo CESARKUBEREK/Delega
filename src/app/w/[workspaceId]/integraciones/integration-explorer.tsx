@@ -94,7 +94,29 @@ export function IntegrationExplorer({
           <div>
             <p className="integration-overview-eyebrow">TUS CONEXIONES</p>
             <h2 id="integration-overview-title">Conecta tus aplicaciones para delegar</h2>
-            <p>Revisa lo que ya está conectado o encuentra lo que necesitas para tu próxima tarea.</p>
+            <p>Revisa lo que ya está conectado o encuentra lo que necesitas para tu próxima tarea. Tú decides qué conectar y puedes retirar el acceso cuando quieras.</p>
+          </div>
+        </div>
+        <div className="integration-health" role="status" aria-live="polite">
+          <div className="integration-health-count">
+            <strong>{counts.connected}</strong>
+            <span>{counts.connected === 1 ? "conexión activa" : "conexiones activas"}</span>
+          </div>
+          <div className="integration-health-copy">
+            <strong>
+              {counts.attention > 0
+                ? `${counts.attention} ${counts.attention === 1 ? "conexión necesita" : "conexiones necesitan"} atención`
+                : counts.connected === 0
+                  ? "Empieza por conectar tu IA"
+                  : "Tu equipo digital tiene conexiones listas"}
+            </strong>
+            <p>
+              {counts.attention > 0
+                ? "Revisa las conexiones marcadas para recuperar el acceso."
+                : counts.connected === 0
+                  ? "Conecta primero un proveedor de IA y después añade correo, agenda y archivos."
+                  : "Las acciones que requieren permiso aparecerán en Aprobaciones antes de ejecutarse."}
+            </p>
           </div>
         </div>
         <div className="integration-status-filters" role="group" aria-label="Filtrar por estado de conexión">
