@@ -1723,3 +1723,76 @@ button.setup-step-link:focus-visible { outline:2px solid var(--link); outline-of
 .run-detail-card.is-success .ms-panel-card-header { border-color: var(--ok); color: var(--ok); }
 .run-detail-card.is-danger { border-color: var(--alert); }
 .run-detail-card.is-danger .ms-panel-card-header { border-color: var(--alert); background: var(--alert-bg); color: var(--alert); }
+
+
+/* MarchaSolo onboarding: movimiento de interfaz, no solo del orbe.
+   Las secciones se montan por paso y reciben una entrada breve y escalonada. */
+@keyframes onboarding-content-enter {
+  from { opacity:0; transform:translate3d(0,14px,0); filter:blur(3px); }
+  to { opacity:1; transform:translate3d(0,0,0); filter:blur(0); }
+}
+@keyframes onboarding-soft-glow {
+  0%,100% { opacity:.55; transform:scale(.92); }
+  50% { opacity:1; transform:scale(1.08); }
+}
+@keyframes onboarding-orbit-spin-a {
+  from { transform:rotate(-18deg); }
+  to { transform:rotate(342deg); }
+}
+@keyframes onboarding-orbit-spin-b {
+  from { transform:rotate(34deg); }
+  to { transform:rotate(-326deg); }
+}
+@keyframes onboarding-spark-drift {
+  0%,100% { opacity:.45; }
+  50% { opacity:1; }
+}
+@keyframes onboarding-step-pulse {
+  0%,100% { box-shadow:0 0 0 0 rgb(0 194 168 / 0%); }
+  50% { box-shadow:0 0 0 5px rgb(0 194 168 / 10%); }
+}
+.setup-header { animation:onboarding-content-enter .55s cubic-bezier(.2,.75,.25,1) both; }
+.setup-header .app-eyebrow { animation:onboarding-content-enter .5s .04s both; }
+.setup-header h1 { animation:onboarding-content-enter .55s .1s both; }
+.setup-steps { animation:onboarding-content-enter .55s .16s both; }
+.setup-panel { animation:onboarding-content-enter .62s cubic-bezier(.2,.75,.25,1) both; }
+.setup-panel > * { animation:onboarding-content-enter .55s both; }
+.setup-panel > *:nth-child(1) { animation-delay:.06s; }
+.setup-panel > *:nth-child(2) { animation-delay:.13s; }
+.setup-panel > *:nth-child(3) { animation-delay:.2s; }
+.setup-panel > *:nth-child(4) { animation-delay:.27s; }
+.setup-panel > *:nth-child(5) { animation-delay:.34s; }
+.setup-panel > *:nth-child(6) { animation-delay:.41s; }
+.setup-panel button, .setup-panel a, .setup-step-link {
+  transition:transform .22s cubic-bezier(.2,.75,.25,1), box-shadow .22s ease, border-color .22s ease, background-color .22s ease, color .22s ease;
+}
+.setup-panel button:hover:not(:disabled), .setup-panel a:hover { transform:translateY(-2px); }
+.setup-panel button:active:not(:disabled) { transform:translateY(0) scale(.985); }
+.setup-step-link.is-current { animation:onboarding-step-pulse 3.2s ease-in-out .7s infinite; }
+.setup-panel textarea { transition:border-color .2s ease, box-shadow .2s ease; }
+.setup-panel textarea:focus { box-shadow:0 0 0 4px rgb(0 194 168 / 12%); }
+.setup-panel .setup-cards > * { animation:onboarding-content-enter .5s both; }
+.setup-panel .setup-cards > *:nth-child(1) { animation-delay:.08s; }
+.setup-panel .setup-cards > *:nth-child(2) { animation-delay:.15s; }
+.setup-panel .setup-cards > *:nth-child(3) { animation-delay:.22s; }
+.setup-panel .setup-cards > *:nth-child(4) { animation-delay:.29s; }
+.setup-panel .setup-cards > *:nth-child(5) { animation-delay:.36s; }
+.onboarding-orbit { transform-box:view-box; transform-origin:120px 77px; }
+.onboarding-orbit-a { animation:onboarding-orbit-spin-a 24s linear infinite; }
+.onboarding-orbit-b { animation:onboarding-orbit-spin-b 32s linear infinite; }
+.onboarding-orb-spark { transform-box:fill-box; transform-origin:center; animation:onboarding-spark-drift 2.8s ease-in-out infinite; }
+.onboarding-orb-spark-b { animation-delay:.7s; }
+.onboarding-orb-spark-c { animation-delay:1.4s; }
+.setup > section[aria-labelledby="intro-title"] { animation:onboarding-content-enter .75s .12s cubic-bezier(.2,.75,.25,1) both; }
+.setup > section[aria-labelledby="intro-title"] > div[aria-hidden="true"] { animation:onboarding-soft-glow 8s ease-in-out infinite; }
+@media (prefers-reduced-motion:reduce) {
+  .setup-header, .setup-header .app-eyebrow, .setup-header h1, .setup-steps,
+  .setup-panel, .setup-panel > *, .setup-panel .setup-cards > *,
+  .setup > section[aria-labelledby="intro-title"],
+  .setup > section[aria-labelledby="intro-title"] > div[aria-hidden="true"],
+  .onboarding-orbit, .onboarding-orb-spark, .setup-step-link.is-current {
+    animation:none !important; opacity:1 !important; filter:none !important;
+  }
+  .setup-panel button, .setup-panel a, .setup-step-link, .setup-panel textarea { transition:none !important; }
+  .setup-panel button:hover:not(:disabled), .setup-panel a:hover { transform:none; }
+}
