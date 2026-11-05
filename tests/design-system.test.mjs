@@ -14,6 +14,7 @@ const inboxIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integ
 const inboxIntegrationsClient = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/inbox-client.tsx", import.meta.url), "utf8")
 const routingForm = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/routing-form.tsx", import.meta.url), "utf8")
 const voiceClient = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/voice-client.tsx", import.meta.url), "utf8")
+const helpPanel = readFileSync(new URL("../src/components/help-panel.tsx", import.meta.url), "utf8")
 const replyComposer = readFileSync(new URL("../src/app/w/[workspaceId]/bandeja/[threadId]/reply-composer.tsx", import.meta.url), "utf8")
 const runLive = readFileSync(new URL("../src/app/w/[workspaceId]/ejecuciones/[runId]/run-live.tsx", import.meta.url), "utf8")
 const runPanel = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/[flowId]/run-panel.tsx", import.meta.url), "utf8")
@@ -186,4 +187,11 @@ test("activación de atención telefónica usa InfoBanner para la confirmación"
   assert.ok(voiceClient.includes('import { InfoBanner } from "@/components/ui"'))
   assert.ok(voiceClient.includes('<InfoBanner tone="success" role="status">'))
   assert.ok(!voiceClient.includes("border-l-2 border-ok bg-ok-bg"))
+})
+
+
+test("el panel de ayuda utiliza InfoBanner para los errores", () => {
+  assert.ok(helpPanel.includes('import { InfoBanner } from "@/components/ui"'))
+  assert.ok(helpPanel.includes('<InfoBanner tone="danger" role="alert">'))
+  assert.ok(!helpPanel.includes('<p className="text-sm text-alert" role="alert">'))
 })
