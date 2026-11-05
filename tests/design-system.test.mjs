@@ -117,7 +117,7 @@ test("Bandeja y Aprobaciones distinguen señales propias de cada área", () => {
 
 test("Bandeja, Ejecuciones y panel de automatización usan avisos compartidos", () => {
   for (const source of [replyComposer, runLive, runPanel]) {
-    assert.ok(source.includes('import { InfoBanner } from "@/components/ui"'))
+    assert.match(source, /import\s*\{[^}]*\bInfoBanner\b[^}]*\}\s*from\s*"@\/components\/ui"/)
     assert.ok(source.includes('<InfoBanner tone="danger" role="alert"'))
     assert.ok(!/border-l-2 border-alert bg-alert-bg/.test(source))
   }
