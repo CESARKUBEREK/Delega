@@ -18,6 +18,8 @@ const flowEditor = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaci
 const invitePage = readFileSync(new URL("../src/app/invite/page.tsx", import.meta.url), "utf8")
 const googleCard = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/google-card.tsx", import.meta.url), "utf8")
 const assistantChat = readFileSync(new URL("../src/app/w/[workspaceId]/asistente/chat.tsx", import.meta.url), "utf8")
+const invitePage = readFileSync(new URL("../src/app/invite/page.tsx", import.meta.url), "utf8")
+const googleResultPage = readFileSync(new URL("../src/app/integraciones/google/page.tsx", import.meta.url), "utf8")
 
 
 function rule(selector) {
@@ -130,6 +132,13 @@ test("Chat del asistente reutiliza InfoBanner para sus tres errores", () => {
   assert.ok(assistantChat.includes('import { InfoBanner } from "@/components/ui"'))
   assert.equal((assistantChat.match(/<InfoBanner tone="danger" role="alert">/g) ?? []).length, 3)
   assert.ok(!assistantChat.includes("border-l-2 border-alert bg-alert-bg"))
+})
+
+test("Invitaciones y retorno OAuth de Google usan avisos compartidos", () => {
+  assert.ok(invitePage.includes('<InfoBanner tone="danger" role="alert">{error}</InfoBanner>'))
+  assert.ok(googleResultPage.includes('<InfoBanner tone="danger" role="alert">'))
+  assert.ok(!invitePage.includes("border-l-2 border-alert bg-alert-bg"))
+  assert.ok(!googleResultPage.includes("border-l-2 border-alert bg-alert-bg"))
 })
 
 test("FormMessage reutiliza InfoBanner y conserva los roles accesibles", () => {
