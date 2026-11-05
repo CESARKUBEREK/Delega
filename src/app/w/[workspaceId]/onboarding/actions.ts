@@ -47,7 +47,7 @@ export async function generateOnboardingPlan(input: {
   websiteContext?: string
 }): Promise<OnboardingPlanResult> {
   const message = input.message.trim()
-  const websiteContext = typeof input.websiteContext === "string" ? input.websiteContext.replace(/[<>]/g, " ").replace(/[\\u0000-\\u001f]/g, " ").trim().slice(0, 6_000) : ""
+  const websiteContext = typeof input.websiteContext === "string" ? input.websiteContext.replace(/[<>]/g, " ").replace(/[\x00-\x1f]/g, " ").trim().slice(0, 6_000) : ""
   if (!UUID_RE.test(input.workspaceId)) {
     return { ok: false, error: "Espacio no válido." }
   }
