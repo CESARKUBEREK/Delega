@@ -5,6 +5,7 @@ import { isIP } from "node:net"
 import { request as httpsRequest } from "node:https"
 import { request as httpRequest } from "node:http"
 import type { IncomingMessage, RequestOptions } from "node:http"
+import { isPublicAddress } from "./ip-address"
 import {
   combineWebsitePages,
   isSameOriginWebsiteUrl,
@@ -17,32 +18,6 @@ import {
 const MAX_BYTES = 1_000_000
 const TIMEOUT_MS = 7_000
 const MAX_REDIRECTS = 3
-
-function isPublicIpv4(address: string): boolean {
-  const parts = address.split(".").map(Number)
-  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) return false
-  const [a, b, c] = parts
-  if (a === 0 || a === 10 || a === 127 || a >= 224) return false
-  if (a === 100 && b >= 64 && b <= 127) return false
-  if (a === 169 && b === 254) return false
-  if (a === 172 && b >= 16 && b <= 31) return false
-  if (a === 192 && (b === 0 || b === 168)) return false
-  if (a === 192 && b === 0 && c === 2) return false
-  if (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) return false
-  if (a === 203 && b === 0 && c === 113) return false
-  return true
-}
-
-function isPublicAddress(address: string): boolean {
-  const version = isIP(address)
-  if (version === 4) return isPublicIpv4(address)
-  if (version === 6) {
-    // Fail closed for IPv6 until we validate against a complete maintained
-    // special-purpose registry. Prefix checks alone miss reserved allocations.
-    return false
-  }
-  return false
-}
 
 function validateUrl(input: string): URL {
   let url: URL
