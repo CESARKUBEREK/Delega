@@ -11,6 +11,9 @@ const automation = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaci
 const history = readFileSync(new URL("../src/app/w/[workspaceId]/historial/page.tsx", import.meta.url), "utf8")
 const workIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/work-cards.tsx", import.meta.url), "utf8")
 const inboxIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/inbox-cards.tsx", import.meta.url), "utf8")
+const replyComposer = readFileSync(new URL("../src/app/w/[workspaceId]/bandeja/[threadId]/reply-composer.tsx", import.meta.url), "utf8")
+const runLive = readFileSync(new URL("../src/app/w/[workspaceId]/ejecuciones/[runId]/run-live.tsx", import.meta.url), "utf8")
+const runPanel = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/[flowId]/run-panel.tsx", import.meta.url), "utf8")
 
 
 function rule(selector) {
@@ -106,4 +109,14 @@ test("Bandeja y Aprobaciones distinguen señales propias de cada área", () => {
   assert.ok(inboxList.includes('<InboxSignalBadge kind="needs_reply" />'))
   assert.ok(inboxList.includes('<InboxSignalBadge kind="pending_classification" />'))
   assert.ok(!inboxList.includes("URGENCY_STYLE"))
+})
+
+
+test("Bandeja, Ejecuciones y panel de automatización usan avisos compartidos", () => {
+  for (const source of [replyComposer, runLive, runPanel]) {
+    assert.ok(source.includes('import { InfoBanner } from "@/components/ui"'))
+    assert.ok(source.includes('<InfoBanner tone="danger" role="alert"'))
+    assert.ok(!/border-l-2 border-alert bg-alert-bg/.test(source))
+  }
+  assert.ok(replyComposer.includes('<InfoBanner tone="success" role="status"'))
 })
