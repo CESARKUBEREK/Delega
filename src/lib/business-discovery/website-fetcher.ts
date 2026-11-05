@@ -30,10 +30,9 @@ function isPublicAddress(address: string): boolean {
   const version = isIP(address)
   if (version === 4) return isPublicIpv4(address)
   if (version === 6) {
-    const normalized = address.toLowerCase()
-    // Only global-unicast 2000::/3. This excludes loopback, link-local,
-    // unique-local, IPv4-mapped and the documentation range.
-    return (normalized.startsWith("2") || normalized.startsWith("3")) && !normalized.startsWith("2001:db8") && !normalized.startsWith("3fff:")
+    // Fail closed for IPv6 until we validate against a complete maintained
+    // special-purpose registry. Prefix checks alone miss reserved allocations.
+    return false
   }
   return false
 }
