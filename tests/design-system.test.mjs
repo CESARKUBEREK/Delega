@@ -168,6 +168,6 @@ test("acciones principales reutilizan los botones del sistema de diseño", () =>
 
 test("formularios de integraciones de bandeja reutilizan Field compartido", () => {
   assert.ok(inboxIntegrationsClient.includes('import { Field, FormMessage, SubmitButton } from "@/components/form"'))
-  assert.ok((inboxIntegrationsClient.match(/<Field\\b/g) ?? []).length >= 5)
+  assert.ok((inboxIntegrationsClient.match(/<Field\b/g) ?? []).length >= 5)
   assert.ok(!inboxIntegrationsClient.includes("function Input(props:"))
 })
