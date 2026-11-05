@@ -1179,7 +1179,6 @@ button.setup-step-link:focus-visible { outline:2px solid var(--link); outline-of
 @media (max-width:560px) {
   .settings-invite-card { padding:16px; }
   .automation-history-run { gap:10px; padding:11px 12px; }
-  .automation-history-status { padding:3px 7px; font-size:9px; }
   .automation-history-table th, .automation-history-table td { padding:9px 10px; }
 }
 @media (prefers-reduced-motion:reduce) {
