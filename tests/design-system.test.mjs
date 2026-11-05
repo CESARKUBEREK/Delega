@@ -264,7 +264,7 @@ function contrast(foreground, background) {
 test("Fase 12C: textos secundarios alcanzan WCAG AA sobre superficies claras", () => {
   assert.ok(contrast("#536175", "#ffffff") >= 4.5)
   assert.ok(contrast("#536175", "#f3f6fa") >= 4.5)
-  assert.match(css, /--muted:\\s*#536175/i)
+  assert.match(css, /--muted\s*:\s*#536175/i)
   for (const oldColor of ["#8796a8", "#8392a5", "#8a98a8", "#718095", "#65768b"]) {
     assert.ok(!css.toLowerCase().includes(oldColor), `permanece un color secundario de bajo contraste: ${oldColor}`)
   }
@@ -273,9 +273,9 @@ test("Fase 12C: textos secundarios alcanzan WCAG AA sobre superficies claras", (
 test("Fase 12C: foco de teclado con contraste y modo de colores forzados", () => {
   assert.ok(contrast("#007a6c", "#ffffff") >= 3)
   assert.ok(contrast("#007a6c", "#f3f6fa") >= 3)
-  assert.match(accessibilityCss, /:focus-visible\\s*\\{[^}]*outline:\\s*3px solid var\\(--state-focus\\)/s)
-  assert.match(accessibilityCss, /@media\\s*\\(forced-colors:\\s*active\\)/)
-  assert.match(accessibilityCss, /outline:\\s*2px solid Highlight/)
+  assert.match(accessibilityCss, /:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--state-focus\)/s)
+  assert.match(accessibilityCss, /@media\s*\(forced-colors:\s*active\)/)
+  assert.match(accessibilityCss, /outline:\s*2px solid Highlight/)
 })
 
 test("Fase 12C: Field relaciona la ayuda y el error con el control", () => {

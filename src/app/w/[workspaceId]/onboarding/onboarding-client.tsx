@@ -18,8 +18,11 @@ import {
   type OnboardingStep,
 } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
+import type { WebsiteSnapshot } from "@/lib/business-discovery/website-parser"
+import { BUSINESS_PROFILE_FIELDS, type BusinessProfile } from "@/lib/business-discovery/business-profile"
 import { saveFlowPlan } from "../flow-editor-actions"
 import {
+  analyzeOnboardingWebsite,
   checkOnboardingAi,
   checkOnboardingConnection,
   checkOnboardingConnections,
@@ -106,6 +109,12 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const [saved] = useState(() => loadOnboarding(workspaceId))
   const [step, setStep] = useState<Step>(saved?.step ?? "task")
   const [task, setTask] = useState(saved?.task ?? "")
+  const [websiteUrl, setWebsiteUrl] = useState("")
+  const [websiteSnapshot, setWebsiteSnapshot] = useState<WebsiteSnapshot | null>(null)
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
+  const [profileConfirmed, setProfileConfirmed] = useState(false)
+  const [websiteError, setWebsiteError] = useState<string | null>(null)
+  const [websitePending, setWebsitePending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [reply, setReply] = useState<string | null>(saved?.reply ?? null)
   const [plan, setPlan] = useState<FlowPlan | null>(saved?.plan ?? null)
@@ -169,12 +178,43 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     return true
   }, [task])
 
+  const handleWebsiteAnalysis = async () => {
+    if (!websiteUrl.trim() || pending || websitePending) return
+    setWebsiteError(null)
+    setWebsiteSnapshot(null)
+    setBusinessProfile(null)
+    setProfileConfirmed(false)
+    setWebsitePending(true)
+    try {
+      const result = await analyzeOnboardingWebsite({ workspaceId, url: websiteUrl })
+      if (!result.ok) setWebsiteError(result.error)
+      else {
+        setWebsiteSnapshot(result.snapshot)
+        setBusinessProfile(result.profile)
+      }
+    } catch {
+      setWebsiteError("No se pudo analizar la web. Puedes continuar sin ella.")
+    } finally {
+      setWebsitePending(false)
+    }
+  }
+
   const handleTaskSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (websiteSnapshot && !profileConfirmed) {
+      setError("Revisa y confirma el perfil de tu negocio antes de preparar la propuesta.")
+      return
+    }
     if (!validateTask() || pending) return
 
     startTransition(async () => {
-      const result = await generateOnboardingPlan({ workspaceId, message: task })
+      const websiteContext = websiteSnapshot && businessProfile && profileConfirmed
+        ? BUSINESS_PROFILE_FIELDS.map(({ key, label }) => {
+            const value = businessProfile[key].value.trim()
+            return value ? `${label}: ${value}` : ""
+          }).filter(Boolean).join("\\n").slice(0, 3_000)
+        : undefined
+      const result = await generateOnboardingPlan({ workspaceId, message: task, websiteContext })
       if (!result.ok) {
         setError(result.error)
         return
@@ -329,6 +369,71 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           </div>
 
           <form onSubmit={handleTaskSubmit} className="flex flex-col gap-4">
+            <div className="rounded-xl border border-rule bg-paper p-4 flex flex-col gap-3">
+              <div>
+                <label htmlFor="website-url" className="block text-sm font-semibold text-ink">La web de mi negocio <span className="font-normal text-graphite">(opcional)</span></label>
+                <p className="mt-1 text-sm text-graphite">Si tienes una web, la analizaré para entender mejor qué ofreces, a quién ayudas y cómo trabajas. No necesito acceso ni contraseña.</p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  id="website-url"
+                  type="url"
+                  inputMode="url"
+                  autoComplete="url"
+                  value={websiteUrl}
+                  onChange={(e) => { setWebsiteUrl(e.target.value); setWebsiteSnapshot(null); setBusinessProfile(null); setProfileConfirmed(false); setWebsiteError(null) }}
+                  placeholder="https://www.tunegocio.com"
+                  maxLength={2048}
+                  className="min-w-0 flex-1 rounded-xl border border-rule bg-paper px-3 py-2 text-ink placeholder:text-graphite focus:border-stroke focus:outline-none"
+                />
+                <button type="button" onClick={handleWebsiteAnalysis} disabled={!websiteUrl.trim() || pending || websitePending} className="inline-flex h-10 items-center justify-center rounded-xl border border-ink px-4 text-sm font-semibold text-ink disabled:opacity-50">
+                  {websitePending ? "Analizando…" : "Analizar mi web"}
+                </button>
+              </div>
+              {websiteError ? <p className="text-sm text-alert" role="alert">{websiteError}</p> : null}
+              {websiteSnapshot && businessProfile ? (
+                <div className="rounded-lg border border-rule bg-sheet p-4 flex flex-col gap-3" aria-live="polite">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-graphite">Esto es lo que hemos entendido</p>
+                    <p className="mt-1 font-semibold text-ink">{websiteSnapshot.title ?? websiteSnapshot.url}</p>
+                    <p className="mt-1 text-xs text-graphite">{websiteSnapshot.pages.length > 1 ? `Hemos revisado ${websiteSnapshot.pages.length} páginas públicas del mismo dominio.` : "Hemos revisado una página pública."} Corrige lo que haga falta; los campos vacíos no se han podido verificar.</p>
+                    <p className="mt-1 break-all text-xs text-graphite">Páginas consultadas: {websiteSnapshot.pages.map((page) => page.url).join(" · ")}</p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {BUSINESS_PROFILE_FIELDS.map(({ key, label, hint }) => (
+                      <label key={key} className="flex flex-col gap-1 text-sm font-medium text-ink">
+                        {label}
+                        <span className="text-xs font-normal text-graphite">{hint}</span>
+                        <textarea
+                          rows={2}
+                          value={businessProfile[key].value}
+                          onChange={(event) => {
+                            setBusinessProfile((current) => current ? {
+                              ...current,
+                              [key]: { ...current[key], value: event.target.value, confirmed: false },
+                            } : current)
+                            setProfileConfirmed(false)
+                          }}
+                          className="w-full rounded-lg border border-rule bg-paper px-3 py-2 text-sm text-ink focus:border-stroke focus:outline-none"
+                        />
+                        {businessProfile[key].evidence.length ? (
+                          <span className="text-xs font-normal text-graphite">Evidencia: {businessProfile[key].evidence[0]} <span className="block">Fuente: {businessProfile[key].evidenceSources[0]}</span></span>
+                        ) : (
+                          <span className="text-xs font-normal text-graphite">Sin información clara en la web</span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button type="button" onClick={() => setProfileConfirmed(true)} className="inline-flex h-10 items-center justify-center rounded-xl bg-ink px-4 text-sm font-semibold text-paper">
+                      {profileConfirmed ? "Perfil confirmado" : "Confirmar perfil"}
+                    </button>
+                    {profileConfirmed ? <span className="text-xs text-graphite" role="status">Usaremos estos datos para adaptar tu propuesta.</span> : <span className="text-xs text-graphite">El perfil no se utilizará hasta que lo confirmes.</span>}
+                    <button type="button" onClick={() => { setWebsiteSnapshot(null); setBusinessProfile(null); setProfileConfirmed(false) }} className="text-xs font-semibold text-link underline underline-offset-4">Quitar análisis</button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
             <label htmlFor="task" className="sr-only">
               Describe la tarea
             </label>
