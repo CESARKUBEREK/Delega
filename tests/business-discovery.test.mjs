@@ -8,7 +8,7 @@ test("business discovery: solo admite HTTP(S), dominios y puertos web estándar"
   assert.match(source, /url\.protocol !== "https:" && url\.protocol !== "http:"/)
   assert.match(source, /url\.username \|\| url\.password/)
   assert.match(source, /isIP\(url\.hostname\)/)
-  assert.match(source, /url\.port !== "80" && url\.port !== "443"/)
+  assert.match(source, /url\.protocol === "https:" && url\.port !== "443"/)
   assert.match(source, /host\.endsWith\("\.localhost"\)/)
 })
 
