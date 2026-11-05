@@ -57,7 +57,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
         .not("next_run_at", "is", null)
         .order("next_run_at")
         .limit(4),
-      supabase.from("flows").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
+      supabase.from("flows").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId).eq("status", "active"),
     ])
 
   const timezone = ws?.timezone || "Europe/Madrid"
@@ -87,6 +87,22 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
           <span className="today-hero-pending"><strong>{pendingTotal}</strong><span>{pendingTotal === 1 ? "aprobación pendiente" : "aprobaciones pendientes"}</span></span>
         </aside>
       </header>
+
+      <section className="today-command" aria-label="Pide algo a MarchaSolo">
+        <div className="today-command-copy">
+          <p className="today-command-title">¿Qué necesitas resolver hoy?</p>
+          <p className="today-command-description">Cuéntaselo a MarchaSolo con tus palabras. Tu equipo digital te ayuda a dar el siguiente paso.</p>
+        </div>
+        <form action={`${base}/asistente`} method="get" role="search" aria-label="Pide algo a MarchaSolo" className="today-ask">
+          <label htmlFor="hoy-pedir" className="sr-only">Pide algo a MarchaSolo</label>
+          <input id="hoy-pedir" name="q" type="text" autoComplete="off" maxLength={2000} placeholder="Ej.: prepara una respuesta para este cliente…" className="today-ask-input" />
+          <button type="submit" aria-label="Seguir en el chat" className="today-ask-button">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </button>
+        </form>
+      </section>
 
       {isAdmin && !setup.ia ? (
         // Sin IA: antes del onboarding, al onboarding; después, a conectar la IA.
@@ -136,9 +152,13 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
         </div>
 
         {(waiting ?? []).length === 0 ? (
-          <p className="rounded-2xl border border-rule bg-sheet px-5 py-4 text-sm text-graphite">
-            Nada pendiente. Cuando MarchaSolo quiera escribir o enviar algo, te lo pedirá aquí.
-          </p>
+          <div className="today-empty rounded-2xl border border-rule bg-sheet px-5 py-5">
+            <p className="font-semibold text-ink">Todo al día. No tienes nada que aprobar.</p>
+            <p className="mt-1 text-sm text-graphite">Cuando MarchaSolo prepare una acción que necesite tu permiso, aparecerá aquí.</p>
+            <Link href={`${base}/asistente`} className="mt-3 inline-flex text-sm font-semibold text-link underline underline-offset-4">
+              Pedir otra tarea →
+            </Link>
+          </div>
         ) : (
           <ul className="flex flex-col gap-2.5">
             {(waiting ?? []).map((run) => {
@@ -211,17 +231,6 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
         )}
       </section>
 
-      <form action={`${base}/asistente`} method="get" role="search" aria-label="Pide algo a MarchaSolo" className="today-ask">
-        <label htmlFor="hoy-pedir" className="sr-only">
-          Pide algo a MarchaSolo
-        </label>
-        <input id="hoy-pedir" name="q" type="text" autoComplete="off" maxLength={2000} placeholder="Pide algo a MarchaSolo…" className="today-ask-input" />
-        <button type="submit" aria-label="Seguir en el chat" className="today-ask-button">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </button>
-      </form>
     </div>
   )
 }
