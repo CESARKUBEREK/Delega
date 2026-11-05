@@ -678,7 +678,7 @@ function ConnectStep({
         <p className="text-sm font-semibold text-graphite">{stepLabel}</p>
         <h2 className="rotulo text-xl mt-1">Solo falta una cosa</h2>
         <p className="text-graphite mt-1">
-          Para este plan necesito acceso a <strong>{label}</strong>. Conéctalo aquí mismo; el resto puede esperar.
+          Para este plan necesito acceso a <strong>{label}</strong>. {card ? "Conéctalo aquí mismo; el resto puede esperar." : "Abre Integraciones para configurarlo; el resto puede esperar."}
         </p>
       </div>
 
