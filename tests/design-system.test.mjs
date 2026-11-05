@@ -13,6 +13,7 @@ const workIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integr
 const inboxIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/inbox-cards.tsx", import.meta.url), "utf8")
 const inboxIntegrationsClient = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/inbox-client.tsx", import.meta.url), "utf8")
 const routingForm = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/routing-form.tsx", import.meta.url), "utf8")
+const voiceClient = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/voice-client.tsx", import.meta.url), "utf8")
 const replyComposer = readFileSync(new URL("../src/app/w/[workspaceId]/bandeja/[threadId]/reply-composer.tsx", import.meta.url), "utf8")
 const runLive = readFileSync(new URL("../src/app/w/[workspaceId]/ejecuciones/[runId]/run-live.tsx", import.meta.url), "utf8")
 const runPanel = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/[flowId]/run-panel.tsx", import.meta.url), "utf8")
@@ -178,4 +179,11 @@ test("presupuesto del router de IA utiliza los campos compartidos", () => {
   assert.ok(routingForm.includes('import { Field, FormMessage, SubmitButton } from "@/components/form"'))
   assert.equal((routingForm.match(/<Field\b/g) ?? []).length, 3)
   assert.ok(!routingForm.includes("function UsdField("))
+})
+
+
+test("activación de atención telefónica usa InfoBanner para la confirmación", () => {
+  assert.ok(voiceClient.includes('import { InfoBanner } from "@/components/ui"'))
+  assert.ok(voiceClient.includes('<InfoBanner tone="success" role="status">'))
+  assert.ok(!voiceClient.includes("border-l-2 border-ok bg-ok-bg"))
 })
