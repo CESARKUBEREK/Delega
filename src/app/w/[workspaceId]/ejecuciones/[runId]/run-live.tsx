@@ -183,10 +183,14 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
   return (
     <section className="approval-card bg-sheet">
       <div className="approval-card-header px-5 py-3">
-        <h2 className="font-semibold text-ink">Necesita tu aprobación</h2>
-        <p className="text-sm text-graphite">{describe(pending)}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--warning)]">Acción pendiente de autorización</span>
+          <span className="rounded-full bg-[var(--warning-bg)] px-2.5 py-1 text-[11px] font-semibold text-[var(--warning)]">Revisión necesaria</span>
+        </div>
+        <h2 className="mt-2 font-semibold text-ink">¿Autorizas esta acción?</h2>
+        <p className="mt-1 text-sm leading-relaxed text-graphite">{describe(pending)}</p>
       </div>
-      <div className="flex flex-col gap-4 px-5 py-4">
+      <div className="flex flex-col gap-4 px-5 py-4" aria-busy={busy}>
         {pending.tool === "append_rows" || pending.tool === "update_range" ? (
           <>
             {pending.before && pending.before.length > 0 ? <Table rows={pending.before} caption="Ahora" /> : null}
@@ -209,6 +213,9 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
             {error}
           </InfoBanner>
         ) : null}
+        <p className="text-xs leading-relaxed text-graphite">
+          MarchaSolo no realizará esta acción hasta que la apruebes. Puedes rechazarla sin ejecutar el cambio.
+        </p>
         <div className="approval-actions flex flex-wrap gap-3">
           <PrimaryButton
             type="button"
@@ -223,8 +230,14 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
                 : pending.tool.startsWith("send_")
                 ? "Aprobar y enviar"
                 : pending.tool === "create_document"
-                  ? "Aprobar y crear"
-                  : "Aprobar y escribir"}
+                  ? "Aprobar y crear documento"
+                  : pending.tool === "append_rows"
+                    ? "Aprobar y añadir filas"
+                    : pending.tool === "update_range"
+                      ? "Aprobar y actualizar hoja"
+                      : pending.tool === "append_to_document"
+                        ? "Aprobar y añadir texto"
+                        : "Aprobar y escribir"}
           </PrimaryButton>
           <SecondaryButton
             type="button"
