@@ -9,5 +9,5 @@ export const LEGAL = {
   // País de residencia o de registro del responsable.
   country: "Francia",
   // Fecha de la última actualización de los textos.
-  updated: "29 de octubre de 2026",
+  updated: "4 de noviembre de 2026",
 }

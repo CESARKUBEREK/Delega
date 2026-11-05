@@ -52,6 +52,11 @@ export default function PrivacyPage() {
                 lo apruebas.
               </li>
               <li>
+                <strong>Google Contacts:</strong> si lo conectas, MarchaSolo busca en tus contactos (nombre, correo, teléfono, empresa y
+                notas) para reconocer a quien te escribe y mostrarte su ficha, y crea contactos nuevos solo cuando lo apruebas. No modifica
+                ni borra tus contactos y no guarda una copia de tu libreta.
+              </li>
+              <li>
                 <strong>Redes sociales (Buffer):</strong> la lista de tus canales y las publicaciones que apruebas.
               </li>
               <li>
@@ -105,7 +110,7 @@ export default function PrivacyPage() {
           , incluidos los requisitos de uso limitado (<em>Limited Use</em>). En concreto:
         </p>
         <ul>
-          <li>Solo usamos los datos de Google Drive y Google Calendar para las funciones de MarchaSolo que tú ves y usas.</li>
+          <li>Solo usamos los datos de Google Drive, Google Calendar y Google Contacts para las funciones de MarchaSolo que tú ves y usas.</li>
           <li>
             Solo los transferimos a terceros cuando es necesario para darte esas funciones (por ejemplo, al proveedor de IA que tú eliges
             para preparar una respuesta), por motivos de seguridad o para cumplir la ley.
