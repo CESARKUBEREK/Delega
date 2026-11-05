@@ -1,6 +1,7 @@
 import "server-only"
 
 import { lookup } from "node:dns/promises"
+import { isIP } from "node:net"
 import { request as httpsRequest } from "node:https"
 import { request as httpRequest } from "node:http"
 import type { IncomingMessage, RequestOptions } from "node:http"
