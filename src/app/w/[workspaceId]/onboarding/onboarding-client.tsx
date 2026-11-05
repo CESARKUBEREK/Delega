@@ -18,6 +18,7 @@ import {
   type OnboardingStep,
 } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
+import type { WebsiteSnapshot } from "@/lib/business-discovery/website-fetcher"
 import { saveFlowPlan } from "../flow-editor-actions"
 import {
   checkOnboardingAi,
@@ -25,6 +26,7 @@ import {
   checkOnboardingConnections,
   completeOnboarding,
   generateOnboardingPlan,
+  inspectOnboardingWebsite,
   getOnboardingResult,
   trackOnboardingStep,
   type OnboardingResult,
@@ -106,6 +108,11 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const [saved] = useState(() => loadOnboarding(workspaceId))
   const [step, setStep] = useState<Step>(saved?.step ?? "task")
   const [task, setTask] = useState(saved?.task ?? "")
+  const [websiteUrl, setWebsiteUrl] = useState("")
+  const [websiteSnapshot, setWebsiteSnapshot] = useState<WebsiteSnapshot | null>(null)
+  const [websiteConfirmed, setWebsiteConfirmed] = useState(false)
+  const [websiteLoading, setWebsiteLoading] = useState(false)
+  const [websiteError, setWebsiteError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [reply, setReply] = useState<string | null>(saved?.reply ?? null)
   const [plan, setPlan] = useState<FlowPlan | null>(saved?.plan ?? null)
@@ -169,12 +176,32 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     return true
   }, [task])
 
+  const handleWebsiteAnalyze = async () => {
+    if (!websiteUrl.trim() || websiteLoading) return
+    setWebsiteLoading(true)
+    setWebsiteError(null)
+    setWebsiteSnapshot(null)
+    setWebsiteConfirmed(false)
+    try {
+      const result = await inspectOnboardingWebsite({ workspaceId, url: websiteUrl.trim() })
+      if (!result.ok) setWebsiteError(result.error)
+      else setWebsiteSnapshot(result.snapshot)
+    } catch {
+      setWebsiteError("No se ha podido analizar la web. Inténtalo de nuevo.")
+    } finally {
+      setWebsiteLoading(false)
+    }
+  }
+
   const handleTaskSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!validateTask() || pending) return
 
     startTransition(async () => {
-      const result = await generateOnboardingPlan({ workspaceId, message: task })
+      const websiteContext = websiteConfirmed && websiteSnapshot
+        ? [websiteSnapshot.title, websiteSnapshot.description, websiteSnapshot.headings.join("\n"), websiteSnapshot.text.slice(0, 4_000)].filter(Boolean).join("\n").slice(0, 6_000)
+        : undefined
+      const result = await generateOnboardingPlan({ workspaceId, message: task, websiteContext })
       if (!result.ok) {
         setError(result.error)
         return
@@ -252,6 +279,10 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const restart = () => {
     setStep("task")
     setTask("")
+    setWebsiteUrl("")
+    setWebsiteSnapshot(null)
+    setWebsiteConfirmed(false)
+    setWebsiteError(null)
     setReply(null)
     setPlan(null)
     setSource(null)
@@ -328,7 +359,43 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
             </p>
           </div>
 
-          <form onSubmit={handleTaskSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleTaskSubmit} className="flex flex-col gap-4">\n          <div className="rounded-2xl border border-rule bg-paper p-4 flex flex-col gap-3">
+            <div>
+              <label htmlFor="business-website" className="text-sm font-semibold text-ink">¿Tienes web de tu negocio?</label>
+              <p className="mt-1 text-sm text-graphite">Si nos das la dirección, leeremos la información pública para entender mejor a qué te dedicas. Es opcional.</p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input
+                id="business-website"
+                type="url"
+                value={websiteUrl}
+                onChange={(e) => { setWebsiteUrl(e.target.value); setWebsiteSnapshot(null); setWebsiteConfirmed(false); setWebsiteError(null) }}
+                placeholder="https://www.tunegocio.com"
+                maxLength={2048}
+                className="h-11 min-w-0 flex-1 rounded-xl border border-rule bg-paper px-3 text-base text-ink placeholder:text-graphite focus:border-stroke focus:outline-none"
+                autoComplete="url"
+              />
+              <button type="button" onClick={handleWebsiteAnalyze} disabled={websiteLoading || !websiteUrl.trim()} className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl border border-ink px-4 text-sm font-semibold text-ink disabled:opacity-50">
+                {websiteLoading ? "Leyendo la web…" : "Analizar mi web"}
+              </button>
+            </div>
+            {websiteError ? <p className="text-sm text-alert" role="alert">{websiteError}</p> : null}
+            {websiteSnapshot ? (
+              <div className="rounded-xl border border-rule bg-sheet p-3 flex flex-col gap-2" aria-live="polite">
+                <p className="text-xs font-semibold uppercase tracking-wide text-graphite">Información pública encontrada</p>
+                {websiteSnapshot.title ? <p className="font-semibold text-ink">{websiteSnapshot.title}</p> : null}
+                {websiteSnapshot.description ? <p className="text-sm text-graphite">{websiteSnapshot.description}</p> : null}
+                {websiteSnapshot.headings.length ? <ul className="list-disc pl-5 text-sm text-graphite">{websiteSnapshot.headings.slice(0, 6).map((heading, index) => <li key={index}>{heading}</li>)}</ul> : null}
+                {!websiteSnapshot.title && !websiteSnapshot.description && !websiteSnapshot.headings.length ? <p className="text-sm text-graphite">{websiteSnapshot.text.slice(0, 700)}</p> : null}
+                <p className="text-xs text-graphite">Revisa estos datos: proceden de la página pública y pueden estar incompletos o ser interpretaciones.</p>
+                <button type="button" onClick={() => setWebsiteConfirmed((value) => !value)} className="self-start rounded-lg bg-stroke px-3 py-2 text-sm font-semibold text-stroke-ink">
+                  {websiteConfirmed ? "Información confirmada ✓" : "Sí, esta es mi web y la información es correcta"}
+                </button>
+              </div>
+            ) : null}
+          </div>
+
+
             <label htmlFor="task" className="sr-only">
               Describe la tarea
             </label>
