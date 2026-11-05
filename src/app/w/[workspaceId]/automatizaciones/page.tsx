@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { asPlan, FLOW_STATUS_LABEL, RUN_STATUS_LABEL, TRIGGER_LABEL } from "@/lib/plan"
+import { asPlan, FLOW_STATUS_LABEL, TRIGGER_LABEL } from "@/lib/plan"
 import type { Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
 import { findTemplate, ROUTINES, type Routine, type RoutineTier, routineOfFlow, TIER_INFO, verticalOfFlow } from "@/lib/templates"
