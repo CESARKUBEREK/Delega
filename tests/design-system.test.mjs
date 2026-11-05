@@ -9,6 +9,8 @@ const ui = readFileSync(new URL("../src/components/ui.tsx", import.meta.url), "u
 const plan = readFileSync(new URL("../src/lib/plan.ts", import.meta.url), "utf8")
 const automation = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/page.tsx", import.meta.url), "utf8")
 const history = readFileSync(new URL("../src/app/w/[workspaceId]/historial/page.tsx", import.meta.url), "utf8")
+const workIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/work-cards.tsx", import.meta.url), "utf8")
+const inboxIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/inbox-cards.tsx", import.meta.url), "utf8")
 
 
 function rule(selector) {
@@ -81,4 +83,15 @@ test("Automatizaciones e Historial usan el mismo componente de estado", () => {
   assert.ok(history.includes("<RunStatusBadge status={r.status}"))
   assert.ok(!css.includes(".automation-activity-status.is-succeeded"))
   assert.ok(!css.includes(".automation-history-status.is-failed"))
+})
+
+test("las tarjetas de integraciones comparten la representación de conexión", () => {
+  assert.ok(ui.includes("export function IntegrationStatusBadge("))
+  assert.match(ui, /status === "active" \? "success"/)
+  assert.match(ui, /status === "paused" \? "warning"/)
+  assert.match(ui, /: "danger"/)
+  assert.ok(workIntegrations.includes("<IntegrationStatusBadge status={integration?.status}"))
+  assert.ok(inboxIntegrations.includes("<IntegrationStatusBadge status={integration?.status}"))
+  assert.ok(!workIntegrations.includes("function Badge("))
+  assert.ok(!inboxIntegrations.includes("function Badge("))
 })
