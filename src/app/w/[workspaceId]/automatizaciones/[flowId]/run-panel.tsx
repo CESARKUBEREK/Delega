@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { InfoBanner } from "@/components/ui"
 import { useRouter } from "next/navigation"
 import { useActionState, useState, useTransition } from "react"
 import { FormMessage } from "@/components/form"
@@ -102,9 +103,9 @@ export function RunPanel({
       </div>
 
       {error ? (
-        <p role="alert" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+        <InfoBanner tone="danger" role="alert">
           {error}
-        </p>
+        </InfoBanner>
       ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
@@ -341,9 +342,9 @@ export function ActivationPanel({
         </fieldset>
       ) : null}
       {error ? (
-        <p role="alert" className="text-sm text-alert">
+        <InfoBanner tone="danger" role="alert" className="py-2">
           {error}
-        </p>
+        </InfoBanner>
       ) : null}
       {canEdit ? (
         <div className="flex flex-wrap gap-3">
