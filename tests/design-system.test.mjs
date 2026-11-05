@@ -5,6 +5,8 @@ import { readFileSync } from "node:fs"
 import { test } from "node:test"
 
 const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8")
+const ui = readFileSync(new URL("../src/components/ui.tsx", import.meta.url), "utf8")
+
 
 function rule(selector) {
   const escaped = selector.replace(/[.*+?^\${}()|[\]\\]/g, "\\$&")
@@ -39,4 +41,10 @@ test("el campo de búsqueda compartido muestra foco en su contenedor", () => {
 
 test("la interfaz respeta la preferencia de movimiento reducido", () => {
   assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/)
+})
+
+
+test("las tarjetas usan un hook de descripción propio con el mismo lenguaje visual", () => {
+  assert.match(ui, /ms-panel-card-description/)
+  assert.match(css, /\.ms-page-header-description,\s*\.ms-panel-card-description\s*\{[^}]*max-width:64ch/)
 })
