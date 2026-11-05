@@ -51,7 +51,7 @@ function normalizeUrl(input: string): URL {
   if ((url.protocol !== "https:" && url.protocol !== "http:") || url.username || url.password || !url.hostname || isIP(url.hostname)) {
     throw new WebsiteFetchError("La dirección web no es válida para este análisis.", "invalid_url")
   }
-  if (url.port && url.port !== "80" && url.port !== "443") throw new WebsiteFetchError("Solo se admiten los puertos web estándar.", "invalid_url")
+  if (url.port && ((url.protocol === "https:" && url.port !== "443") || (url.protocol === "http:" && url.port !== "80"))) throw new WebsiteFetchError("Solo se admiten los puertos web estándar para cada protocolo.", "invalid_url")
   const host = url.hostname.toLowerCase().replace(/\.$/, "")
   if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal")) {
     throw new WebsiteFetchError("No se puede analizar esa dirección.", "unsafe_host")
@@ -77,7 +77,8 @@ function requestHtml(url: URL, address: PublicAddress): Promise<{ location: stri
   return new Promise((resolve, reject) => {
     const transport = url.protocol === "https:" ? httpsRequest : httpRequest
     let settled = false
-    const fail = (error: Error) => { if (!settled) { settled = true; reject(error) } }
+    let deadline: ReturnType<typeof setTimeout> | undefined
+    const fail = (error: Error) => { if (!settled) { settled = true; if (deadline) clearTimeout(deadline); reject(error) } }
     const req = transport({
       protocol: url.protocol, hostname: url.hostname, port: url.port || (url.protocol === "https:" ? 443 : 80),
       method: "GET", path: (url.pathname || "/") + url.search,
@@ -89,7 +90,7 @@ function requestHtml(url: URL, address: PublicAddress): Promise<{ location: stri
       const location = typeof response.headers.location === "string" ? response.headers.location : null
       if (status >= 300 && status < 400 && location) {
         response.resume()
-        if (!settled) { settled = true; resolve({ location, body: "" }) }
+        if (!settled) { settled = true; if (deadline) clearTimeout(deadline); resolve({ location, body: "" }) }
         return
       }
       if (status < 200 || status >= 300) { response.resume(); fail(new WebsiteFetchError("La web no ha permitido leer su página pública.", "unreachable")); return }
@@ -104,11 +105,12 @@ function requestHtml(url: URL, address: PublicAddress): Promise<{ location: stri
         if (bytes > MAX_BYTES) { req.destroy(new WebsiteFetchError("La página es demasiado grande para analizarla.", "too_large")); return }
         chunks.push(chunk)
       })
-      response.on("end", () => { if (!settled) { settled = true; resolve({ location: null, body: Buffer.concat(chunks).toString("utf8") }) } })
+      response.on("end", () => { if (!settled) { settled = true; if (deadline) clearTimeout(deadline); resolve({ location: null, body: Buffer.concat(chunks).toString("utf8") }) } })
       response.on("error", fail)
     })
     req.on("timeout", () => req.destroy(new WebsiteFetchError("La web ha tardado demasiado en responder.", "timeout")))
     req.on("error", fail)
+    deadline = setTimeout(() => req.destroy(new WebsiteFetchError("La web ha tardado demasiado en responder.", "timeout")), TIMEOUT_MS)
     req.end()
   })
 }
