@@ -44,6 +44,7 @@ test("acepta IPv6 global unicast y rechaza direcciones especiales", () => {
     "2001:db8::1",
     "2002:c000:0201::1",
     "3fff::1",
+    "5f00::1",
     "fc00::1",
     "fd12:3456:789a::1",
     "fe80::1",
