@@ -12,6 +12,7 @@ test("extrae título, descripción, encabezados y texto visible", () => {
   assert.deepEqual(result.headings, ["Proyectos", "Reformas integrales"])
   assert.match(result.text, /Atendemos empresas y particulares/)
   assert.doesNotMatch(result.text, /no incluir/)
+  assert.doesNotThrow(() => parseWebsiteHtml("<p>&#99999999;</p>", "https://example.com"))
 })
 
 test("limita la cantidad de encabezados y texto extraído", () => {
