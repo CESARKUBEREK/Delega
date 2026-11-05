@@ -5,7 +5,14 @@ import { isIP } from "node:net"
 import { request as httpsRequest } from "node:https"
 import { request as httpRequest } from "node:http"
 import type { IncomingMessage, RequestOptions } from "node:http"
-import { parseWebsiteHtml, type WebsiteSnapshot } from "./website-parser"
+import {
+  combineWebsitePages,
+  isSameOriginWebsiteUrl,
+  parseWebsiteHtml,
+  selectRelevantWebsiteLinks,
+  type ParsedWebsitePage,
+  type WebsiteSnapshot,
+} from "./website-parser"
 
 const MAX_BYTES = 1_000_000
 const TIMEOUT_MS = 7_000
@@ -115,11 +122,16 @@ async function requestPinned(url: URL, address: string, family: number): Promise
   })
 }
 
-export async function fetchPublicWebsite(input: string): Promise<WebsiteSnapshot> {
+async function fetchSinglePublicPage(input: string, expectedOrigin?: string, blockedUrls: Set<string> = new Set()): Promise<ParsedWebsitePage> {
   const trimmed = input.trim()
   const lowerInput = trimmed.toLowerCase()
   const normalizedInput = lowerInput.startsWith("http://") || lowerInput.startsWith("https://") ? trimmed : `https://${trimmed}`
   let current = validateUrl(normalizedInput)
+
+  if (expectedOrigin && current.origin !== expectedOrigin) {
+    throw new Error("Solo se pueden analizar páginas del mismo dominio.")
+  }
+  if (blockedUrls.has(current.toString())) throw new Error("La página ya se ha analizado.")
 
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
     const records = await lookup(current.hostname, { all: true, verbatim: true })
@@ -131,7 +143,12 @@ export async function fetchPublicWebsite(input: string): Promise<WebsiteSnapshot
     const response = await requestPinned(current, selected.address, selected.family)
     if (response.location) {
       if (redirects === MAX_REDIRECTS) throw new Error("La web redirige demasiadas veces.")
-      current = validateUrl(new URL(response.location, current).toString())
+      const next = validateUrl(new URL(response.location, current).toString())
+      if (expectedOrigin && !isSameOriginWebsiteUrl(expectedOrigin, next.toString())) {
+        throw new Error("La página intenta redirigir fuera del dominio del negocio.")
+      }
+      if (blockedUrls.has(next.toString())) throw new Error("La redirección apunta a una página ya analizada.")
+      current = next
       continue
     }
 
@@ -139,4 +156,26 @@ export async function fetchPublicWebsite(input: string): Promise<WebsiteSnapshot
   }
 
   throw new Error("No se pudo analizar la web.")
+}
+
+export async function fetchPublicWebsite(input: string): Promise<WebsiteSnapshot> {
+  const primary = await fetchSinglePublicPage(input)
+  const primaryOrigin = new URL(primary.url).origin
+  const candidates = selectRelevantWebsiteLinks(primary.links, primary.url, 2)
+  const blockedUrls = new Set([primary.url])
+  const secondary = await Promise.all(candidates.map(async (url) => {
+    try {
+      const page = await fetchSinglePublicPage(url, primaryOrigin, blockedUrls)
+      blockedUrls.add(page.url)
+      return page
+    } catch {
+      // El análisis principal sigue siendo útil aunque una página secundaria falle.
+      return null
+    }
+  }))
+
+  const pages = [primary, ...secondary.filter((page): page is ParsedWebsitePage => page !== null)]
+    .map(({ links: _links, ...page }) => page)
+
+  return combineWebsitePages(pages)
 }
