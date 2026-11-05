@@ -56,7 +56,7 @@ async function FlowList({ params }: { params: PageProps<"/w/[workspaceId]/automa
   const { workspaceId } = await params
   await getWorkspace(workspaceId, `/w/${workspaceId}/automatizaciones`)
   const supabase = await createClient()
-  const [{ data }, { data: recentRuns }, { data: pendingRuns }] = await Promise.all([
+  const [{ data }, { data: recentRuns }, { data: pendingRuns, count: pendingCount }] = await Promise.all([
     supabase
       .from("flows")
       .select("id, name, summary, status, updated_at, next_run_at, settings, definition")
