@@ -46,7 +46,7 @@ function validateUrl(input: string): URL {
     throw new Error("Introduce una dirección web válida, por ejemplo https://tuempresa.com.")
   }
   if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("Solo se admiten webs públicas HTTP o HTTPS.")
-  if (url.username || url.password || url.port && !["80", "443"].includes(url.port)) {
+  if (url.username || url.password || (url.port && url.port !== (url.protocol === "https:" ? "443" : "80"))) {
     throw new Error("La dirección web contiene datos o un puerto no admitidos.")
   }
   if (url.hostname === "localhost" || url.hostname.endsWith(".localhost") || isIP(url.hostname)) {
@@ -82,7 +82,7 @@ async function requestPinned(url: URL, address: string, family: number): Promise
       const location = typeof res.headers.location === "string" ? res.headers.location : null
       const contentType = String(res.headers["content-type"] ?? "")
       if ([301, 302, 303, 307, 308].includes(status)) {
-        res.resume()
+        res.destroy()
         resolve({ status, location, contentType, body: "" })
         return
       }
@@ -108,8 +108,10 @@ async function requestPinned(url: URL, address: string, family: number): Promise
       })
       res.on("end", () => resolve({ status, location: null, contentType, body: Buffer.concat(chunks).toString("utf8") }))
     })
+    const totalTimeout = setTimeout(() => req.destroy(new Error("La web tardó demasiado en responder.")), TIMEOUT_MS)
     req.setTimeout(TIMEOUT_MS, () => req.destroy(new Error("La web tardó demasiado en responder.")))
-    req.on("error", reject)
+    req.on("error", (error) => { clearTimeout(totalTimeout); reject(error) })
+    req.on("close", () => clearTimeout(totalTimeout))
     req.end()
   })
 }
