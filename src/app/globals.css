@@ -944,6 +944,7 @@ a.flow-node-trigger:hover { border-color:var(--ink); box-shadow:0 0 0 3px rgb(0 
 .inbox-filter-chip:focus-visible { outline:3px solid rgb(0 194 168 / 35%); outline-offset:2px; }
 .inbox-filters > span[aria-hidden="true"] { height:24px; margin-inline:3px; }
 @media (max-width:640px) {
+  .inbox-page { gap:16px; }
   .inbox-page-intro { padding:16px; }
   .inbox-filters { gap:7px; padding:10px; }
   .inbox-filter-chip { min-height:38px; padding-inline:11px; }
