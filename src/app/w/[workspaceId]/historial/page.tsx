@@ -4,7 +4,7 @@ import { modelLabel, RUN_STATUS_LABEL } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime, formatNumber } from "../format"
-import { EmptyState, PageHeader, PanelCard } from "@/components/ui"
+import { EmptyState, PageHeader, PanelCard, RunStatusBadge } from "@/components/ui"
 
 export const metadata = { title: "Historial" }
 
@@ -71,11 +71,7 @@ async function History({ params }: { params: PageProps<"/w/[workspaceId]/histori
                     <span className="automation-history-title">{r.flow_name}</span>
                     <time dateTime={r.started_at}>{formatDateTime(r.started_at)}</time>
                   </span>
-                  <span
-                    className={`automation-history-status is-${r.status}`}
-                  >
-                    {RUN_STATUS_LABEL[r.status] ?? r.status}
-                  </span>
+                  <RunStatusBadge status={r.status} className="automation-history-status" />
                 </Link>
               </li>
             ))}
