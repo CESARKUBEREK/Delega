@@ -87,7 +87,7 @@ type OnboardingProps = {
   // Tarjetas de conexión de Integraciones (componentes de servidor), para
   // conectar sin salir del onboarding: las IAs en el paso 3 y la herramienta
   // del plan en el paso 4.
-  cards: Record<Exclude<OnboardingConnection, "none">, ReactNode>
+  cards: Partial<Record<Exclude<OnboardingConnection, "none">, ReactNode>>
   aiCards: { recommended: ReactNode; others: ReactNode }
 }
 
