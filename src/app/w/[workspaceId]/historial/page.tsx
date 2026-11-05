@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { modelLabel, RUN_STATUS_LABEL } from "@/lib/plan"
+import { modelLabel } from "@/lib/plan"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
 import { formatDateTime, formatNumber } from "../format"
