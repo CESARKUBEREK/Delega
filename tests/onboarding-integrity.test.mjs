@@ -21,6 +21,10 @@ test("el servidor comprueba los proveedores reales de Integraciones en una sola 
   for (const provider of ["imap", "google", "calendar", "whatsapp", "telegram", "hubspot", "contacts", "tokko", "xubio", "buffer", "supabase"]) {
     assert.ok(actions.includes(`"${provider}"`), `falta el proveedor ${provider}`)
   }
+  assert.match(actions, /\.from\("integration_files"\)/)
+  assert.match(actions, /hasSpreadsheet/)
+  assert.match(actions, /hasDocument/)
+  assert.match(actions, /hasDriveFile/)
   assert.match(actions, /catch \{\s*return \{ ok: false, error: "No se pudieron comprobar las conexiones\./)
 })
 
