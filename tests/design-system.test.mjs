@@ -6,6 +6,11 @@ import { test } from "node:test"
 
 const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8")
 const ui = readFileSync(new URL("../src/components/ui.tsx", import.meta.url), "utf8")
+const plan = readFileSync(new URL("../src/lib/plan.ts", import.meta.url), "utf8")
+const automation = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/page.tsx", import.meta.url), "utf8")
+const history = readFileSync(new URL("../src/app/w/[workspaceId]/historial/page.tsx", import.meta.url), "utf8")
+const workIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/work-cards.tsx", import.meta.url), "utf8")
+const inboxIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/inbox-cards.tsx", import.meta.url), "utf8")
 
 
 function rule(selector) {
@@ -55,4 +60,50 @@ test("los encabezados y las tarjetas usan sus hooks de descripción correspondie
 
 test("Bandeja reduce el espacio entre secciones en móvil como el resto del espacio", () => {
   assert.ok(css.includes("@media (max-width:640px) {\n  .inbox-page { gap:16px; }"))
+})
+
+test("los estados de ejecución comparten etiquetas y tonos semánticos", () => {
+  for (const [status, tone] of [
+    ["running", "info"],
+    ["awaiting_approval", "warning"],
+    ["succeeded", "success"],
+    ["failed", "danger"],
+    ["cancelled", "neutral"],
+  ]) {
+    assert.match(plan, new RegExp(status + ': "' + tone + '"'))
+  }
+  assert.match(plan, /return RUN_STATUS_TONE\[status\] \?\? "neutral"/)
+  assert.ok(ui.includes("export function RunStatusBadge("))
+  assert.ok(ui.includes("tone={runStatusTone(status)}"))
+})
+
+test("Automatizaciones e Historial usan el mismo componente de estado", () => {
+  assert.ok(automation.includes("<RunStatusBadge status={run.status}"))
+  assert.ok(automation.includes('<RunStatusBadge status="awaiting_approval"'))
+  assert.ok(history.includes("<RunStatusBadge status={r.status}"))
+  assert.ok(!css.includes(".automation-activity-status.is-succeeded"))
+  assert.ok(!css.includes(".automation-history-status.is-failed"))
+})
+
+test("las tarjetas de integraciones comparten la representación de conexión", () => {
+  assert.ok(ui.includes("export function IntegrationStatusBadge("))
+  assert.match(ui, /status === "active" \? "success"/)
+  assert.match(ui, /status === "paused" \? "warning"/)
+  assert.match(ui, /: "danger"/)
+  assert.ok(workIntegrations.includes("<IntegrationStatusBadge status={integration?.status}"))
+  assert.ok(inboxIntegrations.includes("<IntegrationStatusBadge status={integration?.status}"))
+  assert.ok(!workIntegrations.includes("function Badge("))
+  assert.ok(!inboxIntegrations.includes("function Badge("))
+})
+
+test("Bandeja y Aprobaciones distinguen señales propias de cada área", () => {
+  const approvals = readFileSync(new URL("../src/app/w/[workspaceId]/aprobaciones/page.tsx", import.meta.url), "utf8")
+  const inboxList = readFileSync(new URL("../src/app/w/[workspaceId]/bandeja/inbox-list.tsx", import.meta.url), "utf8")
+  assert.ok(ui.includes("export function InboxSignalBadge("))
+  assert.ok(ui.includes('kind: "urgency" | "needs_reply" | "pending_classification"'))
+  assert.ok(approvals.includes("<RunStatusBadge status={run.status} />"))
+  assert.ok(inboxList.includes('<InboxSignalBadge kind="urgency"'))
+  assert.ok(inboxList.includes('<InboxSignalBadge kind="needs_reply" />'))
+  assert.ok(inboxList.includes('<InboxSignalBadge kind="pending_classification" />'))
+  assert.ok(!inboxList.includes("URGENCY_STYLE"))
 })

@@ -1,5 +1,5 @@
 import { ExternalLink } from "@/components/external-link"
-import { StatusBadge } from "@/components/ui"
+import { IntegrationStatusBadge } from "@/components/ui"
 import { PROVIDER_LINKS } from "@/lib/provider-links"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
@@ -8,11 +8,7 @@ import { removeContact } from "../run-actions"
 import { supabaseUrl } from "@/lib/supabase/env"
 import { AddContactForm, DisconnectInboxForm, ImapForm, TelegramForm, WebhookUrl, WhatsAppForm } from "./inbox-client"
 
-function Badge({ status, invalidLabel }: { status: string | null | undefined; invalidLabel: string }) {
-  if (status === "active") return <StatusBadge tone="success">Conectado</StatusBadge>
-  if (status) return <StatusBadge tone="danger">{invalidLabel}</StatusBadge>
-  return <StatusBadge tone="neutral">Sin conectar</StatusBadge>
-}
+
 
 // Contactos a los que las automatizaciones pueden escribir.
 function Contacts({ workspaceId, isAdmin, contacts }: { workspaceId: string; isAdmin: boolean; contacts: { id: string; name: string; email: string }[] }) {
@@ -75,7 +71,7 @@ export async function WhatsAppCard({ workspaceId, isAdmin }: { workspaceId: stri
             Las respuestas esperan tu aprobación y solo pueden salir en las 24 horas siguientes al último mensaje del cliente.
           </p>
         </div>
-        <Badge status={integration?.status} invalidLabel="Desconectado" />
+        <IntegrationStatusBadge status={integration?.status} invalidLabel="Desconectado" />
       </summary>
 
       <div className="flex flex-col gap-6 px-5 py-5">
@@ -149,7 +145,7 @@ export async function TelegramCard({ workspaceId, isAdmin }: { workspaceId: stri
             Un bot propio: lo que le escriban llega a la bandeja y puede lanzar automatizaciones. Las respuestas esperan tu aprobación.
           </p>
         </div>
-        <Badge status={integration?.status} invalidLabel="Desconectado" />
+        <IntegrationStatusBadge status={integration?.status} invalidLabel="Desconectado" />
       </summary>
 
       <div className="flex flex-col gap-6 px-5 py-5">
@@ -228,7 +224,7 @@ export async function ImapCard({ workspaceId, isAdmin }: { workspaceId: string; 
             revisando antes.
           </p>
         </div>
-        <Badge status={integration?.status} invalidLabel="Contraseña rechazada" />
+        <IntegrationStatusBadge status={integration?.status} invalidLabel="Contraseña rechazada" />
       </summary>
 
       <div className="flex flex-col gap-6 px-5 py-5">

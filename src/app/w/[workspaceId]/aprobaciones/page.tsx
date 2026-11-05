@@ -7,7 +7,7 @@ import { getWorkspace } from "@/lib/workspace"
 import { ApprovalCard, RunControls } from "../ejecuciones/[runId]/run-live"
 import { formatDateTime } from "../format"
 import { PushToggle } from "../push-toggle"
-import { EmptyState, PageHeader, PanelCard } from "@/components/ui"
+import { EmptyState, PageHeader, PanelCard, RunStatusBadge } from "@/components/ui"
 
 export const metadata = { title: "Aprobaciones" }
 // Las ejecuciones en curso avanzan desde aquí por tramos de hasta ~90 s.
@@ -71,7 +71,7 @@ async function Approvals({ params }: { params: PageProps<"/w/[workspaceId]/aprob
                     <Link href={`${base}/ejecuciones/${run.id}`} className="automation-approval-name">
                       {run.flow_name}
                     </Link>
-                    <span>{runOrigin(run.trigger)}</span>
+                    <span>{runOrigin(run.trigger)}</span><RunStatusBadge status={run.status} />
                     <time dateTime={run.started_at}>{formatDateTime(run.started_at)}</time>
                   </p>
                   {pending ? (

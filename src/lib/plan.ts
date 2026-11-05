@@ -196,6 +196,20 @@ export const RUN_STATUS_LABEL: Record<string, string> = {
   cancelled: "Cancelada",
 }
 
+export type RunStatusTone = "success" | "warning" | "danger" | "info" | "neutral"
+
+export const RUN_STATUS_TONE: Record<string, RunStatusTone> = {
+  running: "info",
+  awaiting_approval: "warning",
+  succeeded: "success",
+  failed: "danger",
+  cancelled: "neutral",
+}
+
+export function runStatusTone(status: string): RunStatusTone {
+  return RUN_STATUS_TONE[status] ?? "neutral"
+}
+
 export type FlowSchedule = { frequency: "daily" | "weekdays" | "weekly" | "monthly"; time: string; weekday: number; day_of_month: number }
 
 // Programación que propuso el asistente (plan.trigger.schedule), validada.
