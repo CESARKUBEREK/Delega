@@ -235,3 +235,13 @@ test("Fase 5: los errores de acciones contextuales usan el aviso compartido", ()
     assert.ok(!source.includes('className="text-alert" role="alert"'))
   }
 })
+
+
+test("el menú Más móvil mantiene su relación accesible y gestiona el teclado", () => {
+  const navigation = readFileSync(new URL("../src/app/w/[workspaceId]/panel-nav.tsx", import.meta.url), "utf8")
+  assert.ok(navigation.includes('aria-controls="menu-mas"'))
+  assert.ok(navigation.includes('hidden={!open}'))
+  assert.ok(navigation.includes('event.key === "Escape"'))
+  assert.ok(navigation.includes('menuRef.current?.querySelector<HTMLAnchorElement>("a")?.focus()'))
+  assert.ok(navigation.includes('return () => triggerRef.current?.focus()'))
+})
