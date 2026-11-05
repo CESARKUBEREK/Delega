@@ -1,6 +1,6 @@
 import { isIP } from "node:net"
 
-function parseIpv6(input: string): bigint | null {
+function parseIpv6(input: string): number[] | null {
   let address = input.toLowerCase()
   if (!address || address.includes("%") || address.includes(":::")) return null
 
@@ -20,18 +20,25 @@ function parseIpv6(input: string): bigint | null {
   if (halves.length > 2) return null
   const left = halves[0] ? halves[0].split(":") : []
   const right = halves.length === 2 && halves[1] ? halves[1].split(":") : []
+  const missing = 8 - left.length - right.length
+  if (halves.length === 2 && missing < 1) return null
   const groups = halves.length === 2
-    ? [...left, ...Array(8 - left.length - right.length).fill("0"), ...right]
+    ? [...left, ...Array(missing).fill("0"), ...right]
     : left
 
   if (groups.length !== 8 || groups.some((group) => !/^[\da-f]{1,4}$/.test(group))) return null
-
-  return groups.reduce((value, group) => (value << 16n) | BigInt(`0x${group}`), 0n)
+  return groups.map((group) => Number.parseInt(group, 16))
 }
 
-function inIpv6Range(address: bigint, network: bigint, prefixLength: number): boolean {
-  const shift = 128n - BigInt(prefixLength)
-  return (address >> shift) === (network >> shift)
+function inIpv6Range(address: number[], network: number[], prefixLength: number): boolean {
+  const fullGroups = Math.floor(prefixLength / 16)
+  const remainingBits = prefixLength % 16
+  for (let index = 0; index < fullGroups; index += 1) {
+    if (address[index] !== network[index]) return false
+  }
+  if (remainingBits === 0) return true
+  const mask = (0xffff << (16 - remainingBits)) & 0xffff
+  return (address[fullGroups] & mask) === (network[fullGroups] & mask)
 }
 
 function isPublicIpv4(address: string): boolean {
@@ -61,7 +68,7 @@ export function isPublicAddress(address: string): boolean {
   if (version !== 6) return false
 
   const parsed = parseIpv6(address)
-  if (parsed === null) return false
+  if (!parsed) return false
 
   const globalUnicast = parseIpv6("2000::")!
   const ietfProtocolAssignments = parseIpv6("2001::")!
