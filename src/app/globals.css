@@ -1820,3 +1820,90 @@ button.setup-step-link:focus-visible { outline:2px solid var(--link); outline-of
  .plan-live-dot,.plan-team-spine,.plan-team-node,.plan-step-row-animated { animation:none !important; opacity:1 !important; filter:none !important; }
  .plan-team-node { transition:none !important; }
 }
+
+
+/* Fase 4 · ritmo común de páginas y navegación del espacio. */
+.ms-page-header {
+  min-width:0;
+}
+.ms-page-header-copy {
+  min-width:0;
+  flex:1 1 auto;
+}
+.ms-page-header-description {
+  max-width:68ch;
+}
+.ms-page-header-actions {
+  display:flex;
+  min-width:0;
+  flex:0 0 auto;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+}
+.ms-panel-card-header {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.ms-panel-card-header > div {
+  min-width:0;
+}
+.ms-panel-card-header > :last-child {
+  flex:0 0 auto;
+}
+.ms-nav-group + .ms-nav-group {
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid var(--rule-soft);
+}
+.ms-nav-group-heading,
+.mobile-more-group-heading {
+  margin:0 0 7px;
+  padding:0 10px;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:750;
+  letter-spacing:.12em;
+  line-height:1.4;
+  text-transform:uppercase;
+}
+.ms-empty-state {
+  min-width:0;
+}
+.ms-empty-state > div {
+  min-width:0;
+}
+@media (max-width:700px) {
+  .ms-page-header {
+    align-items:stretch;
+    flex-direction:column;
+    gap:12px;
+  }
+  .ms-page-header-actions {
+    width:100%;
+    justify-content:flex-start;
+  }
+  .ms-page-header-actions > * {
+    max-width:100%;
+  }
+  .ms-panel-card-header {
+    flex-wrap:wrap;
+  }
+  .ms-panel-card-header > :last-child {
+    max-width:100%;
+  }
+}
+@media (max-width:480px) {
+  .ms-empty-state {
+    gap:12px;
+    padding:16px;
+  }
+  .ms-empty-state-icon {
+    width:36px;
+    height:36px;
+    flex-basis:36px;
+  }
+}
