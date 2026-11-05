@@ -1,5 +1,5 @@
 import { ExternalLink } from "@/components/external-link"
-import { StatusBadge } from "@/components/ui"
+import { IntegrationStatusBadge } from "@/components/ui"
 import { PROVIDER_LINKS } from "@/lib/provider-links"
 import { fileKindLabel } from "@/lib/plan"
 import { supabaseUrl } from "@/lib/supabase/env"
@@ -10,12 +10,7 @@ import { BufferForm, DisconnectInboxForm, HubSpotForm, TokkoForm, XubioForm } fr
 import { DisconnectVoiceForm, VoiceAccess, VoicePlaybook, VoiceSettingsForm } from "./voice-client"
 import { VoiceWebPanel, type VoiceWebWidget } from "./voice-web-client"
 
-function Badge({ status, invalidLabel }: { status: string | null | undefined; invalidLabel: string }) {
-  if (status === "active") return <StatusBadge tone="success">Conectado</StatusBadge>
-  if (status === "paused") return <StatusBadge tone="warning">Requiere configuración</StatusBadge>
-  if (status) return <StatusBadge tone="danger">{invalidLabel}</StatusBadge>
-  return <StatusBadge tone="neutral">Sin conectar</StatusBadge>
-}
+
 
 function integrationStatus(status: string | null | undefined, unconfigured: "available" | "setup" = "available") {
   if (!status) return unconfigured
@@ -42,7 +37,7 @@ export async function CalendarCard({ workspaceId, isAdmin, notice }: { workspace
             Las automatizaciones consultan tu agenda y proponen eventos nuevos o cambios. Nada se crea ni se mueve sin tu aprobación.
           </p>
         </div>
-        <Badge status={integration?.status} invalidLabel="Acceso retirado" />
+        <IntegrationStatusBadge status={integration?.status} invalidLabel="Acceso retirado" />
       </summary>
 
       <div className="flex flex-col gap-5 px-5 py-5">
@@ -104,7 +99,7 @@ export async function ContactsCard({ workspaceId, isAdmin, notice }: { workspace
             aprobación.
           </p>
         </div>
-        <Badge status={integration?.status} invalidLabel="Acceso retirado" />
+        <IntegrationStatusBadge status={integration?.status} invalidLabel="Acceso retirado" />
       </summary>
 
       <div className="flex flex-col gap-5 px-5 py-5">
@@ -166,7 +161,7 @@ export async function HubSpotCard({ workspaceId, isAdmin }: { workspaceId: strin
             añadir notas o tareas espera tu aprobación.
           </p>
         </div>
-        <Badge status={integration?.status} invalidLabel="Clave rechazada" />
+        <IntegrationStatusBadge status={integration?.status} invalidLabel="Clave rechazada" />
       </summary>
 
       <div className="flex flex-col gap-5 px-5 py-5">
@@ -239,7 +234,7 @@ export async function TokkoCard({ workspaceId, isAdmin }: { workspaceId: string;
             Tokko espera tu aprobación.
           </p>
         </div>
-        <Badge status={integration?.status} invalidLabel="Clave rechazada" />
+        <IntegrationStatusBadge status={integration?.status} invalidLabel="Clave rechazada" />
       </summary>
       <div className="flex flex-col gap-5 px-5 py-5">
         {integration ? (
@@ -290,7 +285,7 @@ export async function XubioCard({ workspaceId, isAdmin }: { workspaceId: string;
             facturas ni cobros.
           </p>
         </div>
-        <Badge status={integration?.status} invalidLabel="Credenciales rechazadas" />
+        <IntegrationStatusBadge status={integration?.status} invalidLabel="Credenciales rechazadas" />
       </summary>
       <div className="flex flex-col gap-5 px-5 py-5">
         {integration ? (
@@ -342,7 +337,7 @@ export async function BufferCard({ workspaceId, isAdmin }: { workspaceId: string
             añade a la cola o las programa; cada publicación espera tu aprobación.
           </p>
         </div>
-        <Badge status={integration?.status} invalidLabel="Clave rechazada" />
+        <IntegrationStatusBadge status={integration?.status} invalidLabel="Clave rechazada" />
       </summary>
       <div className="flex flex-col gap-5 px-5 py-5">
         {integration ? (
@@ -421,7 +416,7 @@ export async function VoiceWebCard({ workspaceId, isAdmin }: { workspaceId: stri
         {widget?.enabled && !xaiReady ? (
           <span className="integration-state-setup shrink-0 border px-2 py-0.5 text-xs">Conecta Grok</span>
         ) : (
-          <Badge status={widget ? (widget.enabled ? "active" : "paused") : null} invalidLabel="Sin activar" />
+          <IntegrationStatusBadge status={widget ? (widget.enabled ? "active" : "paused") : null} invalidLabel="Sin activar" />
         )}
       </summary>
       <div className="flex flex-col gap-5 px-5 py-5">
@@ -477,7 +472,7 @@ export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string;
             tus documentos. Cada cita y cada recado llegan a la Bandeja y te avisan.
           </p>
         </div>
-        <Badge status={integration?.status} invalidLabel="Desactivado" />
+        <IntegrationStatusBadge status={integration?.status} invalidLabel="Desactivado" />
       </summary>
       <div className="flex flex-col gap-6 px-5 py-5">
         {!isAdmin ? (
