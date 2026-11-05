@@ -22,6 +22,7 @@ test("el servidor comprueba los proveedores reales de Integraciones en una sola 
     assert.ok(actions.includes(`"${provider}"`), `falta el proveedor ${provider}`)
   }
   assert.match(actions, /\.from\("integration_files"\)/)
+  assert.match(actions, /\.in\("integration_id", googleIds\)/)
   assert.match(actions, /hasSpreadsheet/)
   assert.match(actions, /hasDocument/)
   assert.match(actions, /hasDriveFile/)
