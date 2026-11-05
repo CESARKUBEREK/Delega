@@ -111,6 +111,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const [websiteUrl, setWebsiteUrl] = useState("")
   const [websiteSnapshot, setWebsiteSnapshot] = useState<WebsiteSnapshot | null>(null)
   const [websiteError, setWebsiteError] = useState<string | null>(null)
+  const [websitePending, setWebsitePending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [reply, setReply] = useState<string | null>(saved?.reply ?? null)
   const [plan, setPlan] = useState<FlowPlan | null>(saved?.plan ?? null)
@@ -174,18 +175,20 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     return true
   }, [task])
 
-  const handleWebsiteAnalysis = () => {
-    if (!websiteUrl.trim() || pending) return
+  const handleWebsiteAnalysis = async () => {
+    if (!websiteUrl.trim() || pending || websitePending) return
     setWebsiteError(null)
     setWebsiteSnapshot(null)
-    startTransition(async () => {
+    setWebsitePending(true)
+    try {
       const result = await analyzeOnboardingWebsite({ workspaceId, url: websiteUrl })
-      if (!result.ok) {
-        setWebsiteError(result.error)
-        return
-      }
-      setWebsiteSnapshot(result.snapshot)
-    })
+      if (!result.ok) setWebsiteError(result.error)
+      else setWebsiteSnapshot(result.snapshot)
+    } catch {
+      setWebsiteError("No se pudo analizar la web. Puedes continuar sin ella.")
+    } finally {
+      setWebsitePending(false)
+    }
   }
 
   const handleTaskSubmit = (e: React.FormEvent) => {
@@ -368,8 +371,8 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                   maxLength={2048}
                   className="min-w-0 flex-1 rounded-xl border border-rule bg-paper px-3 py-2 text-ink placeholder:text-graphite focus:border-stroke focus:outline-none"
                 />
-                <button type="button" onClick={handleWebsiteAnalysis} disabled={!websiteUrl.trim() || pending} className="inline-flex h-10 items-center justify-center rounded-xl border border-ink px-4 text-sm font-semibold text-ink disabled:opacity-50">
-                  {pending && !websiteSnapshot ? "Analizando…" : "Analizar mi web"}
+                <button type="button" onClick={handleWebsiteAnalysis} disabled={!websiteUrl.trim() || pending || websitePending} className="inline-flex h-10 items-center justify-center rounded-xl border border-ink px-4 text-sm font-semibold text-ink disabled:opacity-50">
+                  {websitePending ? "Analizando…" : "Analizar mi web"}
                 </button>
               </div>
               {websiteError ? <p className="text-sm text-alert" role="alert">{websiteError}</p> : null}
