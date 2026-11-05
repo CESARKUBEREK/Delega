@@ -26,9 +26,12 @@ test("acepta IPv4 públicas y rechaza rangos privados, locales y reservados", ()
   }
 })
 
-test("acepta IPv6 global unicast y rechaza direcciones especiales", () => {
+test("acepta IPv6 asignadas globales y rechaza direcciones especiales o no asignadas", () => {
   for (const address of [
+    "2001:200::1",
     "2001:4860:4860::8888",
+    "2003::1",
+    "2400::1",
     "2606:4700:4700::1111",
     "2a00:1450:4001::1",
   ]) {
@@ -42,7 +45,10 @@ test("acepta IPv6 global unicast y rechaza direcciones especiales", () => {
     "100::1",
     "2001::1",
     "2001:db8::1",
+    "2001:ffff::1",
     "2002:c000:0201::1",
+    "2300::1",
+    "2500::1",
     "2d00::1",
     "3000::1",
     "3ffe::1",
