@@ -245,3 +245,42 @@ test("el menú Más móvil mantiene su relación accesible y gestiona el teclado
   assert.ok(navigation.includes('menuRef.current?.querySelector<HTMLAnchorElement>("a")?.focus()'))
   assert.ok(navigation.includes('return () => triggerRef.current?.focus()'))
 })
+
+
+const accessibilityCss = readFileSync(new URL("../src/app/accessibility.css", import.meta.url), "utf8")
+const sharedForm = readFileSync(new URL("../src/components/form.tsx", import.meta.url), "utf8")
+
+function luminance(hex) {
+  const channels = hex.replace("#", "").match(/.{2}/g).map(value => parseInt(value, 16) / 255)
+  const linear = channels.map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
+  return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+}
+
+function contrast(foreground, background) {
+  const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a)
+  return (values[0] + 0.05) / (values[1] + 0.05)
+}
+
+test("Fase 12C: textos secundarios alcanzan WCAG AA sobre superficies claras", () => {
+  assert.ok(contrast("#536175", "#ffffff") >= 4.5)
+  assert.ok(contrast("#536175", "#f3f6fa") >= 4.5)
+  assert.match(css, /--muted:\\s*#536175/i)
+  for (const oldColor of ["#8796a8", "#8392a5", "#8a98a8", "#718095", "#65768b"]) {
+    assert.ok(!css.toLowerCase().includes(oldColor), `permanece un color secundario de bajo contraste: ${oldColor}`)
+  }
+})
+
+test("Fase 12C: foco de teclado con contraste y modo de colores forzados", () => {
+  assert.ok(contrast("#007a6c", "#ffffff") >= 3)
+  assert.ok(contrast("#007a6c", "#f3f6fa") >= 3)
+  assert.match(accessibilityCss, /:focus-visible\\s*\\{[^}]*outline:\\s*3px solid var\\(--state-focus\\)/s)
+  assert.match(accessibilityCss, /@media\\s*\\(forced-colors:\\s*active\\)/)
+  assert.match(accessibilityCss, /outline:\\s*2px solid Highlight/)
+})
+
+test("Fase 12C: Field relaciona la ayuda y el error con el control", () => {
+  assert.ok(sharedForm.includes("error?: string"))
+  assert.ok(sharedForm.includes("aria-describedby={describedBy}"))
+  assert.ok(sharedForm.includes("aria-invalid={error ? true : undefined}"))
+  assert.ok(sharedForm.includes('id={errorId} className="text-xs text-alert" role="alert"'))
+})
