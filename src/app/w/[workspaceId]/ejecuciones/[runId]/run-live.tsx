@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { InfoBanner } from "@/components/ui"
+import { InfoBanner, PrimaryButton, SecondaryButton } from "@/components/ui"
 import { useEffect, useRef, useState, useTransition } from "react"
 import type { Cell, Field, Pending } from "@/lib/pending"
 import { cancelRun, continueRun, decideRun } from "../../run-actions"
@@ -210,11 +210,11 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
           </InfoBanner>
         ) : null}
         <div className="approval-actions flex flex-wrap gap-3">
-          <button
+          <PrimaryButton
             type="button"
             disabled={busy}
             onClick={() => decide(true)}
-            className="h-11 bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90 disabled:opacity-60"
+            className="px-5"
           >
             {busy && decision === "approve"
               ? "Aplicando…"
@@ -225,15 +225,15 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
                 : pending.tool === "create_document"
                   ? "Aprobar y crear"
                   : "Aprobar y escribir"}
-          </button>
-          <button
+          </PrimaryButton>
+          <SecondaryButton
             type="button"
             disabled={busy}
             onClick={() => decide(false)}
-            className="h-11 border border-ink px-5 text-base font-medium text-ink hover:bg-paper disabled:opacity-60"
+            className="px-5"
           >
             {busy && decision === "reject" ? "Rechazando…" : "Rechazar"}
-          </button>
+          </SecondaryButton>
         </div>
       </div>
     </section>
