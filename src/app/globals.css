@@ -1662,7 +1662,7 @@ button.setup-step-link:focus-visible { outline:2px solid var(--link); outline-of
 .ms-page-header-copy { min-width:0; }
 .ms-page-header-eyebrow { margin:0 0 var(--space-2); color:var(--link); font-size:var(--font-size-xs); font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
 .ms-page-header-title { margin:0; color:var(--ink); font-size:clamp(1.625rem, 3vw, 2.125rem); font-weight:700; letter-spacing:-.035em; line-height:var(--line-height-heading); }
-.ms-page-header-description { max-width:64ch; margin:var(--space-2) 0 0; color:var(--graphite); font-size:var(--font-size-sm); line-height:1.6; }
+.ms-page-header-description, .ms-panel-card-description { max-width:64ch; margin:var(--space-2) 0 0; color:var(--graphite); font-size:var(--font-size-sm); line-height:1.6; }
 .ms-page-header-actions { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-2); }
 .ms-panel-card { min-width:0; overflow:hidden; border:var(--border-subtle); border-radius:var(--radius-lg); background:var(--sheet); box-shadow:var(--shadow-card); }
 .ms-panel-card-header { display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); padding:var(--space-4) var(--space-5); border-bottom:1px solid var(--rule); }
