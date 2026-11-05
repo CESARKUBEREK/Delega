@@ -133,19 +133,21 @@ export async function checkOnboardingConnections(input: {
   try {
     const supabase = await createClient()
     const providers = [...new Set(input.connections.flatMap((connection) => CONNECTION_PROVIDER[connection] ?? []))]
-    const [{ data, error }, { data: selectedFiles, error: filesError }] = await Promise.all([
-      supabase
-        .from("integrations")
-        .select("provider, status")
-        .eq("workspace_id", input.workspaceId)
-        .in("provider", providers.length ? providers : ["__none__"]),
-      input.connections.some((connection) => connection === "spreadsheet" || connection === "documents" || connection === "drive")
-        ? supabase.from("integration_files").select("mime_type").eq("workspace_id", input.workspaceId)
-        : Promise.resolve({ data: [], error: null }),
-    ])
+    const { data, error } = await supabase
+      .from("integrations")
+      .select("id, provider, status")
+      .eq("workspace_id", input.workspaceId)
+      .in("provider", providers.length ? providers : ["__none__"])
     if (error) throw error
+    const activeRows = data ?? []
+    const active = new Set(activeRows.filter((row) => row.status === "active").map((row) => row.provider))
+    // Solo cuentan los archivos vinculados a la conexión Google activa de este espacio.
+    const googleIds = activeRows.filter((row) => row.provider === "google" && row.status === "active").map((row) => row.id)
+    const needsGoogleFiles = input.connections.some((connection) => connection === "spreadsheet" || connection === "documents" || connection === "drive")
+    const { data: selectedFiles, error: filesError } = needsGoogleFiles && googleIds.length
+      ? await supabase.from("integration_files").select("mime_type").eq("workspace_id", input.workspaceId).in("integration_id", googleIds)
+      : { data: [], error: null }
     if (filesError) throw filesError
-    const active = new Set((data ?? []).filter((row) => row.status === "active").map((row) => row.provider))
     const fileMimes = (selectedFiles ?? []).map((file) => file.mime_type)
     const hasSpreadsheet = fileMimes.some((mime) =>
       mime === "application/vnd.google-apps.spreadsheet" ||
