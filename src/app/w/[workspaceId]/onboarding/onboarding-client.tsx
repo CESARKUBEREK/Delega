@@ -18,8 +18,10 @@ import {
   type OnboardingStep,
 } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
+import type { WebsiteSnapshot } from "@/lib/business-discovery/website-parser"
 import { saveFlowPlan } from "../flow-editor-actions"
 import {
+  analyzeOnboardingWebsite,
   checkOnboardingAi,
   checkOnboardingConnection,
   checkOnboardingConnections,
@@ -106,6 +108,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const [saved] = useState(() => loadOnboarding(workspaceId))
   const [step, setStep] = useState<Step>(saved?.step ?? "task")
   const [task, setTask] = useState(saved?.task ?? "")
+  const [websiteUrl, setWebsiteUrl] = useState("")
+  const [websiteSnapshot, setWebsiteSnapshot] = useState<WebsiteSnapshot | null>(null)
+  const [websiteError, setWebsiteError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [reply, setReply] = useState<string | null>(saved?.reply ?? null)
   const [plan, setPlan] = useState<FlowPlan | null>(saved?.plan ?? null)
@@ -169,12 +174,29 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     return true
   }, [task])
 
+  const handleWebsiteAnalysis = () => {
+    if (!websiteUrl.trim() || pending) return
+    setWebsiteError(null)
+    setWebsiteSnapshot(null)
+    startTransition(async () => {
+      const result = await analyzeOnboardingWebsite({ workspaceId, url: websiteUrl })
+      if (!result.ok) {
+        setWebsiteError(result.error)
+        return
+      }
+      setWebsiteSnapshot(result.snapshot)
+    })
+  }
+
   const handleTaskSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!validateTask() || pending) return
 
     startTransition(async () => {
-      const result = await generateOnboardingPlan({ workspaceId, message: task })
+      const websiteContext = websiteSnapshot
+        ? [websiteSnapshot.title, websiteSnapshot.description, ...websiteSnapshot.headings, websiteSnapshot.text].filter(Boolean).join("\n").slice(0, 6_000)
+        : undefined
+      const result = await generateOnboardingPlan({ workspaceId, message: task, websiteContext })
       if (!result.ok) {
         setError(result.error)
         return
@@ -329,6 +351,39 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           </div>
 
           <form onSubmit={handleTaskSubmit} className="flex flex-col gap-4">
+            <div className="rounded-xl border border-rule bg-paper p-4 flex flex-col gap-3">
+              <div>
+                <label htmlFor="website-url" className="block text-sm font-semibold text-ink">La web de mi negocio <span className="font-normal text-graphite">(opcional)</span></label>
+                <p className="mt-1 text-sm text-graphite">Si tienes una web, la analizaré para entender mejor qué ofreces, a quién ayudas y cómo trabajas. No necesito acceso ni contraseña.</p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  id="website-url"
+                  type="url"
+                  inputMode="url"
+                  autoComplete="url"
+                  value={websiteUrl}
+                  onChange={(e) => { setWebsiteUrl(e.target.value); setWebsiteSnapshot(null); setWebsiteError(null) }}
+                  placeholder="https://www.tunegocio.com"
+                  maxLength={2048}
+                  className="min-w-0 flex-1 rounded-xl border border-rule bg-paper px-3 py-2 text-ink placeholder:text-graphite focus:border-stroke focus:outline-none"
+                />
+                <button type="button" onClick={handleWebsiteAnalysis} disabled={!websiteUrl.trim() || pending} className="inline-flex h-10 items-center justify-center rounded-xl border border-ink px-4 text-sm font-semibold text-ink disabled:opacity-50">
+                  {pending && !websiteSnapshot ? "Analizando…" : "Analizar mi web"}
+                </button>
+              </div>
+              {websiteError ? <p className="text-sm text-alert" role="alert">{websiteError}</p> : null}
+              {websiteSnapshot ? (
+                <div className="rounded-lg border border-rule bg-sheet p-3 flex flex-col gap-2" aria-live="polite">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-graphite">Información encontrada · revísala</p>
+                  <p className="font-semibold text-ink">{websiteSnapshot.title ?? websiteSnapshot.url}</p>
+                  {websiteSnapshot.description ? <p className="text-sm text-graphite">{websiteSnapshot.description}</p> : null}
+                  {websiteSnapshot.headings.length ? <ul className="flex flex-wrap gap-2">{websiteSnapshot.headings.slice(0, 8).map((heading) => <li key={heading} className="rounded-full border border-rule px-2 py-1 text-xs text-graphite">{heading}</li>)}</ul> : null}
+                  <p className="text-xs text-graphite">Usaré esta información pública para contextualizar tu propuesta. Podrás corregirla o descartarla más adelante.</p>
+                  <button type="button" onClick={() => setWebsiteSnapshot(null)} className="self-start text-xs font-semibold text-link underline underline-offset-4">Quitar este análisis</button>
+                </div>
+              ) : null}
+            </div>
             <label htmlFor="task" className="sr-only">
               Describe la tarea
             </label>
