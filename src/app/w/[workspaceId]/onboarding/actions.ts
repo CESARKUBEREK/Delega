@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getWorkspace, UUID_RE } from "@/lib/workspace"
 import { fetchPublicWebsite } from "@/lib/business-discovery/website-fetcher"
 import type { WebsiteSnapshot } from "@/lib/business-discovery/website-parser"
+import { analyzeBusinessProfile, type BusinessProfile } from "@/lib/business-discovery/business-profile"
 
 export type OnboardingPlanResult =
   | {
@@ -237,7 +238,7 @@ const AI_LABELS: Record<string, string> = { openai: "OpenAI", anthropic: "Anthro
 
 
 export type WebsiteAnalysisResult =
-  | { ok: true; snapshot: WebsiteSnapshot }
+  | { ok: true; snapshot: WebsiteSnapshot; profile: BusinessProfile }
   | { ok: false; error: string }
 
 // Analiza únicamente la web pública del espacio activo. La descarga se hace
@@ -255,7 +256,8 @@ export async function analyzeOnboardingWebsite(input: {
   if (!workspace.isAdmin) return { ok: false, error: "Solo un administrador del espacio puede analizar la web." }
   try {
     const snapshot = await fetchPublicWebsite(rawUrl)
-    return { ok: true, snapshot }
+    const profile = analyzeBusinessProfile(snapshot)
+    return { ok: true, snapshot, profile }
   } catch (error) {
     return {
       ok: false,
