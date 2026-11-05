@@ -1,5 +1,5 @@
 import { fileKindLabel } from "@/lib/plan"
-import { StatusBadge } from "@/components/ui"
+import { PrimaryButton, StatusBadge } from "@/components/ui"
 import { createClient } from "@/lib/supabase/server"
 import { connectGoogle, removeSheet } from "../run-actions"
 import { DisconnectGoogleForm, PickSheetsButton } from "./google-client"
@@ -131,9 +131,9 @@ export async function DriveCard({ workspaceId, isAdmin, notice }: { workspaceId:
             ) : (
               <form action={connectGoogle}>
                 <input type="hidden" name="workspaceId" value={workspaceId} />
-                <button type="submit" className="h-11 bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90">
+                <PrimaryButton type="submit" className="px-5">
                   {integration ? "Volver a conectar Google Drive" : "Conectar Google Drive"}
-                </button>
+                </PrimaryButton>
               </form>
             )}
             {integration ? <DisconnectGoogleForm workspaceId={workspaceId} /> : null}

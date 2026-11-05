@@ -2,6 +2,7 @@
 
 import { useActionState, useState, useTransition } from "react"
 import { FormMessage, SubmitButton } from "@/components/form"
+import { InfoBanner } from "@/components/ui"
 import { DAY_NAMES, type VoiceConfig } from "@/lib/voice"
 import { type ActionResult, createVoiceAccess, disconnectVoice, type KeyState, saveVoiceSettings } from "../run-actions"
 
@@ -55,9 +56,9 @@ export function VoiceAccess({ workspaceId, url, connected }: { workspaceId: stri
       {result ? (
         <>
           <CopyField label="URL del servidor MCP (con la clave incluida): pégala en xAI" value={result.url} secret />
-          <p role="status" className="border-l-2 border-ok bg-ok-bg px-3 py-2 text-sm text-ok">
+          <InfoBanner tone="success" role="status">
             Cópiala ahora: lleva la clave dentro y MarchaSolo no volverá a mostrarla. Trátala como una contraseña.
-          </p>
+          </InfoBanner>
           <details className="text-sm text-graphite">
             <summary className="cursor-pointer text-ink">Si tu cliente MCP pide la clave aparte</summary>
             <div className="mt-2 flex flex-col gap-2">

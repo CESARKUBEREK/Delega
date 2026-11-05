@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { type ReactNode, useEffect, useId, useMemo, useRef, useState, useTransition } from "react"
 import { FormMessage } from "@/components/form"
+import { PrimaryButton, SecondaryButton } from "@/components/ui"
 import { TRIGGER_LABEL } from "@/lib/plan"
 import {
   CONNECTION_NAME,
@@ -305,14 +306,14 @@ export function FlowEditor({
 
       {/* En el móvil queda fija justo encima de la barra de navegación inferior. */}
       <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 grid grid-cols-[1fr_auto] gap-2 border-t border-ink bg-paper px-4 py-3 lg:static lg:mx-0 lg:flex lg:border-0 lg:bg-transparent lg:px-0">
-        <button
+        <PrimaryButton
           type="button"
           onClick={save}
           disabled={saving || steps.length === 0 || !name.trim()}
-          className="h-11 bg-stroke px-6 text-base font-semibold text-stroke-ink hover:opacity-90 disabled:opacity-60"
+          className="px-6"
         >
           {saving ? "Guardando…" : flowId ? "Guardar cambios" : "Crear automatización"}
-        </button>
+        </PrimaryButton>
         <Link
           href={flowId ? `${base}/automatizaciones/${flowId}` : `${base}/automatizaciones`}
           className="flex h-11 items-center justify-center border border-ink px-6 text-base font-medium text-ink hover:bg-paper"
@@ -623,18 +624,18 @@ function InsertPoint({
       <FormMessage error={error ?? undefined} />
       <div className="flex flex-col gap-2 sm:flex-row">
         {aiReady ? (
-          <button
+          <PrimaryButton
             type="button"
             onClick={withAi}
             disabled={pending || !text.trim()}
-            className="h-11 bg-stroke px-4 text-base font-semibold text-stroke-ink hover:opacity-90 disabled:opacity-60"
+            className="px-4"
           >
             {pending ? "Preparando…" : "Complétalo tú (IA)"}
-          </button>
+          </PrimaryButton>
         ) : null}
-        <button type="button" onClick={byHand} disabled={pending} className="h-11 border border-ink px-4 text-base font-medium text-ink hover:bg-paper disabled:opacity-60">
+        <SecondaryButton type="button" onClick={byHand} disabled={pending} className="px-4">
           Rellenar a mano
-        </button>
+        </SecondaryButton>
         <button type="button" onClick={() => setAdding(null)} disabled={pending} className="h-11 px-4 text-base text-link underline underline-offset-4">
           Cancelar
         </button>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { InfoBanner } from "@/components/ui"
 import { draftReply, sendReply } from "../../run-actions"
 
 const field = "border border-rule bg-sheet px-3 py-2 text-sm text-ink focus:border-link focus:outline-none"
@@ -68,14 +69,14 @@ export function ReplyComposer({ workspaceId, threadId, channel, to }: { workspac
         className={`${field} mt-1 w-full`}
       />
       {error ? (
-        <p role="alert" className="mt-2 border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+        <InfoBanner tone="danger" role="alert" className="mt-2">
           {error}
-        </p>
+        </InfoBanner>
       ) : null}
       {sent ? (
-        <p role="status" className="mt-2 border-l-2 border-ok bg-ok-bg px-3 py-2 text-sm text-ok">
+        <InfoBanner tone="success" role="status" className="mt-2">
           Enviado.
-        </p>
+        </InfoBanner>
       ) : null}
       <div className="mt-3 flex justify-end">
         <button

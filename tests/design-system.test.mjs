@@ -11,6 +11,18 @@ const automation = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaci
 const history = readFileSync(new URL("../src/app/w/[workspaceId]/historial/page.tsx", import.meta.url), "utf8")
 const workIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/work-cards.tsx", import.meta.url), "utf8")
 const inboxIntegrations = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/inbox-cards.tsx", import.meta.url), "utf8")
+const inboxIntegrationsClient = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/inbox-client.tsx", import.meta.url), "utf8")
+const routingForm = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/routing-form.tsx", import.meta.url), "utf8")
+const voiceClient = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/voice-client.tsx", import.meta.url), "utf8")
+const helpPanel = readFileSync(new URL("../src/components/help-panel.tsx", import.meta.url), "utf8")
+const replyComposer = readFileSync(new URL("../src/app/w/[workspaceId]/bandeja/[threadId]/reply-composer.tsx", import.meta.url), "utf8")
+const runLive = readFileSync(new URL("../src/app/w/[workspaceId]/ejecuciones/[runId]/run-live.tsx", import.meta.url), "utf8")
+const runPanel = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/[flowId]/run-panel.tsx", import.meta.url), "utf8")
+const flowEditor = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaciones/flow-editor.tsx", import.meta.url), "utf8")
+const invitePage = readFileSync(new URL("../src/app/invite/page.tsx", import.meta.url), "utf8")
+const googleCard = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/google-card.tsx", import.meta.url), "utf8")
+const assistantChat = readFileSync(new URL("../src/app/w/[workspaceId]/asistente/chat.tsx", import.meta.url), "utf8")
+const googleResultPage = readFileSync(new URL("../src/app/integraciones/google/page.tsx", import.meta.url), "utf8")
 
 
 function rule(selector) {
@@ -106,4 +118,80 @@ test("Bandeja y Aprobaciones distinguen señales propias de cada área", () => {
   assert.ok(inboxList.includes('<InboxSignalBadge kind="needs_reply" />'))
   assert.ok(inboxList.includes('<InboxSignalBadge kind="pending_classification" />'))
   assert.ok(!inboxList.includes("URGENCY_STYLE"))
+})
+
+
+test("Bandeja, Ejecuciones y panel de automatización usan avisos compartidos", () => {
+  for (const source of [replyComposer, runLive, runPanel]) {
+    assert.match(source, /import\s*\{[^}]*\bInfoBanner\b[^}]*\}\s*from\s*"@\/components\/ui"/)
+    assert.ok(source.includes('<InfoBanner tone="danger" role="alert"'))
+    assert.ok(!/border-l-2 border-alert bg-alert-bg/.test(source))
+  }
+  assert.ok(replyComposer.includes('<InfoBanner tone="success" role="status"'))
+})
+
+
+test("Chat del asistente reutiliza InfoBanner para sus tres errores", () => {
+  assert.ok(assistantChat.includes('import { InfoBanner } from "@/components/ui"'))
+  assert.equal((assistantChat.match(/<InfoBanner tone="danger" role="alert">/g) ?? []).length, 3)
+  assert.ok(!assistantChat.includes("border-l-2 border-alert bg-alert-bg"))
+})
+
+test("Invitaciones y retorno OAuth de Google usan avisos compartidos", () => {
+  assert.ok(invitePage.includes('<InfoBanner tone="danger" role="alert">{error}</InfoBanner>'))
+  assert.ok(googleResultPage.includes('<InfoBanner tone="danger" role="alert">'))
+  assert.ok(!invitePage.includes("border-l-2 border-alert bg-alert-bg"))
+  assert.ok(!googleResultPage.includes("border-l-2 border-alert bg-alert-bg"))
+})
+
+test("FormMessage reutiliza InfoBanner y conserva los roles accesibles", () => {
+  const form = readFileSync(new URL("../src/components/form.tsx", import.meta.url), "utf8")
+  assert.ok(form.includes("InfoBanner") && form.includes('from "@/components/ui"'))
+  assert.ok(form.includes('<InfoBanner tone="danger" role="alert">'))
+  assert.ok(form.includes('<InfoBanner tone="success" role="status">'))
+  assert.ok(!form.includes("border-l-2 border-alert bg-alert-bg"))
+  assert.ok(!form.includes("border-l-2 border-ok bg-ok-bg"))
+})
+
+test("acciones principales reutilizan los botones del sistema de diseño", () => {
+  assert.ok(flowEditor.includes('import { PrimaryButton, SecondaryButton } from "@/components/ui"'))
+  assert.ok(flowEditor.includes("<PrimaryButton"))
+  assert.ok(flowEditor.includes("<SecondaryButton"))
+  assert.ok(runLive.includes("<PrimaryButton"))
+  assert.ok(runLive.includes("<SecondaryButton"))
+  assert.ok(runPanel.includes("<PrimaryButton"))
+  assert.ok(runPanel.includes("<SecondaryButton"))
+  assert.ok(googleCard.includes("<PrimaryButton"))
+  assert.ok(invitePage.includes("<PrimaryButton"))
+  for (const source of [flowEditor, runLive, runPanel, googleCard, invitePage]) {
+    assert.ok(!/h-11 bg-stroke px-\d+ text-base font-semibold text-stroke-ink/.test(source))
+  }
+})
+
+
+test("formularios de integraciones de bandeja reutilizan Field compartido", () => {
+  assert.ok(inboxIntegrationsClient.includes('import { Field, FormMessage, SubmitButton } from "@/components/form"'))
+  assert.ok((inboxIntegrationsClient.match(/<Field\b/g) ?? []).length >= 5)
+  assert.ok(!inboxIntegrationsClient.includes("function Input(props:"))
+})
+
+
+test("presupuesto del router de IA utiliza los campos compartidos", () => {
+  assert.ok(routingForm.includes('import { Field, FormMessage, SubmitButton } from "@/components/form"'))
+  assert.equal((routingForm.match(/<Field\b/g) ?? []).length, 3)
+  assert.ok(!routingForm.includes("function UsdField("))
+})
+
+
+test("activación de atención telefónica usa InfoBanner para la confirmación", () => {
+  assert.ok(voiceClient.includes('import { InfoBanner } from "@/components/ui"'))
+  assert.ok(voiceClient.includes('<InfoBanner tone="success" role="status">'))
+  assert.ok(!voiceClient.includes("border-l-2 border-ok bg-ok-bg"))
+})
+
+
+test("el panel de ayuda utiliza InfoBanner para los errores", () => {
+  assert.ok(helpPanel.includes('import { InfoBanner } from "@/components/ui"'))
+  assert.ok(helpPanel.includes('<InfoBanner tone="danger" role="alert">'))
+  assert.ok(!helpPanel.includes('<p className="text-sm text-alert" role="alert">'))
 })

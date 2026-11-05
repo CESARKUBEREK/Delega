@@ -3,7 +3,7 @@
 import { ExternalLink } from "@/components/external-link"
 import { PROVIDER_LINKS } from "@/lib/provider-links"
 import { useActionState, useRef, useState } from "react"
-import { FormMessage, SubmitButton } from "@/components/form"
+import { Field, FormMessage, SubmitButton } from "@/components/form"
 import {
   addContact,
   type ActionResult,
@@ -30,23 +30,6 @@ import {
   type WhatsAppState,
 } from "../run-actions"
 
-function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string; id: string; hint?: string }) {
-  const { label, hint, id, ...rest } = props
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-ink">
-        {label}
-      </label>
-      <input
-        id={id}
-        className="h-11 border border-rule bg-sheet px-3 text-sm text-ink placeholder:text-graphite/70 focus:border-link focus:outline-none"
-        {...rest}
-      />
-      {hint ? <p className="text-xs text-graphite">{hint}</p> : null}
-    </div>
-  )
-}
-
 export function TelegramForm({ workspaceId, replacing }: { workspaceId: string; replacing: boolean }) {
   const formRef = useRef<HTMLFormElement>(null)
   const [state, action] = useActionState<TelegramState, FormData>(async (prev, fd) => {
@@ -58,7 +41,7 @@ export function TelegramForm({ workspaceId, replacing }: { workspaceId: string; 
   return (
     <form ref={formRef} action={action} className="flex flex-col gap-4">
       <input type="hidden" name="workspaceId" value={workspaceId} />
-      <Input
+      <Field
         id="tg-token"
         name="botToken"
         type="password"
@@ -87,8 +70,8 @@ export function WhatsAppForm({ workspaceId, replacing }: { workspaceId: string; 
   return (
     <form ref={formRef} action={action} className="flex flex-col gap-4">
       <input type="hidden" name="workspaceId" value={workspaceId} />
-      <Input id="wa-sid" name="accountSid" label="Account SID" autoComplete="off" spellCheck={false} required placeholder="AC…" hint="En la portada de tu consola de Twilio (Account Info)." />
-      <Input
+      <Field id="wa-sid" name="accountSid" label="Account SID" autoComplete="off" spellCheck={false} required placeholder="AC…" hint="En la portada de tu consola de Twilio (Account Info)." />
+      <Field
         id="wa-token"
         name="authToken"
         type="password"
@@ -98,7 +81,7 @@ export function WhatsAppForm({ workspaceId, replacing }: { workspaceId: string; 
         required
         hint="Justo debajo del Account SID. MarchaSolo lo guarda cifrado y no vuelve a mostrarlo."
       />
-      <Input
+      <Field
         id="wa-from"
         name="from"
         label="Número de WhatsApp"
@@ -149,8 +132,8 @@ export function AddContactForm({ workspaceId }: { workspaceId: string }) {
     <form ref={formRef} action={action} className="mt-3 flex flex-col gap-3">
       <input type="hidden" name="workspaceId" value={workspaceId} />
       <div className="grid gap-3 sm:grid-cols-2">
-        <Input id="contact-name" name="name" label="Nombre" maxLength={120} required />
-        <Input id="contact-email" name="email" type="email" label="Correo" placeholder="nombre@empresa.com" maxLength={320} required />
+        <Field id="contact-name" name="name" label="Nombre" maxLength={120} required />
+        <Field id="contact-email" name="email" type="email" label="Correo" placeholder="nombre@empresa.com" maxLength={320} required />
       </div>
       <FormMessage error={state.error} message={state.message} />
       <div className="sm:max-w-48">
@@ -171,7 +154,7 @@ export function HubSpotForm({ workspaceId, replacing }: { workspaceId: string; r
   return (
     <form ref={formRef} action={action} className="flex flex-col gap-4">
       <input type="hidden" name="workspaceId" value={workspaceId} />
-      <Input
+      <Field
         id="hs-token"
         name="token"
         type="password"
@@ -309,7 +292,7 @@ export function ImapForm({ workspaceId, current }: { workspaceId: string; curren
         </select>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input
+        <Field
           id="imap-email"
           name="email"
           type="email"
@@ -323,9 +306,9 @@ export function ImapForm({ workspaceId, current }: { workspaceId: string; curren
           }}
           required
         />
-        <Input id="imap-name" name="displayName" label="Nombre del remitente (opcional)" placeholder="Estudio Ruiz" defaultValue={current?.displayName ?? ""} maxLength={120} />
+        <Field id="imap-name" name="displayName" label="Nombre del remitente (opcional)" placeholder="Estudio Ruiz" defaultValue={current?.displayName ?? ""} maxLength={120} />
       </div>
-      <Input
+      <Field
         id="imap-password"
         name="password"
         type="password"
@@ -345,7 +328,7 @@ export function ImapForm({ workspaceId, current }: { workspaceId: string; curren
         </p>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input
+        <Field
           id="imap-host"
           name="imapHost"
           label="Servidor IMAP (puerto 993)"
@@ -356,7 +339,7 @@ export function ImapForm({ workspaceId, current }: { workspaceId: string; curren
           spellCheck={false}
           required
         />
-        <Input
+        <Field
           id="smtp-host"
           name="smtpHost"
           label="Servidor SMTP (puerto 465)"
@@ -371,7 +354,7 @@ export function ImapForm({ workspaceId, current }: { workspaceId: string; curren
       <details className="text-sm text-graphite">
         <summary className="cursor-pointer text-ink">Usuario distinto de la dirección</summary>
         <div className="mt-3">
-          <Input id="imap-user" name="user" label="Usuario" placeholder="Solo si tu proveedor usa otro distinto de la dirección" autoComplete="off" spellCheck={false} />
+          <Field id="imap-user" name="user" label="Usuario" placeholder="Solo si tu proveedor usa otro distinto de la dirección" autoComplete="off" spellCheck={false} />
         </div>
       </details>
       <FormMessage error={state.error} message={state.message} />
@@ -392,7 +375,7 @@ export function TokkoForm({ workspaceId, replacing }: { workspaceId: string; rep
   return (
     <form ref={formRef} action={action} className="flex flex-col gap-4">
       <input type="hidden" name="workspaceId" value={workspaceId} />
-      <Input
+      <Field
         id="tokko-key"
         name="key"
         type="password"
@@ -420,7 +403,7 @@ export function BufferForm({ workspaceId, replacing }: { workspaceId: string; re
   return (
     <form ref={formRef} action={action} className="flex flex-col gap-4">
       <input type="hidden" name="workspaceId" value={workspaceId} />
-      <Input
+      <Field
         id="buffer-key"
         name="key"
         type="password"
@@ -448,8 +431,8 @@ export function XubioForm({ workspaceId, replacing }: { workspaceId: string; rep
   return (
     <form ref={formRef} action={action} className="flex flex-col gap-4">
       <input type="hidden" name="workspaceId" value={workspaceId} />
-      <Input id="xubio-client" name="clientId" label="Client ID" autoComplete="off" spellCheck={false} required />
-      <Input
+      <Field id="xubio-client" name="clientId" label="Client ID" autoComplete="off" spellCheck={false} required />
+      <Field
         id="xubio-secret"
         name="secretId"
         type="password"

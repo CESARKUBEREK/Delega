@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { InfoBanner, PrimaryButton, SecondaryButton } from "@/components/ui"
 import { useRouter } from "next/navigation"
 import { useActionState, useState, useTransition } from "react"
 import { FormMessage } from "@/components/form"
@@ -102,20 +103,20 @@ export function RunPanel({
       </div>
 
       {error ? (
-        <p role="alert" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+        <InfoBanner tone="danger" role="alert">
           {error}
-        </p>
+        </InfoBanner>
       ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
-        <button
+        <PrimaryButton
           type="button"
           onClick={run}
           disabled={pending || (needsFiles && files.length > 0 && selected.length === 0)}
-          className="h-11 bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="px-5"
         >
           {pending ? "Iniciando…" : "Ejecutar ahora"}
-        </button>
+        </PrimaryButton>
         <span className="text-xs text-graphite">Lee sin preguntar; cada escritura espera tu aprobación.</span>
       </div>
     </div>
@@ -341,29 +342,29 @@ export function ActivationPanel({
         </fieldset>
       ) : null}
       {error ? (
-        <p role="alert" className="text-sm text-alert">
+        <InfoBanner tone="danger" role="alert" className="py-2">
           {error}
-        </p>
+        </InfoBanner>
       ) : null}
       {canEdit ? (
         <div className="flex flex-wrap gap-3">
-          <button
+          <PrimaryButton
             type="button"
             disabled={pending}
             onClick={() => save(true)}
-            className="h-11 bg-stroke px-5 text-base font-semibold text-stroke-ink hover:opacity-90 disabled:opacity-60"
+            className="px-5"
           >
             {pending ? "Guardando…" : active ? "Guardar cambios" : "Activar"}
-          </button>
+          </PrimaryButton>
           {active ? (
-            <button
+            <SecondaryButton
               type="button"
               disabled={pending}
               onClick={() => save(false)}
-              className="h-11 border border-ink px-5 text-base font-medium text-ink hover:bg-paper disabled:opacity-60"
+              className="px-5"
             >
               Pausar
-            </button>
+            </SecondaryButton>
           ) : null}
         </div>
       ) : (

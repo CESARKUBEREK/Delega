@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState, useTransition } from "react"
 import { Sheet } from "@/components/sheet"
+import { InfoBanner, PrimaryButton } from "@/components/ui"
 import { acceptInvitation } from "@/app/w/actions"
 
 const STORAGE_KEY = "delega:invite"
@@ -74,18 +75,15 @@ export default function InvitePage() {
         <div className="flex flex-col gap-4">
           <p className="text-ink">Al aceptar te unirás a la organización con el rol que te asignaron.</p>
           {error ? (
-            <p role="alert" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
-              {error}
-            </p>
+            <InfoBanner tone="danger" role="alert">{error}</InfoBanner>
           ) : null}
-          <button
+          <PrimaryButton
             type="button"
             onClick={accept}
             disabled={pending}
-            className="h-11 bg-stroke font-semibold text-stroke-ink disabled:opacity-70"
           >
             {pending ? "Aceptando…" : "Aceptar invitación"}
-          </button>
+          </PrimaryButton>
         </div>
       )}
     </Sheet>

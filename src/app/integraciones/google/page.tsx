@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Suspense } from "react"
 import { Sheet } from "@/components/sheet"
+import { InfoBanner } from "@/components/ui"
 
 export const metadata = { title: "Conexión con Google" }
 
@@ -34,9 +35,9 @@ async function Message({ searchParams }: Pick<PageProps<"/integraciones/google">
   const { e } = await searchParams
   const code = typeof e === "string" ? e : "invalid"
   return (
-    <p role="alert" className="border-l-2 border-alert bg-alert-bg px-3 py-2 text-sm text-alert">
+    <InfoBanner tone="danger" role="alert">
       {MESSAGES[code] ?? "No se pudo completar la conexión con Google. Inténtalo de nuevo desde Integraciones."}
       <span className="mt-1 block text-xs opacity-80">Código: {code.slice(0, 40)}</span>
-    </p>
+    </InfoBanner>
   )
 }

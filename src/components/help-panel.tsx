@@ -7,6 +7,7 @@ import { applyStepChanges, askHelp, helpVoiceAvailable, startHelpVoice, type Hel
 import { AutoReadToggle, DictateButton, ListenButton, useAutoRead } from "@/app/w/[workspaceId]/asistente/voice"
 import { HELP_GUIDES, looksLikeSecret, relevantGuides, SECRET_REPLY, type HelpGuide } from "@/lib/help"
 import { RealtimeVoice, requestMicrophone, type VoicePhase } from "@/lib/realtime-voice"
+import { InfoBanner } from "@/components/ui"
 import { speak, stopSpeaking, unlockSpeech } from "@/lib/speech"
 
 // Panel «¿Te ayudo?» (fase 7-1): dudas sobre integraciones y automatizaciones.
@@ -280,9 +281,9 @@ export function HelpPanel({ workspaceId, page, runId = null }: { workspaceId: st
                   </p>
                 ) : null}
                 {error ? (
-                  <p className="text-sm text-alert" role="alert">
+                  <InfoBanner tone="danger" role="alert">
                     {error}
-                  </p>
+                  </InfoBanner>
                 ) : null}
               </>
             )}
