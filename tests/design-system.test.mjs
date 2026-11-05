@@ -18,7 +18,6 @@ const flowEditor = readFileSync(new URL("../src/app/w/[workspaceId]/automatizaci
 const invitePage = readFileSync(new URL("../src/app/invite/page.tsx", import.meta.url), "utf8")
 const googleCard = readFileSync(new URL("../src/app/w/[workspaceId]/integraciones/google-card.tsx", import.meta.url), "utf8")
 const assistantChat = readFileSync(new URL("../src/app/w/[workspaceId]/asistente/chat.tsx", import.meta.url), "utf8")
-const invitePage = readFileSync(new URL("../src/app/invite/page.tsx", import.meta.url), "utf8")
 const googleResultPage = readFileSync(new URL("../src/app/integraciones/google/page.tsx", import.meta.url), "utf8")
 
 
