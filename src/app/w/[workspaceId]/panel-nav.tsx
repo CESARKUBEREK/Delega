@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useParams, usePathname } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 type NavItem = { slug: string; label: string }
 type NavGroup = { label: string; items: NavItem[] }
@@ -127,14 +127,34 @@ const MORE = SECTIONS.filter((s) => !TABS.some((t) => t.slug === s.slug))
 export function MobileTabBar({ pending = 0 }: { pending?: number }) {
   const { base, isActive } = useSection()
   const [open, setOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLUListElement>(null)
   const moreActive = MORE.some((s) => isActive(s.slug))
+
+  useEffect(() => {
+    if (!open) return
+    menuRef.current?.querySelector<HTMLAnchorElement>("a")?.focus()
+    return () => triggerRef.current?.focus()
+  }, [open])
 
   return (
     <nav aria-label="Secciones del espacio" className="mobile-tab-nav fixed inset-x-0 bottom-0 z-40 lg:hidden">
-      {open ? (
-        <>
+      <>
+        {open ? (
           <button type="button" aria-label="Cerrar el menú" className="fixed inset-0 -z-10 bg-ink/30" onClick={() => setOpen(false)} />
-          <ul id="menu-mas" className="mobile-more-menu mx-3 mb-2 divide-y divide-rule border border-ink bg-sheet shadow-lg">
+        ) : null}
+        <ul
+          id="menu-mas"
+          ref={menuRef}
+          hidden={!open}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault()
+              setOpen(false)
+            }
+          }}
+          className="mobile-more-menu mx-3 mb-2 divide-y divide-rule border border-ink bg-sheet shadow-lg"
+        >
             {NAV_GROUPS.map(({ label: groupLabel, items }) => {
               const visibleItems = items.filter((item) => MORE.some((more) => more.slug === item.slug))
               if (!visibleItems.length) return null
@@ -163,9 +183,8 @@ export function MobileTabBar({ pending = 0 }: { pending?: number }) {
                 Cambiar de espacio
               </Link>
             </li>
-          </ul>
-        </>
-      ) : null}
+        </ul>
+      </>
       <ul className="mobile-tab-list grid grid-cols-4 border-t border-ink bg-sheet pb-[env(safe-area-inset-bottom)]">
         {TABS.map(({ slug, label }) => {
           const active = isActive(slug)
@@ -191,6 +210,7 @@ export function MobileTabBar({ pending = 0 }: { pending?: number }) {
         })}
         <li>
           <button
+            ref={triggerRef}
             type="button"
             aria-expanded={open}
             aria-controls="menu-mas"
