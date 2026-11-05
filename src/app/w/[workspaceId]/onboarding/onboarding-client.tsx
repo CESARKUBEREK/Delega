@@ -372,7 +372,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
             )}
           </div>
 
-          <PlanView plan={plan} />
+          <PlanView plan={plan} animated />
 
           <SupervisedNote plan={plan} />
 
