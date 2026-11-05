@@ -95,3 +95,15 @@ test("las tarjetas de integraciones comparten la representación de conexión", 
   assert.ok(!workIntegrations.includes("function Badge("))
   assert.ok(!inboxIntegrations.includes("function Badge("))
 })
+
+test("Bandeja y Aprobaciones distinguen señales propias de cada área", () => {
+  const approvals = readFileSync(new URL("../src/app/w/[workspaceId]/aprobaciones/page.tsx", import.meta.url), "utf8")
+  const inboxList = readFileSync(new URL("../src/app/w/[workspaceId]/bandeja/inbox-list.tsx", import.meta.url), "utf8")
+  assert.ok(ui.includes("export function InboxSignalBadge("))
+  assert.ok(ui.includes('kind: "urgency" | "needs_reply" | "pending_classification"'))
+  assert.ok(approvals.includes("<RunStatusBadge status={run.status} />"))
+  assert.ok(inboxList.includes('<InboxSignalBadge kind="urgency"'))
+  assert.ok(inboxList.includes('<InboxSignalBadge kind="needs_reply" />'))
+  assert.ok(inboxList.includes('<InboxSignalBadge kind="pending_classification" />'))
+  assert.ok(!inboxList.includes("URGENCY_STYLE"))
+})
