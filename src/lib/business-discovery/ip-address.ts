@@ -74,9 +74,11 @@ export function isPublicAddress(address: string): boolean {
   const ietfProtocolAssignments = parseIpv6("2001::")!
   const sixToFour = parseIpv6("2002::")!
   const documentation = parseIpv6("3fff::")!
+  const srv6Sids = parseIpv6("5f00::")!
 
   return inIpv6Range(parsed, globalUnicast, 3)
     && !inIpv6Range(parsed, ietfProtocolAssignments, 23)
     && !inIpv6Range(parsed, sixToFour, 16)
     && !inIpv6Range(parsed, documentation, 20)
+    && !inIpv6Range(parsed, srv6Sids, 16)
 }
