@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
+import { InfoBanner } from "@/components/ui"
 import { setHelpVoice } from "../help-actions"
 
 export function HelpVoiceToggle({ workspaceId, enabled, disabled }: { workspaceId: string; enabled: boolean; disabled: boolean }) {
@@ -25,11 +26,7 @@ export function HelpVoiceToggle({ workspaceId, enabled, disabled }: { workspaceI
       >
         {pending ? "Guardando…" : enabled ? "Desactivar la conversación por voz" : "Activar la conversación por voz"}
       </button>
-      {error ? (
-        <p className="text-alert" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <InfoBanner tone="danger" role="alert">{error}</InfoBanner> : null}
     </div>
   )
 }
