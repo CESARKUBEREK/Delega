@@ -125,6 +125,15 @@ test("Bandeja, Ejecuciones y panel de automatización usan avisos compartidos", 
 })
 
 
+test("FormMessage reutiliza InfoBanner y conserva los roles accesibles", () => {
+  const form = readFileSync(new URL("../src/components/form.tsx", import.meta.url), "utf8")
+  assert.match(form, /import\\s*\\{[^}]*\\bInfoBanner\\b[^}]*\\}\\s*from\\s*"@\\/components\\/ui"/)
+  assert.ok(form.includes('<InfoBanner tone="danger" role="alert">'))
+  assert.ok(form.includes('<InfoBanner tone="success" role="status">'))
+  assert.ok(!form.includes("border-l-2 border-alert bg-alert-bg"))
+  assert.ok(!form.includes("border-l-2 border-ok bg-ok-bg"))
+})
+
 test("acciones principales reutilizan los botones del sistema de diseño", () => {
   assert.ok(flowEditor.includes('import { PrimaryButton, SecondaryButton } from "@/components/ui"'))
   assert.ok(flowEditor.includes("<PrimaryButton"))
