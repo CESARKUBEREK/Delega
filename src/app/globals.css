@@ -1907,3 +1907,15 @@ button.setup-step-link:focus-visible { outline:2px solid var(--link); outline-of
     flex-basis:36px;
   }
 }
+
+/* Hoy: la petición al equipo digital queda visible al entrar, no al final. */
+.today-command { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); align-items:center; gap:18px; padding:18px 20px; border:1px solid var(--border); border-radius:18px; background:var(--sheet); box-shadow:0 10px 28px rgb(11 31 59 / 4%); }
+.today-command-copy { min-width:0; }
+.today-command-title { color:var(--ink); font-size:15px; font-weight:700; letter-spacing:-.01em; }
+.today-command-description { margin-top:4px; color:var(--graphite); font-size:13px; line-height:1.5; }
+.today-command .today-ask { min-width:0; box-shadow:0 6px 18px rgb(11 31 59 / 6%); }
+.today-command .today-ask-input { min-width:0; }
+@media (max-width:700px) {
+  .today-command { grid-template-columns:minmax(0,1fr); gap:12px; padding:16px; }
+  .today-command .today-ask { position:static; }
+}
