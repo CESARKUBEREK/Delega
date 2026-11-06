@@ -81,9 +81,10 @@ export function BusinessContextFields({
             onChange={(event) => onWebsiteUrlChange(event.target.value)}
             placeholder="https://www.tunegocio.com"
             maxLength={2048}
+            disabled={semanticPending || websitePending || disabled}
             className="min-w-0 flex-1 rounded-xl border border-rule bg-paper px-3 py-2 text-ink placeholder:text-graphite focus:border-stroke focus:outline-none"
           />
-          <button type="button" onClick={onAnalyzeWebsite} disabled={!websiteUrl.trim() || disabled || websitePending} className="inline-flex h-10 items-center justify-center rounded-xl border border-ink px-4 text-sm font-semibold text-ink disabled:opacity-50">
+          <button type="button" onClick={onAnalyzeWebsite} disabled={!websiteUrl.trim() || disabled || websitePending || semanticPending} className="inline-flex h-10 items-center justify-center rounded-xl border border-ink px-4 text-sm font-semibold text-ink disabled:opacity-50">
             {websitePending ? "Analizando…" : "Analizar mi web"}
           </button>
         </div>
@@ -115,6 +116,7 @@ export function BusinessContextFields({
                   <span className="text-xs font-normal text-graphite">{hint}</span>
                   <textarea
                     rows={2}
+                    disabled={semanticPending}
                     value={businessProfile[key].value}
                     onChange={(event) => onProfileFieldChange(key, event.target.value)}
                     className="w-full rounded-lg border border-rule bg-paper px-3 py-2 text-sm text-ink focus:border-stroke focus:outline-none"
@@ -128,11 +130,11 @@ export function BusinessContextFields({
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <button type="button" onClick={onConfirmProfile} className="inline-flex h-10 items-center justify-center rounded-xl bg-ink px-4 text-sm font-semibold text-paper">
+              <button type="button" onClick={onConfirmProfile} disabled={semanticPending} className="inline-flex h-10 items-center justify-center rounded-xl bg-ink px-4 text-sm font-semibold text-paper">
                 {profileConfirmed ? "Perfil confirmado" : "Confirmar perfil"}
               </button>
               {profileConfirmed ? <span className="text-xs text-graphite" role="status">Usaremos estos datos para adaptar tu propuesta.</span> : <span className="text-xs text-graphite">El perfil no se utilizará hasta que lo confirmes.</span>}
-              <button type="button" onClick={onRemoveAnalysis} className="text-xs font-semibold text-link underline underline-offset-4">Quitar análisis</button>
+              <button type="button" onClick={onRemoveAnalysis} disabled={semanticPending} className="text-xs font-semibold text-link underline underline-offset-4">Quitar análisis</button>
             </div>
           </div>
         ) : null}
