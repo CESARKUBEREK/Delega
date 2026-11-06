@@ -134,10 +134,7 @@ export async function generateOnboardingPlan(input: {
   return {
     ok: true,
     source: "local",
-    reply:
-      hasAi
-        ? "He preparado una propuesta a partir de tu descripción. Puedes afinarla después en el chat."
-        : "Así lo haría con lo que me has contado. Podrás afinarlo después en el chat.",
+    reply: "Este primer plan es un punto de partida; podrás ajustarlo después en el chat.",
     plan,
     conversationId: null,
     trialRemaining: null,
