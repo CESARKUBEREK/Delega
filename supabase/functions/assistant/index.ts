@@ -8,7 +8,7 @@ import { type AuthContext, authenticate, fail, isUuid, json, membershipRole } fr
 import { helpReply } from "./help.ts"
 import { helpVoiceStart } from "./help-voice.ts"
 import { type Plan, RESPONSE_SCHEMA, sanitizePlan, sanitizeStep, STEP_SCHEMA } from "./plan-schema.ts"
-import { type Ai, generateJson, LlmError, type Msg, NO_AI_MESSAGE } from "../_shared/llm.ts"
+import { type Ai, generateJson, LlmError, type Msg, NO_AI_MESSAGE, TRIAL_EXHAUSTED_MESSAGE } from "../_shared/llm.ts"
 import { callRouted, isRouteError, routeAi } from "../_shared/router/index.ts"
 
 const MAX_MESSAGE = 4000
@@ -100,7 +100,12 @@ async function discoverBusinessProfile(ctx: AuthContext, body: Record<string, un
     // previamente el uso de IA propia o de un crédito de prueba.
     allowTrial: true,
   })
-  if (isRouteError(routed)) return fail(409, routed.code === "budget" ? "budget" : "no_connection", routed.error)
+  if (isRouteError(routed)) {
+    if (routed.code === "no_ai" && routed.error === TRIAL_EXHAUSTED_MESSAGE) {
+      return fail(402, "trial_exhausted", routed.error)
+    }
+    return fail(409, routed.code === "budget" ? "budget" : "no_connection", routed.error)
+  }
 
   const instructions = `Eres un analista de negocio que completa un perfil de empresa a partir de páginas web públicas.
 Devuelve los seis campos: activity (actividad), clients (clientes), offer (oferta), acquisition (captación/contacto), operations (forma de trabajar), tools (herramientas).

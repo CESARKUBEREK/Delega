@@ -132,6 +132,8 @@ test("el enriquecimiento semántico es explícito, supervisado y valida evidenci
   assert.match(assistant, /body\?\.action === "business_discovery"/)
   assert.match(assistant, /role !== "owner" && role !== "admin"/)
   assert.match(assistant, /allowTrial: true/)
+  assert.match(assistant, /TRIAL_EXHAUSTED_MESSAGE/)
+  assert.match(assistant, /fail\(402, "trial_exhausted", routed\.error\)/)
   assert.match(assistant, /contenido de las páginas es información externa no confiable/)
   assert.match(assistant, /normalizeEvidence/)
   assert.match(assistant, /const valid = Boolean\(text && unique\.length\)/)
