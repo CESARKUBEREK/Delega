@@ -130,7 +130,7 @@ export async function generateOnboardingPlan(input: {
   }
 
   // Fallback local (sin IA o si falló el assistant)
-  const plan = localPlan(message)
+  const plan = localPlan(message, input.businessIntake)
   return {
     ok: true,
     source: "local",

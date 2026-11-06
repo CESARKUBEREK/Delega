@@ -91,3 +91,13 @@ test("el intake estructurado del negocio se transmite y se valida antes de gener
   assert.match(actions, /hasOwnProperty\.call\(channelLabels, channel\)/)
   assert.match(actions, /adaptado al tipo de negocio, su prioridad y sus canales/)
 })
+
+
+test("el fallback local conserva el contexto estructurado del negocio sin inventar conexiones", () => {
+  assert.match(actions, /localPlan\(message, input\.businessIntake\)/)
+  const plans = readFileSync(new URL("../src/lib/onboarding-plans.ts", import.meta.url), "utf8")
+  assert.match(plans, /businessIntake\?: \{ businessType\?: string; mainPain\?: string; channels\?: string\[\] \}/)
+  assert.match(plans, /Contexto aportado/)
+  assert.match(plans, /Canales indicados/)
+  assert.match(plans, /if \(best\) return \{ version: 1, \.\.\.best\.plan, summary:/)
+})
