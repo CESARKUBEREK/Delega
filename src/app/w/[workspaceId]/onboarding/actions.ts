@@ -70,19 +70,19 @@ export async function generateOnboardingPlan(input: {
     in_person: "atención presencial",
   }
   const businessType = typeof input.businessIntake?.businessType === "string"
-    ? businessTypes[input.businessIntake.businessType] ?? ""
+    ? Object.prototype.hasOwnProperty.call(businessTypes, input.businessIntake.businessType) ? businessTypes[input.businessIntake.businessType] : ""
     : ""
   const mainPain = typeof input.businessIntake?.mainPain === "string"
-    ? priorities[input.businessIntake.mainPain] ?? ""
+    ? Object.prototype.hasOwnProperty.call(priorities, input.businessIntake.mainPain) ? priorities[input.businessIntake.mainPain] : ""
     : ""
   const channels = Array.isArray(input.businessIntake?.channels)
-    ? [...new Set(input.businessIntake.channels.filter((channel): channel is string => typeof channel === "string" && channel in channelLabels))].slice(0, 6)
+    ? [...new Set(input.businessIntake.channels.filter((channel): channel is string => typeof channel === "string" && Object.prototype.hasOwnProperty.call(channelLabels, channel)))].slice(0, 6)
     : []
   const intakeContext = [
     businessType ? `Tipo de negocio: ${businessType}` : "",
     mainPain ? `Prioridad principal: ${mainPain}` : "",
     channels.length ? `Canales de contacto: ${channels.map((channel) => channelLabels[channel]).join(", ")}` : "",
-  ].filter(Boolean).join("\\n").slice(0, 500)
+  ].filter(Boolean).join("\n").slice(0, 500)
 
   const supabase = await createClient()
   const { data: ai } = await supabase
