@@ -100,10 +100,9 @@ export function AiStep({
     <section className="setup-panel flex flex-col gap-5">
       <div>
         <p className="text-sm font-semibold text-graphite">{stepLabel}</p>
-        <h2 className="rotulo text-xl mt-1">Conecta tu IA</h2>
+        <h2 className="rotulo text-xl mt-1">{fromTrial || trialAvailable ? "Tu IA para la prueba" : "Conecta tu IA"}</h2>
         <p className="text-graphite mt-1">
-          Es el motor de MarchaSolo: con ella lee, ordena y redacta. Usas tu propia cuenta de IA: pagas allí, directamente al proveedor, solo
-          lo que uses. Una automatización como la de tu plan suele costar unos céntimos por ejecución, y puedes fijar un presupuesto.
+          Puedes continuar con la IA de prueba de MarchaSolo si tienes créditos disponibles, o conectar tu propia cuenta de IA como alternativa. Para ejecutar automatizaciones fuera de la prueba necesitarás tu propia IA y las aplicaciones que utilice el plan.
         </p>
       </div>
 
@@ -122,6 +121,32 @@ export function AiStep({
           >
             {next}
           </button>
+        </div>
+      ) : (fromTrial || trialAvailable) ? (
+        <div className="rounded-2xl border border-ok bg-paper p-5 flex flex-col gap-3">
+          <div>
+            <p className="font-semibold text-ink">{fromTrial ? "✓ Ya estás usando la IA de MarchaSolo" : "Prueba gratuita de MarchaSolo disponible"}</p>
+            <p className="mt-1 text-sm text-graphite">
+              {fromTrial
+                ? "Esta propuesta la ha preparado nuestra IA con el crédito gratuito de prueba. No necesitas conectar una cuenta propia para continuar ni para probar tu primera automatización."
+                : "Tu plan anterior quedó guardado sin IA. Puedes volver a prepararlo ahora con la IA de MarchaSolo, sin conectar una cuenta propia."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={fromTrial ? onContinue : onRetryTrial}
+            disabled={pending}
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
+          >
+            {pending
+              ? "Preparando con la IA de MarchaSolo…"
+              : fromTrial
+                ? "Continuar con la prueba gratuita →"
+                : "Preparar este plan con la IA de MarchaSolo →"}
+          </button>
+          <Link href={`${base}/integraciones#llms`} className="text-sm text-graphite underline underline-offset-4">
+            Conectar mi propia IA (opcional)
+          </Link>
         </div>
       ) : isAdmin ? (
         <div className="flex flex-col gap-3">
