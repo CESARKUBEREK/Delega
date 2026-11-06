@@ -33,20 +33,20 @@ export function Sheet({
                 <h2>Qué pasa al crear tu cuenta</h2>
                 <ol className="access-next">
                   <li>
-                    <b>Confirmas tu correo</b>
-                    Te enviamos un enlace. Si entras con Google, te lo ahorras.
+                    <b>Nos cuentas qué te gustaría mejorar</b>
+                    Puedes describir una tarea o pedirnos ayuda para descubrir oportunidades en tu negocio.
                   </li>
                   <li>
-                    <b>Nos cuentas una tarea</b>
-                    La que más tiempo te quita, con tus palabras.
+                    <b>Conocemos mejor tu negocio</b>
+                    Si tienes web, la analizamos; si no, nos cuentas lo que quieras. Tú revisas el perfil antes de confirmarlo.
                   </li>
                   <li>
-                    <b>Ves el plan que te prepara</b>
-                    Con IA avanzada por cuenta de MarchaSolo, sin conectar nada.
+                    <b>Ves tu propuesta de trabajo</b>
+                    MarchaSolo prepara un plan con IA, antes de conectar tus aplicaciones.
                   </li>
                   <li>
-                    <b>Conectas tu IA y lo que haga falta</b>
-                    Primero tu IA; después el correo, Drive o la agenda. Y nada se envía sin tu aprobación.
+                    <b>Conectas lo que haga falta</b>
+                    Primero tu IA; después el correo, Drive o la agenda. Nada se envía sin tu aprobación.
                   </li>
                 </ol>
               </>
