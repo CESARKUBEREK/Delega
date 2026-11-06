@@ -448,6 +448,7 @@ export function parseRunRouting(value: unknown): RunRouting | null {
     reason: typeof v.reason === "string" ? v.reason : "",
     estimated_usd: Number(v.estimated_usd) || 0,
     switches: Array.isArray(v.switches) ? (v.switches as RunRouting["switches"])!.slice(-5) : [],
+    trial: v.trial === true,
   }
 }
 
