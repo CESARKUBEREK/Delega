@@ -68,10 +68,16 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
   const chat = trigger?.type === "chat" && typeof trigger.conversation_id === "string" && UUID_RE.test(trigger.conversation_id)
     ? { conversation_id: trigger.conversation_id }
     : null
+  const trialFunded = (run.routing as { trial?: unknown } | null)?.trial === true
 
   return (
     <div className="flex flex-col gap-6">
       <HelpPanel workspaceId={workspaceId} page="ejecucion" runId={run.id} />
+      {trialFunded ? (
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+          Esta ejecución está financiada por MarchaSolo. Incluye una única prueba gratuita, con un límite de coste de IA de 0,10 USD.
+        </p>
+      ) : null}
       <PageHeader eyebrow={run.flow_id ? <Link href={`${base}/automatizaciones/${run.flow_id}`} className="text-link underline underline-offset-4">{run.flow_name}</Link> : chat ? <Link href={`${base}/asistente?c=${chat.conversation_id}`} className="text-link underline underline-offset-4">{run.flow_name} (pedida en el chat)</Link> : <span className="text-graphite">{run.flow_name} (automatización borrada)</span>} title={<>Ejecución del {formatDateTime(run.started_at)}</>} description={<span className="text-sm text-graphite">
           {RUN_STATUS_LABEL[run.status] ?? run.status} · {runOrigin(run.trigger)} · {run.tool_calls} acciones · {formatNumber(run.input_tokens + run.output_tokens)} tokens
         </span>} />
