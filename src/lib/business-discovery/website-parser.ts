@@ -138,7 +138,7 @@ export function parseWebsiteHtml(html: string, url: string): ParsedWebsitePage {
 }
 
 /** Selects at most two useful same-origin pages, prioritizing substantive business content. */
-export function selectRelevantWebsiteLinks(links: string[], baseUrl: string, limit = 2): string[] {
+export function selectRelevantWebsiteLinks(links: string[], baseUrl: string, limit = 4): string[] {
   let base: URL
   try { base = new URL(baseUrl) } catch { return [] }
   const candidates = new Map<string, { url: string; score: number; order: number }>()
@@ -164,7 +164,7 @@ export function selectRelevantWebsiteLinks(links: string[], baseUrl: string, lim
     } catch { /* Ignore malformed or non-web links. */ }
   })
   return [...candidates.values()].sort((a, b) => b.score - a.score || a.order - b.order)
-    .slice(0, Math.max(0, Math.min(2, limit))).map((item) => item.url)
+    .slice(0, Math.max(0, Math.min(4, limit))).map((item) => item.url)
 }
 
 export function isSameOriginWebsiteUrl(baseUrl: string, candidateUrl: string): boolean {
@@ -172,7 +172,7 @@ export function isSameOriginWebsiteUrl(baseUrl: string, candidateUrl: string): b
 }
 
 export function combineWebsitePages(pages: WebsitePage[]): WebsiteSnapshot {
-  const uniquePages = [...new Map(pages.map((page) => [page.url, page])).values()].slice(0, 3)
+  const uniquePages = [...new Map(pages.map((page) => [page.url, page])).values()].slice(0, 5)
   const primary = uniquePages[0]
   if (!primary) throw new Error("No hay páginas válidas para analizar.")
   return { ...primary, pages: uniquePages }
