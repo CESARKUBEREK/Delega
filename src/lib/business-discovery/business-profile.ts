@@ -24,10 +24,11 @@ function evidence(pages: WebsitePage[], pattern: RegExp): Evidence[] {
   const seen = new Set<string>()
   const matches: Evidence[] = []
   for (const page of pages) {
-    const text = [page.title, page.description, ...page.headings, page.text].filter(Boolean).join("\n")
-    for (const sentence of text.split(/(?<=[.!?])\s+|\n+/)) {
-      const normalized = sentence.trim()
-      if (!normalized || !pattern.test(normalized) || seen.has(normalized)) continue
+    // Prioriza metadatos y encabezados frente a texto genérico de navegación/pie.
+    const text = [page.title, page.siteName, page.description, ...page.headings, page.text].filter(Boolean).join("\\n")
+    for (const sentence of text.split(/(?<=[.!?])\\s+|\\n+/)) {
+      const normalized = sentence.trim().replace(/\\s+/g, " ")
+      if (!normalized || normalized.length < 3 || !pattern.test(normalized) || seen.has(normalized)) continue
       seen.add(normalized)
       matches.push({ text: normalized.slice(0, 240), url: page.url })
       if (matches.length >= 3) return matches
@@ -36,12 +37,12 @@ function evidence(pages: WebsitePage[], pattern: RegExp): Evidence[] {
   return matches
 }
 
-function makeField(items: Evidence[], confidence: BusinessProfileField["confidence"]): BusinessProfileField {
+function makeField(items: Evidence[]): BusinessProfileField {
   return {
     value: items[0]?.text ?? "",
     evidence: items.map((item) => item.text),
     evidenceSources: items.map((item) => item.url),
-    confidence: items.length ? confidence : "low",
+    confidence: items.length >= 2 ? "medium" : "low",
     source: items.length ? "website" : "not_found",
     confirmed: false,
   }
