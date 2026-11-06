@@ -1005,19 +1005,31 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       return finishRun(admin, run, "failed", `Se alcanzó el límite de ${MAX_TOOL_CALLS} acciones sin terminar.`)
     }
 
-    // Presupuesto de la ejecución: al llegar, se pausa y se pregunta.
+    // La prueba gratuita nunca permite ampliar el presupuesto.
     const spent = Number(run.cost_usd) || 0
     const cap = Number(run.budget_usd) || 0
-    if (cap > 0 && spent >= cap) return pauseForBudget(admin, run, spent, cap)
+    if (cap > 0 && spent >= cap) {
+      if (routing?.trial) return finishRun(admin, run, "failed", "La prueba gratuita alcanzó su límite de 0,10 USD. Conecta tu propia IA para continuar.")
+      return pauseForBudget(admin, run, spent, cap)
+    }
 
     let result
     const started = Date.now()
     try {
+      if (ai.trial) {
+        // Estimación deliberadamente conservadora para no iniciar una llamada
+        // cuyo coste máximo probable ya consuma el presupuesto restante.
+        const estimatedInput = Math.ceil((INSTRUCTIONS.length + JSON.stringify(messages).length) / 2)
+        const estimated = costUsd(await modelInfo(admin, ai.model), { input: estimatedInput, output: 512 })
+        if (spent + estimated > cap) {
+          return finishRun(admin, run, "failed", "La prueba gratuita no tiene saldo suficiente para continuar esta etapa. Conecta tu propia IA para seguir.")
+        }
+      }
       result = await complete(ai, {
         instructions: INSTRUCTIONS,
         messages,
         tools,
-        maxTokens: 8000,
+        maxTokens: ai.trial ? 512 : 8000,
         timeoutMs: Math.max(10_000, deadline - Date.now() + 20_000),
       })
     } catch (e) {
@@ -1025,7 +1037,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
         await save(admin, run, { lease_until: null })
         return "running"
       }
-      if (e instanceof LlmError && e.code === "invalid_key") {
+      if (!ai.trial && e instanceof LlmError && e.code === "invalid_key") {
         await admin.rpc("ai_connection_mark_invalid", { p_workspace_id: run.workspace_id, p_provider: ai.provider })
       }
       // Saldo, límite, clave rechazada o caída del proveedor: el respaldo.
@@ -1048,8 +1060,11 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
 
     run.input_tokens += result.usage.input
     run.output_tokens += result.usage.output
-    const cost = costUsd(await modelInfo(admin, ai.model), result.usage)
-    run.cost_usd = spent + cost
+    const actualCost = costUsd(await modelInfo(admin, ai.model), result.usage)
+    // El coste de MarchaSolo no se imputa al gasto del cliente, pero sí al
+    // presupuesto interno de esta ejecución.
+    const cost = ai.trial ? 0 : actualCost
+    run.cost_usd = spent + actualCost
     await admin.from("usage_events").insert({
       workspace_id: run.workspace_id,
       provider: ai.provider,
@@ -1066,9 +1081,15 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       step_type: switched ? "fallback" : "primary",
       created_by: run.started_by,
     })
-    if (cost > 0) {
-      const { error: costError } = await admin.rpc("flow_run_add_cost", { p_run_id: run.id, p_cost: cost })
-      if (costError) console.error("flow_run_add_cost", costError.code)
+    if (actualCost > 0) {
+      const { error: costError } = await admin.rpc("flow_run_add_cost", { p_run_id: run.id, p_cost: actualCost })
+      if (costError) {
+        console.error("flow_run_add_cost", costError.code)
+        if (ai.trial) return finishRun(admin, run, "failed", "No se pudo verificar el coste de la prueba gratuita. Conecta tu propia IA para continuar.")
+      }
+    }
+    if (ai.trial && spent + actualCost >= cap) {
+      return finishRun(admin, run, "failed", "La prueba gratuita alcanzó su límite de 0,10 USD. La etapa se detuvo antes de ejecutar acciones. Conecta tu propia IA para continuar.")
     }
 
     messages.push(result.message)
