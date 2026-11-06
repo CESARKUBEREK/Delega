@@ -3,12 +3,12 @@ import { createClient } from "@/lib/supabase/server"
 
 // Planes de prueba del onboarding (decisión de Cesar, 3 nov): mientras el
 // espacio no tenga IA propia, el onboarding prepara el plan con un modelo
-// potente (Claude Sonnet 5.5) y la clave de MarchaSolo, como mucho 2 veces
+// económico (GPT-6 Luna) y la clave de MarchaSolo, como mucho 2 veces
 // por espacio personal. Nada más usa esta clave: el chat, la bandeja y las
 // automatizaciones necesitan la IA del cliente.
 // Devuelve null si el espacio no tiene planes de prueba o si la prueba no está
 // activada en el servidor: TRIAL_CREDITS_ENABLED=true en Vercel, junto con
-// TRIAL_ANTHROPIC_API_KEY en las Edge Functions de Supabase.
+// TRIAL_OPENAI_API_KEY en las Edge Functions de Supabase.
 export type TrialStatus = { allowance: number; used: number; remaining: number; exhausted: boolean }
 
 export async function getTrialStatus(workspaceId: string): Promise<TrialStatus | null> {

@@ -189,7 +189,7 @@ export async function routeAi(
   } = {},
 ): Promise<Routed | RouteError> {
   if (opts.allowTrialRun) {
-    const trialKey = Deno.env.get("TRIAL_ANTHROPIC_API_KEY")?.trim()
+    const trialKey = Deno.env.get("TRIAL_OPENAI_API_KEY")?.trim()
     const [{ data: workspace }, { data: credits }] = await Promise.all([
       admin.from("workspaces").select("kind").eq("id", workspaceId).maybeSingle(),
       admin.from("workspace_trial_credits").select("allowance_runs, used_runs").eq("workspace_id", workspaceId).maybeSingle(),
@@ -198,7 +198,7 @@ export async function routeAi(
       if (!trialKey) {
         return { error: "La prueba gratuita de MarchaSolo no está disponible ahora. No usaremos tu IA conectada sin tu autorización.", code: "no_ai" }
       }
-      const trialModel = "claude-haiku-5-5"
+      const trialModel = "gpt-6-luna"
       const plan: RoutePlan = {
         task,
         mode: "eco",
@@ -213,7 +213,7 @@ export async function routeAi(
         workspaceId,
         task,
         plan,
-        ai: { provider: "anthropic", model: trialModel, apiKey: trialKey, trial: true },
+        ai: { provider: "openai", model: trialModel, apiKey: trialKey, trial: true },
         trial: true,
         next: () => Promise.resolve(null),
       }
@@ -414,8 +414,8 @@ export async function aiForRun(
   skipProviders: Set<string> = new Set(),
 ): Promise<Ai | null> {
   if (routing?.trial) {
-    const key = Deno.env.get("TRIAL_ANTHROPIC_API_KEY")?.trim()
-    return key ? { provider: "anthropic", model: "claude-haiku-5-5", apiKey: key, trial: true } : null
+    const key = Deno.env.get("TRIAL_OPENAI_API_KEY")?.trim()
+    return key ? { provider: "openai", model: "gpt-6-luna", apiKey: key, trial: true } : null
   }
   const catalog = await loadCatalog(admin)
   const keyFor = keyring(admin, workspaceId)
