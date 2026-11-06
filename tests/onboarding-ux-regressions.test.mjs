@@ -13,7 +13,7 @@ test("el onboarding acepta dominios con o sin protocolo y con www", () => {
   assert.match(websiteField, /type="text"/)
   assert.doesNotMatch(websiteField, /type="url"/)
   assert.match(websiteField, /inputMode="url"/)
-  assert.match(websiteField, /marchasolo\\.com o www\\.marchasolo\\.com/)
+  assert.match(websiteField, /marchasolo\.com o www\.marchasolo\.com/))
   assert.match(websiteFetcher, /const normalizedInput = lowerInput\.startsWith\("http:\/\/"\) \|\| lowerInput\.startsWith\("https:\/\/"\) \? trimmed :/)
   assert.match(websiteFetcher, /https:\/\//)
 })
