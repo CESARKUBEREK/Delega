@@ -312,6 +312,55 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     }
   }
 
+  // Si se guardó un plan local antes de habilitar/restablecer la prueba,
+  // permite regenerarlo con la IA de MarchaSolo sin reiniciar el onboarding.
+  const retryWithMarchaSoloAi = () => {
+    if (!plan || !task.trim() || pending || source === "trial") return
+    setError(null)
+    startTransition(async () => {
+      const websiteContext = websiteSnapshot && businessProfile && profileConfirmed
+        ? [
+            websiteSnapshot.title ? `Título de la web: ${websiteSnapshot.title}` : "",
+            websiteSnapshot.description ? `Descripción pública: ${websiteSnapshot.description}` : "",
+            websiteSnapshot.language ? `Idioma detectado: ${websiteSnapshot.language}` : "",
+            ...BUSINESS_PROFILE_FIELDS.map(({ key, label }) => {
+              const field = businessProfile[key]
+              const value = field.value.trim()
+              if (!value) return ""
+              const evidence = field.evidence[0] ? ` Evidencia: ${field.evidence[0]}` : ""
+              const sourceUrl = field.evidenceSources[0] ? ` Fuente: ${field.evidenceSources[0]}` : ""
+              return `${label}: ${value}.${evidence}${sourceUrl}`
+            }),
+          ].filter(Boolean).join("\\n").slice(0, 3_000)
+        : undefined
+      const result = await generateOnboardingPlan({
+        workspaceId,
+        message: task,
+        websiteContext,
+        businessIntake: { businessType, mainPain, channels },
+      })
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      if (result.source !== "trial") {
+        setError("La IA de prueba no pudo preparar el plan. No se ha consumido una ejecución de automatización; puedes volver a intentarlo o continuar con el borrador.")
+        return
+      }
+      const savedPlan = await saveFlowPlan({ workspaceId, flowId, plan: result.plan, fileIds: [] })
+      if (!savedPlan.ok) {
+        setError(savedPlan.error || "No se pudo actualizar el borrador con el nuevo plan.")
+        return
+      }
+      setReply(result.reply)
+      setPlan(result.plan)
+      setSource("trial")
+      setConversationId(result.conversationId)
+      setTrialRemaining(result.trialRemaining)
+      setFlowId(savedPlan.flowId)
+    })
+  }
+
   // Plan aceptado → persistirlo una sola vez antes de continuar.
   const acceptPlan = () => {
     if (!plan || pending) return
@@ -598,6 +647,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           stepLabel={`Paso ${stepOrdinal("ai")} de ${stepTotal}`}
           onBack={() => setStep("plan")}
           onContinue={afterAi}
+          onRetryTrial={retryWithMarchaSoloAi}
           onFinishDraft={finish}
         />
       )}
