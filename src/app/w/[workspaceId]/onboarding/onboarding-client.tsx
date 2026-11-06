@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react"
 import { PlanView } from "@/components/plan-view"
+import { DemoApprovalCard, SupervisedNote } from "@/components/onboarding/trust-cards"
 import {
   chatHref,
   clearOnboarding,
@@ -12,7 +13,6 @@ import {
   loadOnboarding,
   requiredConnections,
   saveOnboarding,
-  supervisedPreview,
   type OnboardingConnection,
   type OnboardingSource,
   type OnboardingStep,
@@ -811,107 +811,6 @@ function ConnectStep({
         <button type="button" onClick={onBack} className="text-sm text-graphite">
           ← Volver a tu IA
         </button>
-      </div>
-    </section>
-  )
-}
-
-// Paso 2 (debajo del plan): qué hará MarchaSolo con él y qué no hará sin
-// permiso. Antes era un paso entero; es información, no una decisión.
-function SupervisedNote({ plan }: { plan: FlowPlan }) {
-  const preview = supervisedPreview(plan)
-  return (
-    <div className="rounded-2xl border border-stroke bg-paper p-5 flex flex-col gap-3">
-      <p className="font-medium text-ink">Tú apruebas cada acción</p>
-      <blockquote className="border-l-2 border-stroke pl-4 text-sm text-graphite">
-        <p>«{preview.will}</p>
-        <p className="mt-1">
-          <strong>{preview.wont}</strong>»
-        </p>
-      </blockquote>
-      {preview.approvals.length > 0 ? (
-        <div>
-          <p className="text-xs font-semibold text-ink">Esperarán tu aprobación</p>
-          <ul className="mt-1 list-disc pl-5 text-sm text-graphite">
-            {preview.approvals.map((a) => (
-              <li key={a.id}>{a.title}</li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <p className="text-sm text-graphite">Este plan no escribe ni envía nada: solo tendrás que revisar el resultado.</p>
-      )}
-    </div>
-  )
-}
-
-// Demostración aislada: enseña el recorrido de una aprobación sin crear
-// ejecuciones ni llamar a proveedores externos.
-function DemoApprovalCard({ plan }: { plan: FlowPlan }) {
-  const [decision, setDecision] = useState<"pending" | "approved" | "rejected">("pending")
-  const approval = plan.steps.find((step) => step.requires_approval)
-
-  return (
-    <section className="rounded-2xl border border-rule bg-sheet p-5 flex flex-col gap-4" aria-labelledby="demo-approval-title">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="text-xs font-semibold tracking-wide text-graphite">EJEMPLO INTERACTIVO</p>
-          <h3 id="demo-approval-title" className="mt-1 font-semibold text-ink">Así funciona una aprobación</h3>
-        </div>
-        <span className="rounded-full border border-rule px-2.5 py-1 text-xs font-semibold text-graphite">SIMULACIÓN</span>
-      </div>
-
-      <div className="rounded-xl border border-rule bg-paper p-4 flex flex-col gap-3">
-        <div>
-          <p className="text-xs text-graphite">ACCIÓN QUE REVISARÍAS</p>
-          <p className="mt-1 font-medium text-ink">{approval?.title ?? "Una propuesta de MarchaSolo"}</p>
-        </div>
-        <div className="border-t border-rule pt-3">
-          <p className="text-xs text-graphite">VISTA PREVIA FICTICIA</p>
-          <p className="mt-1 text-sm leading-relaxed text-ink">
-            MarchaSolo te mostrará aquí el contenido y los cambios concretos de «{plan.name}» antes de hacer nada.
-          </p>
-        </div>
-      </div>
-
-      <p className="text-xs text-graphite">
-        Este ejemplo no utiliza tus aplicaciones ni envía, escribe o modifica datos.
-      </p>
-
-      <div className="flex flex-wrap items-center gap-2">
-        {decision === "pending" ? (
-          <>
-            <button
-              type="button"
-              onClick={() => setDecision("approved")}
-              className="inline-flex h-10 items-center rounded-xl bg-ink px-4 text-sm font-semibold text-paper"
-            >
-              Simular aprobación
-            </button>
-            <button
-              type="button"
-              onClick={() => setDecision("rejected")}
-              className="inline-flex h-10 items-center rounded-xl border border-rule px-4 text-sm font-medium text-ink"
-            >
-              Simular rechazo
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setDecision("pending")}
-            className="inline-flex h-10 items-center rounded-xl border border-rule px-4 text-sm font-medium text-ink"
-          >
-            Repetir ejemplo
-          </button>
-        )}
-        <p className="text-sm text-graphite" role="status" aria-live="polite">
-          {decision === "approved"
-            ? "Ejemplo aprobado. No se ha ejecutado ninguna acción externa."
-            : decision === "rejected"
-              ? "Ejemplo rechazado. No se ha ejecutado ninguna acción externa."
-              : "Prueba qué ocurre al aprobar o rechazar."}
-        </p>
       </div>
     </section>
   )
