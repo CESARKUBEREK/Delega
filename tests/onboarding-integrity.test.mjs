@@ -158,7 +158,22 @@ test("el paso de IA está encapsulado y conserva comprobaciones y alternativas",
   assert.match(aiStep, /export function AiStep/)
   assert.match(aiStep, /checkOnboardingAi\(workspaceId\)/)
   assert.match(aiStep, /window\.setInterval\(\(\) => void check\(\), 8000\)/)
-  assert.match(aiStep, /trackOnboardingStep\(workspaceId, "ai_connected"\)/)
+  assert.doesNotMatch(aiStep, /trackOnboardingStep\(workspaceId, "ai_connected"\)/)
   assert.match(aiStep, /Guardar el plan como borrador y terminar/)
   assert.match(aiStep, /Sin tu IA no se ejecuta nada/)
+})
+
+
+test("los eventos enviados respetan el CHECK de onboarding_events y los pasos visuales no soportados se omiten", () => {
+  const migration = readFileSync(new URL("../supabase/migrations/20261101210000_onboarding_events.sql", import.meta.url), "utf8")
+  assert.match(migration, /check \(step in \('task', 'plan', 'connect', 'connected', 'supervised', 'done'\)\)/)
+  assert.match(actions, /TRACKABLE_ONBOARDING_STEPS = \["task", "plan", "connect", "connected", "supervised", "done"\] as const/)
+  assert.match(actions, /if \(!TRACKABLE_ONBOARDING_STEPS\.some\(\(allowedStep\) => allowedStep === step\)\) return/)
+  assert.doesNotMatch(actions, /step: "task" \| "plan" \| "ai" \| "ai_connected"/)
+})
+
+test("completar el onboarding exige que el RPC confirme true", () => {
+  assert.match(actions, /const \{ data, error \} = await supabase\.rpc\("workspace_complete_onboarding"/)
+  assert.match(actions, /if \(error \|\| data !== true\) return \{ ok: false/)
+  assert.match(actions, /catch \{\s*return \{ ok: false, error: "No se pudo guardar/)
 })
