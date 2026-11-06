@@ -5,6 +5,7 @@ import { test } from "node:test"
 const onboarding = readFileSync(new URL("../src/lib/onboarding.ts", import.meta.url), "utf8")
 const actions = readFileSync(new URL("../src/app/w/[workspaceId]/onboarding/actions.ts", import.meta.url), "utf8")
 const client = readFileSync(new URL("../src/app/w/[workspaceId]/onboarding/onboarding-client.tsx", import.meta.url), "utf8")
+const businessContext = readFileSync(new URL("../src/components/onboarding/business-context-fields.tsx", import.meta.url), "utf8")
 
 test("el plan mapea todas las capacidades y también el canal de entrada", () => {
   assert.match(onboarding, /export function requiredConnections\(plan: FlowPlan\): OnboardingConnection\[\]/)
@@ -98,4 +99,15 @@ test("el fallback local conserva el contexto estructurado del negocio sin invent
   assert.match(plans, /Contexto aportado/)
   assert.match(plans, /Canales indicados/)
   assert.match(plans, /if \(best\) return \{ version: 1, \.\.\.best\.plan, summary:/)
+})
+
+test("el intake y el análisis web están encapsulados sin mover la lógica de negocio", () => {
+  assert.match(client, /<BusinessContextFields/)
+  assert.match(client, /const handleWebsiteAnalysis = async/)
+  assert.match(client, /websiteSnapshot && !profileConfirmed/)
+  assert.match(client, /businessIntake: \{ businessType, mainPain, channels \}/)
+  for (const value of ["Analizar mi web", "Confirmar perfil", "Páginas consultadas", "BUSINESS_PROFILE_FIELDS", "CONTACT_CHANNELS", "onProfileFieldChange", "onChannelChange"]) {
+    assert.ok(businessContext.includes(value), `falta el elemento extraído ${value}`)
+  }
+  assert.match(businessContext, /disabled=\{!websiteUrl\.trim\(\) \|\| disabled \|\| websitePending\}/)
 })
