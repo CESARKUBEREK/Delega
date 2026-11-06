@@ -49,8 +49,9 @@ async function Onboarding({ params, searchParams }: Pick<PageProps<"/w/[workspac
         }}
         cards={{
           email: <ImapCard workspaceId={workspaceId} isAdmin={isAdmin} />,
-          messaging: <WhatsAppCard workspaceId={workspaceId} isAdmin={isAdmin} />,
+          whatsapp: <WhatsAppCard workspaceId={workspaceId} isAdmin={isAdmin} />,
           spreadsheet: <DriveCard workspaceId={workspaceId} isAdmin={isAdmin} notice={googleNotice} />,
+          drive: <DriveCard workspaceId={workspaceId} isAdmin={isAdmin} notice={googleNotice} />,
           calendar: <CalendarCard workspaceId={workspaceId} isAdmin={isAdmin} notice={sp.calendar === "conectado"} />,
         }}
       />

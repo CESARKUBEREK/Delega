@@ -105,22 +105,74 @@ export type ConnectionStatusResult =
   | { ok: true; connected: boolean; label: string }
   | { ok: false; error: string }
 
-// Comprueba todas las conexiones con una sola lectura del estado del espacio.
+// Proveedor persistido para cada conexión que puede pedir un plan.
+const CONNECTION_PROVIDER: Partial<Record<OnboardingConnection, string[]>> = {
+  email: ["imap"],
+  messaging: ["whatsapp", "telegram"], // Compatibilidad con planes antiguos.
+  whatsapp: ["whatsapp"],
+  telegram: ["telegram"],
+  spreadsheet: ["google"],
+  documents: ["google"],
+  drive: ["google"],
+  calendar: ["calendar"],
+  crm: ["hubspot"],
+  contacts: ["contacts"],
+  properties: ["tokko"],
+  accounting: ["xubio"],
+  social: ["buffer"],
+  database: ["supabase"],
+}
+
+// Comprueba todos los proveedores en una sola lectura y usa el mismo estado
+// persistido que la página de Integraciones.
 export async function checkOnboardingConnections(input: {
   workspaceId: string
   connections: OnboardingConnection[]
 }): Promise<{ ok: true; statuses: Partial<Record<OnboardingConnection, boolean>> } | { ok: false; error: string }> {
   if (!UUID_RE.test(input.workspaceId)) return { ok: false, error: "Espacio no válido." }
   try {
-    const status = await setupStatus(input.workspaceId)
+    const supabase = await createClient()
+    const providers = [...new Set(input.connections.flatMap((connection) => CONNECTION_PROVIDER[connection] ?? []))]
+    const { data, error } = await supabase
+      .from("integrations")
+      .select("id, provider, status")
+      .eq("workspace_id", input.workspaceId)
+      .in("provider", providers.length ? providers : ["__none__"])
+    if (error) throw error
+    const activeRows = data ?? []
+    const active = new Set(activeRows.filter((row) => row.status === "active").map((row) => row.provider))
+    // Solo cuentan los archivos vinculados a la conexión Google activa de este espacio.
+    const googleIds = activeRows.filter((row) => row.provider === "google" && row.status === "active").map((row) => row.id)
+    const needsGoogleFiles = input.connections.some((connection) => connection === "spreadsheet" || connection === "documents" || connection === "drive")
+    const { data: selectedFiles, error: filesError } = needsGoogleFiles && googleIds.length
+      ? await supabase.from("integration_files").select("mime_type").eq("workspace_id", input.workspaceId).in("integration_id", googleIds)
+      : { data: [], error: null }
+    if (filesError) throw filesError
+    const fileMimes = (selectedFiles ?? []).map((file) => file.mime_type)
+    const hasSpreadsheet = fileMimes.some((mime) =>
+      mime === "application/vnd.google-apps.spreadsheet" ||
+      mime === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      mime === "application/vnd.ms-excel" ||
+      mime === "application/vnd.oasis.opendocument.spreadsheet",
+    )
+    const hasDocument = fileMimes.some((mime) =>
+      mime === "application/vnd.google-apps.document" ||
+      mime === "application/pdf" ||
+      mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      mime === "application/msword" ||
+      mime === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+      mime === "application/vnd.ms-powerpoint",
+    )
+    const hasDriveFile = fileMimes.length > 0
     const statuses: Partial<Record<OnboardingConnection, boolean>> = {}
     for (const connection of input.connections) {
-      statuses[connection] =
-        connection === "none" ? true :
-        connection === "email" ? status.correo :
-        connection === "messaging" ? status.mensajeria :
-        connection === "spreadsheet" ? status.drive :
-        connection === "calendar" ? status.calendario : false
+      const required = CONNECTION_PROVIDER[connection] ?? []
+      const providerReady = required.length > 0 && required.some((provider) => active.has(provider))
+      const resourceReady =
+        connection === "spreadsheet" ? hasSpreadsheet :
+        connection === "documents" ? hasDocument :
+        connection === "drive" ? hasDriveFile : true
+      statuses[connection] = connection === "none" || (providerReady && resourceReady)
     }
     return { ok: true, statuses }
   } catch {

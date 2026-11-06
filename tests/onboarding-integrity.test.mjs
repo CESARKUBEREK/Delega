@@ -6,16 +6,26 @@ const onboarding = readFileSync(new URL("../src/lib/onboarding.ts", import.meta.
 const actions = readFileSync(new URL("../src/app/w/[workspaceId]/onboarding/actions.ts", import.meta.url), "utf8")
 const client = readFileSync(new URL("../src/app/w/[workspaceId]/onboarding/onboarding-client.tsx", import.meta.url), "utf8")
 
-test("el plan conserva todas las conexiones requeridas en orden estable", () => {
+test("el plan mapea todas las capacidades y también el canal de entrada", () => {
   assert.match(onboarding, /export function requiredConnections\(plan: FlowPlan\): OnboardingConnection\[\]/)
-  assert.match(onboarding, /required\.push\("email"\)/)
-  assert.match(onboarding, /required\.push\("calendar"\)/)
+  for (const kind of ["email", "whatsapp", "telegram", "spreadsheet", "documents", "drive", "calendar", "crm", "contacts", "properties", "accounting", "social", "database"]) {
+    assert.ok(onboarding.includes(`${kind}: ["${kind}"]`), `falta el mapeo de ${kind}`)
+  }
+  assert.match(onboarding, /plan\.trigger\.type/)
   assert.match(onboarding, /return requiredConnections\(plan\)\[0\] \?\? "none"/)
 })
 
-test("el servidor comprueba varias conexiones en una lectura y separa error de desconexión", () => {
+test("el servidor comprueba los proveedores reales y limita los archivos a Google Drive", () => {
   assert.match(actions, /export async function checkOnboardingConnections/)
-  assert.match(actions, /const status = await setupStatus\(input\.workspaceId\)/)
+  assert.match(actions, /\.from\("integrations"\)[\s\S]*?\.select\("id, provider, status"\)/)
+  for (const provider of ["imap", "google", "calendar", "whatsapp", "telegram", "hubspot", "contacts", "tokko", "xubio", "buffer", "supabase"]) {
+    assert.ok(actions.includes(`"${provider}"`), `falta el proveedor ${provider}`)
+  }
+  assert.match(actions, /\.from\("integration_files"\)/)
+  assert.match(actions, /\.in\("integration_id", googleIds\)/)
+  assert.match(actions, /hasSpreadsheet/)
+  assert.match(actions, /hasDocument/)
+  assert.match(actions, /hasDriveFile/)
   assert.match(actions, /catch \{\s*return \{ ok: false, error: "No se pudieron comprobar las conexiones\./)
 })
 
