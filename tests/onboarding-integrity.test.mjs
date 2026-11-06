@@ -29,6 +29,19 @@ test("el servidor comprueba los proveedores reales y limita los archivos a Googl
   assert.match(actions, /catch \{\s*return \{ ok: false, error: "No se pudieron comprobar las conexiones\./)
 })
 
+test("la demostración de aprobación es local y nunca ejecuta acciones externas", () => {
+  assert.match(client, /<DemoApprovalCard plan=\{plan\} \/>/)
+  const start = client.indexOf("function DemoApprovalCard")
+  const end = client.indexOf("// Paso 3:", start)
+  assert.ok(start >= 0 && end > start, "falta el componente de demostración")
+  const demo = client.slice(start, end)
+  assert.match(demo, /setDecision\("approved"\)/)
+  assert.match(demo, /setDecision\("rejected"\)/)
+  assert.match(demo, /Repetir ejemplo/)
+  assert.match(demo, /no se ha ejecutado ninguna acción externa/i)
+  assert.doesNotMatch(demo, /saveFlowPlan|fetch\(|\.from\(["']flow_runs/)
+})
+
 test("el plan debe persistirse antes de avanzar y antes de completar", () => {
   assert.match(client, /const persistPlan = async/)
   assert.match(client, /if \(!savedFlowId\) return/)
