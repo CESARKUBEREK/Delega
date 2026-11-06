@@ -108,13 +108,14 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const [saved] = useState(() => loadOnboarding(workspaceId))
   const [step, setStep] = useState<Step>(saved?.step ?? "task")
   const [task, setTask] = useState(saved?.task ?? "")
-  const [businessType, setBusinessType] = useState("")
-  const [mainPain, setMainPain] = useState("")
-  const [channels, setChannels] = useState<string[]>([])
-  const [websiteUrl, setWebsiteUrl] = useState("")
-  const [websiteSnapshot, setWebsiteSnapshot] = useState<WebsiteSnapshot | null>(null)
-  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
-  const [profileConfirmed, setProfileConfirmed] = useState(false)
+  const savedBusiness = saved?.businessContext
+  const [businessType, setBusinessType] = useState(savedBusiness?.businessType ?? "")
+  const [mainPain, setMainPain] = useState(savedBusiness?.mainPain ?? "")
+  const [channels, setChannels] = useState<string[]>(savedBusiness?.channels ?? [])
+  const [websiteUrl, setWebsiteUrl] = useState(savedBusiness?.websiteUrl ?? "")
+  const [websiteSnapshot, setWebsiteSnapshot] = useState<WebsiteSnapshot | null>(savedBusiness?.websiteSnapshot ?? null)
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(savedBusiness?.businessProfile ?? null)
+  const [profileConfirmed, setProfileConfirmed] = useState(savedBusiness?.profileConfirmed ?? false)
   const [websiteError, setWebsiteError] = useState<string | null>(null)
   const [websitePending, setWebsitePending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -133,12 +134,15 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
 
   // Guardar en cada cambio. Al terminar (o sin nada que guardar) se borra.
   useEffect(() => {
-    if (step === "done" || (step === "task" && !task.trim())) {
+    if (step === "done" || (step === "task" && !task.trim() && !websiteUrl.trim() && !businessType && !mainPain && channels.length === 0)) {
       clearOnboarding(workspaceId)
       return
     }
-    saveOnboarding(workspaceId, { step, task, reply, plan, source, conversationId, trialRemaining, flowId })
-  }, [workspaceId, step, task, reply, plan, source, conversationId, trialRemaining, flowId])
+    saveOnboarding(workspaceId, {
+      step, task, reply, plan, source, conversationId, trialRemaining, flowId,
+      businessContext: { websiteUrl, websiteSnapshot, businessProfile, profileConfirmed, businessType, mainPain, channels },
+    })
+  }, [workspaceId, step, task, reply, plan, source, conversationId, trialRemaining, flowId, websiteUrl, websiteSnapshot, businessProfile, profileConfirmed, businessType, mainPain, channels])
 
   const requirements = useMemo(() => (plan ? requiredConnections(plan) : []), [plan])
   const [connectionIndex, setConnectionIndex] = useState(0)
@@ -166,10 +170,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     setStep(target)
   }
 
-  const validateTask = useCallback(() => {
-    const value = task.trim()
+  const validateTask = useCallback((value: string) => {
     if (value.length < 12) {
-      setError("Describe la tarea con un poco más de detalle (mínimo 12 caracteres).")
+      setError("Cuéntame un poco más o utiliza la opción de descubrir oportunidades.")
       return false
     }
     if (value.length > 500) {
@@ -178,7 +181,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     }
     setError(null)
     return true
-  }, [task])
+  }, [])
 
   const handleWebsiteAnalysis = async () => {
     if (!websiteUrl.trim() || pending || websitePending) return
@@ -368,10 +371,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
             <p className="text-sm font-semibold text-graphite">
               Paso {stepOrdinal("task")} de {stepTotal}
             </p>
-            <h2 className="rotulo text-xl mt-1">¿Qué tarea te quita más tiempo?</h2>
+            <h2 className="rotulo text-xl mt-1">¿Qué te gustaría mejorar en tu negocio?</h2>
             <p className="text-graphite mt-1">
-              Cuéntamela con tus palabras, como se la explicarías a alguien de tu equipo, o elige un ejemplo. No hace falta conectar nada
-              todavía.
+              Puedes describir una tarea concreta o contarnos cómo funciona tu negocio. Si todavía no sabes qué delegar, MarchaSolo te ayudará a descubrir oportunidades. No hace falta conectar nada todavía.
             </p>
           </div>
 
@@ -426,12 +428,13 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
               }}
               rows={4}
               maxLength={500}
-              placeholder="Ej.: cuando un cliente pide presupuesto por correo, prepárame la respuesta con nuestras tarifas para que la revise."
+              placeholder="Ej.: pierdo mucho tiempo respondiendo consultas, preparando presupuestos y haciendo seguimiento de clientes."
               className="w-full rounded-xl border border-rule bg-paper px-4 py-3 text-ink placeholder:text-graphite focus:border-stroke focus:outline-none"
             />
             {error && <p className="text-sm text-alert">{error}</p>}
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={() => { setTask(""); setError(null) }} className="rounded-full border border-dashed border-ink px-3 py-1.5 text-sm font-semibold text-ink hover:bg-sheet">No sé todavía; ayúdame a descubrirlo</button>
               {SUGGESTIONS.map((s) => (
                 <button
                   key={s}
