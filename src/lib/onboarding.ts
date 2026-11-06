@@ -172,7 +172,7 @@ function readBusinessProfile(value: unknown): BusinessProfile | null {
       || !Array.isArray(field.evidence) || !field.evidence.every((item) => typeof item === "string")
       || !Array.isArray(field.evidenceSources) || !field.evidenceSources.every((item) => typeof item === "string")
       || !["high", "medium", "low"].includes(String(field.confidence))
-      || !["website", "not_found"].includes(String(field.source))) return null
+      || !["website", "user", "not_found"].includes(String(field.source))) return null
     result[key] = {
       value: field.value.slice(0, 2_000),
       evidence: field.evidence.slice(0, 3).map((item) => item.slice(0, 240)),
