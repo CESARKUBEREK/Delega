@@ -79,21 +79,33 @@ export const NO_AI_MESSAGE = "Conecta una IA (OpenAI, Anthropic, DeepSeek o Grok
 // ---------------------------------------------------------------------------
 export const TRIAL_PROVIDER: Provider = "anthropic"
 export const TRIAL_MODEL = "claude-sonnet-5-5"
+export const TRIAL_FALLBACK_PROVIDER: Provider = "deepseek"
+export const TRIAL_FALLBACK_MODEL = "deepseek-flash"
 
 export const TRIAL_EXHAUSTED_MESSAGE =
   "Ya has usado los planes de prueba de MarchaSolo. Conecta tu propia IA (OpenAI, Anthropic, DeepSeek o Grok) en Integraciones para seguir."
 
-// La IA del espacio si la hay; si no, la de prueba mientras queden planes.
-// Devuelve el motivo cuando no hay ninguna, para dar el mensaje adecuado.
+// La IA del espacio si la hay; si no, la IA de prueba con respaldo opcional.
+// TRIAL_DEEPSEEK_API_KEY es independiente: nunca se reutiliza la clave Anthropic.
+// La ausencia del respaldo no bloquea el onboarding, pero no garantiza continuidad
+// si Anthropic falla; la aplicación siempre conserva el fallback local.
 export async function resolveAiOrTrial(
   admin: SupabaseClient,
   workspaceId: string,
   preferredModel?: string | null,
-): Promise<{ ai: Ai } | { ai: null; message: string }> {
+): Promise<{ ai: Ai; fallback: Ai | null } | { ai: null; message: string }> {
   const own = await resolveAi(admin, workspaceId, preferredModel)
-  if (own) return { ai: own }
-  const key = Deno.env.get("TRIAL_ANTHROPIC_API_KEY")?.trim()
-  if (!key) return { ai: null, message: NO_AI_MESSAGE }
+  if (own) return { ai: own, fallback: null }
+
+  const anthropicKey = Deno.env.get("TRIAL_ANTHROPIC_API_KEY")?.trim()
+  const deepseekKey = Deno.env.get("TRIAL_DEEPSEEK_API_KEY")?.trim()
+  const primary: Ai | null = anthropicKey
+    ? { provider: TRIAL_PROVIDER, model: TRIAL_MODEL, apiKey: anthropicKey, trial: true }
+    : deepseekKey
+      ? { provider: TRIAL_FALLBACK_PROVIDER, model: TRIAL_FALLBACK_MODEL, apiKey: deepseekKey, trial: true }
+      : null
+  if (!primary) return { ai: null, message: NO_AI_MESSAGE }
+
   const { data } = await admin
     .from("workspace_trial_credits")
     .select("allowance_tokens, used_tokens, allowance_plans, used_plans")
@@ -103,7 +115,11 @@ export async function resolveAiOrTrial(
   if (Number(data.used_plans) >= Number(data.allowance_plans) || Number(data.used_tokens) >= Number(data.allowance_tokens)) {
     return { ai: null, message: TRIAL_EXHAUSTED_MESSAGE }
   }
-  return { ai: { provider: TRIAL_PROVIDER, model: TRIAL_MODEL, apiKey: key, trial: true } }
+
+  const fallback: Ai | null = primary.provider === "anthropic" && deepseekKey
+    ? { provider: TRIAL_FALLBACK_PROVIDER, model: TRIAL_FALLBACK_MODEL, apiKey: deepseekKey, trial: true }
+    : null
+  return { ai: primary, fallback }
 }
 
 // ---------------------------------------------------------------------------
