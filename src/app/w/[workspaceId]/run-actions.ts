@@ -72,7 +72,7 @@ export async function disconnectGoogle(_prev: ActionResult | null, formData: For
 // ---------------------------------------------------------------------------
 
 export type RunStatus = "running" | "awaiting_approval" | "succeeded" | "failed" | "cancelled"
-export type RunStep = { ok: true; status: RunStatus; runId: string; busy?: boolean } | { ok: false; code: string; error: string }
+export type RunStep = { ok: true; status: RunStatus; runId: string; busy?: boolean; trialFunded?: boolean } | { ok: false; code: string; error: string }
 
 export async function startRun(input: {
   workspaceId: string
@@ -82,7 +82,7 @@ export async function startRun(input: {
 }): Promise<RunStep> {
   if (!UUID_RE.test(input.workspaceId) || !UUID_RE.test(input.flowId)) return { ok: false, code: "bad_request", error: "Datos no válidos." }
   const fileIds = input.fileIds.filter((id) => UUID_RE.test(id)).slice(0, 5)
-  const result = await callEdgeFunction<{ run_id: string; status: RunStatus }>("run-flow", {
+  const result = await callEdgeFunction<{ run_id: string; status: RunStatus; trial_funded?: boolean }>("run-flow", {
     action: "start",
     workspace_id: input.workspaceId,
     flow_id: input.flowId,
@@ -90,7 +90,7 @@ export async function startRun(input: {
     note: input.note.slice(0, 2000),
   })
   if (result.error) return { ok: false, code: result.error.code, error: result.error.message }
-  return { ok: true, status: result.data.status, runId: result.data.run_id }
+  return { ok: true, status: result.data.status, runId: result.data.run_id, trialFunded: result.data.trial_funded === true }
 }
 
 // «Ejecutar ahora» desde el chat. La Edge Function lee el plan del mensaje
@@ -99,7 +99,7 @@ export async function startRunFromMessage(input: { workspaceId: string; messageI
   if (!UUID_RE.test(input.workspaceId) || !Number.isSafeInteger(input.messageId) || input.messageId <= 0) {
     return { ok: false, code: "bad_request", error: "Datos no válidos." }
   }
-  const result = await callEdgeFunction<{ run_id: string; status: RunStatus }>("run-flow", {
+  const result = await callEdgeFunction<{ run_id: string; status: RunStatus; trial_funded?: boolean }>("run-flow", {
     action: "start_from_message",
     workspace_id: input.workspaceId,
     message_id: input.messageId,
@@ -107,7 +107,7 @@ export async function startRunFromMessage(input: { workspaceId: string; messageI
   })
   if (result.error) return { ok: false, code: result.error.code, error: result.error.message }
   refresh()
-  return { ok: true, status: result.data.status, runId: result.data.run_id }
+  return { ok: true, status: result.data.status, runId: result.data.run_id, trialFunded: result.data.trial_funded === true }
 }
 
 async function runAction(body: Record<string, unknown>): Promise<RunStep> {
