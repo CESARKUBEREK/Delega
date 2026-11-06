@@ -27,7 +27,7 @@ function candidateSentences(page: WebsitePage): { text: string; weight: number }
     if (!value) return
     for (const raw of value.split(/(?<=[.!?])\s+|\n+/)) {
       const text = raw.trim().replace(/\s+/g, " ").replace(/^[•·|–—-]+|[•·|–—-]+$/g, "").trim()
-      if (text.length < 14 || text.length > 260 || BOILERPLATE.test(text) || GENERIC.test(text)) continue
+      if (text.length < (weight >= 4 ? 3 : 14) || text.length > 260 || BOILERPLATE.test(text) || GENERIC.test(text)) continue
       if (/^(aceptar|rechazar|configurar|skip to|saltar al contenido)/i.test(text)) continue
       candidates.push({ text, weight })
     }
