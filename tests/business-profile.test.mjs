@@ -65,3 +65,28 @@ test("reconoce señales de negocio en francés", () => {
   assert.notEqual(profile.offer.value, "")
   assert.notEqual(profile.acquisition.value, "")
 })
+
+test("reconoce el perfil público de Argentina Gateway sin inventar operaciones ni herramientas", () => {
+  const page = {
+    url: "https://argentinagateway.org/",
+    title: "Argentina Market Intelligence & Project Signals",
+    description: "Independent strategic market intelligence for companies selling, sourcing, investing and operating across Argentina’s key sectors: Energy, Mining, Infrastructure.",
+    headings: [
+      "Three Products. One Intelligence System.",
+      "AG Outlook Strategic Intelligence",
+      "AG Radar Project & Procurement Intelligence",
+      "AG Network Business & Institutional Network",
+      "Built for Companies That Need to Act",
+      "Contact Us",
+    ],
+    text: "Argentina Gateway connects market signals into a unified intelligence system. It is designed for corporate decision-makers who require structured, verifiable market intelligence rather than general news summaries. Identify investment projects, developments and procurement signals that create direct demand for products, equipment, technology or industrial services.",
+  }
+  const profile = analyzeBusinessProfile({ ...page, pages: [page] })
+  assert.notEqual(profile.activity.value, "")
+  assert.notEqual(profile.clients.value, "")
+  assert.notEqual(profile.offer.value, "")
+  assert.notEqual(profile.acquisition.value, "")
+  assert.equal(profile.operations.value, "")
+  assert.equal(profile.tools.value, "")
+  assert.ok(profile.activity.evidenceSources.every((url) => url === page.url))
+})
