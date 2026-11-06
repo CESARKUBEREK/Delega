@@ -10,6 +10,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { modelInfo } from "./router/catalog.ts"
 import { costUsd, type Task } from "./router/core.ts"
+import { resolveTrialProviders } from "./trial-routing.ts"
 
 export type Provider = "openai" | "anthropic" | "deepseek" | "xai"
 export const PROVIDERS: Provider[] = ["openai", "anthropic", "deepseek", "xai"]
@@ -79,8 +80,6 @@ export const NO_AI_MESSAGE = "Conecta una IA (OpenAI, Anthropic, DeepSeek o Grok
 // ---------------------------------------------------------------------------
 export const TRIAL_PROVIDER: Provider = "anthropic"
 export const TRIAL_MODEL = "claude-sonnet-5-5"
-export const TRIAL_FALLBACK_PROVIDER: Provider = "deepseek"
-export const TRIAL_FALLBACK_MODEL = "deepseek-flash"
 
 export const TRIAL_EXHAUSTED_MESSAGE =
   "Ya has usado los planes de prueba de MarchaSolo. Conecta tu propia IA (OpenAI, Anthropic, DeepSeek o Grok) en Integraciones para seguir."
@@ -97,13 +96,12 @@ export async function resolveAiOrTrial(
   const own = await resolveAi(admin, workspaceId, preferredModel)
   if (own) return { ai: own, fallback: null }
 
-  const anthropicKey = Deno.env.get("TRIAL_ANTHROPIC_API_KEY")?.trim()
-  const deepseekKey = Deno.env.get("TRIAL_DEEPSEEK_API_KEY")?.trim()
-  const primary: Ai | null = anthropicKey
-    ? { provider: TRIAL_PROVIDER, model: TRIAL_MODEL, apiKey: anthropicKey, trial: true }
-    : deepseekKey
-      ? { provider: TRIAL_FALLBACK_PROVIDER, model: TRIAL_FALLBACK_MODEL, apiKey: deepseekKey, trial: true }
-      : null
+  const providers = resolveTrialProviders(
+    Deno.env.get("TRIAL_ANTHROPIC_API_KEY"),
+    Deno.env.get("TRIAL_DEEPSEEK_API_KEY"),
+  )
+  const primary = providers.primary as Ai | null
+  const fallback = providers.fallback as Ai | null
   if (!primary) return { ai: null, message: NO_AI_MESSAGE }
 
   const { data } = await admin
@@ -116,9 +114,6 @@ export async function resolveAiOrTrial(
     return { ai: null, message: TRIAL_EXHAUSTED_MESSAGE }
   }
 
-  const fallback: Ai | null = primary.provider === "anthropic" && deepseekKey
-    ? { provider: TRIAL_FALLBACK_PROVIDER, model: TRIAL_FALLBACK_MODEL, apiKey: deepseekKey, trial: true }
-    : null
   return { ai: primary, fallback }
 }
 
