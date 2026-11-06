@@ -22,6 +22,7 @@ type BusinessContextProps = {
   onEnrichWebsite: () => void
   semanticPending: boolean
   semanticError: string | null
+  semanticMessage: string | null
   websitePending: boolean
   disabled: boolean
   websiteError: string | null
@@ -46,6 +47,7 @@ export function BusinessContextFields({
   onEnrichWebsite,
   semanticPending,
   semanticError,
+  semanticMessage,
   websitePending,
   disabled,
   websiteError,
@@ -104,6 +106,7 @@ export function BusinessContextFields({
                 {semanticPending ? "Completando el análisis…" : "Completar análisis con IA"}
               </button>
               {semanticError ? <p className="text-sm text-alert" role="alert">{semanticError}</p> : null}
+              {semanticMessage ? <p className="text-sm text-graphite" role="status">{semanticMessage}</p> : null}
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {BUSINESS_PROFILE_FIELDS.map(({ key, label, hint }) => (
