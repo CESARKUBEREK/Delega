@@ -52,3 +52,29 @@ test("no inventa datos cuando las páginas no aportan evidencia", () => {
     assert.equal(field.confirmed, false)
   }
 })
+
+
+test("el perfil usa metadata y mantiene confianza conservadora", () => {
+  const page = { url: "https://example.org", title: "Estudio Norte", description: "Consultoría para pequeñas empresas.", headings: ["Servicios de estrategia"], text: "Contacta con nuestro equipo.", siteName: "Estudio Norte", language: "es" }
+  const profile = analyzeBusinessProfile({ ...page, pages: [page] })
+  assert.equal(profile.activity.source, "website")
+  assert.equal(profile.activity.confidence, "medium")
+  assert.ok(profile.activity.evidenceSources.every((source) => source === page.url))
+})
+
+
+test("reconoce negocios de inteligencia de mercado descritos en inglés", () => {
+  const page = {
+    url: "https://argentinagateway.com",
+    title: "Independent Market & Procurement Intelligence on Argentina",
+    description: "Market intelligence, country risk analysis and procurement research for international companies.",
+    headings: ["Market Entry", "Supplier Intelligence", "Reports and Insights"],
+    text: "We help importers, exporters and investors understand opportunities in Argentina. Our research and due diligence services support sourcing and procurement decisions. Contact us to discuss your requirements.",
+  }
+  const profile = analyzeBusinessProfile({ ...page, pages: [page] })
+  assert.notEqual(profile.activity.value, "")
+  assert.notEqual(profile.clients.value, "")
+  assert.notEqual(profile.offer.value, "")
+  assert.notEqual(profile.acquisition.value, "")
+  assert.ok(profile.activity.evidenceSources.every((source) => source === page.url))
+})

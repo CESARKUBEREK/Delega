@@ -8,7 +8,7 @@ import { SignupForm } from "./signup-form"
 export const metadata = publicPageMetadata({
   title: "Crear cuenta",
   description:
-    "Crea tu cuenta de MarchaSolo sin coste. Cuéntale una tarea y mira el plan que te prepara antes de conectar nada.",
+    "Crea tu cuenta de MarchaSolo sin coste. Cuéntanos qué quieres mejorar o descubre oportunidades para tu negocio antes de conectar tus aplicaciones.",
   path: "/crear-cuenta",
 })
 
@@ -31,8 +31,8 @@ async function SignupContent({ searchParams }: SignupPageProps) {
       title="Crea tu cuenta"
       intro={
         plan
-          ? `Has elegido ${plan.name} (${plan.price}${plan.period}). Sin coste al empezar y sin tarjeta: en dos minutos le cuentas tu primera tarea.`
-          : "Sin coste y sin tarjeta. En dos minutos estás contándole tu primera tarea."
+          ? `Has elegido ${plan.name} (${plan.price}${plan.period}). Sin coste al empezar y sin tarjeta: cuéntanos qué quieres mejorar en tu negocio.`
+          : "Sin coste y sin tarjeta. Cuéntanos qué quieres mejorar; si aún no lo sabes, te ayudamos a descubrirlo."
       }
       story="signup"
       footer={<SignupFooter />}
@@ -44,7 +44,7 @@ async function SignupContent({ searchParams }: SignupPageProps) {
 
 function SignupPageFallback() {
   return (
-    <Sheet title="Crea tu cuenta" intro="Sin coste y sin tarjeta. En dos minutos estás contándole tu primera tarea." story="signup">
+    <Sheet title="Crea tu cuenta" intro="Sin coste y sin tarjeta. Cuéntanos qué quieres mejorar; si aún no lo sabes, te ayudamos a descubrirlo." story="signup">
       <div className="h-96" aria-busy="true" />
     </Sheet>
   )

@@ -162,3 +162,22 @@ test("el paso de IA está encapsulado y conserva comprobaciones y alternativas",
   assert.match(aiStep, /Guardar el plan como borrador y terminar/)
   assert.match(aiStep, /Sin tu IA no se ejecuta nada/)
 })
+
+
+test("el progreso conserva el contexto web y los datos de negocio", () => {
+  assert.match(onboarding, /businessContext\?: \{/)
+  assert.match(onboarding, /readBusinessContext\(v\.businessContext\)/)
+  assert.match(client, /savedBusiness\?\.websiteSnapshot/)
+  assert.match(client, /businessContext: \{ websiteUrl, websiteSnapshot, businessProfile, profileConfirmed, businessType, mainPain, channels \}/)
+})
+
+test("el usuario puede pedir descubrir oportunidades sin definir una tarea", () => {
+  assert.match(client, /¿Qué te gustaría mejorar en tu negocio\?/)
+  assert.match(client, /No sé todavía; ayúdame a descubrirlo/)
+  assert.match(client, /const requestedTask = task\.trim\(\) \|\| "Ayúdame a descubrir qué tareas repetitivas/)
+  assert.match(client, /message: requestedTask/)
+})
+
+test("el intake no se borra si el usuario aún no ha escrito una tarea", () => {
+  assert.match(client, /!websiteUrl\.trim\(\) && !businessType && !mainPain && channels\.length === 0/)
+})

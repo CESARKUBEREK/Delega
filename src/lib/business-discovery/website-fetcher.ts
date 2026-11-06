@@ -19,6 +19,26 @@ const MAX_BYTES = 1_000_000
 const TIMEOUT_MS = 7_000
 const MAX_REDIRECTS = 3
 
+// Node's getaddrinfo can fail transiently when the runtime is under load.
+// Retry only temporary resolver errors; never weaken the public-IP checks.
+async function lookupWithRetry(hostname: string) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await lookup(hostname, { all: true, verbatim: true })
+    } catch (error) {
+      const code = error && typeof error === "object" && "code" in error
+        ? String((error as NodeJS.ErrnoException).code)
+        : ""
+      if (code !== "EBUSY" && code !== "EAI_AGAIN") throw error
+      if (attempt === 2) {
+        throw new Error("No hemos podido consultar el DNS de esta web. Inténtalo de nuevo dentro de unos segundos o continúa sin analizarla.")
+      }
+      await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)))
+    }
+  }
+  throw new Error("No se pudo resolver el dominio.")
+}
+
 function validateUrl(input: string): URL {
   let url: URL
   try {
@@ -109,7 +129,7 @@ async function fetchSinglePublicPage(input: string, expectedOrigin?: string, blo
   if (blockedUrls.has(current.toString())) throw new Error("La página ya se ha analizado.")
 
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
-    const records = await lookup(current.hostname, { all: true, verbatim: true })
+    const records = await lookupWithRetry(current.hostname)
     if (!records.length || records.some((record) => !isPublicAddress(record.address))) {
       throw new Error("No se puede analizar esta dirección porque no resuelve a una IP pública segura.")
     }

@@ -37,16 +37,16 @@ export function Sheet({
                     Te enviamos un enlace. Si entras con Google, te lo ahorras.
                   </li>
                   <li>
-                    <b>Nos cuentas una tarea</b>
-                    La que más tiempo te quita, con tus palabras.
+                    <b>Nos cuentas qué te gustaría mejorar</b>
+                    Puedes describir una tarea o pedirnos ayuda para descubrir oportunidades en tu negocio.
                   </li>
                   <li>
-                    <b>Ves el plan que te prepara</b>
-                    Con IA avanzada por cuenta de MarchaSolo, sin conectar nada.
+                    <b>Conocemos tu negocio y preparamos una propuesta</b>
+                    Si tienes web, la analizamos; tú revisas el perfil antes de confirmarlo. Después ves el plan, sin conectar nada.
                   </li>
                   <li>
-                    <b>Conectas tu IA y lo que haga falta</b>
-                    Primero tu IA; después el correo, Drive o la agenda. Y nada se envía sin tu aprobación.
+                    <b>Conectas lo que haga falta</b>
+                    Primero tu IA; después el correo, Drive o la agenda. Nada se envía sin tu aprobación.
                   </li>
                 </ol>
               </>
