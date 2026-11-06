@@ -52,3 +52,12 @@ test("no inventa datos cuando las páginas no aportan evidencia", () => {
     assert.equal(field.confirmed, false)
   }
 })
+
+
+test("el perfil usa metadata y mantiene confianza conservadora", () => {
+  const page = { url: "https://example.org", title: "Estudio Norte", description: "Consultoría para pequeñas empresas.", headings: ["Servicios de estrategia"], text: "Contacta con nuestro equipo.", siteName: "Estudio Norte", language: "es" }
+  const profile = analyzeBusinessProfile({ ...page, pages: [page] })
+  assert.equal(profile.activity.source, "website")
+  assert.equal(profile.activity.confidence, "medium")
+  assert.ok(profile.activity.evidenceSources.every((source) => source === page.url))
+})
