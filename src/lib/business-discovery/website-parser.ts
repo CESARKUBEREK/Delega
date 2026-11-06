@@ -76,7 +76,7 @@ export function parseWebsiteHtml(html: string, url: string): ParsedWebsitePage {
     .map((m) => decodeEntities(m[2].trim())).filter(Boolean).slice(0, 150)
   const appShell = /<div[^>]+id=["'](?:__next|root|app)["'][^>]*>\s*<\/div>/i.test(html)
     || /__NEXT_DATA__|data-reactroot|ng-version=/i.test(html)
-  const contentQuality = text.length >= 180 ? "usable" : (appShell || (text.length < 80 && /<script\b/i.test(html))) ? "javascript_shell" : "metadata_only"
+  const contentQuality = text.length >= 30 ? "usable" : (appShell || (text.length < 80 && /<script\b/i.test(html))) ? "javascript_shell" : "metadata_only"
   return { url, title: title || null, description, headings, text, links, language, siteName, canonicalUrl, keywords, contentQuality }
 }
 
