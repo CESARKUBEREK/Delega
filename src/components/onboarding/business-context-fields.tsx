@@ -94,8 +94,9 @@ export function BusinessContextFields({
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-graphite">Esto es lo que hemos entendido</p>
               <p className="mt-1 font-semibold text-ink">{websiteSnapshot.title ?? websiteSnapshot.url}</p>
-              <p className="mt-1 text-xs text-graphite">{websiteSnapshot.pages.length > 1 ? `Hemos revisado ${websiteSnapshot.pages.length} páginas públicas del mismo dominio.` : "Hemos revisado una página pública."} Usamos títulos, metadatos y contenido visible. Corrige lo que haga falta; los campos vacíos no se han podido verificar.</p>
+              <p className="mt-1 text-xs text-graphite">{websiteSnapshot.pages.length > 1 ? `Hemos revisado ${websiteSnapshot.pages.length} páginas públicas del mismo dominio.` : "Hemos revisado una página pública."} Usamos títulos, metadatos, contenido de página y datos estructurados disponibles. Corrige lo que haga falta; los campos vacíos no se han podido verificar.</p>
               {websiteSnapshot.language ? <p className="mt-1 text-xs text-graphite">Idioma detectado: {websiteSnapshot.language}</p> : null}
+              {websiteSnapshot.pages.some((page) => page.contentSource === "embedded_data") ? <p className="mt-1 text-xs text-graphite">Parte del contenido se ha recuperado de datos estructurados o de la carga inicial de la web; no todas las páginas permiten leer el contenido dinámico.</p> : null}
               {websiteSnapshot.pages.some((page) => page.contentQuality === "javascript_shell") ? (
                 <p className="mt-2 rounded-lg border border-alert/30 bg-alert/5 p-3 text-sm text-alert" role="status">
                   Algunas páginas cargan su contenido mediante JavaScript y no han podido leerse completamente. El análisis puede estar incompleto; revisa los campos y complétalos manualmente antes de confirmar.
