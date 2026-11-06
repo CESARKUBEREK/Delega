@@ -118,7 +118,7 @@ export function BusinessContextFields({
             <div className="flex flex-col gap-2 rounded-lg border border-rule bg-paper p-3">
               <div>
                 <p className="text-sm font-semibold text-ink">Mejorar la lectura con IA <span className="font-normal text-graphite">(opcional)</span></p>
-                <p className="mt-1 text-xs text-graphite">La IA interpreta el contenido y puede completar datos que el análisis inicial no haya identificado. Solo se utiliza cuando pulsas el botón; antes verás si consume un crédito de tu espacio o de prueba.</p>
+                <p className="mt-1 text-xs text-graphite">La IA interpreta el contenido y puede completar datos que el análisis inicial no haya identificado. Solo se utiliza cuando pulsas el botón; antes verás si consume un crédito de tu espacio o de prueba. Al pulsar, autorizas el uso de la IA conectada.</p>
               </div>
               <button type="button" onClick={onEnrichWebsite} disabled={semanticPending || websitePending || disabled} className="inline-flex h-10 items-center justify-center self-start rounded-xl border border-ink px-4 text-sm font-semibold text-ink disabled:opacity-50">
                 {semanticPending ? "Completando el análisis…" : "Completar análisis con IA"}
