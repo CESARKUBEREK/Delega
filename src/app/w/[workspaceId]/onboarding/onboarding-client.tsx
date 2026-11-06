@@ -1096,7 +1096,7 @@ function DoneStep({
   onRestart: () => void
 }) {
   const router = useRouter()
-  const [ai, setAi] = useState<{ ok: boolean; label: string | null } | null>(null)
+  const [ai, setAi] = useState<{ ok: boolean; label: string | null; error?: string } | null>(null)
   const [toolCheck, setToolCheck] = useState<
     | { ok: true; statuses: Partial<Record<OnboardingConnection, boolean>> }
     | { ok: false; error: string }
@@ -1104,14 +1104,15 @@ function DoneStep({
   >(neededConnections.length === 0 ? { ok: true, statuses: {} } : null)
   const [error, setError] = useState<string | null>(null)
   const [saving, startSave] = useTransition()
+  const [checkVersion, setCheckVersion] = useState(0)
 
   useEffect(() => {
     let stop = false
     void checkOnboardingAi(workspaceId)
       .then((r) => {
-        if (!stop) setAi(r.ok ? { ok: r.connected, label: r.label } : { ok: false, label: null })
+        if (!stop) setAi(r.ok ? { ok: r.connected, label: r.label } : { ok: false, label: null, error: r.error })
       })
-      .catch(() => !stop && setAi({ ok: false, label: null }))
+      .catch(() => !stop && setAi({ ok: false, label: null, error: "No se pudo comprobar la conexión de IA." }))
     if (neededConnections.length > 0) {
       void checkOnboardingConnections({ workspaceId, connections: neededConnections })
         .then((result) => {
@@ -1122,11 +1123,12 @@ function DoneStep({
     return () => {
       stop = true
     }
-  }, [workspaceId, neededConnections])
+  }, [workspaceId, neededConnections, checkVersion])
 
   const toolReady = neededConnections.every((connection) => toolCheck?.ok === true && toolCheck.statuses[connection] === true)
   const ready = ai?.ok === true && toolReady
   const loading = ai === null || toolCheck === null
+  const verificationError = ai?.error ?? (toolCheck?.ok === false ? toolCheck.error : null)
 
   const saveAndOpen = () => {
     if (!plan) return
@@ -1145,7 +1147,7 @@ function DoneStep({
 
   const items: { label: string; ok: boolean | null; detail: string }[] = [
     { label: "Tu plan", ok: plan !== null, detail: plan?.name ?? "" },
-    { label: "Tu IA", ok: ai?.ok ?? null, detail: ai?.ok ? (ai.label ?? "Conectada") : "Sin conectar: sin ella no se ejecuta nada" },
+    { label: "Tu IA", ok: ai?.error ? null : ai?.ok ?? null, detail: ai?.error ?? (ai?.ok ? (ai.label ?? "Conectada") : "Sin conectar: sin ella no se ejecuta nada") },
     ...neededConnections.map((connection) => ({
       label: CONNECTION_LABEL[connection],
       ok: toolCheck?.ok === true ? toolCheck.statuses[connection] ?? false : null,
@@ -1159,13 +1161,13 @@ function DoneStep({
     <section className="setup-panel flex flex-col gap-5">
       <div>
         <p className="text-sm font-semibold text-graphite">{stepLabel}</p>
-        <h2 className="rotulo text-xl mt-1">{ready ? "Todo listo para ponerlo en marcha" : loading ? "Comprobando…" : "Casi listo"}</h2>
+        <h2 className="rotulo text-xl mt-1">{ready ? "Preparado para probar" : loading ? "Comprobando conexiones…" : verificationError ? "No pude verificar toda la configuración" : "Configuración pendiente"}</h2>
         <p className="text-graphite mt-1">
           {ready
-            ? "Guárdalo como automatización: podrás probarlo una vez y, si te convence, activarlo. Nada se envía sin tu aprobación."
+            ? "Tu plan y sus conexiones están preparados. Podrás probarlo antes de activarlo; nada se envía ni modifica sin tu aprobación."
             : loading
-              ? "Miro qué está conectado."
-              : "Para que MarchaSolo haga tu plan de verdad falta conectar lo que ves abajo. Tu progreso queda guardado en este navegador."}
+              ? "Estoy comprobando qué servicios están conectados."
+              : verificationError ? "No voy a dar por conectada una herramienta si no he podido comprobarla. Puedes volver a intentarlo." : "Tu plan está guardado, pero todavía falta conectar los servicios que necesita para poder probarlo."}
         </p>
       </div>
 
@@ -1196,7 +1198,15 @@ function DoneStep({
 
       {!loading ? (
         <div className="flex flex-col gap-3">
-          {ready && plan ? (
+          {verificationError ? (
+            <button type="button" onClick={() => {
+              setAi(null)
+              setToolCheck(neededConnections.length === 0 ? { ok: true, statuses: {} } : null)
+              setCheckVersion((version) => version + 1)
+            }} className={primary}>
+              Volver a comprobar conexiones →
+            </button>
+          ) : ready && plan ? (
             <button type="button" onClick={saveAndOpen} disabled={saving} className={primary}>
               {saving ? "Guardando…" : "Abrir y probar esta automatización →"}
             </button>

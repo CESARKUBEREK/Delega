@@ -29,6 +29,16 @@ test("el servidor comprueba los proveedores reales y limita los archivos a Googl
   assert.match(actions, /catch \{\s*return \{ ok: false, error: "No se pudieron comprobar las conexiones\./)
 })
 
+test("el estado final distingue conexiones pendientes de errores de verificación", () => {
+  assert.match(client, /verificationError = ai\?\.error/)
+  assert.match(client, /No pude verificar toda la configuración/)
+  assert.match(client, /Configuración pendiente/)
+  assert.match(client, /Preparado para probar/)
+  assert.match(client, /Volver a comprobar conexiones/)
+  assert.match(client, /setAi\(r\.ok \? \{ ok: r\.connected, label: r\.label \} : \{ ok: false, label: null, error: r\.error \}\)/)
+  assert.match(client, /ok: ai\?\.error \? null : ai\?\.ok \?\? null/)
+})
+
 test("la demostración de aprobación es local y nunca ejecuta acciones externas", () => {
   assert.match(client, /<DemoApprovalCard plan=\{plan\} \/>/)
   const start = client.indexOf("function DemoApprovalCard")
