@@ -213,7 +213,7 @@ async function fetchSinglePublicPage(input: string, expectedOrigin?: string, blo
     }
 
     const parsed = parseWebsiteHtml(response.body, current.toString())
-    if (parsed.contentQuality === "javascript_shell" && process.env.BROWSERLESS_API_TOKEN) {
+    if (parsed.contentQuality !== "usable" && process.env.BROWSERLESS_API_TOKEN) {
       const rendered = await renderWithBrowserless(current)
       if (rendered) return rendered
     }
