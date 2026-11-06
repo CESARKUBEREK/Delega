@@ -194,7 +194,10 @@ export async function routeAi(
       admin.from("workspaces").select("kind").eq("id", workspaceId).maybeSingle(),
       admin.from("workspace_trial_credits").select("allowance_runs, used_runs").eq("workspace_id", workspaceId).maybeSingle(),
     ])
-    if (workspace?.kind === "personal" && credits && Number(credits.used_runs) < Number(credits.allowance_runs) && trialKey) {
+    if (workspace?.kind === "personal" && credits && Number(credits.used_runs) < Number(credits.allowance_runs)) {
+      if (!trialKey) {
+        return { error: "La prueba gratuita de MarchaSolo no está disponible ahora. No usaremos tu IA conectada sin tu autorización.", code: "no_ai" }
+      }
       const trialModel = "claude-haiku-5-5"
       const plan: RoutePlan = {
         task,
