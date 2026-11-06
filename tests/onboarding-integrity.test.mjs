@@ -186,6 +186,10 @@ test("el paso de IA está encapsulado y conserva comprobaciones y alternativas",
   assert.match(aiStep, /window\.setInterval\(\(\) => void check\(\), 8000\)/)
   assert.match(aiStep, /trackOnboardingStep\(workspaceId, "ai_connected"\)/)
   assert.match(aiStep, /Guardar el plan como borrador y terminar/)
+  assert.match(aiStep, /\) : fromTrial \? \(/)
+  assert.match(aiStep, /Ya estás usando la IA de MarchaSolo/)
+  assert.match(aiStep, /Continuar con la prueba gratuita/)
+  assert.match(aiStep, /Conectar mi propia IA \(opcional\)/)
   assert.match(aiStep, /Sin tu IA no se ejecuta nada/)
 })
 
