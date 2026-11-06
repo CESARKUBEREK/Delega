@@ -88,6 +88,6 @@ test("el intake estructurado del negocio se transmite y se valida antes de gener
   assert.match(actions, /Tipo de negocio: \\?\$\{businessType\}/)
   assert.match(actions, /Prioridad principal/)
   assert.match(actions, /Canales de contacto/)
-  assert.match(actions, /channel in channelLabels/)
+  assert.match(actions, /hasOwnProperty\.call\(channelLabels, channel\)/)
   assert.match(actions, /adaptado al tipo de negocio, su prioridad y sus canales/)
 })
