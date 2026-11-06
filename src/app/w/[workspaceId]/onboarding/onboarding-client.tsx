@@ -25,6 +25,7 @@ import { BUSINESS_PROFILE_FIELDS, type BusinessProfile } from "@/lib/business-di
 import { saveFlowPlan } from "../flow-editor-actions"
 import {
   analyzeOnboardingWebsite,
+  enrichOnboardingWebsite,
   checkOnboardingConnections,
   completeOnboarding,
   generateOnboardingPlan,
@@ -118,6 +119,10 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const [profileConfirmed, setProfileConfirmed] = useState(savedBusiness?.profileConfirmed ?? false)
   const [websiteError, setWebsiteError] = useState<string | null>(null)
   const [websitePending, setWebsitePending] = useState(false)
+  const [semanticPending, setSemanticPending] = useState(false)
+  const [semanticError, setSemanticError] = useState<string | null>(null)
+  const [semanticMessage, setSemanticMessage] = useState<string | null>(null)
+  const [editedProfileFields, setEditedProfileFields] = useState<Set<keyof BusinessProfile>>(() => new Set())
   const [error, setError] = useState<string | null>(null)
   const [reply, setReply] = useState<string | null>(saved?.reply ?? null)
   const [plan, setPlan] = useState<FlowPlan | null>(saved?.plan ?? null)
@@ -186,6 +191,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const handleWebsiteAnalysis = async () => {
     if (!websiteUrl.trim() || pending || websitePending) return
     setWebsiteError(null)
+    setSemanticError(null)
+    setSemanticMessage(null)
+    setEditedProfileFields(new Set())
     setWebsiteSnapshot(null)
     setBusinessProfile(null)
     setProfileConfirmed(false)
@@ -201,6 +209,35 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
       setWebsiteError("No se pudo analizar la web. Puedes continuar sin ella.")
     } finally {
       setWebsitePending(false)
+    }
+  }
+
+  const handleSemanticEnrichment = async () => {
+    if (!websiteSnapshot || semanticPending || websitePending) return
+    setSemanticError(null)
+    setSemanticMessage(null)
+    setSemanticPending(true)
+    try {
+      const result = await enrichOnboardingWebsite({ workspaceId, snapshot: websiteSnapshot })
+      if (!result.ok) {
+        setSemanticError(result.error)
+        return
+      }
+      setBusinessProfile((current) => {
+        if (!current) return result.profile
+        return Object.fromEntries(BUSINESS_PROFILE_FIELDS.map(({ key }) => [
+          key,
+          editedProfileFields.has(key) || !result.profile[key].value ? current[key] : result.profile[key],
+        ])) as BusinessProfile
+      })
+      setProfileConfirmed(false)
+      setSemanticMessage(result.trial
+        ? "Análisis completado con un crédito de prueba de MarchaSolo."
+        : `Análisis completado con ${result.model}.`)
+    } catch {
+      setSemanticError("No se pudo completar el análisis con IA. Puedes seguir con el análisis inicial.")
+    } finally {
+      setSemanticPending(false)
     }
   }
 
@@ -399,12 +436,16 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                 setWebsiteError(null)
               }}
               onAnalyzeWebsite={handleWebsiteAnalysis}
+              onEnrichWebsite={handleSemanticEnrichment}
+              semanticPending={semanticPending}
+              semanticError={semanticError ?? semanticMessage}
               websitePending={websitePending}
               disabled={pending}
               websiteError={websiteError}
               websiteSnapshot={websiteSnapshot}
               businessProfile={businessProfile}
               onProfileFieldChange={(key, value) => {
+                setEditedProfileFields((current) => new Set(current).add(key))
                 setBusinessProfile((current) => current ? {
                   ...current,
                   [key]: { ...current[key], value, confirmed: false },
@@ -417,6 +458,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                 setWebsiteSnapshot(null)
                 setBusinessProfile(null)
                 setProfileConfirmed(false)
+                setSemanticError(null)
+                setSemanticMessage(null)
+                setEditedProfileFields(new Set())
               }}
               businessType={businessType}
               onBusinessTypeChange={setBusinessType}
