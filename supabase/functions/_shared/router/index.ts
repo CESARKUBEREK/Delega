@@ -190,11 +190,16 @@ export async function routeAi(
 ): Promise<Routed | RouteError> {
   if (opts.allowTrialRun) {
     const trialKey = Deno.env.get("TRIAL_OPENAI_API_KEY")?.trim()
-    const [{ data: workspace }, { data: credits }] = await Promise.all([
-      admin.from("workspaces").select("kind").eq("id", workspaceId).maybeSingle(),
-      admin.from("workspace_trial_credits").select("allowance_runs, used_runs").eq("workspace_id", workspaceId).maybeSingle(),
-    ])
-    if (workspace?.kind === "personal" && credits && Number(credits.used_runs) < Number(credits.allowance_runs)) {
+    // La fila de créditos es la concesión explícita del cupo; no limitar por
+    // tipo de espacio. Esto permite pruebas financiadas también en organizaciones
+    // cuando MarchaSolo les haya asignado créditos.
+    const { data: credits } = await admin
+      .from("workspace_trial_credits")
+      .select("allowance_runs, used_runs, allowance_tokens, used_tokens")
+      .eq("workspace_id", workspaceId)
+      .maybeSingle()
+    if (credits && Number(credits.used_runs) < Number(credits.allowance_runs) &&
+        Number(credits.used_tokens) < Number(credits.allowance_tokens)) {
       if (!trialKey) {
         return { error: "La prueba gratuita de MarchaSolo no está disponible ahora. No usaremos tu IA conectada sin tu autorización.", code: "no_ai" }
       }
@@ -415,7 +420,16 @@ export async function aiForRun(
 ): Promise<Ai | null> {
   if (routing?.trial) {
     const key = Deno.env.get("TRIAL_OPENAI_API_KEY")?.trim()
-    return key ? { provider: "openai", model: "gpt-6-luna", apiKey: key, trial: true } : null
+    if (!key) return null
+    // Cada tramo del agente vuelve a comprobar el saldo de tokens de prueba.
+    // Así una ejecución gratuita no puede seguir generando llamadas sin cupo.
+    const { data: credits } = await admin
+      .from("workspace_trial_credits")
+      .select("allowance_tokens, used_tokens")
+      .eq("workspace_id", workspaceId)
+      .maybeSingle()
+    if (!credits || Number(credits.used_tokens) >= Number(credits.allowance_tokens)) return null
+    return { provider: "openai", model: "gpt-6-luna", apiKey: key, trial: true }
   }
   const catalog = await loadCatalog(admin)
   const keyFor = keyring(admin, workspaceId)
