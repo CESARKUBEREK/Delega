@@ -1108,8 +1108,6 @@ function DoneStep({
 
   useEffect(() => {
     let stop = false
-    setAi(null)
-    if (neededConnections.length > 0) setToolCheck(null)
     void checkOnboardingAi(workspaceId)
       .then((r) => {
         if (!stop) setAi(r.ok ? { ok: r.connected, label: r.label } : { ok: false, label: null, error: r.error })
@@ -1201,7 +1199,11 @@ function DoneStep({
       {!loading ? (
         <div className="flex flex-col gap-3">
           {verificationError ? (
-            <button type="button" onClick={() => setCheckVersion((version) => version + 1)} className={primary}>
+            <button type="button" onClick={() => {
+              setAi(null)
+              setToolCheck(neededConnections.length === 0 ? { ok: true, statuses: {} } : null)
+              setCheckVersion((version) => version + 1)
+            }} className={primary}>
               Volver a comprobar conexiones →
             </button>
           ) : ready && plan ? (
