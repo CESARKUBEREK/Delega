@@ -6,15 +6,7 @@ export function PlanView({ plan, compact = false, animated = false }: { plan: Fl
     <div className={`plan-view border border-ink bg-sheet ${animated ? "plan-view-animated" : ""}`}>
       {animated ? (
         <div className="plan-team-stage border-b border-ink px-4 py-4 sm:px-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p className="text-[10px] font-bold tracking-[.16em] text-graphite">TU EQUIPO DIGITAL</p>
-              <p className="mt-1 text-sm font-semibold text-ink">Así colaborarán para resolverlo</p>
-            </div>
-            <span className="plan-live-indicator inline-flex items-center gap-2 rounded-full border border-stroke/30 bg-stroke/5 px-2.5 py-1 text-[10px] font-semibold text-ink">
-              <span className="plan-live-dot h-1.5 w-1.5 rounded-full bg-stroke" /> EQUIPO PROPUESTO
-            </span>
-          </div>
+          <p className="text-sm font-semibold text-ink">Tu equipo digital</p>
           <div className="plan-team-flow mt-5" aria-label={`Equipo de ${plan.steps.length} funciones coordinadas`}>
             <div className="plan-team-spine" aria-hidden="true" />
             {plan.steps.map((step, i) => (
@@ -28,15 +20,14 @@ export function PlanView({ plan, compact = false, animated = false }: { plan: Fl
               </div>
             ))}
           </div>
-          <p className="mt-3 text-xs text-graphite">Cada función tiene una tarea concreta. MarchaSolo coordina el conjunto y te pide aprobación cuando corresponde.</p>
+          <p className="mt-3 text-xs text-graphite">MarchaSolo coordina estas funciones y te pide aprobación antes de enviar o modificar algo.</p>
         </div>
       ) : null}
       <div className="border-b border-ink px-4 py-3">
         <p className="rotulo text-base text-ink">{plan.name}</p>
         {plan.summary ? <p className="mt-1 text-sm text-graphite">{plan.summary}</p> : null}
         <p className="mt-2 text-xs text-graphite">
-          {TRIGGER_LABEL[plan.trigger.type] ?? "Manual"}
-          {plan.trigger.description ? `: ${plan.trigger.description}` : ""}
+          {plan.trigger.description?.trim() || TRIGGER_LABEL[plan.trigger.type] || "Manual"}
         </p>
       </div>
 
@@ -79,7 +70,7 @@ export function PlanView({ plan, compact = false, animated = false }: { plan: Fl
 
       {plan.open_questions.length > 0 ? (
         <div className="border-t border-ink px-4 py-3">
-          <p className="text-xs font-medium text-ink">Falta por concretar</p>
+          <p className="text-xs font-medium text-ink">Por definir</p>
           <ul className="mt-1 list-disc pl-5 text-sm text-graphite">
             {plan.open_questions.map((q, i) => (
               <li key={i}>{q}</li>

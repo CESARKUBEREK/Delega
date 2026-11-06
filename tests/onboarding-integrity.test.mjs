@@ -6,6 +6,7 @@ const onboarding = readFileSync(new URL("../src/lib/onboarding.ts", import.meta.
 const actions = readFileSync(new URL("../src/app/w/[workspaceId]/onboarding/actions.ts", import.meta.url), "utf8")
 const client = readFileSync(new URL("../src/app/w/[workspaceId]/onboarding/onboarding-client.tsx", import.meta.url), "utf8")
 const businessContext = readFileSync(new URL("../src/components/onboarding/business-context-fields.tsx", import.meta.url), "utf8")
+const planView = readFileSync(new URL("../src/components/plan-view.tsx", import.meta.url), "utf8")
 
 test("el plan mapea todas las capacidades y también el canal de entrada", () => {
   assert.match(onboarding, /export function requiredConnections\(plan: FlowPlan\): OnboardingConnection\[\]/)
@@ -110,4 +111,16 @@ test("el intake y el análisis web están encapsulados sin mover la lógica de n
     assert.ok(businessContext.includes(value), `falta el elemento extraído ${value}`)
   }
   assert.match(businessContext, /disabled=\{!websiteUrl\.trim\(\) \|\| disabled \|\| websitePending\}/)
+})
+
+test("el paso de propuesta evita titulares y disparadores redundantes", () => {
+  assert.match(client, /Tu propuesta de trabajo/)
+  assert.doesNotMatch(client, /Así lo resolvería/)
+  assert.match(actions, /Este primer plan es un punto de partida/)
+  assert.doesNotMatch(actions, /Así lo haría con lo que me has contado/)
+  assert.match(planView, /Tu equipo digital/)
+  assert.doesNotMatch(planView, /EQUIPO PROPUESTO|Así colaborarán para resolverlo/)
+  assert.match(planView, /plan\.trigger\.description\?\.trim\(\) \|\| TRIGGER_LABEL/)
+  assert.doesNotMatch(planView, /TRIGGER_LABEL\[plan\.trigger\.type\].*plan\.trigger\.description/)
+  assert.match(planView, /Por definir/)
 })
