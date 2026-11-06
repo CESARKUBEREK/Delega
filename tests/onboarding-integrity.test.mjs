@@ -196,7 +196,7 @@ test("el progreso conserva el contexto web y los datos de negocio", () => {
 })
 
 test("el usuario puede pedir descubrir oportunidades sin definir una tarea", () => {
-  assert.match(client, /¿Qué te gustaría mejorar en tu negocio\?/)
+  assert.match(client, /¿Qué debería hacer MarchaSolo por ti\?/))
   assert.match(client, /No sé todavía; ayúdame a descubrirlo/)
   assert.match(client, /const requestedTask = task\.trim\(\) \|\| "Ayúdame a descubrir qué tareas repetitivas/)
   assert.match(client, /message: requestedTask/)
