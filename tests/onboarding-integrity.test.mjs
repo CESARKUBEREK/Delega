@@ -7,6 +7,7 @@ const actions = readFileSync(new URL("../src/app/w/[workspaceId]/onboarding/acti
 const client = readFileSync(new URL("../src/app/w/[workspaceId]/onboarding/onboarding-client.tsx", import.meta.url), "utf8")
 const businessContext = readFileSync(new URL("../src/components/onboarding/business-context-fields.tsx", import.meta.url), "utf8")
 const connectStep = readFileSync(new URL("../src/components/onboarding/connect-step.tsx", import.meta.url), "utf8")
+const doneStep = readFileSync(new URL("../src/components/onboarding/done-step.tsx", import.meta.url), "utf8")
 const planView = readFileSync(new URL("../src/components/plan-view.tsx", import.meta.url), "utf8")
 
 test("el plan mapea todas las capacidades y también el canal de entrada", () => {
@@ -33,13 +34,13 @@ test("el servidor comprueba los proveedores reales y limita los archivos a Googl
 })
 
 test("el estado final distingue conexiones pendientes de errores de verificación", () => {
-  assert.match(client, /verificationError = ai\?\.error/)
-  assert.match(client, /No pude verificar toda la configuración/)
-  assert.match(client, /Configuración pendiente/)
-  assert.match(client, /Preparado para probar/)
-  assert.match(client, /Volver a comprobar conexiones/)
-  assert.match(client, /setAi\(r\.ok \? \{ ok: r\.connected, label: r\.label \} : \{ ok: false, label: null, error: r\.error \}\)/)
-  assert.match(client, /ok: ai\?\.error \? null : ai\?\.ok \?\? null/)
+  assert.match(doneStep, /verificationError = ai\?\.error/)
+  assert.match(doneStep, /No pude verificar toda la configuración/)
+  assert.match(doneStep, /Configuración pendiente/)
+  assert.match(doneStep, /Preparado para probar/)
+  assert.match(doneStep, /Volver a comprobar conexiones/)
+  assert.match(doneStep, /setAi\(r\.ok \? \{ ok: r\.connected, label: r\.label \} : \{ ok: false, label: null, error: r\.error \}\)/)
+  assert.match(doneStep, /ok: ai\?\.error \? null : ai\?\.ok \?\? null/)
 })
 
 test("la demostración de aprobación es local y nunca ejecuta acciones externas", () => {
@@ -61,7 +62,7 @@ test("el plan debe persistirse antes de avanzar y antes de completar", () => {
 })
 
 test("la pantalla final reutiliza flowId y no crea otro borrador", () => {
-  assert.match(client, /if \(!flowId\) \{\s*setError\("El borrador aún no está guardado/)
+  assert.match(doneStep, /if \(!flowId\) \{\s*setError\("El borrador aún no está guardado/)
   assert.doesNotMatch(client, /saveFlowPlan\(\{ workspaceId, flowId: null, plan, fileIds: \[\] \}\)[\s\S]{0,100}router\.push/)
 })
 
@@ -77,8 +78,8 @@ test("los errores de comprobación tienen estado propio y no conservan un conect
 })
 
 test("la pantalla final lista y comprueba todas las conexiones del plan", () => {
-  assert.match(client, /neededConnections\.map\(\(connection\) =>/)
-  assert.match(client, /checkOnboardingConnections\(\{ workspaceId, connections: neededConnections \}\)/)
+  assert.match(doneStep, /neededConnections\.map\(\(connection\) =>/)
+  assert.match(doneStep, /checkOnboardingConnections\(\{ workspaceId, connections: neededConnections \}\)/)
 })
 
 test("el intake estructurado del negocio se transmite y se valida antes de generar el plan", () => {
@@ -135,4 +136,16 @@ test("el paso de conexiones está encapsulado y conserva sus comprobaciones", ()
   assert.match(connectStep, /ms_setup=/)
   assert.match(connectStep, /trackOnboardingStep\(workspaceId, "connected"/)
   assert.match(connectStep, /CONNECTION_ANCHOR\[needed\]/)
+})
+
+
+test("el paso final está encapsulado y conserva la comprobación y el resultado de la bandeja", () => {
+  assert.match(client, /<DoneStep/)
+  assert.match(client, /from "@\/components\/onboarding\/done-step"/)
+  assert.match(doneStep, /export function DoneStep/)
+  assert.match(doneStep, /checkOnboardingAi\(workspaceId\)/)
+  assert.match(doneStep, /checkOnboardingConnections\(\{ workspaceId, connections: neededConnections \}\)/)
+  assert.match(doneStep, /getOnboardingResult\(workspaceId\)/)
+  assert.match(doneStep, /Abrir y probar esta automatización/)
+  assert.match(doneStep, /nada se envía ni modifica sin tu aprobación/)
 })
