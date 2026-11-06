@@ -1,6 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import { combineWebsitePages, isSameOriginWebsiteUrl, parseWebsiteHtml, selectRelevantWebsiteLinks } from "../src/lib/business-discovery/website-parser.ts"
+import { analyzeBusinessProfile } from "../src/lib/business-discovery/business-profile.ts"
 
 test("extrae contenido visible y omite navegación, pie y scripts", () => {
   const result = parseWebsiteHtml('<html lang="es"><head><title>Estudio Norte</title><meta name="description" content="Diseño y arquitectura"></head><body><header>Cabecera global</header><nav>Inicio Contacto</nav><main><h1>Proyectos</h1><p>Atendemos empresas y particulares.</p></main><footer>Política de privacidad</footer><script>no incluir</script></body></html>', "https://example.com")
@@ -33,17 +34,17 @@ test("limita encabezados, texto y enlaces", () => {
 
 test("selecciona páginas comerciales y corporativas del mismo origen", () => {
   const selected = selectRelevantWebsiteLinks(["/blog/noticia", "/servicios", "/contacto", "https://otro.example/servicios", "mailto:hola@example.org", "/nosotros", "/proyectos"], "https://negocio.example/")
-  assert.deepEqual(selected, ["https://negocio.example/servicios", "https://negocio.example/proyectos"])
+  assert.deepEqual(selected, ["https://negocio.example/servicios", "https://negocio.example/proyectos", "https://negocio.example/nosotros", "https://negocio.example/contacto"])
   assert.ok(selected.every((url) => isSameOriginWebsiteUrl("https://negocio.example/", url)))
   assert.equal(isSameOriginWebsiteUrl("https://negocio.example/", "https://otro.example/contacto"), false)
 })
 
-test("el snapshot elimina duplicados y limita a tres páginas", () => {
+test("el snapshot elimina duplicados y limita a cinco páginas", () => {
   const pages = Array.from({ length: 5 }, (_, index) => ({ url: `https://negocio.example/pagina-${index}`, title: `Página ${index}`, description: null, headings: [], text: "Contenido" }))
   const snapshot = combineWebsitePages([pages[0], pages[1], pages[1], pages[2], pages[3]])
-  assert.equal(snapshot.pages.length, 3)
+  assert.equal(snapshot.pages.length, 4)
   assert.equal(snapshot.url, pages[0].url)
-  assert.deepEqual(snapshot.pages.map((page) => page.url), [pages[0].url, pages[1].url, pages[2].url])
+  assert.deepEqual(snapshot.pages.map((page) => page.url), [pages[0].url, pages[1].url, pages[2].url, pages[3].url])
 })
 
 test("extrae contenido de una estructura WordPress típica sin confundir widgets y footer", () => {
@@ -100,3 +101,19 @@ test("ignora scripts ejecutables que no sean datos estructurados o de hidrataci�
   assert.equal(result.contentSource, "metadata")
   assert.doesNotMatch(result.text, /Texto de ejemplo/)
 })
+
+
+test("construye un perfil más completo con evidencias de varias páginas y conserva los campos desconocidos", () => {
+  const pages = [
+    { url: "https://empresa.example/", title: "Andes Market Intelligence", description: "Consultoría estratégica e inteligencia de mercado para evaluar oportunidades de negocio en Argentina.", headings: ["Inteligencia comercial"], text: "Ayudamos a fabricantes, importadores e inversores a comprender el mercado argentino y sus sectores industriales.", keywords: ["market intelligence", "Argentina"] },
+    { url: "https://empresa.example/servicios", title: "Servicios de investigación", description: "Estudios de mercado, análisis sectoriales, evaluación de riesgos y due diligence.", headings: ["Research & Market Entry"], text: "Preparamos informes de mercado y acompañamos decisiones de inversión, exportación y abastecimiento." },
+    { url: "https://empresa.example/contacto", title: "Contacto", description: "Solicita información y agenda una reunión con nuestro equipo.", headings: ["Hablemos"], text: "Contacta con nosotros para solicitar un presupuesto y conocer nuestros servicios." },
+  ];
+  const profile = analyzeBusinessProfile({ ...pages[0], pages });
+  assert.match(profile.activity.value, /Consultoría|inteligencia de mercado|fabricantes/i);
+  assert.match(profile.clients.value, /fabricantes|importadores|inversores/i);
+  assert.match(profile.offer.value, /inteligencia de mercado|Estudios de mercado|análisis sectoriales/i);
+  assert.match(profile.acquisition.value, /Solicita información|agenda una reunión|solicitar un presupuesto/i);
+  assert.equal(profile.tools.source, "not_found");
+  assert.ok(profile.offer.evidenceSources.every((url) => url.startsWith("https://empresa.example/")));
+});
