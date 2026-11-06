@@ -38,7 +38,7 @@ test("la demostración de aprobación es local y nunca ejecuta acciones externas
   assert.match(demo, /setDecision\("approved"\)/)
   assert.match(demo, /setDecision\("rejected"\)/)
   assert.match(demo, /Repetir ejemplo/)
-  assert.match(demo, /no se ha ejecutado ninguna acción externa/)
+  assert.match(demo, /no se ha ejecutado ninguna acción externa/i)
   assert.doesNotMatch(demo, /saveFlowPlan|fetch\(|\.from\(["']flow_runs/)
 })
 
