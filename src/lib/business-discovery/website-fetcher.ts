@@ -117,6 +117,71 @@ async function requestPinned(url: URL, address: string, family: number): Promise
   })
 }
 
+async function renderWithBrowserless(url: URL): Promise<ParsedWebsitePage | null> {
+  const token = process.env.BROWSERLESS_API_TOKEN
+  if (!token) return null
+
+  const endpoint = new URL("https://production-ams.browserless.io/chromium/content")
+  endpoint.searchParams.set("token", token)
+  // Restrict browser navigation to the exact hostname supplied by the user.
+  endpoint.searchParams.set("allowedDomains", JSON.stringify([url.hostname]))
+
+  let response: Response
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "text/html" },
+      body: JSON.stringify({
+        url: url.toString(),
+        gotoOptions: { waitUntil: "domcontentloaded", timeout: 10_000 },
+        waitForTimeout: 900,
+        rejectResourceTypes: ["image", "media", "font", "websocket"],
+      }),
+      signal: AbortSignal.timeout(15_000),
+      cache: "no-store",
+    })
+  } catch {
+    return null
+  }
+  if (!response.ok || !response.body) return null
+
+  const renderedUrlHeader = response.headers.get("x-response-url")
+  let renderedUrl: URL
+  try {
+    renderedUrl = new URL(renderedUrlHeader || url.toString())
+  } catch {
+    return null
+  }
+  if (renderedUrl.origin !== url.origin || renderedUrl.username || renderedUrl.password) return null
+
+  const siteStatus = Number(response.headers.get("x-response-code") || "200")
+  if (siteStatus < 200 || siteStatus >= 300) return null
+
+  const records = await lookupWithRetry(renderedUrl.hostname)
+  if (!records.length || records.some((record) => !isPublicAddress(record.address))) return null
+
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let bytes = 0
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      bytes += value.byteLength
+      if (bytes > MAX_BYTES) {
+        await reader.cancel()
+        return null
+      }
+      chunks.push(value)
+    }
+  } catch {
+    return null
+  }
+  const html = Buffer.concat(chunks.map((chunk) => Buffer.from(chunk))).toString("utf8")
+  const page = parseWebsiteHtml(html, renderedUrl.toString())
+  return page.contentQuality === "usable" ? { ...page, contentSource: "rendered_html" } : null
+}
+
 async function fetchSinglePublicPage(input: string, expectedOrigin?: string, blockedUrls: Set<string> = new Set()): Promise<ParsedWebsitePage> {
   const trimmed = input.trim()
   const lowerInput = trimmed.toLowerCase()
@@ -147,7 +212,12 @@ async function fetchSinglePublicPage(input: string, expectedOrigin?: string, blo
       continue
     }
 
-    return parseWebsiteHtml(response.body, current.toString())
+    const parsed = parseWebsiteHtml(response.body, current.toString())
+    if (parsed.contentQuality === "javascript_shell" && process.env.BROWSERLESS_API_TOKEN) {
+      const rendered = await renderWithBrowserless(current)
+      if (rendered) return rendered
+    }
+    return parsed
   }
 
   throw new Error("No se pudo analizar la web.")
