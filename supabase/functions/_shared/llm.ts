@@ -72,13 +72,13 @@ export const NO_AI_MESSAGE = "Conecta una IA (OpenAI, Anthropic, DeepSeek o Grok
 
 // ---------------------------------------------------------------------------
 // Planes de prueba del onboarding (decisión de Cesar, 3 nov): con una clave de
-// MarchaSolo y un modelo potente (Claude Sonnet 5.5), solo para preparar el
+// MarchaSolo y un modelo potente (GPT-6 Luna), solo para preparar el
 // plan del onboarding cuando el espacio aún no tiene IA propia. Como mucho 2
 // planes por espacio personal. El chat, el ayudante y todo lo demás usan
 // siempre la IA del espacio.
 // ---------------------------------------------------------------------------
-export const TRIAL_PROVIDER: Provider = "anthropic"
-export const TRIAL_MODEL = "claude-sonnet-5-5"
+export const TRIAL_PROVIDER: Provider = "openai"
+export const TRIAL_MODEL = "gpt-6-luna"
 
 export const TRIAL_EXHAUSTED_MESSAGE =
   "Ya has usado los planes de prueba de MarchaSolo. Conecta tu propia IA (OpenAI, Anthropic, DeepSeek o Grok) en Integraciones para seguir."
@@ -92,7 +92,7 @@ export async function resolveAiOrTrial(
 ): Promise<{ ai: Ai } | { ai: null; message: string }> {
   const own = await resolveAi(admin, workspaceId, preferredModel)
   if (own) return { ai: own }
-  const key = Deno.env.get("TRIAL_ANTHROPIC_API_KEY")?.trim()
+  const key = Deno.env.get("TRIAL_OPENAI_API_KEY")?.trim()
   if (!key) return { ai: null, message: NO_AI_MESSAGE }
   const { data } = await admin
     .from("workspace_trial_credits")
