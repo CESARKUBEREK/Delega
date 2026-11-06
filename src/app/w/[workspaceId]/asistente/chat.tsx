@@ -276,6 +276,7 @@ function PlanActions({
   const wantsFiles = needsFiles(plan)
   const [selected, setSelected] = useState<string[]>(wantsFiles && files.length === 1 ? [files[0].id] : [])
   const [error, setError] = useState<string | null>(null)
+  const [trialFunded, setTrialFunded] = useState(false)
   const [starting, startRun] = useTransition()
   const base = `/w/${workspaceId}`
   const active = run && (run.status === "running" || run.status === "awaiting_approval")
@@ -286,12 +287,18 @@ function PlanActions({
     startRun(async () => {
       const result = await startRunFromMessage({ workspaceId, messageId, fileIds: selected })
       if (!result.ok) setError(result.error)
+      else setTrialFunded(result.trialFunded === true)
       router.refresh()
     })
   }
 
   return (
     <div className="flex flex-col gap-3">
+      {trialFunded ? (
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+          Esta ejecución está financiada por MarchaSolo. Incluye una única prueba gratuita, con un límite de coste de IA de 0,10 USD.
+        </p>
+      ) : null}
       {run ? <RunInChat run={run} base={base} /> : null}
 
       {!active ? (
