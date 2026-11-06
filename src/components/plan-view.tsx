@@ -1,12 +1,24 @@
 import { AVAILABLE_CONNECTIONS, CONNECTION_LABEL, STEP_LABEL, TRIGGER_LABEL, type FlowPlan } from "@/lib/plan"
 
+function getTriggerText(plan: FlowPlan) {
+  const description = plan.trigger.description?.trim()
+  if (!description) return TRIGGER_LABEL[plan.trigger.type] || "Manual"
+
+  const parts = description.split(":").map((part) => part.trim()).filter(Boolean)
+  const repeatsEmailTrigger = parts.length === 2 && parts.every((part) =>
+    /correo/i.test(part) && /(lleg|recib)/i.test(part),
+  )
+
+  return repeatsEmailTrigger ? TRIGGER_LABEL.email_message : description
+}
+
 // Plan de un flujo como hoja de pasos numerados. Solo muestra: no ejecuta.
 export function PlanView({ plan, compact = false, animated = false }: { plan: FlowPlan; compact?: boolean; animated?: boolean }) {
   return (
     <div className={`plan-view border border-ink bg-sheet ${animated ? "plan-view-animated" : ""}`}>
       {animated ? (
         <div className="plan-team-stage border-b border-ink px-4 py-4 sm:px-5">
-          <p className="text-sm font-semibold text-ink">Tu equipo digital</p>
+          <p className="text-sm font-semibold text-ink">Equipo digital</p>
           <div className="plan-team-flow mt-5" aria-label={`Equipo de ${plan.steps.length} funciones coordinadas`}>
             <div className="plan-team-spine" aria-hidden="true" />
             {plan.steps.map((step, i) => (
@@ -20,14 +32,14 @@ export function PlanView({ plan, compact = false, animated = false }: { plan: Fl
               </div>
             ))}
           </div>
-          <p className="mt-3 text-xs text-graphite">MarchaSolo coordina estas funciones y te pide aprobación antes de enviar o modificar algo.</p>
+          <p className="mt-3 text-xs text-graphite">MarchaSolo coordina el trabajo. Tú apruebas antes de enviar o modificar.</p>
         </div>
       ) : null}
       <div className="border-b border-ink px-4 py-3">
         <p className="rotulo text-base text-ink">{plan.name}</p>
         {plan.summary ? <p className="mt-1 text-sm text-graphite">{plan.summary}</p> : null}
         <p className="mt-2 text-xs text-graphite">
-          {plan.trigger.description?.trim() || TRIGGER_LABEL[plan.trigger.type] || "Manual"}
+          {getTriggerText(plan)}
         </p>
       </div>
 
