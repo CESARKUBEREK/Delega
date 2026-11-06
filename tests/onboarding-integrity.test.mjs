@@ -6,6 +6,7 @@ const onboarding = readFileSync(new URL("../src/lib/onboarding.ts", import.meta.
 const actions = readFileSync(new URL("../src/app/w/[workspaceId]/onboarding/actions.ts", import.meta.url), "utf8")
 const client = readFileSync(new URL("../src/app/w/[workspaceId]/onboarding/onboarding-client.tsx", import.meta.url), "utf8")
 const businessContext = readFileSync(new URL("../src/components/onboarding/business-context-fields.tsx", import.meta.url), "utf8")
+const connectStep = readFileSync(new URL("../src/components/onboarding/connect-step.tsx", import.meta.url), "utf8")
 const planView = readFileSync(new URL("../src/components/plan-view.tsx", import.meta.url), "utf8")
 
 test("el plan mapea todas las capacidades y también el canal de entrada", () => {
@@ -70,9 +71,9 @@ test("la numeración usa exactamente los pasos visibles", () => {
 })
 
 test("los errores de comprobación tienen estado propio y no conservan un conectado anterior", () => {
-  assert.match(client, /"loading" \| "connected" \| "missing" \| "error"/)
-  assert.match(client, /setStatus\("error"\)/)
-  assert.match(client, /setStatus\(result\.connected \? "connected" : "missing"\)/)
+  assert.match(connectStep, /"loading" \| "connected" \| "missing" \| "error"/)
+  assert.match(connectStep, /setStatus\("error"\)/)
+  assert.match(connectStep, /setStatus\(result\.connected \? "connected" : "missing"\)/)
 })
 
 test("la pantalla final lista y comprueba todas las conexiones del plan", () => {
@@ -123,4 +124,15 @@ test("el paso de propuesta evita titulares y disparadores redundantes", () => {
   assert.match(planView, /getTriggerText\(plan\)/)
   assert.match(planView, /repeatsEmailTrigger \? TRIGGER_LABEL\.email_message : description/)
   assert.match(planView, /Por definir/)
+})
+
+
+test("el paso de conexiones está encapsulado y conserva sus comprobaciones", () => {
+  assert.match(client, /<ConnectStep/)
+  assert.match(client, /from "@\/components\/onboarding\/connect-step"/)
+  assert.match(connectStep, /export function ConnectStep/)
+  assert.match(connectStep, /window\.setInterval\(\(\) => void check\(\), 8000\)/)
+  assert.match(connectStep, /ms_setup=/)
+  assert.match(connectStep, /trackOnboardingStep\(workspaceId, "connected"/)
+  assert.match(connectStep, /CONNECTION_ANCHOR\[needed\]/)
 })
