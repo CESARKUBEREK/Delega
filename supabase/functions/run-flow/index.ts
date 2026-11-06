@@ -48,7 +48,7 @@ async function readyToRun(
 }
 
 async function reserveTrialRun(ctx: AuthContext, workspaceId: string, runId: string): Promise<boolean> {
-  const { data, error } = await ctx.admin.rpc("trial_run_consume", { p_workspace_id: workspaceId })
+  const { data, error } = await ctx.admin.rpc("trial_run_consume", { p_workspace_id: workspaceId, p_run_id: runId })
   if (error) {
     console.error("trial_run_consume", error.code)
     await ctx.admin.from("flow_runs").update({
