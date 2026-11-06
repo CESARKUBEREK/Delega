@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useCallback, useEffect, useRef, useState, useTransition, type ReactNode } from "react"
 import { checkOnboardingAi, trackOnboardingStep } from "@/app/w/[workspaceId]/onboarding/actions"
 
-function AiStep({
+export function AiStep({
   workspaceId,
   base,
   isAdmin,
