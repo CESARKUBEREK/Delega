@@ -1400,7 +1400,15 @@ export type Database = {
         Returns: number
       }
       trial_run_consume: {
-        Args: { p_workspace_id: string }
+        Args: { p_run_id: string; p_workspace_id: string }
+        Returns: boolean
+      }
+      trial_run_release: {
+        Args: { p_run_id: string; p_workspace_id: string }
+        Returns: boolean
+      }
+      trial_run_commit: {
+        Args: { p_run_id: string; p_workspace_id: string }
         Returns: boolean
       }
       workspace_set_ai_routing: {
