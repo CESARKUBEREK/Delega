@@ -9,7 +9,7 @@ import { checkOnboardingConnection, trackOnboardingStep } from "@/app/w/[workspa
 // aquí mismo la tarjeta de conexión (la misma que en Integraciones). Vuelve a
 // comprobar sola cada pocos segundos, al volver a la pestaña y al volver de
 // Google (la cookie ms_setup trae de vuelta a esta página).
-function ConnectStep({
+export function ConnectStep({
   workspaceId,
   base,
   needed,
