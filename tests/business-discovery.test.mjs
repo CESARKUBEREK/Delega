@@ -45,3 +45,14 @@ test("el snapshot elimina duplicados y limita a tres páginas", () => {
   assert.equal(snapshot.url, pages[0].url)
   assert.deepEqual(snapshot.pages.map((page) => page.url), [pages[0].url, pages[1].url, pages[2].url])
 })
+
+test("extrae contenido de una estructura WordPress típica sin confundir widgets y footer", () => {
+  const html = `<!doctype html><html lang="fr"><head><title>Cabinet Durand</title><meta name="description" content="Conseil en stratégie pour PME"></head><body><header class="site-header"><nav>Accueil Services Contact</nav></header><main id="main" class="site-main"><article class="page type-page"><h1>Conseil en stratégie</h1><div class="entry-content"><p>Nous accompagnons les entreprises industrielles dans leur développement commercial.</p><h2>Nos services</h2><p>Études de marché, stratégie export et accompagnement opérationnel.</p></div></article></main><aside class="widget-area">Articles récents</aside><footer class="site-footer">Mentions légales et cookies</footer></body></html>`;
+  const result = parseWebsiteHtml(html, "https://cabinet.example/");
+  assert.equal(result.language, "fr");
+  assert.match(result.title, /Cabinet Durand/);
+  assert.match(result.text, /entreprises industrielles/);
+  assert.match(result.text, /stratégie export/);
+  assert.doesNotMatch(result.text, /Accueil Services Contact|Articles récents|Mentions légales/);
+  assert.equal(result.contentQuality, "usable");
+})
