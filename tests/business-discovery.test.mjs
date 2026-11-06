@@ -44,7 +44,7 @@ test("el snapshot elimina duplicados y limita a cinco páginas", () => {
   const snapshot = combineWebsitePages([pages[0], pages[1], pages[1], pages[2], pages[3]])
   assert.equal(snapshot.pages.length, 4)
   assert.equal(snapshot.url, pages[0].url)
-  assert.deepEqual(snapshot.pages.map((page) => page.url), [pages[0].url, pages[1].url, pages[2].url])
+  assert.deepEqual(snapshot.pages.map((page) => page.url), [pages[0].url, pages[1].url, pages[2].url, pages[3].url])
 })
 
 test("extrae contenido de una estructura WordPress típica sin confundir widgets y footer", () => {
@@ -105,7 +105,7 @@ test("ignora scripts ejecutables que no sean datos estructurados o de hidrataci�
 
 test("construye un perfil más completo con evidencias de varias páginas y conserva los campos desconocidos", () => {
   const pages = [
-    { url: "https://empresa.example/", title: "Andes Market Intelligence", description: "Consultoría estratégica e inteligencia de mercado para empresas que evalúan oportunidades en Argentina.", headings: ["Inteligencia comercial"], text: "Ayudamos a fabricantes, importadores e inversores a comprender el mercado argentino y sus sectores industriales.", keywords: ["market intelligence", "Argentina"] },
+    { url: "https://empresa.example/", title: "Andes Market Intelligence", description: "Consultoría estratégica e inteligencia de mercado para evaluar oportunidades de negocio en Argentina.", headings: ["Inteligencia comercial"], text: "Ayudamos a fabricantes, importadores e inversores a comprender el mercado argentino y sus sectores industriales.", keywords: ["market intelligence", "Argentina"] },
     { url: "https://empresa.example/servicios", title: "Servicios de investigación", description: "Estudios de mercado, análisis sectoriales, evaluación de riesgos y due diligence.", headings: ["Research & Market Entry"], text: "Preparamos informes de mercado y acompañamos decisiones de inversión, exportación y abastecimiento." },
     { url: "https://empresa.example/contacto", title: "Contacto", description: "Solicita información y agenda una reunión con nuestro equipo.", headings: ["Hablemos"], text: "Contacta con nosotros para solicitar un presupuesto y conocer nuestros servicios." },
   ];
