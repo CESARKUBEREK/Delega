@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useCallback, useEffect, useRef, useState, useTransition, type ReactNode } from "react"
-import { checkOnboardingAi, trackOnboardingStep } from "@/app/w/[workspaceId]/onboarding/actions"
+import { checkOnboardingAi } from "@/app/w/[workspaceId]/onboarding/actions"
 
 export function AiStep({
   workspaceId,
@@ -65,10 +65,6 @@ export function AiStep({
       window.removeEventListener("focus", onFocus)
     }
   }, [check])
-
-  useEffect(() => {
-    if (status === "connected") void trackOnboardingStep(workspaceId, "ai_connected")
-  }, [status, workspaceId])
 
   // La tarjeta recomendada, abierta: el botón a la web del proveedor a la vista.
   useEffect(() => {
