@@ -50,3 +50,18 @@ test("reconoce una empresa de inteligencia de mercado descrita en inglés", () =
   assert.notEqual(profile.offer.value, "")
   assert.notEqual(profile.acquisition.value, "")
 })
+
+test("reconoce señales de negocio en francés", () => {
+  const page = {
+    url: "https://cabinet.example/",
+    title: "Cabinet de conseil en stratégie",
+    description: "Nous accompagnons les entreprises industrielles dans leur développement.",
+    headings: ["Études de marché", "Stratégie export"],
+    text: "Nos équipes réalisent des études de marché et des analyses sectorielles pour les entreprises et les investisseurs. Contactez-nous pour échanger sur votre projet.",
+  }
+  const profile = analyzeBusinessProfile({ ...page, pages: [page] })
+  assert.notEqual(profile.activity.value, "")
+  assert.notEqual(profile.clients.value, "")
+  assert.notEqual(profile.offer.value, "")
+  assert.notEqual(profile.acquisition.value, "")
+})
