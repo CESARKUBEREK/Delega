@@ -1108,6 +1108,8 @@ function DoneStep({
 
   useEffect(() => {
     let stop = false
+    setAi(null)
+    if (neededConnections.length > 0) setToolCheck(null)
     void checkOnboardingAi(workspaceId)
       .then((r) => {
         if (!stop) setAi(r.ok ? { ok: r.connected, label: r.label } : { ok: false, label: null, error: r.error })
