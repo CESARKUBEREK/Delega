@@ -61,6 +61,15 @@ const SUGGESTIONS = [
   "Después de cada visita, prepárame el mensaje de seguimiento",
 ]
 
+const CONTACT_CHANNELS = [
+  ["email", "Correo"],
+  ["whatsapp", "WhatsApp"],
+  ["instagram", "Instagram / redes"],
+  ["website", "Web / formularios"],
+  ["phone", "Teléfono"],
+  ["in_person", "En persona"],
+] as const
+
 // Mientras el asistente prepara el plan (puede tardar unos segundos).
 const LOADING_MESSAGES = ["Leyendo tu tarea…", "Eligiendo las herramientas que hacen falta…", "Ordenando los pasos…", "Casi listo…"]
 
@@ -109,6 +118,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const [saved] = useState(() => loadOnboarding(workspaceId))
   const [step, setStep] = useState<Step>(saved?.step ?? "task")
   const [task, setTask] = useState(saved?.task ?? "")
+  const [businessType, setBusinessType] = useState("")
+  const [mainPain, setMainPain] = useState("")
+  const [channels, setChannels] = useState<string[]>([])
   const [websiteUrl, setWebsiteUrl] = useState("")
   const [websiteSnapshot, setWebsiteSnapshot] = useState<WebsiteSnapshot | null>(null)
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
@@ -214,7 +226,12 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
             return value ? `${label}: ${value}` : ""
           }).filter(Boolean).join("\\n").slice(0, 3_000)
         : undefined
-      const result = await generateOnboardingPlan({ workspaceId, message: task, websiteContext })
+      const result = await generateOnboardingPlan({
+        workspaceId,
+        message: task,
+        websiteContext,
+        businessIntake: { businessType, mainPain, channels },
+      })
       if (!result.ok) {
         setError(result.error)
         return
@@ -433,6 +450,58 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                   </div>
                 </div>
               ) : null}
+            </div>
+            <div className="rounded-xl border border-rule bg-paper p-4 flex flex-col gap-3">
+              <div>
+                <p className="text-sm font-semibold text-ink">Cuéntame un poco de tu negocio <span className="font-normal text-graphite">(opcional)</span></p>
+                <p className="mt-1 text-xs text-graphite">Con estos datos podré adaptar mejor el equipo digital y las herramientas que te proponga.</p>
+              </div>
+              <label className="flex flex-col gap-1 text-sm font-medium text-ink">
+                ¿A qué te dedicas?
+                <select value={businessType} onChange={(event) => setBusinessType(event.target.value)} className="w-full rounded-lg border border-rule bg-paper px-3 py-2 text-sm text-ink">
+                  <option value="">Selecciona tu actividad</option>
+                  <option value="professional">Servicios profesionales / consultoría</option>
+                  <option value="agency">Agencia / estudio</option>
+                  <option value="retail">Comercio / tienda</option>
+                  <option value="real_estate">Inmobiliaria</option>
+                  <option value="health">Salud / clínica</option>
+                  <option value="hospitality">Hostelería / turismo</option>
+                  <option value="industry">Industria / fabricación</option>
+                  <option value="other">Otro tipo de negocio</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-sm font-medium text-ink">
+                ¿Qué te gustaría mejorar primero?
+                <select value={mainPain} onChange={(event) => setMainPain(event.target.value)} className="w-full rounded-lg border border-rule bg-paper px-3 py-2 text-sm text-ink">
+                  <option value="">Elige tu prioridad</option>
+                  <option value="customer_messages">Responder consultas y mensajes</option>
+                  <option value="appointments">Organizar citas y reservas</option>
+                  <option value="sales_followup">Hacer seguimiento de clientes y ventas</option>
+                  <option value="admin">Reducir tareas administrativas</option>
+                  <option value="billing">Facturas y cobros</option>
+                  <option value="reporting">Informes y control del negocio</option>
+                  <option value="marketing">Contenido y redes sociales</option>
+                  <option value="other">Otra tarea</option>
+                </select>
+              </label>
+              <fieldset className="flex flex-col gap-2">
+                <legend className="text-sm font-medium text-ink">¿Por dónde te contactan tus clientes? <span className="font-normal text-graphite">(puedes elegir varios)</span></legend>
+                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                  {CONTACT_CHANNELS.map(([value, label]) => (
+                    <label key={value} className="inline-flex items-center gap-2 text-sm text-graphite">
+                      <input
+                        type="checkbox"
+                        checked={channels.includes(value)}
+                        onChange={(event) => setChannels((current) => event.target.checked
+                          ? [...current, value]
+                          : current.filter((channel) => channel !== value))}
+                        className="h-4 w-4 accent-ink"
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
             </div>
             <label htmlFor="task" className="sr-only">
               Describe la tarea
