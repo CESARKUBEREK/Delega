@@ -19,20 +19,8 @@ export function PlanView({ plan, compact = false, animated = false }: { plan: Fl
       {animated ? (
         <div className="plan-team-stage border-b border-ink px-4 py-4 sm:px-5">
           <p className="text-sm font-semibold text-ink">Equipo digital</p>
-          <div className="plan-team-flow mt-5" aria-label={`Equipo de ${plan.steps.length} funciones coordinadas`}>
-            <div className="plan-team-spine" aria-hidden="true" />
-            {plan.steps.map((step, i) => (
-              <div className="plan-team-node" key={`team-${step.id}-${i}`} style={{ animationDelay: `${160 + i * 130}ms` }}>
-                <span className="plan-team-node-icon" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-                <span className="plan-team-node-copy">
-                  <span className="plan-team-node-title">{step.title}</span>
-                  <span className="plan-team-node-meta">{step.connection && step.connection !== "none" ? CONNECTION_LABEL[step.connection] ?? step.connection : STEP_LABEL[step.kind] ?? step.kind}</span>
-                </span>
-                <span className="plan-team-node-status" aria-hidden="true" />
-              </div>
-            ))}
-          </div>
-          <p className="mt-3 text-xs text-graphite">MarchaSolo coordina el trabajo. Tú apruebas antes de enviar o modificar.</p>
+          <p className="mt-1 text-sm text-graphite">MarchaSolo coordina el trabajo. Los pasos aparecen una sola vez, en el orden en que se realizarán.</p>
+          <p className="mt-2 text-xs text-graphite">Tú apruebas antes de enviar o modificar información.</p>
         </div>
       ) : null}
       <div className="border-b border-ink px-4 py-3">
