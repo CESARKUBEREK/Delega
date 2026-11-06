@@ -239,10 +239,16 @@ export async function checkOnboardingConnection(input: {
 // los administradores.
 export async function completeOnboarding(workspaceId: string): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
-  const supabase = await createClient()
-  const { error } = await supabase.rpc("workspace_complete_onboarding", { p_workspace_id: workspaceId })
-  if (error) return { ok: false, error: "No se pudo guardar. Inténtalo de nuevo." }
-  return { ok: true }
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc("workspace_complete_onboarding", { p_workspace_id: workspaceId })
+    // El RPC devuelve false cuando el usuario no administra el espacio.
+    // Un resultado SQL sin error no equivale necesariamente a una operación autorizada.
+    if (error || data !== true) return { ok: false, error: "No se pudo guardar. Inténtalo de nuevo." }
+    return { ok: true }
+  } catch {
+    return { ok: false, error: "No se pudo guardar. Inténtalo de nuevo." }
+  }
 }
 
 // Paso 5: lo que MarchaSolo ya ha hecho con la bandeja (solo administradores:
@@ -297,12 +303,18 @@ export async function getOnboardingResult(workspaceId: string): Promise<Onboardi
 
 // Embudo: apunta la primera llegada de quien usa el onboarding a cada paso.
 // Nunca falla hacia fuera (si la tabla aún no existe, no pasa nada).
+const TRACKABLE_ONBOARDING_STEPS = ["task", "plan", "connect", "connected", "supervised", "done"] as const
+
 export async function trackOnboardingStep(
   workspaceId: string,
-  step: "task" | "plan" | "ai" | "ai_connected" | "connect" | "connected" | "done",
+  step: string,
   detail: { source?: string; plan?: string; needed?: string } = {},
 ): Promise<void> {
   if (!UUID_RE.test(workspaceId)) return
+  // Mantener este allowlist alineado con el CHECK de onboarding_events.step.
+  // Pasos visuales aún no representados en el esquema (p. ej. "ai") se omiten:
+  // nunca deben provocar un fallo SQL silencioso en el embudo.
+  if (!TRACKABLE_ONBOARDING_STEPS.some((allowedStep) => allowedStep === step)) return
   try {
     const supabase = await createClient()
     await supabase.rpc("onboarding_track", { p_workspace_id: workspaceId, p_step: step, p_detail: detail })
