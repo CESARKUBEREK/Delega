@@ -468,7 +468,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
             <p className="text-sm font-semibold text-graphite">
               Paso {stepOrdinal("plan")} de {stepTotal}
             </p>
-            <h2 className="rotulo text-xl mt-1">Así lo resolvería</h2>
+            <h2 className="rotulo text-xl mt-1">Tu propuesta de trabajo</h2>
             {reply && <p className="text-graphite mt-1 whitespace-pre-wrap">{reply}</p>}
             {source === "trial" && (
               <p className="mt-2 text-xs text-graphite">
@@ -483,7 +483,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
             )}
             {source === "local" && (
               <p className="mt-2 text-xs text-graphite">
-                Propuesta basada en patrones habituales, sin IA. Con tu IA conectada, los planes se adaptan a tu negocio.
+                Plan orientativo creado sin IA. Al conectar tu IA, podremos adaptarlo mejor a tu negocio.
               </p>
             )}
           </div>
