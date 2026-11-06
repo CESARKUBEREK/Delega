@@ -5,7 +5,7 @@ import type { FlowPlan } from "@/lib/plan"
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react"
 import { PlanView } from "@/components/plan-view"
 import { AiStep } from "@/components/onboarding/ai-step"
-import { DemoApprovalCard, SupervisedNote } from "@/components/onboarding/trust-cards"
+import { SupervisedNote } from "@/components/onboarding/trust-cards"
 import { ConnectStep } from "@/components/onboarding/connect-step"
 import { DoneStep } from "@/components/onboarding/done-step"
 import { BusinessContextFields } from "@/components/onboarding/business-context-fields"
@@ -131,6 +131,11 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const [trialRemaining, setTrialRemaining] = useState<number | null>(saved?.trialRemaining ?? null)
   const [flowId, setFlowId] = useState<string | null>(saved?.flowId ?? null)
   const [pending, startTransition] = useTransition()
+
+  // Cada paso comienza desde arriba, aunque el contenido nuevo sea más corto.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [step])
 
   // Borra una cookie de vuelta antigua; el paso 4 la vuelve a poner si hace falta.
   useEffect(() => {
@@ -552,7 +557,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           <PlanView plan={plan} animated />
 
           <SupervisedNote plan={plan} />
-          <DemoApprovalCard plan={plan} />
+
 
           <div className="flex flex-wrap gap-3">
             <button
