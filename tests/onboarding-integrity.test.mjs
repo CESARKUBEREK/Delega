@@ -79,3 +79,15 @@ test("la pantalla final lista y comprueba todas las conexiones del plan", () => 
   assert.match(client, /neededConnections\.map\(\(connection\) =>/)
   assert.match(client, /checkOnboardingConnections\(\{ workspaceId, connections: neededConnections \}\)/)
 })
+
+test("el intake estructurado del negocio se transmite y se valida antes de generar el plan", () => {
+  for (const value of ["businessType", "mainPain", "channels", "customer_messages", "appointments", "sales_followup", "whatsapp", "instagram"]) {
+    assert.ok(client.includes(value) || actions.includes(value), `falta el dato de intake ${value}`)
+  }
+  assert.match(client, /businessIntake: \{ businessType, mainPain, channels \}/)
+  assert.match(actions, /Tipo de negocio: \\?\$\{businessType\}/)
+  assert.match(actions, /Prioridad principal/)
+  assert.match(actions, /Canales de contacto/)
+  assert.match(actions, /channel in channelLabels/)
+  assert.match(actions, /adaptado al tipo de negocio, su prioridad y sus canales/)
+})
