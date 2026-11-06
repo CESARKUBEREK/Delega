@@ -119,6 +119,9 @@ test("el intake y el análisis web están encapsulados sin mover la lógica de n
 test("el enriquecimiento semántico es explícito, supervisado y valida evidencias", () => {
   assert.match(client, /const handleSemanticEnrichment = async/)
   assert.match(client, /editedProfileFields\.has\(key\)/)
+  assert.match(client, /current\[key\]\.source === "user"/)
+  assert.match(client, /evidence: \[\], evidenceSources: \[\], confidence: "low", source: "user"/)
+  assert.match(businessContext, /Información añadida o corregida por ti/)
   assert.match(actions, /action: "business_discovery"/)
   assert.match(actions, /snapshot = await fetchPublicWebsite\(rawUrl\)/)
   assert.match(actions, /No confiamos en el snapshot del navegador/)
