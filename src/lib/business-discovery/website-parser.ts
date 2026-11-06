@@ -9,6 +9,7 @@ export type WebsitePage = {
   canonicalUrl?: string | null
   keywords?: string[]
   contentQuality?: "usable" | "metadata_only" | "javascript_shell"
+  contentSource?: "html" | "embedded_data" | "metadata"
 }
 
 export type WebsiteSnapshot = WebsitePage & { pages: WebsitePage[] }
@@ -50,6 +51,58 @@ function stripNonContent(html: string): string {
     .replace(/<(?:div|section)[^>]*(?:role\s*=\s*["'](?:navigation|contentinfo|banner)["']|aria-hidden\s*=\s*["']true["'])[^>]*>[\s\S]*?<\/(?:div|section)\s*>/gi, " ")
 }
 
+const EMBEDDED_TEXT_KEYS = new Set([
+  "about", "articlebody", "body", "content", "description", "excerpt", "headline",
+  "name", "offers", "product", "service", "summary", "text", "title",
+  "subtitle", "seotitle", "seodescription", "longdescription", "shortdescription",
+])
+
+function extractEmbeddedContent(html: string): string {
+  const chunks: string[] = []
+  const seen = new Set<string>()
+  let visited = 0
+
+  const add = (value: unknown) => {
+    if (typeof value !== "string") return
+    const text = cleanText(value)
+    if (text.length < 25 || text.length > 2_000 || seen.has(text)) return
+    if (/^(https?:\/\/|\/[_a-z0-9-]+\/?$)/i.test(text)) return
+    seen.add(text)
+    chunks.push(text)
+  }
+
+  const walk = (value: unknown, depth: number) => {
+    if (depth > 8 || visited >= 700 || chunks.join(" ").length >= 8_000) return
+    visited += 1
+    if (Array.isArray(value)) {
+      for (const item of value.slice(0, 100)) walk(item, depth + 1)
+      return
+    }
+    if (!value || typeof value !== "object") return
+    for (const [key, child] of Object.entries(value as Record<string, unknown>).slice(0, 150)) {
+      const normalizedKey = key.toLowerCase().replace(/[^a-z]/g, "")
+      if (typeof child === "string" && EMBEDDED_TEXT_KEYS.has(normalizedKey)) add(child)
+      else if (child && typeof child === "object") walk(child, depth + 1)
+    }
+  }
+
+  for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)) {
+    const attrs = match[1]
+    const body = match[2].trim()
+    const isStructured = /\btype\s*=\s*["']application\/(?:ld\+)?json["']/i.test(attrs)
+    const isHydration = /\bid\s*=\s*["'](?:__NEXT_DATA__|__NUXT_DATA__|__NUXT__|__INITIAL_STATE__|__APOLLO_STATE__)["']/i.test(attrs)
+      || /\bdata-nuxt-data\b/i.test(attrs)
+    if ((!isStructured && !isHydration) || !body || body.length > 500_000) continue
+    try {
+      walk(JSON.parse(body), 0)
+    } catch {
+      // Malformed or executable script content is deliberately ignored.
+    }
+  }
+
+  return chunks.join(". ").slice(0, 8_000)
+}
+
 export function parseWebsiteHtml(html: string, url: string): ParsedWebsitePage {
   const safeHtml = stripNonContent(html)
   const htmlTitle = cleanText(safeHtml.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "")
@@ -71,14 +124,17 @@ export function parseWebsiteHtml(html: string, url: string): ParsedWebsitePage {
     .map((m) => cleanText(m[1])).filter((item) => item.length >= 3 && item.length <= 180).slice(0, 12)
   const mainContent = safeHtml.match(/<(?:main|article)\b[^>]*>([\s\S]*?)<\/(?:main|article)\s*>/i)?.[1]
   const body = mainContent ?? safeHtml.match(/<body[^>]*>([\s\S]*?)<\/body\s*>/i)?.[1] ?? safeHtml
-  const text = cleanText(body).slice(0, 12_000)
+  const visibleText = cleanText(body).slice(0, 12_000)
+  const embeddedText = extractEmbeddedContent(html)
+  const text = [visibleText, embeddedText].filter(Boolean).join(" ").slice(0, 12_000)
   const links = [...html.matchAll(/<a\b[^>]*\bhref\s*=\s*(["'])(.*?)\1[^>]*>/gi)]
     .map((m) => decodeEntities(m[2].trim())).filter(Boolean).slice(0, 150)
   const emptyAppRoot = /<div[^>]+id=["'](?:__next|root|app)["'][^>]*>\s*<\/div>/i.test(html)
-  const appShell = /__NEXT_DATA__|data-reactroot|ng-version=/i.test(html)
+  const appShell = /__NEXT_DATA__|__NUXT_DATA__|__NUXT__|data-reactroot|ng-version=/i.test(html)
     || (emptyAppRoot && /<script\b[^>]*(?:src=|type=["']module["'])/i.test(html))
   const contentQuality = text.length >= 30 ? "usable" : (appShell || (text.length < 80 && /<script\b/i.test(html))) ? "javascript_shell" : "metadata_only"
-  return { url, title: title || null, description, headings, text, links, language, siteName, canonicalUrl, keywords, contentQuality }
+  const contentSource = visibleText.length >= 30 ? "html" : embeddedText.length >= 30 ? "embedded_data" : "metadata"
+  return { url, title: title || null, description, headings, text, links, language, siteName, canonicalUrl, keywords, contentQuality, contentSource }
 }
 
 /** Selects at most two useful same-origin pages, prioritizing substantive business content. */
