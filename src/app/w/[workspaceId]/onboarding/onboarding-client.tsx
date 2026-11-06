@@ -210,18 +210,29 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
       setError("Revisa y confirma el perfil de tu negocio antes de preparar la propuesta.")
       return
     }
-    if (!validateTask() || pending) return
+    const requestedTask = task.trim() || "Ayúdame a descubrir qué tareas repetitivas de mi negocio puedo delegar y automatizar. Identifica oportunidades según la actividad, prioridades y canales que te indique; no des por ciertos datos que no conozcas."
+    if (!validateTask(requestedTask) || pending) return
+    setTask(requestedTask)
 
     startTransition(async () => {
       const websiteContext = websiteSnapshot && businessProfile && profileConfirmed
-        ? BUSINESS_PROFILE_FIELDS.map(({ key, label }) => {
-            const value = businessProfile[key].value.trim()
-            return value ? `${label}: ${value}` : ""
-          }).filter(Boolean).join("\\n").slice(0, 3_000)
+        ? [
+            websiteSnapshot.title ? `Título de la web: ${websiteSnapshot.title}` : "",
+            websiteSnapshot.description ? `Descripción pública: ${websiteSnapshot.description}` : "",
+            websiteSnapshot.language ? `Idioma detectado: ${websiteSnapshot.language}` : "",
+            ...BUSINESS_PROFILE_FIELDS.map(({ key, label }) => {
+              const field = businessProfile[key]
+              const value = field.value.trim()
+              if (!value) return ""
+              const evidence = field.evidence[0] ? ` Evidencia: ${field.evidence[0]}` : ""
+              const sourceUrl = field.evidenceSources[0] ? ` Fuente: ${field.evidenceSources[0]}` : ""
+              return `${label}: ${value}.${evidence}${sourceUrl}`
+            }),
+          ].filter(Boolean).join("\n").slice(0, 3_000)
         : undefined
       const result = await generateOnboardingPlan({
         workspaceId,
-        message: task,
+        message: requestedTask,
         websiteContext,
         businessIntake: { businessType, mainPain, channels },
       })
