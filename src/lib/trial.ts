@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 
 // Planes de prueba del onboarding (decisión de Cesar, 3 nov): mientras el
 // espacio no tenga IA propia, el onboarding prepara el plan con un modelo
-// potente (GPT-6 Luna) y la clave de MarchaSolo, como mucho 2 veces
+// económico (GPT-6 Luna) y la clave de MarchaSolo, como mucho 2 veces
 // por espacio personal. Nada más usa esta clave: el chat, la bandeja y las
 // automatizaciones necesitan la IA del cliente.
 // Devuelve null si el espacio no tiene planes de prueba o si la prueba no está
