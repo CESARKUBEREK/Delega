@@ -34,13 +34,13 @@ test("el servidor comprueba los proveedores reales y limita los archivos a Googl
 })
 
 test("el estado final distingue conexiones pendientes de errores de verificación", () => {
-  assert.match(client, /verificationError = ai\?\.error/)
-  assert.match(client, /No pude verificar toda la configuración/)
-  assert.match(client, /Configuración pendiente/)
-  assert.match(client, /Preparado para probar/)
-  assert.match(client, /Volver a comprobar conexiones/)
-  assert.match(client, /setAi\(r\.ok \? \{ ok: r\.connected, label: r\.label \} : \{ ok: false, label: null, error: r\.error \}\)/)
-  assert.match(client, /ok: ai\?\.error \? null : ai\?\.ok \?\? null/)
+  assert.match(doneStep, /verificationError = ai\?\.error/)
+  assert.match(doneStep, /No pude verificar toda la configuración/)
+  assert.match(doneStep, /Configuración pendiente/)
+  assert.match(doneStep, /Preparado para probar/)
+  assert.match(doneStep, /Volver a comprobar conexiones/)
+  assert.match(doneStep, /setAi\(r\.ok \? \{ ok: r\.connected, label: r\.label \} : \{ ok: false, label: null, error: r\.error \}\)/)
+  assert.match(doneStep, /ok: ai\?\.error \? null : ai\?\.ok \?\? null/)
 })
 
 test("la demostración de aprobación es local y nunca ejecuta acciones externas", () => {
@@ -62,7 +62,7 @@ test("el plan debe persistirse antes de avanzar y antes de completar", () => {
 })
 
 test("la pantalla final reutiliza flowId y no crea otro borrador", () => {
-  assert.match(client, /if \(!flowId\) \{\s*setError\("El borrador aún no está guardado/)
+  assert.match(doneStep, /if \(!flowId\) \{\s*setError\("El borrador aún no está guardado/)
   assert.doesNotMatch(client, /saveFlowPlan\(\{ workspaceId, flowId: null, plan, fileIds: \[\] \}\)[\s\S]{0,100}router\.push/)
 })
 
