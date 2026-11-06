@@ -651,6 +651,11 @@ export async function save(admin: Admin, run: RunRow, patch: Record<string, unkn
 
 export async function finishRun(admin: Admin, run: RunRow, status: "succeeded" | "failed", text: string) {
   const now = new Date().toISOString()
+  const trial = parseRunRouting(run.routing)?.trial === true
+  if (trial && (run.input_tokens + run.output_tokens) === 0) {
+    const { error } = await admin.rpc("trial_run_release", { p_workspace_id: run.workspace_id, p_run_id: run.id })
+    if (error) console.error("trial_run_release", error.code)
+  }
   const patch = status === "succeeded"
     ? { status, summary: text.slice(0, 8000), finished_at: now, pending_action: null, lease_until: null }
     : { status, error: text.slice(0, 2000), finished_at: now, pending_action: null, lease_until: null }
@@ -1086,6 +1091,13 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       if (costError) {
         console.error("flow_run_add_cost", costError.code)
         if (ai.trial) return finishRun(admin, run, "failed", "No se pudo verificar el coste de la prueba gratuita. Conecta tu propia IA para continuar.")
+      }
+    }
+    if (ai.trial && run.input_tokens + run.output_tokens === result.usage.input + result.usage.output) {
+      const { data: committed, error: commitError } = await admin.rpc("trial_run_commit", { p_workspace_id: run.workspace_id, p_run_id: run.id })
+      if (commitError || committed !== true) {
+        console.error("trial_run_commit", commitError?.code ?? "not_reserved")
+        return finishRun(admin, run, "failed", "No se pudo confirmar el consumo de la prueba gratuita. Conecta tu propia IA para continuar.")
       }
     }
     if (ai.trial && spent + actualCost >= cap) {
