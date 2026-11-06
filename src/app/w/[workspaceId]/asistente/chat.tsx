@@ -282,6 +282,7 @@ function PlanActions({
 
   function execute() {
     setError(null)
+    setTrialFunded(false)
     startRun(async () => {
       const result = await startRunFromMessage({ workspaceId, messageId, fileIds: selected })
       if (!result.ok) setError(result.error)
