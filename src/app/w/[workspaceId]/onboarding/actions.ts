@@ -329,6 +329,40 @@ export async function checkOnboardingAi(workspaceId: string): Promise<{ ok: true
 const AI_LABELS: Record<string, string> = { openai: "OpenAI", anthropic: "Anthropic", deepseek: "DeepSeek", xai: "Grok (xAI)" }
 
 
+
+export type SemanticWebsiteAnalysisResult =
+  | { ok: true; profile: BusinessProfile; model: string; trial: boolean }
+  | { ok: false; error: string }
+
+// Solo se invoca desde la acción explícita del usuario; nunca al introducir la URL.
+export async function enrichOnboardingWebsite(input: {
+  workspaceId: string
+  snapshot: WebsiteSnapshot
+}): Promise<SemanticWebsiteAnalysisResult> {
+  if (!UUID_RE.test(input.workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const workspace = await getWorkspace(input.workspaceId, `/w/${input.workspaceId}/onboarding`)
+  if (!workspace.isAdmin) return { ok: false, error: "Solo un administrador puede enriquecer el perfil del negocio." }
+  const pages = Array.isArray(input.snapshot?.pages) ? input.snapshot.pages.slice(0, 3) : []
+  if (!pages.length) return { ok: false, error: "Primero analiza una web pública." }
+  const result = await callEdgeFunction<{
+    profile: BusinessProfile
+    model: string
+    trial: boolean
+  }>("assistant", {
+    action: "business_discovery",
+    workspace_id: input.workspaceId,
+    pages: pages.map((page) => ({
+      url: page.url,
+      title: page.title,
+      description: page.description,
+      headings: page.headings,
+      text: page.text,
+    })),
+  }, 65_000)
+  if (result.error) return { ok: false, error: result.error.message }
+  return { ok: true, profile: result.data.profile, model: result.data.model, trial: result.data.trial }
+}
+
 export type WebsiteAnalysisResult =
   | { ok: true; snapshot: WebsiteSnapshot; profile: BusinessProfile }
   | { ok: false; error: string }

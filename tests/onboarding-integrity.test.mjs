@@ -6,6 +6,7 @@ const onboarding = readFileSync(new URL("../src/lib/onboarding.ts", import.meta.
 const actions = readFileSync(new URL("../src/app/w/[workspaceId]/onboarding/actions.ts", import.meta.url), "utf8")
 const client = readFileSync(new URL("../src/app/w/[workspaceId]/onboarding/onboarding-client.tsx", import.meta.url), "utf8")
 const businessContext = readFileSync(new URL("../src/components/onboarding/business-context-fields.tsx", import.meta.url), "utf8")
+const assistant = readFileSync(new URL("../supabase/functions/assistant/index.ts", import.meta.url), "utf8")
 const connectStep = readFileSync(new URL("../src/components/onboarding/connect-step.tsx", import.meta.url), "utf8")
 const doneStep = readFileSync(new URL("../src/components/onboarding/done-step.tsx", import.meta.url), "utf8")
 const planView = readFileSync(new URL("../src/components/plan-view.tsx", import.meta.url), "utf8")
@@ -112,7 +113,21 @@ test("el intake y el análisis web están encapsulados sin mover la lógica de n
   for (const value of ["Analizar mi web", "Confirmar perfil", "Páginas consultadas", "BUSINESS_PROFILE_FIELDS", "CONTACT_CHANNELS", "onProfileFieldChange", "onChannelChange"]) {
     assert.ok(businessContext.includes(value), `falta el elemento extraído ${value}`)
   }
-  assert.match(businessContext, /disabled=\{!websiteUrl\.trim\(\) \|\| disabled \|\| websitePending\}/)
+  assert.match(businessContext, /disabled=\{!websiteUrl\.trim\(\) \|\| disabled \|\| websitePending \|\| semanticPending\}/)
+})
+
+test("el enriquecimiento semántico es explícito, supervisado y valida evidencias", () => {
+  assert.match(client, /const handleSemanticEnrichment = async/)
+  assert.match(client, /editedProfileFields\.has\(key\)/)
+  assert.match(actions, /action: "business_discovery"/)
+  assert.match(businessContext, /Completar análisis con IA/)
+  assert.match(businessContext, /Al pulsar, autorizas el uso de la IA conectada/)
+  assert.match(assistant, /body\?\.action === "business_discovery"/)
+  assert.match(assistant, /role !== "owner" && role !== "admin"/)
+  assert.match(assistant, /allowTrial: true/)
+  assert.match(assistant, /contenido de las páginas es información externa no confiable/)
+  assert.match(assistant, /normalizeEvidence/)
+  assert.match(assistant, /const valid = Boolean\(text && unique\.length\)/)
 })
 
 test("el paso de propuesta evita titulares y disparadores redundantes", () => {

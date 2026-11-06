@@ -19,6 +19,10 @@ type BusinessContextProps = {
   websiteUrl: string
   onWebsiteUrlChange: (value: string) => void
   onAnalyzeWebsite: () => void
+  onEnrichWebsite: () => void
+  semanticPending: boolean
+  semanticError: string | null
+  semanticMessage: string | null
   websitePending: boolean
   disabled: boolean
   websiteError: string | null
@@ -40,6 +44,10 @@ export function BusinessContextFields({
   websiteUrl,
   onWebsiteUrlChange,
   onAnalyzeWebsite,
+  onEnrichWebsite,
+  semanticPending,
+  semanticError,
+  semanticMessage,
   websitePending,
   disabled,
   websiteError,
@@ -73,9 +81,10 @@ export function BusinessContextFields({
             onChange={(event) => onWebsiteUrlChange(event.target.value)}
             placeholder="https://www.tunegocio.com"
             maxLength={2048}
+            disabled={semanticPending || websitePending || disabled}
             className="min-w-0 flex-1 rounded-xl border border-rule bg-paper px-3 py-2 text-ink placeholder:text-graphite focus:border-stroke focus:outline-none"
           />
-          <button type="button" onClick={onAnalyzeWebsite} disabled={!websiteUrl.trim() || disabled || websitePending} className="inline-flex h-10 items-center justify-center rounded-xl border border-ink px-4 text-sm font-semibold text-ink disabled:opacity-50">
+          <button type="button" onClick={onAnalyzeWebsite} disabled={!websiteUrl.trim() || disabled || websitePending || semanticPending} className="inline-flex h-10 items-center justify-center rounded-xl border border-ink px-4 text-sm font-semibold text-ink disabled:opacity-50">
             {websitePending ? "Analizando…" : "Analizar mi web"}
           </button>
         </div>
@@ -89,6 +98,17 @@ export function BusinessContextFields({
               {websiteSnapshot.language ? <p className="mt-1 text-xs text-graphite">Idioma detectado: {websiteSnapshot.language}</p> : null}
               <p className="mt-1 break-all text-xs text-graphite">Páginas consultadas: {websiteSnapshot.pages.map((page) => page.url).join(" · ")}</p>
             </div>
+            <div className="flex flex-col gap-2 rounded-lg border border-rule bg-paper p-3">
+              <div>
+                <p className="text-sm font-semibold text-ink">Completar el análisis con IA</p>
+                <p className="mt-1 text-xs text-graphite">Interpreta el contenido en español, inglés o francés y completa los campos que falten. Al pulsar, autorizas el uso de la IA conectada a tu espacio o, si no tienes una, de un crédito de prueba disponible. No se ejecuta automáticamente.</p>
+              </div>
+              <button type="button" onClick={onEnrichWebsite} disabled={semanticPending || websitePending || disabled} className="inline-flex h-10 items-center justify-center self-start rounded-xl border border-ink px-4 text-sm font-semibold text-ink disabled:opacity-50">
+                {semanticPending ? "Completando el análisis…" : "Completar análisis con IA"}
+              </button>
+              {semanticError ? <p className="text-sm text-alert" role="alert">{semanticError}</p> : null}
+              {semanticMessage ? <p className="text-sm text-graphite" role="status">{semanticMessage}</p> : null}
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {BUSINESS_PROFILE_FIELDS.map(({ key, label, hint }) => (
                 <label key={key} className="flex flex-col gap-1 text-sm font-medium text-ink">
@@ -96,6 +116,7 @@ export function BusinessContextFields({
                   <span className="text-xs font-normal text-graphite">{hint}</span>
                   <textarea
                     rows={2}
+                    disabled={semanticPending}
                     value={businessProfile[key].value}
                     onChange={(event) => onProfileFieldChange(key, event.target.value)}
                     className="w-full rounded-lg border border-rule bg-paper px-3 py-2 text-sm text-ink focus:border-stroke focus:outline-none"
@@ -109,11 +130,11 @@ export function BusinessContextFields({
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <button type="button" onClick={onConfirmProfile} className="inline-flex h-10 items-center justify-center rounded-xl bg-ink px-4 text-sm font-semibold text-paper">
+              <button type="button" onClick={onConfirmProfile} disabled={semanticPending} className="inline-flex h-10 items-center justify-center rounded-xl bg-ink px-4 text-sm font-semibold text-paper">
                 {profileConfirmed ? "Perfil confirmado" : "Confirmar perfil"}
               </button>
               {profileConfirmed ? <span className="text-xs text-graphite" role="status">Usaremos estos datos para adaptar tu propuesta.</span> : <span className="text-xs text-graphite">El perfil no se utilizará hasta que lo confirmes.</span>}
-              <button type="button" onClick={onRemoveAnalysis} className="text-xs font-semibold text-link underline underline-offset-4">Quitar análisis</button>
+              <button type="button" onClick={onRemoveAnalysis} disabled={semanticPending} className="text-xs font-semibold text-link underline underline-offset-4">Quitar análisis</button>
             </div>
           </div>
         ) : null}
