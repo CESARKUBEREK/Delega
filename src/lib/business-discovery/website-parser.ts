@@ -42,11 +42,14 @@ function cleanText(value: string): string {
 }
 
 function readMetaContent(html: string, keys: string[]): string | null {
-  for (const tag of html.matchAll(/<meta\b[^>]*>/gi)) {
-    const attrs: Record<string, string> = {}
-    for (const match of tag[0].matchAll(/([:\w-]+)\s*=\s*(["'])(.*?)\2/g)) attrs[match[1].toLowerCase()] = decodeEntities(match[3].trim())
-    const identity = (attrs.name ?? attrs.property ?? attrs.itemprop ?? "").toLowerCase()
-    if (keys.includes(identity) && attrs.content) return cleanText(attrs.content).slice(0, 500) || null
+  // The caller's key order is the precedence order, independent of HTML tag order.
+  for (const key of keys) {
+    for (const tag of html.matchAll(/<meta\b[^>]*>/gi)) {
+      const attrs: Record<string, string> = {}
+      for (const match of tag[0].matchAll(/([:\w-]+)\s*=\s*(["'])(.*?)\2/g)) attrs[match[1].toLowerCase()] = decodeEntities(match[3].trim())
+      const identity = (attrs.name ?? attrs.property ?? attrs.itemprop ?? "").toLowerCase()
+      if (identity === key && attrs.content) return cleanText(attrs.content).slice(0, 500) || null
+    }
   }
   return null
 }
