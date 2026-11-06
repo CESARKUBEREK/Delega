@@ -131,7 +131,9 @@ export function BusinessContextFields({
                     onChange={(event) => onProfileFieldChange(key, event.target.value)}
                     className="w-full rounded-lg border border-rule bg-paper px-3 py-2 text-sm text-ink focus:border-stroke focus:outline-none"
                   />
-                  {businessProfile[key].evidence.length ? (
+                  {businessProfile[key].source === "user" ? (
+                    <span className="text-xs font-normal text-graphite">Información añadida o corregida por ti</span>
+                  ) : businessProfile[key].evidence.length ? (
                     <span className="text-xs font-normal text-graphite">Evidencia: {businessProfile[key].evidence[0]} <span className="block">Fuente: {businessProfile[key].evidenceSources[0]}</span></span>
                   ) : (
                     <span className="text-xs font-normal text-graphite">Sin información clara en la web</span>
