@@ -191,17 +191,32 @@ export async function routeAi(
     if (!opts.allowTrial) return { error: NO_AI_MESSAGE, code: "no_ai" }
     const trial = await resolveAiOrTrial(admin, workspaceId)
     if (!trial.ai) return { error: trial.message, code: "no_ai" }
+    const fallback = trial.fallback
     const plan: RoutePlan = {
       task,
       mode: "expert",
       fixed: true,
       primary: trial.ai.model,
-      fallbacks: [],
+      fallbacks: fallback ? [fallback.model] : [],
       estimatedCostUsd: 0,
-      reason: "Plan de prueba de MarchaSolo (onboarding).",
+      reason: fallback
+        ? "Plan de prueba de MarchaSolo con respaldo entre proveedores."
+        : "Plan de prueba de MarchaSolo (sin proveedor de respaldo configurado).",
       scores: [],
     }
-    return { workspaceId, task, plan, ai: trial.ai, trial: true, next: () => Promise.resolve(null) }
+    return {
+      workspaceId,
+      task,
+      plan,
+      ai: trial.ai,
+      trial: true,
+      next: (failedProvider, code) => {
+        // El respaldo solo se prueba ante errores recuperables de proveedor,
+        // nunca ante timeout, rechazo del usuario o salida inválida.
+        const recoverable = code === "invalid_key" || code === "limit" || code === "provider"
+        return Promise.resolve(recoverable && fallback && failedProvider === trial.ai.provider ? fallback : null)
+      },
+    }
   }
 
   const settings = await readSettings(admin, workspaceId)

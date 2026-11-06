@@ -10,6 +10,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { modelInfo } from "./router/catalog.ts"
 import { costUsd, type Task } from "./router/core.ts"
+import { resolveTrialProviders } from "./trial-routing.ts"
 
 export type Provider = "openai" | "anthropic" | "deepseek" | "xai"
 export const PROVIDERS: Provider[] = ["openai", "anthropic", "deepseek", "xai"]
@@ -83,17 +84,26 @@ export const TRIAL_MODEL = "claude-sonnet-5-5"
 export const TRIAL_EXHAUSTED_MESSAGE =
   "Ya has usado los planes de prueba de MarchaSolo. Conecta tu propia IA (OpenAI, Anthropic, DeepSeek o Grok) en Integraciones para seguir."
 
-// La IA del espacio si la hay; si no, la de prueba mientras queden planes.
-// Devuelve el motivo cuando no hay ninguna, para dar el mensaje adecuado.
+// La IA del espacio si la hay; si no, la IA de prueba con respaldo opcional.
+// TRIAL_DEEPSEEK_API_KEY es independiente: nunca se reutiliza la clave Anthropic.
+// La ausencia del respaldo no bloquea el onboarding, pero no garantiza continuidad
+// si Anthropic falla; la aplicación siempre conserva el fallback local.
 export async function resolveAiOrTrial(
   admin: SupabaseClient,
   workspaceId: string,
   preferredModel?: string | null,
-): Promise<{ ai: Ai } | { ai: null; message: string }> {
+): Promise<{ ai: Ai; fallback: Ai | null } | { ai: null; message: string }> {
   const own = await resolveAi(admin, workspaceId, preferredModel)
-  if (own) return { ai: own }
-  const key = Deno.env.get("TRIAL_ANTHROPIC_API_KEY")?.trim()
-  if (!key) return { ai: null, message: NO_AI_MESSAGE }
+  if (own) return { ai: own, fallback: null }
+
+  const providers = resolveTrialProviders(
+    Deno.env.get("TRIAL_ANTHROPIC_API_KEY"),
+    Deno.env.get("TRIAL_DEEPSEEK_API_KEY"),
+  )
+  const primary = providers.primary as Ai | null
+  const fallback = providers.fallback as Ai | null
+  if (!primary) return { ai: null, message: NO_AI_MESSAGE }
+
   const { data } = await admin
     .from("workspace_trial_credits")
     .select("allowance_tokens, used_tokens, allowance_plans, used_plans")
@@ -103,7 +113,8 @@ export async function resolveAiOrTrial(
   if (Number(data.used_plans) >= Number(data.allowance_plans) || Number(data.used_tokens) >= Number(data.allowance_tokens)) {
     return { ai: null, message: TRIAL_EXHAUSTED_MESSAGE }
   }
-  return { ai: { provider: TRIAL_PROVIDER, model: TRIAL_MODEL, apiKey: key, trial: true } }
+
+  return { ai: primary, fallback }
 }
 
 // ---------------------------------------------------------------------------
