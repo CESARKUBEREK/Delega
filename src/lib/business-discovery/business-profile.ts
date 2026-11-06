@@ -25,7 +25,7 @@ function candidateSentences(page: WebsitePage): { text: string; weight: number }
   const candidates: { text: string; weight: number }[] = []
   const add = (value: string | null | undefined, weight: number) => {
     if (!value) return
-    for (const raw of value.split(/(?<=[.!?])\s+|\n+/)) {
+    for (const raw of value.split(/(?<=[.!?])\s+|[;•·]\s*|\n+/)) {
       const text = raw.trim().replace(/\s+/g, " ").replace(/^[•·|–—-]+|[•·|–—-]+$/g, "").trim()
       if (text.length < (weight >= 4 ? 3 : 14) || text.length > 260 || BOILERPLATE.test(text) || GENERIC.test(text)) continue
       if (/^(aceptar|rechazar|configurar|skip to|saltar al contenido)/i.test(text)) continue
