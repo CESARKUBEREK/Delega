@@ -96,6 +96,15 @@ export function BusinessContextFields({
               <p className="mt-1 font-semibold text-ink">{websiteSnapshot.title ?? websiteSnapshot.url}</p>
               <p className="mt-1 text-xs text-graphite">{websiteSnapshot.pages.length > 1 ? `Hemos revisado ${websiteSnapshot.pages.length} páginas públicas del mismo dominio.` : "Hemos revisado una página pública."} Usamos títulos, metadatos y contenido visible. Corrige lo que haga falta; los campos vacíos no se han podido verificar.</p>
               {websiteSnapshot.language ? <p className="mt-1 text-xs text-graphite">Idioma detectado: {websiteSnapshot.language}</p> : null}
+              {websiteSnapshot.pages.some((page) => page.contentQuality === "javascript_shell") ? (
+                <p className="mt-2 rounded-lg border border-alert/30 bg-alert/5 p-3 text-sm text-alert" role="status">
+                  Algunas páginas cargan su contenido mediante JavaScript y no han podido leerse completamente. El análisis puede estar incompleto; revisa los campos y complétalos manualmente antes de confirmar.
+                </p>
+              ) : websiteSnapshot.pages.some((page) => page.contentQuality === "metadata_only") ? (
+                <p className="mt-2 rounded-lg border border-rule bg-paper p-3 text-sm text-graphite" role="status">
+                  Una o más páginas solo han proporcionado metadatos. La información disponible puede ser limitada; comprueba los campos antes de confirmar.
+                </p>
+              ) : null}
               <p className="mt-1 break-all text-xs text-graphite">Páginas consultadas: {websiteSnapshot.pages.map((page) => page.url).join(" · ")}</p>
             </div>
             <div className="flex flex-col gap-2 rounded-lg border border-rule bg-paper p-3">
