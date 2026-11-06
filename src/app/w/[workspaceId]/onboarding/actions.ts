@@ -337,13 +337,25 @@ export type SemanticWebsiteAnalysisResult =
 // Solo se invoca desde la acción explícita del usuario; nunca al introducir la URL.
 export async function enrichOnboardingWebsite(input: {
   workspaceId: string
-  snapshot: WebsiteSnapshot
+  url: string
 }): Promise<SemanticWebsiteAnalysisResult> {
   if (!UUID_RE.test(input.workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const rawUrl = input.url.trim()
+  if (!rawUrl || rawUrl.length > 2_048) return { ok: false, error: "Introduce una dirección web válida." }
   const workspace = await getWorkspace(input.workspaceId, `/w/${input.workspaceId}/onboarding`)
   if (!workspace.isAdmin) return { ok: false, error: "Solo un administrador puede enriquecer el perfil del negocio." }
-  const pages = Array.isArray(input.snapshot?.pages) ? input.snapshot.pages.slice(0, 3) : []
-  if (!pages.length) return { ok: false, error: "Primero analiza una web pública." }
+
+  // No confiamos en el snapshot del navegador: volvemos a descargar la web
+  // desde el servidor y validamos las citas contra este contenido recién obtenido.
+  let snapshot: WebsiteSnapshot
+  try {
+    snapshot = await fetchPublicWebsite(rawUrl)
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "No se pudo volver a consultar la web." }
+  }
+  const pages = Array.isArray(snapshot.pages) ? snapshot.pages.slice(0, 3) : []
+  if (!pages.length) return { ok: false, error: "La web no contiene páginas públicas suficientes para completar el análisis." }
+
   const result = await callEdgeFunction<{
     profile: BusinessProfile
     model: string
