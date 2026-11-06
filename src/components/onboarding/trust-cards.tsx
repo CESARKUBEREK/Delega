@@ -39,6 +39,12 @@ export function DemoApprovalCard({ plan }: { plan: FlowPlan }) {
   const [decision, setDecision] = useState<"pending" | "approved" | "rejected">("pending")
   const approval = plan.steps.find((step) => step.requires_approval)
 
+  const statusLabel = decision === "approved"
+    ? "APROBADO · SIMULACIÓN"
+    : decision === "rejected"
+      ? "RECHAZADO · SIMULACIÓN"
+      : "PENDIENTE"
+
   return (
     <section className="rounded-2xl border border-rule bg-sheet p-5 flex flex-col gap-4" aria-labelledby="demo-approval-title">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -46,7 +52,7 @@ export function DemoApprovalCard({ plan }: { plan: FlowPlan }) {
           <p className="text-xs font-semibold tracking-wide text-graphite">EJEMPLO INTERACTIVO</p>
           <h3 id="demo-approval-title" className="mt-1 font-semibold text-ink">Así funciona una aprobación</h3>
         </div>
-        <span className="rounded-full border border-rule px-2.5 py-1 text-xs font-semibold text-graphite">SIMULACIÓN</span>
+        <span className="rounded-full border border-rule px-2.5 py-1 text-xs font-semibold text-graphite" data-decision={decision}>{statusLabel}</span>
       </div>
 
       <div className="rounded-xl border border-rule bg-paper p-4 flex flex-col gap-3">
@@ -93,12 +99,23 @@ export function DemoApprovalCard({ plan }: { plan: FlowPlan }) {
             Repetir ejemplo
           </button>
         )}
-        <p className="text-sm text-graphite" role="status" aria-live="polite">
+      </div>
+
+      <div className="rounded-xl border border-rule bg-paper p-4" role="status" aria-live="polite" data-decision={decision}>
+        <p className="text-sm font-semibold text-ink">
           {decision === "approved"
-            ? "Ejemplo aprobado. No se ha ejecutado ninguna acción externa."
+            ? "Has aprobado la propuesta."
             : decision === "rejected"
-              ? "Ejemplo rechazado. No se ha ejecutado ninguna acción externa."
-              : "Prueba qué ocurre al aprobar o rechazar."}
+              ? "Has rechazado la propuesta."
+              : "La propuesta espera tu decisión."}
+        </p>
+        <p className="mt-1 text-sm text-graphite">
+          {decision === "approved"
+            ? "En una automatización real, MarchaSolo continuaría con esta acción después de tu aprobación."
+            : decision === "rejected"
+              ? "En una automatización real, esta acción quedaría detenida y no se aplicaría ningún cambio."
+              : "Pulsa uno de los botones para ver cómo cambia el resultado."}
+          {" "}Esto es solo una simulación: no se ha ejecutado ninguna acción externa.
         </p>
       </div>
     </section>
