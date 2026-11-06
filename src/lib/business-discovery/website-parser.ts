@@ -4,6 +4,10 @@ export type WebsitePage = {
   description: string | null
   headings: string[]
   text: string
+  language?: string | null
+  siteName?: string | null
+  canonicalUrl?: string | null
+  keywords?: string[]
 }
 
 export type WebsiteSnapshot = WebsitePage & {
@@ -37,28 +41,39 @@ function cleanText(value: string): string {
   return decodeEntities(value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ")).trim()
 }
 
+function readMetaContent(html: string, keys: string[]): string | null {
+  for (const tag of html.matchAll(/<meta\\b[^>]*>/gi)) {
+    const attrs: Record<string, string> = {}
+    for (const match of tag[0].matchAll(/([:\\w-]+)\\s*=\\s*(["'])(.*?)\\2/gs)) attrs[match[1].toLowerCase()] = decodeEntities(match[3].trim())
+    const identity = (attrs.name ?? attrs.property ?? attrs.itemprop ?? "").toLowerCase()
+    if (keys.includes(identity) && attrs.content) return cleanText(attrs.content).slice(0, 500) || null
+  }
+  return null
+}
+
 export function parseWebsiteHtml(html: string, url: string): ParsedWebsitePage {
-  const withoutExecutableContent = html
-    .replace(/<!--[\s\S]*?-->/g, " ")
-    .replace(/<(script|style|noscript|svg|iframe|template)[^>]*>[\s\S]*?<\/\1\s*>/gi, " ")
-
-  const title = cleanText(withoutExecutableContent.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "")
-  const description = cleanText(
-    withoutExecutableContent.match(/<meta\s+[^>]*(?:name|property)=["'](?:description|og:description)["'][^>]*content=["']([^"']*)["'][^>]*>/i)?.[1] ??
-    withoutExecutableContent.match(/<meta\s+[^>]*content=["']([^"']*)["'][^>]*(?:name|property)=["'](?:description|og:description)["'][^>]*>/i)?.[1] ?? "",
-  )
-  const headings = [...withoutExecutableContent.matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]\s*>/gi)]
-    .map((match) => cleanText(match[1]))
-    .filter(Boolean)
-    .slice(0, 12)
-  const body = withoutExecutableContent.match(/<body[^>]*>([\s\S]*?)<\/body\s*>/i)?.[1] ?? withoutExecutableContent
+  const safeHtml = html.replace(/<!--[\\s\\S]*?-->/g, " ")
+    .replace(/<(script|style|noscript|svg|iframe|template)[^>]*>[\\s\\S]*?<\\/\\1\\s*>/gi, " ")
+  const htmlTitle = cleanText(safeHtml.match(/<title[^>]*>([\\s\\S]*?)<\\/title>/i)?.[1] ?? "")
+  const title = readMetaContent(safeHtml, ["og:title", "twitter:title"]) ?? htmlTitle
+  const description = readMetaContent(safeHtml, ["description", "og:description", "twitter:description"])
+  const siteName = readMetaContent(safeHtml, ["og:site_name"])
+  const language = safeHtml.match(/<html\\b[^>]*\\blang\\s*=\\s*(["'])(.*?)\\1/i)?.[2]?.trim().slice(0, 20) ?? null
+  const canonicalHref = safeHtml.match(/<link\\b(?=[^>]*\\brel\\s*=\\s*(["'])canonical\\1)[^>]*\\bhref\\s*=\\s*(["'])(.*?)\\2[^>]*>/i)?.[3]
+  let canonicalUrl: string | null = null
+  if (canonicalHref) {
+    try {
+      const candidate = new URL(decodeEntities(canonicalHref), url)
+      if (candidate.protocol === "https:" || candidate.protocol === "http:") canonicalUrl = candidate.toString().slice(0, 2_048)
+    } catch { canonicalUrl = null }
+  }
+  const rawKeywords = readMetaContent(safeHtml, ["keywords"])
+  const keywords = rawKeywords ? [...new Set(rawKeywords.split(",").map((item) => item.trim()).filter(Boolean))].slice(0, 12) : []
+  const headings = [...safeHtml.matchAll(/<h[1-3][^>]*>([\\s\\S]*?)<\\/h[1-3]\\s*>/gi)].map((m) => cleanText(m[1])).filter(Boolean).slice(0, 12)
+  const body = safeHtml.match(/<body[^>]*>([\\s\\S]*?)<\\/body\\s*>/i)?.[1] ?? safeHtml
   const text = cleanText(body).slice(0, 12_000)
-  const links = [...withoutExecutableContent.matchAll(/<a\b[^>]*\bhref\s*=\s*(["'])(.*?)\1[^>]*>/gi)]
-    .map((match) => decodeEntities(match[2].trim()))
-    .filter(Boolean)
-    .slice(0, 150)
-
-  return { url, title: title || null, description: description || null, headings, text, links }
+  const links = [...safeHtml.matchAll(/<a\\b[^>]*\\bhref\\s*=\\s*(["'])(.*?)\\1[^>]*>/gi)].map((m) => decodeEntities(m[2].trim())).filter(Boolean).slice(0, 150)
+  return { url, title: title || null, description, headings, text, links, language, siteName, canonicalUrl, keywords }
 }
 
 /** Selects at most two relevant links from the same origin; never follows arbitrary links. */
