@@ -419,9 +419,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
             <p className="text-sm font-semibold text-graphite">
               Paso {stepOrdinal("task")} de {stepTotal}
             </p>
-            <h2 className="rotulo text-xl mt-1">¿Qué te gustaría mejorar en tu negocio?</h2>
+            <h2 className="rotulo text-xl mt-1">Primero entendemos tu negocio. Después, elegimos qué delegar.</h2>
             <p className="text-graphite mt-1">
-              Puedes describir una tarea concreta o contarnos cómo funciona tu negocio. Si todavía no sabes qué delegar, MarchaSolo te ayudará a descubrir oportunidades. No hace falta conectar nada todavía.
+              No vamos a proponerte una automatización a ciegas. Revisamos la información disponible, tú corriges lo que haga falta y nos cuentas qué tarea te gustaría quitarte de encima. No hace falta conectar aplicaciones todavía.
             </p>
           </div>
 
@@ -475,9 +475,10 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                 ? [...current, value]
                 : current.filter((channel) => channel !== value))}
             />
-            <label htmlFor="task" className="sr-only">
-              Describe la tarea
-            </label>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="task" className="text-sm font-semibold text-ink">3 · ¿Qué debería hacer MarchaSolo por ti?</label>
+              <p className="text-xs text-graphite">Describe el resultado que buscas, no hace falta saber cómo automatizarlo. Si no lo tienes claro, déjalo vacío y te ayudaremos a descubrir oportunidades.</p>
+            </div>
             <textarea
               id="task"
               value={task}
@@ -487,7 +488,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
               }}
               rows={4}
               maxLength={500}
-              placeholder="Ej.: pierdo mucho tiempo respondiendo consultas, preparando presupuestos y haciendo seguimiento de clientes."
+              placeholder="Ej.: quiero responder más rápido a las consultas, preparar presupuestos y no olvidarme del seguimiento de clientes."
               className="w-full rounded-xl border border-rule bg-paper px-4 py-3 text-ink placeholder:text-graphite focus:border-stroke focus:outline-none"
             />
             {error && <p className="text-sm text-alert">{error}</p>}
@@ -514,7 +515,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
               disabled={pending}
               className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
             >
-              {pending ? "Preparando el plan…" : "Ver cómo lo haría →"}
+              {pending ? "Preparando tu propuesta…" : "Descubrir oportunidades y preparar mi propuesta →"}
             </button>
             {pending ? <PlanLoading /> : null}
           </form>
@@ -661,7 +662,7 @@ function Intro() {
         </div>
         <div className="max-w-xl">
           <h2 id="intro-title" className="text-balance text-[clamp(28px,4vw,38px)] font-semibold leading-[1.08] tracking-[-.045em]">Tu negocio. <span className="text-[#8de9df]">Tu equipo.</span><br />Tu manera de trabajar.</h2>
-          <p className="mt-3 max-w-lg text-sm leading-6 text-[#c2cede] sm:text-[15px]">Vamos a crear un equipo digital de IA adaptado a tu negocio. Empezamos por una tarea real; tú mantienes el control y apruebas cada acción.</p>
+          <p className="mt-3 max-w-lg text-sm leading-6 text-[#c2cede] sm:text-[15px]">MarchaSolo conoce cómo trabajas, identifica tareas que puede asumir y prepara un equipo digital adaptado a tu negocio. Tú revisas cada propuesta y mantienes el control de las acciones.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-4">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/[.07] px-3 py-1.5 text-xs text-[#dce8f4]"><svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="#8de9df" strokeWidth="1.8"><path d="M10 2.5 16 5v4.2c0 3.5-2.5 6.3-6 8.3-3.5-2-6-4.8-6-8.3V5l6-2.5Z"/><path d="m7 9.8 2 2 4-4" /></svg>Tú decides. Nada se ejecuta sin permiso.</span>
