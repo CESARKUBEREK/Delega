@@ -485,7 +485,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                     ["website", "Web / formularios"],
                     ["phone", "Teléfono"],
                     ["in_person", "En persona"],
-                  ].map(([value, label]) => (
+                  ] as const).map(([value, label]) => (
                     <label key={value} className="inline-flex items-center gap-2 text-sm text-graphite">
                       <input
                         type="checkbox"
