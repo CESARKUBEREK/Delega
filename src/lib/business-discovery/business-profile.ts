@@ -5,7 +5,7 @@ export type BusinessProfileField = {
   evidence: string[]
   evidenceSources: string[]
   confidence: "high" | "medium" | "low"
-  source: "website" | "not_found"
+  source: "website" | "user" | "not_found"
   confirmed: false
 }
 export type BusinessProfile = {
