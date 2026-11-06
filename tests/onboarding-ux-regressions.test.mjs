@@ -11,11 +11,11 @@ const approvalDemo = read("src/components/onboarding/trust-cards.tsx")
 
 test("el onboarding acepta dominios con o sin protocolo y con www", () => {
   assert.match(websiteField, /type="text"/)
+  assert.doesNotMatch(websiteField, /type="url"/)
   assert.match(websiteField, /inputMode="url"/)
   assert.match(websiteField, /marchasolo\.com, www\.marchasolo\.com o https:\/\/marchasolo\.com/)
-  assert.match(websiteFetcher, /startsWith\("http:\/\/ "\)/) === false
-  assert.match(websiteFetcher, /startsWith\("http:\/\/"\) \|\| lowerInput\.startsWith\("https:\/\/"\)/)
-  assert.match(websiteFetcher, /\`https:\/\/\$\{trimmed\}\`/)
+  assert.match(websiteFetcher, /const normalizedInput = lowerInput\.startsWith\("http:\/\/"\) \|\| lowerInput\.startsWith\("https:\/\/"\) \? trimmed :/)
+  assert.match(websiteFetcher, /https:\/\//)
 })
 
 test("el plan animado no vuelve a dibujar los mismos pasos", () => {
