@@ -224,8 +224,10 @@ function RunAi({
 }) {
   const routing = (run.routing && typeof run.routing === "object" ? run.routing : {}) as {
     reason?: unknown
+    trial?: unknown
     switches?: { from?: string; to?: string; code?: string }[]
   }
+  const trialFunded = routing.trial === true
   if (!run.model && !calls.length) return null
   const catalog = models.map((m) => toModelInfo(m)).filter((m): m is ModelInfo => m !== null)
   const cat = catalog.length ? catalog : FALLBACK_CATALOG
@@ -261,9 +263,9 @@ function RunAi({
               Modelo: <span className="font-medium text-ink">{modelLabel(run.model)}</span>
             </>
           )}
-          {modeLabel ? ` · ${modeLabel}` : ""} · {calls.length} {calls.length === 1 ? "llamada" : "llamadas"} · coste estimado{" "}
+          {modeLabel ? ` · ${modeLabel}` : ""} · {calls.length} {calls.length === 1 ? "llamada" : "llamadas"} · {trialFunded ? "coste asumido por MarchaSolo" : "coste estimado"}{" "}
           <span className="font-medium text-ink">{formatUsd(cost)}</span>
-          {run.budget_usd ? ` de ${formatUsd(Number(run.budget_usd))} de presupuesto` : ""}
+          {run.budget_usd ? trialFunded ? ` de ${formatUsd(Number(run.budget_usd))} de presupuesto gratuito` : ` de ${formatUsd(Number(run.budget_usd))} de presupuesto` : ""}
           {seconds !== null ? ` · ${seconds < 60 ? `${seconds} s` : `${Math.round(seconds / 60)} min`}` : ""}
         </p>
         {reason ? <p>{reason}</p> : null}
@@ -278,7 +280,7 @@ function RunAi({
             Un {saving} % menos que con {premium.label} para el mismo trabajo ({formatUsd(reference)}).
           </p>
         ) : null}
-        <p className="text-xs">Estimación con los tokens que informa el proveedor y sus precios oficiales; la factura que vale es la de tu cuenta.</p>
+        <p className="text-xs">{trialFunded ? "MarchaSolo asume este coste. No se carga a tu cuenta de IA." : "Estimación con los tokens que informa el proveedor y sus precios oficiales; la factura que vale es la de tu cuenta."}</p>
       </div>
     </PanelCard>
   )
