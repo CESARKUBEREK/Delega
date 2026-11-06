@@ -15,7 +15,7 @@ test("el plan mapea todas las capacidades y también el canal de entrada", () =>
   assert.match(onboarding, /return requiredConnections\(plan\)\[0\] \?\? "none"/)
 })
 
-test("el servidor comprueba los proveedores reales de Integraciones en una sola lectura", () => {
+test("el servidor comprueba los proveedores reales y limita los archivos a Google Drive", () => {
   assert.match(actions, /export async function checkOnboardingConnections/)
   assert.match(actions, /\.from\("integrations"\)[\s\S]*?\.select\("provider, status"\)/)
   for (const provider of ["imap", "google", "calendar", "whatsapp", "telegram", "hubspot", "contacts", "tokko", "xubio", "buffer", "supabase"]) {
