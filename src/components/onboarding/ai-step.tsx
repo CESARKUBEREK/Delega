@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useCallback, useEffect, useRef, useState, useTransition, type ReactNode } from "react"
-import { checkOnboardingAi, trackOnboardingStep } from "@/app/w/[workspaceId]/onboarding/actions"
+import { checkOnboardingAi, checkOnboardingTrial, trackOnboardingStep } from "@/app/w/[workspaceId]/onboarding/actions"
 
 export function AiStep({
   workspaceId,
@@ -16,6 +16,7 @@ export function AiStep({
   stepLabel,
   onBack,
   onContinue,
+  onRetryTrial,
   onFinishDraft,
 }: {
   workspaceId: string
@@ -29,10 +30,12 @@ export function AiStep({
   stepLabel: string
   onBack: () => void
   onContinue: () => void
+  onRetryTrial: () => void
   onFinishDraft: () => void
 }) {
   const [status, setStatus] = useState<"loading" | "connected" | "missing">("loading")
   const [label, setLabel] = useState<string | null>(null)
+  const [trialAvailable, setTrialAvailable] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [checking, startCheck] = useTransition()
   const recommendedBox = useRef<HTMLDivElement>(null)
@@ -65,6 +68,20 @@ export function AiStep({
       window.removeEventListener("focus", onFocus)
     }
   }, [check])
+
+  useEffect(() => {
+    let active = true
+    const checkTrial = async () => {
+      const result = await checkOnboardingTrial(workspaceId).catch(() => null)
+      if (active && result?.ok) setTrialAvailable(result.available)
+    }
+    void checkTrial()
+    const id = window.setInterval(() => void checkTrial(), 15000)
+    return () => {
+      active = false
+      window.clearInterval(id)
+    }
+  }, [workspaceId])
 
   useEffect(() => {
     if (status === "connected") void trackOnboardingStep(workspaceId, "ai_connected")
