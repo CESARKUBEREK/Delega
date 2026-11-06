@@ -9,7 +9,7 @@ export type WebsitePage = {
   canonicalUrl?: string | null
   keywords?: string[]
   contentQuality?: "usable" | "metadata_only" | "javascript_shell"
-  contentSource?: "html" | "embedded_data" | "metadata"
+  contentSource?: "html" | "embedded_data" | "rendered_html" | "metadata"
 }
 
 export type WebsiteSnapshot = WebsitePage & { pages: WebsitePage[] }
