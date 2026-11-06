@@ -47,7 +47,7 @@ const DISCOVERY_SCHEMA = {
 }
 
 function normalizeEvidence(value: string): string {
-  return value.normalize("NFKC").toLocaleLowerCase().replace(/\\s+/g, " ").trim()
+  return value.normalize("NFKC").toLocaleLowerCase().replace(/\s+/g, " ").trim()
 }
 
 async function discoverBusinessProfile(ctx: AuthContext, body: Record<string, unknown>): Promise<Response> {
@@ -70,19 +70,15 @@ async function discoverBusinessProfile(ctx: AuthContext, body: Record<string, un
     if (parsed.protocol !== "https:" && parsed.protocol !== "http:") continue
     if (origin && parsed.origin !== origin) return fail(400, "bad_request", "Las páginas deben pertenecer al mismo dominio.")
     origin = parsed.origin
-    const text = typeof page.text === "string" ? page.text.slice(0, 12_000) : ""
+    const title = typeof page.title === "string" ? page.title.slice(0, 300) : ""
+    const description = typeof page.description === "string" ? page.description.slice(0, 500) : ""
     const headings = Array.isArray(page.headings) ? page.headings.filter((x): x is string => typeof x === "string").slice(0, 12).map((x) => x.slice(0, 240)) : []
-    totalChars += text.length + headings.join(" ").length
-    pages.push({
-      url,
-      title: typeof page.title === "string" ? page.title.slice(0, 300) : "",
-      description: typeof page.description === "string" ? page.description.slice(0, 500) : "",
-      headings,
-      text,
-    })
+    const remaining = Math.max(0, 24_000 - totalChars - title.length - description.length - headings.join(" ").length)
+    const text = typeof page.text === "string" ? page.text.slice(0, Math.min(12_000, remaining)) : ""
+    totalChars += title.length + description.length + text.length + headings.join(" ").length
+    pages.push({ url, title, description, headings, text })
   }
   if (!pages.length || totalChars < 80) return fail(400, "bad_request", "La web no contiene suficiente texto para enriquecer el perfil.")
-  if (totalChars > 24_000) return fail(413, "too_large", "El contenido de la web es demasiado extenso. Vuelve a analizarla.")
 
   const since = new Date(Date.now() - 60_000).toISOString()
   const { count } = await ctx.admin.from("usage_events").select("id", { count: "exact", head: true })
