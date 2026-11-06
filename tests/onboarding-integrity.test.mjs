@@ -46,7 +46,7 @@ test("el estado final distingue conexiones pendientes de errores de verificació
 
 test("la demostración de aprobación es local y nunca ejecuta acciones externas", () => {
   const trustCards = readFileSync(new URL("../src/components/onboarding/trust-cards.tsx", import.meta.url), "utf8")
-  assert.ok(client.includes('<DemoApprovalCard plan={plan} />'))
+  assert.ok(!client.includes('DemoApprovalCard'), 'el ejemplo interactivo no debe aparecer en el onboarding')
   assert.ok(client.includes('from "@/components/onboarding/trust-cards"'))
   assert.ok(trustCards.includes('setDecision("approved")'))
   assert.ok(trustCards.includes('setDecision("rejected")'))
@@ -121,7 +121,7 @@ test("el enriquecimiento semántico es explícito, supervisado y valida evidenci
   assert.match(client, /editedProfileFields\.has\(key\)/)
   assert.match(client, /current\[key\]\.source === "user"/)
   assert.match(client, /evidence: \[\], evidenceSources: \[\], confidence: "low", source: "user"/)
-  assert.match(businessContext, /Información añadida o corregida por ti/)
+  assert.match(businessContext, /Añadido o corregido por ti/)
   assert.match(actions, /action: "business_discovery"/)
   assert.match(actions, /snapshot = await fetchPublicWebsite\(rawUrl\)/)
   assert.match(actions, /No confiamos en el snapshot del navegador/)
@@ -196,7 +196,7 @@ test("el progreso conserva el contexto web y los datos de negocio", () => {
 })
 
 test("el usuario puede pedir descubrir oportunidades sin definir una tarea", () => {
-  assert.match(client, /¿Qué te gustaría mejorar en tu negocio\?/)
+  assert.match(client, /¿Qué debería hacer MarchaSolo por ti\?/);
   assert.match(client, /No sé todavía; ayúdame a descubrirlo/)
   assert.match(client, /const requestedTask = task\.trim\(\) \|\| "Ayúdame a descubrir qué tareas repetitivas/)
   assert.match(client, /message: requestedTask/)

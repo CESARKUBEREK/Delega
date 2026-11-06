@@ -64,12 +64,17 @@ export function BusinessContextFields({
   channels,
   onChannelChange,
 }: BusinessContextProps) {
+  const filledFields = businessProfile
+    ? BUSINESS_PROFILE_FIELDS.filter(({ key }) => businessProfile[key].value.trim()).length
+    : 0
+
   return (
     <>
       <div className="rounded-xl border border-rule bg-paper p-4 flex flex-col gap-3">
         <div>
-          <label htmlFor="website-url" className="block text-sm font-semibold text-ink">La web de mi negocio <span className="font-normal text-graphite">(opcional)</span></label>
-          <p className="mt-1 text-sm text-graphite">Escribe tu dominio como lo tengas: marchasolo.com, www.marchasolo.com o https://marchasolo.com. Añadiremos https:// cuando falte. No necesitamos acceso ni contraseña.</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-graphite">1 · Conocer tu negocio</p>
+          <label htmlFor="website-url" className="mt-1 block text-sm font-semibold text-ink">¿Tienes una web? <span className="font-normal text-graphite">(opcional)</span></label>
+          <p className="mt-1 text-sm text-graphite">Analizamos las páginas públicas para preparar un perfil inicial. No necesitamos acceso ni contraseña. Si no tienes web, puedes contarnos tu actividad más abajo.</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
@@ -112,14 +117,18 @@ export function BusinessContextFields({
             </div>
             <div className="flex flex-col gap-2 rounded-lg border border-rule bg-paper p-3">
               <div>
-                <p className="text-sm font-semibold text-ink">Completar el análisis con IA</p>
-                <p className="mt-1 text-xs text-graphite">Interpreta el contenido en español, inglés o francés y completa los campos que falten. Al pulsar, autorizas el uso de la IA conectada a tu espacio o, si no tienes una, de un crédito de prueba disponible. No se ejecuta automáticamente.</p>
+                <p className="text-sm font-semibold text-ink">Mejorar la lectura con IA <span className="font-normal text-graphite">(opcional)</span></p>
+                <p className="mt-1 text-xs text-graphite">La IA interpreta el contenido y puede completar datos que el análisis inicial no haya identificado. Solo se utiliza cuando pulsas el botón; antes verás si consume un crédito de tu espacio o de prueba. Al pulsar, autorizas el uso de la IA conectada.</p>
               </div>
               <button type="button" onClick={onEnrichWebsite} disabled={semanticPending || websitePending || disabled} className="inline-flex h-10 items-center justify-center self-start rounded-xl border border-ink px-4 text-sm font-semibold text-ink disabled:opacity-50">
                 {semanticPending ? "Completando el análisis…" : "Completar análisis con IA"}
               </button>
               {semanticError ? <p className="text-sm text-alert" role="alert">{semanticError}</p> : null}
               {semanticMessage ? <p className="text-sm text-graphite" role="status">{semanticMessage}</p> : null}
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-ink">Perfil detectado</p>
+              <span className="text-xs text-graphite">{filledFields} de {BUSINESS_PROFILE_FIELDS.length} campos con información</span>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {BUSINESS_PROFILE_FIELDS.map(({ key, label, hint }) => (
@@ -134,11 +143,14 @@ export function BusinessContextFields({
                     className="w-full rounded-lg border border-rule bg-paper px-3 py-2 text-sm text-ink focus:border-stroke focus:outline-none"
                   />
                   {businessProfile[key].source === "user" ? (
-                    <span className="text-xs font-normal text-graphite">Información añadida o corregida por ti</span>
+                    <span className="text-xs font-normal text-graphite">Añadido o corregido por ti · pendiente de confirmar</span>
                   ) : businessProfile[key].evidence.length ? (
-                    <span className="text-xs font-normal text-graphite">Evidencia: {businessProfile[key].evidence[0]} <span className="block">Fuente: {businessProfile[key].evidenceSources[0]}</span></span>
+                    <span className="text-xs font-normal text-graphite">
+                      {businessProfile[key].confidence === "high" ? "Varias evidencias" : "Evidencia encontrada"}: {businessProfile[key].evidence[0]}
+                      <span className="block break-all">Fuente: {businessProfile[key].evidenceSources[0]}</span>
+                    </span>
                   ) : (
-                    <span className="text-xs font-normal text-graphite">Sin información clara en la web</span>
+                    <span className="text-xs font-normal text-graphite">No encontrado en la web. Puedes completarlo o dejarlo vacío.</span>
                   )}
                 </label>
               ))}
@@ -156,11 +168,12 @@ export function BusinessContextFields({
 
       <div className="rounded-xl border border-rule bg-paper p-4 flex flex-col gap-3">
         <div>
-          <p className="text-sm font-semibold text-ink">Cuéntame un poco de tu negocio <span className="font-normal text-graphite">(opcional)</span></p>
-          <p className="mt-1 text-xs text-graphite">Con estos datos podré adaptar mejor el equipo digital y las herramientas que te proponga.</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-graphite">2 · Completar el contexto</p>
+          <p className="mt-1 text-sm font-semibold text-ink">Cuéntame cómo funciona tu negocio <span className="font-normal text-graphite">(opcional)</span></p>
+          <p className="mt-1 text-xs text-graphite">Estos datos ayudan a no recomendarte automatizaciones genéricas. Puedes completar solo lo que sepas.</p>
         </div>
         <label className="flex flex-col gap-1 text-sm font-medium text-ink">
-          ¿A qué te dedicas?
+          ¿Cuál describe mejor tu actividad?
           <select value={businessType} onChange={(event) => onBusinessTypeChange(event.target.value)} className="w-full rounded-lg border border-rule bg-paper px-3 py-2 text-sm text-ink">
             <option value="">Selecciona tu actividad</option>
             <option value="professional">Servicios profesionales / consultoría</option>
@@ -174,7 +187,7 @@ export function BusinessContextFields({
           </select>
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium text-ink">
-          ¿Qué te gustaría mejorar primero?
+          ¿Qué tarea te quita más tiempo hoy?
           <select value={mainPain} onChange={(event) => onMainPainChange(event.target.value)} className="w-full rounded-lg border border-rule bg-paper px-3 py-2 text-sm text-ink">
             <option value="">Elige tu prioridad</option>
             <option value="customer_messages">Responder consultas y mensajes</option>
@@ -188,7 +201,7 @@ export function BusinessContextFields({
           </select>
         </label>
         <fieldset className="flex flex-col gap-2">
-          <legend className="text-sm font-medium text-ink">¿Por dónde te contactan tus clientes? <span className="font-normal text-graphite">(puedes elegir varios)</span></legend>
+          <legend className="text-sm font-medium text-ink">¿Por dónde llegan o te contactan tus clientes? <span className="font-normal text-graphite">(puedes elegir varios)</span></legend>
           <div className="flex flex-wrap gap-x-4 gap-y-2">
             {CONTACT_CHANNELS.map(([value, label]) => (
               <label key={value} className="inline-flex items-center gap-2 text-sm text-graphite">
