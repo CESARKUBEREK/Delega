@@ -434,6 +434,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                 setBusinessProfile(null)
                 setProfileConfirmed(false)
                 setWebsiteError(null)
+                setSemanticError(null)
+                setSemanticMessage(null)
+                setEditedProfileFields(new Set())
               }}
               onAnalyzeWebsite={handleWebsiteAnalysis}
               onEnrichWebsite={handleSemanticEnrichment}
