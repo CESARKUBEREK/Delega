@@ -1192,6 +1192,7 @@ export type Database = {
         Row: {
           allowance_plans: number
           allowance_runs: number
+          reserved_run_id: string | null
           allowance_tokens: number
           created_at: string
           updated_at: string
