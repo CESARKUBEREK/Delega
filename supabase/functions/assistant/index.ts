@@ -134,11 +134,12 @@ ${serialized}` }],
       const unique = [...new Map(supported.map((item) => [item.text, item])).values()]
       const text = typeof field?.value === "string" ? field.value.trim().slice(0, 500) : ""
       const valid = Boolean(text && unique.length)
+      const distinctSources = new Set(unique.map((item) => item.url)).size
       return [key, {
         value: valid ? text : "",
         evidence: valid ? unique.map((item) => item.text) : [],
         evidenceSources: valid ? unique.map((item) => item.url) : [],
-        confidence: unique.length >= 2 ? "high" : "medium",
+        confidence: distinctSources >= 2 ? "high" : "medium",
         source: valid ? "website" : "not_found",
         confirmed: false,
       }]

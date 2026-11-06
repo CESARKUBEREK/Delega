@@ -94,8 +94,18 @@ export function BusinessContextFields({
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-graphite">Esto es lo que hemos entendido</p>
               <p className="mt-1 font-semibold text-ink">{websiteSnapshot.title ?? websiteSnapshot.url}</p>
-              <p className="mt-1 text-xs text-graphite">{websiteSnapshot.pages.length > 1 ? `Hemos revisado ${websiteSnapshot.pages.length} páginas públicas del mismo dominio.` : "Hemos revisado una página pública."} Usamos títulos, metadatos y contenido visible. Corrige lo que haga falta; los campos vacíos no se han podido verificar.</p>
+              <p className="mt-1 text-xs text-graphite">{websiteSnapshot.pages.length > 1 ? `Hemos revisado ${websiteSnapshot.pages.length} páginas públicas del mismo dominio.` : "Hemos revisado una página pública."} Usamos títulos, metadatos, contenido de página y datos estructurados disponibles. Corrige lo que haga falta; los campos vacíos no se han podido verificar.</p>
               {websiteSnapshot.language ? <p className="mt-1 text-xs text-graphite">Idioma detectado: {websiteSnapshot.language}</p> : null}
+              {websiteSnapshot.pages.some((page) => page.contentSource === "rendered_html") ? <p className="mt-1 text-xs text-graphite">El contenido dinámico de algunas páginas se ha recuperado mediante un navegador aislado.</p> : websiteSnapshot.pages.some((page) => page.contentSource === "embedded_data") ? <p className="mt-1 text-xs text-graphite">Parte del contenido se ha recuperado de datos estructurados o de la carga inicial de la web; no todas las páginas permiten leer el contenido dinámico.</p> : null}
+              {websiteSnapshot.pages.some((page) => page.contentQuality === "javascript_shell") ? (
+                <p className="mt-2 rounded-lg border border-alert/30 bg-alert/5 p-3 text-sm text-alert" role="status">
+                  Algunas páginas cargan su contenido mediante JavaScript y no han podido leerse completamente. El análisis puede estar incompleto; revisa los campos y complétalos manualmente antes de confirmar.
+                </p>
+              ) : websiteSnapshot.pages.some((page) => page.contentQuality === "metadata_only") ? (
+                <p className="mt-2 rounded-lg border border-rule bg-paper p-3 text-sm text-graphite" role="status">
+                  Una o más páginas solo han proporcionado metadatos. La información disponible puede ser limitada; comprueba los campos antes de confirmar.
+                </p>
+              ) : null}
               <p className="mt-1 break-all text-xs text-graphite">Páginas consultadas: {websiteSnapshot.pages.map((page) => page.url).join(" · ")}</p>
             </div>
             <div className="flex flex-col gap-2 rounded-lg border border-rule bg-paper p-3">
@@ -121,7 +131,9 @@ export function BusinessContextFields({
                     onChange={(event) => onProfileFieldChange(key, event.target.value)}
                     className="w-full rounded-lg border border-rule bg-paper px-3 py-2 text-sm text-ink focus:border-stroke focus:outline-none"
                   />
-                  {businessProfile[key].evidence.length ? (
+                  {businessProfile[key].source === "user" ? (
+                    <span className="text-xs font-normal text-graphite">Información añadida o corregida por ti</span>
+                  ) : businessProfile[key].evidence.length ? (
                     <span className="text-xs font-normal text-graphite">Evidencia: {businessProfile[key].evidence[0]} <span className="block">Fuente: {businessProfile[key].evidenceSources[0]}</span></span>
                   ) : (
                     <span className="text-xs font-normal text-graphite">Sin información clara en la web</span>

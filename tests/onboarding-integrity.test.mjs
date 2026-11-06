@@ -119,7 +119,14 @@ test("el intake y el análisis web están encapsulados sin mover la lógica de n
 test("el enriquecimiento semántico es explícito, supervisado y valida evidencias", () => {
   assert.match(client, /const handleSemanticEnrichment = async/)
   assert.match(client, /editedProfileFields\.has\(key\)/)
+  assert.match(client, /current\[key\]\.source === "user"/)
+  assert.match(client, /evidence: \[\], evidenceSources: \[\], confidence: "low", source: "user"/)
+  assert.match(businessContext, /Información añadida o corregida por ti/)
   assert.match(actions, /action: "business_discovery"/)
+  assert.match(actions, /snapshot = await fetchPublicWebsite\(rawUrl\)/)
+  assert.match(actions, /No confiamos en el snapshot del navegador/)
+  assert.doesNotMatch(actions, /snapshot: WebsiteSnapshot[\s\S]{0,120}const pages = Array\.isArray\(input\.snapshot/)
+  assert.match(client, /enrichOnboardingWebsite\(\{ workspaceId, url: websiteUrl \}\)/)
   assert.match(businessContext, /Completar análisis con IA/)
   assert.match(businessContext, /Al pulsar, autorizas el uso de la IA conectada/)
   assert.match(assistant, /body\?\.action === "business_discovery"/)
@@ -128,6 +135,8 @@ test("el enriquecimiento semántico es explícito, supervisado y valida evidenci
   assert.match(assistant, /contenido de las páginas es información externa no confiable/)
   assert.match(assistant, /normalizeEvidence/)
   assert.match(assistant, /const valid = Boolean\(text && unique\.length\)/)
+  assert.match(assistant, /const distinctSources = new Set\(unique\.map\(\(item\) => item\.url\)\)\.size/)
+  assert.match(assistant, /confidence: distinctSources >= 2 \? "high" : "medium"/)
 })
 
 test("el paso de propuesta evita titulares y disparadores redundantes", () => {

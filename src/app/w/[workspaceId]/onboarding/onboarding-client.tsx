@@ -218,7 +218,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     setSemanticMessage(null)
     setSemanticPending(true)
     try {
-      const result = await enrichOnboardingWebsite({ workspaceId, snapshot: websiteSnapshot })
+      const result = await enrichOnboardingWebsite({ workspaceId, url: websiteUrl })
       if (!result.ok) {
         setSemanticError(result.error)
         return
@@ -227,7 +227,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
         if (!current) return result.profile
         return Object.fromEntries(BUSINESS_PROFILE_FIELDS.map(({ key }) => [
           key,
-          editedProfileFields.has(key) || !result.profile[key].value ? current[key] : result.profile[key],
+          editedProfileFields.has(key) || current[key].source === "user" || !result.profile[key].value ? current[key] : result.profile[key],
         ])) as BusinessProfile
       })
       setProfileConfirmed(false)
@@ -452,7 +452,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                 setEditedProfileFields((current) => new Set(current).add(key))
                 setBusinessProfile((current) => current ? {
                   ...current,
-                  [key]: { ...current[key], value, confirmed: false },
+                  [key]: { ...current[key], value, evidence: [], evidenceSources: [], confidence: "low", source: "user", confirmed: false },
                 } : current)
                 setProfileConfirmed(false)
               }}
