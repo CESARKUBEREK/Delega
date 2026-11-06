@@ -1,4 +1,6 @@
 import { asPlan, type FlowPlan } from "@/lib/plan"
+import type { BusinessProfile } from "@/lib/business-discovery/business-profile"
+import type { WebsiteSnapshot, WebsitePage } from "@/lib/business-discovery/website-parser"
 
 export type OnboardingConnection =
   | "email"
@@ -126,6 +128,15 @@ export type OnboardingSnapshot = {
   trialRemaining: number | null
   // Borrador de automatización creado al aceptar el plan (si se pudo guardar).
   flowId: string | null
+  businessContext?: {
+    websiteUrl: string
+    websiteSnapshot: WebsiteSnapshot | null
+    businessProfile: BusinessProfile | null
+    profileConfirmed: boolean
+    businessType: string
+    mainPain: string
+    channels: string[]
+  } | null
 }
 
 const STORAGE_PREFIX = "ms_onboarding:"
@@ -138,6 +149,61 @@ function storage(): Storage | null {
     return null
   }
 }
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function isWebsitePage(value: unknown): value is WebsitePage {
+  if (!isRecord(value)) return false
+  return typeof value.url === "string"
+    && (typeof value.title === "string" || value.title === null)
+    && (typeof value.description === "string" || value.description === null)
+    && Array.isArray(value.headings) && value.headings.every((item) => typeof item === "string")
+    && typeof value.text === "string"
+}
+
+function readBusinessProfile(value: unknown): BusinessProfile | null {
+  if (!isRecord(value)) return null
+  const keys = ["activity", "clients", "offer", "acquisition", "operations", "tools"] as const
+  const result = {} as BusinessProfile
+  for (const key of keys) {
+    const field = value[key]
+    if (!isRecord(field) || typeof field.value !== "string"
+      || !Array.isArray(field.evidence) || !field.evidence.every((item) => typeof item === "string")
+      || !Array.isArray(field.evidenceSources) || !field.evidenceSources.every((item) => typeof item === "string")
+      || !["high", "medium", "low"].includes(String(field.confidence))
+      || !["website", "not_found"].includes(String(field.source))) return null
+    result[key] = {
+      value: field.value.slice(0, 2_000),
+      evidence: field.evidence.slice(0, 3).map((item) => item.slice(0, 240)),
+      evidenceSources: field.evidenceSources.slice(0, 3).map((item) => item.slice(0, 2_048)),
+      confidence: field.confidence as BusinessProfile["activity"]["confidence"],
+      source: field.source as BusinessProfile["activity"]["source"],
+      confirmed: false,
+    }
+  }
+  return result
+}
+
+function readBusinessContext(value: unknown): OnboardingSnapshot["businessContext"] {
+  if (!isRecord(value)) return null
+  const candidate = value.websiteSnapshot
+  const pages = isRecord(candidate) && Array.isArray(candidate.pages) ? candidate.pages : null
+  const snapshot = isRecord(candidate) && pages !== null && pages.length > 0 && pages.length <= 3
+    && pages.every(isWebsitePage) && isWebsitePage(candidate)
+    ? { ...candidate, pages } as WebsiteSnapshot : null
+  const profile = readBusinessProfile(value.businessProfile)
+  return {
+    websiteUrl: typeof value.websiteUrl === "string" ? value.websiteUrl.slice(0, 2_048) : "",
+    websiteSnapshot: snapshot,
+    businessProfile: profile,
+    profileConfirmed: value.profileConfirmed === true && snapshot !== null && profile !== null,
+    businessType: typeof value.businessType === "string" ? value.businessType.slice(0, 40) : "",
+    mainPain: typeof value.mainPain === "string" ? value.mainPain.slice(0, 40) : "",
+    channels: Array.isArray(value.channels) ? value.channels.filter((item): item is string => typeof item === "string").slice(0, 6) : [],
+  }
+}
+
 const STEPS: OnboardingStep[] = ["task", "plan", "ai", "connect", "done"]
 
 export function loadOnboarding(workspaceId: string): OnboardingSnapshot | null {
@@ -167,6 +233,7 @@ export function loadOnboarding(workspaceId: string): OnboardingSnapshot | null {
       conversationId: typeof v.conversationId === "string" ? v.conversationId : null,
       trialRemaining: typeof v.trialRemaining === "number" ? v.trialRemaining : null,
       flowId: typeof v.flowId === "string" ? v.flowId : null,
+      businessContext: readBusinessContext(v.businessContext),
     }
   } catch {
     return null
