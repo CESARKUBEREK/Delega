@@ -85,7 +85,8 @@ export function BusinessContextFields({
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-graphite">Esto es lo que hemos entendido</p>
               <p className="mt-1 font-semibold text-ink">{websiteSnapshot.title ?? websiteSnapshot.url}</p>
-              <p className="mt-1 text-xs text-graphite">{websiteSnapshot.pages.length > 1 ? `Hemos revisado ${websiteSnapshot.pages.length} páginas públicas del mismo dominio.` : "Hemos revisado una página pública."} Corrige lo que haga falta; los campos vacíos no se han podido verificar.</p>
+              <p className="mt-1 text-xs text-graphite">{websiteSnapshot.pages.length > 1 ? `Hemos revisado ${websiteSnapshot.pages.length} páginas públicas del mismo dominio.` : "Hemos revisado una página pública."} Usamos títulos, metadatos y contenido visible. Corrige lo que haga falta; los campos vacíos no se han podido verificar.</p>
+              {websiteSnapshot.language ? <p className="mt-1 text-xs text-graphite">Idioma detectado: {websiteSnapshot.language}</p> : null}
               <p className="mt-1 break-all text-xs text-graphite">Páginas consultadas: {websiteSnapshot.pages.map((page) => page.url).join(" · ")}</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
