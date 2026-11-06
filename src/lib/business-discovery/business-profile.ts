@@ -25,9 +25,9 @@ function evidence(pages: WebsitePage[], pattern: RegExp): Evidence[] {
   const matches: Evidence[] = []
   for (const page of pages) {
     // Prioriza metadatos y encabezados frente a texto genérico de navegación/pie.
-    const text = [page.title, page.siteName, page.description, ...page.headings, page.text].filter(Boolean).join("\\n")
-    for (const sentence of text.split(/(?<=[.!?])\\s+|\\n+/)) {
-      const normalized = sentence.trim().replace(/\\s+/g, " ")
+    const text = [page.title, page.siteName, page.description, ...page.headings, page.text].filter(Boolean).join("\n")
+    for (const sentence of text.split(/(?<=[.!?])\s+|\n+/)) {
+      const normalized = sentence.trim().replace(/\s+/g, " ")
       if (!normalized || normalized.length < 3 || !pattern.test(normalized) || seen.has(normalized)) continue
       seen.add(normalized)
       matches.push({ text: normalized.slice(0, 240), url: page.url })
@@ -59,12 +59,12 @@ export function analyzeBusinessProfile(source: WebsiteSnapshot): BusinessProfile
   const tools = evidence(pages, /\b(software|plataforma|crm|erp|google workspace|microsoft 365|salesforce|hubspot|holded|excel|teams|slack)\b/i)
 
   return {
-    activity: makeField(activity, "medium"),
-    clients: makeField(clients, "medium"),
-    offer: makeField(offer, "medium"),
-    acquisition: makeField(acquisition, "medium"),
-    operations: makeField(operations, "low"),
-    tools: makeField(tools, "low"),
+    activity: makeField(activity),
+    clients: makeField(clients),
+    offer: makeField(offer),
+    acquisition: makeField(acquisition),
+    operations: makeField(operations),
+    tools: makeField(tools),
   }
 }
 
