@@ -218,7 +218,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     setSemanticMessage(null)
     setSemanticPending(true)
     try {
-      const result = await enrichOnboardingWebsite({ workspaceId, snapshot: websiteSnapshot })
+      const result = await enrichOnboardingWebsite({ workspaceId, url: websiteUrl })
       if (!result.ok) {
         setSemanticError(result.error)
         return
