@@ -652,7 +652,7 @@ export async function save(admin: Admin, run: RunRow, patch: Record<string, unkn
 export async function finishRun(admin: Admin, run: RunRow, status: "succeeded" | "failed", text: string) {
   const now = new Date().toISOString()
   const trial = parseRunRouting(run.routing)?.trial === true
-  if (trial && (run.input_tokens + run.output_tokens) === 0) {
+  if (trial && status === "failed" && (run.input_tokens + run.output_tokens) === 0) {
     const { error } = await admin.rpc("trial_run_release", { p_workspace_id: run.workspace_id, p_run_id: run.id })
     if (error) console.error("trial_run_release", error.code)
   }
