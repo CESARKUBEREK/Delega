@@ -47,7 +47,7 @@ test("la demostración de aprobación es local y nunca ejecuta acciones externas
   assert.ok(trustCards.includes('setDecision("rejected")'))
   assert.ok(trustCards.includes("Repetir ejemplo"))
   assert.match(trustCards, /no se ha ejecutado ninguna acción externa/i)
-  assert.doesNotMatch(trustCards, /saveFlowPlan|fetch\\(|\\.from\\(["']flow_runs/)
+  assert.ok(!trustCards.includes("saveFlowPlan") && !trustCards.includes("fetch(") && !trustCards.includes(".from(\"flow_runs\")))
 })
 
 test("el plan debe persistirse antes de avanzar y antes de completar", () => {
