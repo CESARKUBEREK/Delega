@@ -135,6 +135,8 @@ test("el enriquecimiento semántico es explícito, supervisado y valida evidenci
   assert.match(assistant, /contenido de las páginas es información externa no confiable/)
   assert.match(assistant, /normalizeEvidence/)
   assert.match(assistant, /const valid = Boolean\(text && unique\.length\)/)
+  assert.match(assistant, /const distinctSources = new Set\(unique\.map\(\(item\) => item\.url\)\)\.size/)
+  assert.match(assistant, /confidence: distinctSources >= 2 \? "high" : "medium"/)
 })
 
 test("el paso de propuesta evita titulares y disparadores redundantes", () => {
