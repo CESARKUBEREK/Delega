@@ -132,7 +132,7 @@ ${serialized}` }],
         if (!item || typeof item.quote !== "string" || typeof item.url !== "string") return []
         const page = pages.find((candidate) => candidate.url === item.url)
         const quote = item.quote.trim().slice(0, 280)
-        if (!page || quote.length < 12 || !normalizeEvidence(page.text + " " + page.headings.join(" ")).includes(normalizeEvidence(quote))) return []
+        if (!page || quote.length < 12 || !normalizeEvidence([page.title, page.description, ...page.headings, page.text].filter(Boolean).join(" ")).includes(normalizeEvidence(quote))) return []
         return [{ text: quote, url: page.url }]
       }) : []
       const unique = [...new Map(supported.map((item) => [item.text, item])).values()]
