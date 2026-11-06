@@ -34,7 +34,7 @@ async function readyToRun(
   workspaceId: string,
   flow: { id: string | null; settings?: unknown; definition?: unknown },
 ): Promise<PlannedRun | Response> {
-  const planned = await planRun(ctx.admin, workspaceId, { flowId: flow.id, flowSettings: flow.settings, steps: stepCount(flow.definition) })
+  const planned = await planRun(ctx.admin, workspaceId, { flowId: flow.id, flowSettings: flow.settings, steps: stepCount(flow.definition), allowTrialRun: true })
   if (isRouteError(planned)) return fail(409, planned.code === "budget" ? "budget" : "no_connection", planned.error)
 
   const since = new Date(Date.now() - 10 * 60_000).toISOString()
@@ -45,6 +45,26 @@ async function readyToRun(
     .gte("started_at", since)
   if ((count ?? 0) >= 10) return fail(429, "rate_limited", "Has lanzado muchas ejecuciones seguidas. Espera unos minutos.")
   return planned
+}
+
+async function reserveTrialRun(ctx: AuthContext, workspaceId: string, runId: string): Promise<boolean> {
+  const { data, error } = await ctx.admin.rpc("trial_run_consume", { p_workspace_id: workspaceId, p_run_id: runId })
+  if (error) {
+    console.error("trial_run_consume", error.code)
+    await ctx.admin.from("flow_runs").update({
+      status: "failed",
+      error: "No se pudo reservar la ejecución gratuita.",
+      finished_at: new Date().toISOString(),
+    }).eq("id", runId)
+    return false
+  }
+  if (data === true) return true
+  await ctx.admin.from("flow_runs").update({
+    status: "failed",
+    error: "La ejecución gratuita ya fue utilizada.",
+    finished_at: new Date().toISOString(),
+  }).eq("id", runId)
+  return false
 }
 
 async function canManage(ctx: AuthContext, run: RunRow): Promise<boolean> {
@@ -103,9 +123,12 @@ async function handle(req: Request): Promise<Response> {
       startedBy: ctx.userId,
       trigger: { type: "manual" },
     })
+    if (ai.routing.trial && !(await reserveTrialRun(ctx, workspaceId, run.id))) {
+      return fail(409, "trial_unavailable", "La ejecución gratuita ya se utilizó. Conecta tu propia IA para ejecutar esta automatización.")
+    }
     // El panel de la ejecución pide "continue" y va mostrando el avance.
     kick(ctx.admin, run.id)
-    return json({ run_id: run.id, status: "running" })
+    return json({ run_id: run.id, status: "running", trial_funded: ai.routing.trial === true })
   }
 
   // «Ejecutar ahora» desde el chat: el plan se lee de la base de datos (RLS),
@@ -160,8 +183,11 @@ async function handle(req: Request): Promise<Response> {
       trigger: { type: "chat", conversation_id: msg.conversation_id, message_id: msg.id },
       sourceMessageId: msg.id,
     })
+    if (ai.routing.trial && !(await reserveTrialRun(ctx, workspaceId, run.id))) {
+      return fail(409, "trial_unavailable", "La ejecución gratuita ya se utilizó. Conecta tu propia IA para ejecutar esta automatización.")
+    }
     kick(ctx.admin, run.id)
-    return json({ run_id: run.id, status: "running" })
+    return json({ run_id: run.id, status: "running", trial_funded: ai.routing.trial === true })
   }
 
   if (action === "continue") {

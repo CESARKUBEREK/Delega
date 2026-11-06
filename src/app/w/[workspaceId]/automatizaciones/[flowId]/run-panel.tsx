@@ -32,17 +32,6 @@ export function RunPanel({
   const [pending, startTransition] = useTransition()
   const base = `/w/${workspaceId}`
 
-  if (!aiReady) {
-    return (
-      <p className="text-sm text-graphite">
-        Para ejecutar hace falta una IA conectada (OpenAI, Anthropic, DeepSeek o Grok).{" "}
-        <Link href={`${base}/integraciones`} className="text-link underline underline-offset-4">
-          Ir a Integraciones
-        </Link>
-      </p>
-    )
-  }
-
   function toggle(id: string) {
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : s.length < 5 ? [...s, id] : s))
   }
@@ -108,6 +97,12 @@ export function RunPanel({
         </InfoBanner>
       ) : null}
 
+      {!aiReady ? (
+        <p className="text-sm text-graphite">
+          Puedes probar una ejecución gratuita de MarchaSolo si todavía está disponible. Si ya la utilizaste, conecta tu IA en{" "}
+          <Link href={`${base}/integraciones`} className="text-link underline underline-offset-4">Integraciones</Link>.
+        </p>
+      ) : null}
       <div className="flex flex-wrap items-center gap-3">
         <PrimaryButton
           type="button"

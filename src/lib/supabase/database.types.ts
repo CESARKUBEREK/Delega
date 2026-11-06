@@ -1191,28 +1191,37 @@ export type Database = {
       workspace_trial_credits: {
         Row: {
           allowance_plans: number
+          allowance_runs: number
+          reserved_run_id: string | null
           allowance_tokens: number
           created_at: string
           updated_at: string
           used_plans: number
+          used_runs: number
           used_tokens: number
           workspace_id: string
         }
         Insert: {
           allowance_plans?: number
+          allowance_runs?: number
+          reserved_run_id?: string | null
           allowance_tokens?: number
           created_at?: string
           updated_at?: string
           used_plans?: number
+          used_runs?: number
           used_tokens?: number
           workspace_id: string
         }
         Update: {
           allowance_plans?: number
+          allowance_runs?: number
           allowance_tokens?: number
+          reserved_run_id?: string | null
           created_at?: string
           updated_at?: string
           used_plans?: number
+          used_runs?: number
           used_tokens?: number
           workspace_id?: string
         }
@@ -1390,6 +1399,18 @@ export type Database = {
       trial_consume: {
         Args: { p_tokens: number; p_workspace_id: string }
         Returns: number
+      }
+      trial_run_consume: {
+        Args: { p_run_id: string; p_workspace_id: string }
+        Returns: boolean
+      }
+      trial_run_release: {
+        Args: { p_run_id: string; p_workspace_id: string }
+        Returns: boolean
+      }
+      trial_run_commit: {
+        Args: { p_run_id: string; p_workspace_id: string }
+        Returns: boolean
       }
       workspace_set_ai_routing: {
         Args: { p_settings: Json; p_workspace_id: string }

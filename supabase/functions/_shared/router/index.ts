@@ -184,8 +184,42 @@ export async function routeAi(
     inputTokens?: number
     // Solo el plan del onboarding (decisión del 3 nov).
     allowTrial?: boolean
+    // Solo ejecución manual iniciada por el usuario; nunca triggers ni schedules.
+    allowTrialRun?: boolean
   } = {},
 ): Promise<Routed | RouteError> {
+  if (opts.allowTrialRun) {
+    const trialKey = Deno.env.get("TRIAL_ANTHROPIC_API_KEY")?.trim()
+    const [{ data: workspace }, { data: credits }] = await Promise.all([
+      admin.from("workspaces").select("kind").eq("id", workspaceId).maybeSingle(),
+      admin.from("workspace_trial_credits").select("allowance_runs, used_runs").eq("workspace_id", workspaceId).maybeSingle(),
+    ])
+    if (workspace?.kind === "personal" && credits && Number(credits.used_runs) < Number(credits.allowance_runs)) {
+      if (!trialKey) {
+        return { error: "La prueba gratuita de MarchaSolo no está disponible ahora. No usaremos tu IA conectada sin tu autorización.", code: "no_ai" }
+      }
+      const trialModel = "claude-haiku-5-5"
+      const plan: RoutePlan = {
+        task,
+        mode: "eco",
+        fixed: true,
+        primary: trialModel,
+        fallbacks: [],
+        estimatedCostUsd: 0,
+        reason: "Ejecución gratuita de prueba financiada por MarchaSolo.",
+        scores: [],
+      }
+      return {
+        workspaceId,
+        task,
+        plan,
+        ai: { provider: "anthropic", model: trialModel, apiKey: trialKey, trial: true },
+        trial: true,
+        next: () => Promise.resolve(null),
+      }
+    }
+  }
+
   const conns = await connections(admin, workspaceId)
   if (!conns.length) {
     if (!opts.allowTrial) return { error: NO_AI_MESSAGE, code: "no_ai" }
@@ -309,6 +343,7 @@ export type RunRouting = {
   reason: string
   estimated_usd: number
   switches?: { from: string; to: string; code: string; at: string }[]
+  trial?: boolean
 }
 
 // Número de pasos del plan de una automatización (para la complejidad).
@@ -322,7 +357,7 @@ export type PlannedRun = { model: string; routing: RunRouting; routingMode: Mode
 export async function planRun(
   admin: SupabaseClient,
   workspaceId: string,
-  opts: { task?: "agent" | "draft_reply"; flowId?: string | null; flowSettings?: unknown; steps?: number },
+  opts: { task?: "agent" | "draft_reply"; flowId?: string | null; flowSettings?: unknown; steps?: number; allowTrialRun?: boolean },
 ): Promise<PlannedRun | RouteError> {
   const flow = parseFlowRouting(opts.flowSettings)
   const task = opts.task ?? "agent"
@@ -331,11 +366,12 @@ export async function planRun(
     fixedModel: flow.fixedModel,
     needsTools: true,
     complexity: task === "agent" ? (opts.steps ?? 0) >= 6 ? 4 : 3 : 2,
+    allowTrialRun: opts.allowTrialRun,
   })
   if (isRouteError(routed)) return routed
 
   const settings = await readSettings(admin, workspaceId)
-  let budgetUsd = flow.runUsd ?? settings.run_usd
+  let budgetUsd = routed.trial ? 0.10 : flow.runUsd ?? settings.run_usd
   if (!budgetUsd) {
     let recent: number[] = []
     if (opts.flowId) {
@@ -363,6 +399,7 @@ export async function planRun(
       fallbacks: [routed.plan.primary, ...routed.plan.fallbacks].filter((x) => x !== routed.ai.model),
       reason: routed.plan.reason,
       estimated_usd: routed.plan.estimatedCostUsd,
+      ...(routed.trial ? { trial: true } : {}),
     },
   }
 }
@@ -376,6 +413,10 @@ export async function aiForRun(
   routing: RunRouting | null,
   skipProviders: Set<string> = new Set(),
 ): Promise<Ai | null> {
+  if (routing?.trial) {
+    const key = Deno.env.get("TRIAL_ANTHROPIC_API_KEY")?.trim()
+    return key ? { provider: "anthropic", model: "claude-haiku-5-5", apiKey: key, trial: true } : null
+  }
   const catalog = await loadCatalog(admin)
   const keyFor = keyring(admin, workspaceId)
   const conns = await connections(admin, workspaceId)
@@ -410,6 +451,7 @@ export function parseRunRouting(value: unknown): RunRouting | null {
     reason: typeof v.reason === "string" ? v.reason : "",
     estimated_usd: Number(v.estimated_usd) || 0,
     switches: Array.isArray(v.switches) ? (v.switches as RunRouting["switches"])!.slice(-5) : [],
+    trial: v.trial === true,
   }
 }
 

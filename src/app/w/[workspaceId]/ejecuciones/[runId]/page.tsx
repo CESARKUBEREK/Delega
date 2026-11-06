@@ -68,10 +68,16 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
   const chat = trigger?.type === "chat" && typeof trigger.conversation_id === "string" && UUID_RE.test(trigger.conversation_id)
     ? { conversation_id: trigger.conversation_id }
     : null
+  const trialFunded = (run.routing as { trial?: unknown } | null)?.trial === true
 
   return (
     <div className="flex flex-col gap-6">
       <HelpPanel workspaceId={workspaceId} page="ejecucion" runId={run.id} />
+      {trialFunded ? (
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+          Esta ejecución está financiada por MarchaSolo. Incluye una única prueba gratuita, con un límite de coste de IA de 0,10 USD.
+        </p>
+      ) : null}
       <PageHeader eyebrow={run.flow_id ? <Link href={`${base}/automatizaciones/${run.flow_id}`} className="text-link underline underline-offset-4">{run.flow_name}</Link> : chat ? <Link href={`${base}/asistente?c=${chat.conversation_id}`} className="text-link underline underline-offset-4">{run.flow_name} (pedida en el chat)</Link> : <span className="text-graphite">{run.flow_name} (automatización borrada)</span>} title={<>Ejecución del {formatDateTime(run.started_at)}</>} description={<span className="text-sm text-graphite">
           {RUN_STATUS_LABEL[run.status] ?? run.status} · {runOrigin(run.trigger)} · {run.tool_calls} acciones · {formatNumber(run.input_tokens + run.output_tokens)} tokens
         </span>} />
@@ -218,8 +224,10 @@ function RunAi({
 }) {
   const routing = (run.routing && typeof run.routing === "object" ? run.routing : {}) as {
     reason?: unknown
+    trial?: unknown
     switches?: { from?: string; to?: string; code?: string }[]
   }
+  const trialFunded = routing.trial === true
   if (!run.model && !calls.length) return null
   const catalog = models.map((m) => toModelInfo(m)).filter((m): m is ModelInfo => m !== null)
   const cat = catalog.length ? catalog : FALLBACK_CATALOG
@@ -255,9 +263,9 @@ function RunAi({
               Modelo: <span className="font-medium text-ink">{modelLabel(run.model)}</span>
             </>
           )}
-          {modeLabel ? ` · ${modeLabel}` : ""} · {calls.length} {calls.length === 1 ? "llamada" : "llamadas"} · coste estimado{" "}
+          {modeLabel ? ` · ${modeLabel}` : ""} · {calls.length} {calls.length === 1 ? "llamada" : "llamadas"} · {trialFunded ? "coste asumido por MarchaSolo" : "coste estimado"}{" "}
           <span className="font-medium text-ink">{formatUsd(cost)}</span>
-          {run.budget_usd ? ` de ${formatUsd(Number(run.budget_usd))} de presupuesto` : ""}
+          {run.budget_usd ? trialFunded ? ` de ${formatUsd(Number(run.budget_usd))} de presupuesto gratuito` : ` de ${formatUsd(Number(run.budget_usd))} de presupuesto` : ""}
           {seconds !== null ? ` · ${seconds < 60 ? `${seconds} s` : `${Math.round(seconds / 60)} min`}` : ""}
         </p>
         {reason ? <p>{reason}</p> : null}
@@ -272,7 +280,7 @@ function RunAi({
             Un {saving} % menos que con {premium.label} para el mismo trabajo ({formatUsd(reference)}).
           </p>
         ) : null}
-        <p className="text-xs">Estimación con los tokens que informa el proveedor y sus precios oficiales; la factura que vale es la de tu cuenta.</p>
+        <p className="text-xs">{trialFunded ? "MarchaSolo asume este coste. No se carga a tu cuenta de IA." : "Estimación con los tokens que informa el proveedor y sus precios oficiales; la factura que vale es la de tu cuenta."}</p>
       </div>
     </PanelCard>
   )
