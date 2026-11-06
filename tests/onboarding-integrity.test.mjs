@@ -41,13 +41,13 @@ test("el estado final distingue conexiones pendientes de errores de verificació
 
 test("la demostración de aprobación es local y nunca ejecuta acciones externas", () => {
   const trustCards = readFileSync(new URL("../src/components/onboarding/trust-cards.tsx", import.meta.url), "utf8")
-  assert.match(client, /<DemoApprovalCard plan=\\{plan\\} \/>/)
-  assert.match(client, /from "@\\/components\\/onboarding\\/trust-cards"/)
-  assert.match(trustCards, /setDecision\\("approved"\\)/)
-  assert.match(trustCards, /setDecision\\("rejected"\\)/)
-  assert.match(trustCards, /Repetir ejemplo/)
+  assert.ok(client.includes('<DemoApprovalCard plan={plan} />'))
+  assert.ok(client.includes('from "@/components/onboarding/trust-cards"'))
+  assert.ok(trustCards.includes('setDecision("approved")'))
+  assert.ok(trustCards.includes('setDecision("rejected")'))
+  assert.ok(trustCards.includes("Repetir ejemplo"))
   assert.match(trustCards, /no se ha ejecutado ninguna acción externa/i)
-  assert.doesNotMatch(trustCards, /saveFlowPlan|fetch\\(|\\.from\\([\\\"']flow_runs/)
+  assert.doesNotMatch(trustCards, /saveFlowPlan|fetch\\(|\\.from\\(["']flow_runs/)
 })
 
 test("el plan debe persistirse antes de avanzar y antes de completar", () => {
