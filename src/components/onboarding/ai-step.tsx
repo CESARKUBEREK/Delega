@@ -106,6 +106,26 @@ export function AiStep({
             {next}
           </button>
         </div>
+      ) : fromTrial ? (
+        <div className="rounded-2xl border border-ok bg-paper p-5 flex flex-col gap-3">
+          <div>
+            <p className="font-semibold text-ink">✓ Ya estás usando la IA de MarchaSolo</p>
+            <p className="mt-1 text-sm text-graphite">
+              Esta propuesta la ha preparado nuestra IA con el crédito gratuito de prueba. No necesitas conectar una cuenta propia para continuar ni para probar tu primera automatización.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onContinue}
+            disabled={pending}
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
+          >
+            {pending ? "Continuando…" : "Continuar con la prueba gratuita →"}
+          </button>
+          <Link href={`${base}/integraciones#llms`} className="text-sm text-graphite underline underline-offset-4">
+            Conectar mi propia IA (opcional)
+          </Link>
+        </div>
       ) : isAdmin ? (
         <div className="flex flex-col gap-3">
           <ol className="grid gap-2 text-sm text-graphite sm:grid-cols-3">
