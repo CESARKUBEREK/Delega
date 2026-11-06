@@ -218,10 +218,6 @@ async function handle(req: Request): Promise<Response> {
     const run = await loadRun(ctx, body?.run_id)
     if (run instanceof Response) return run
     if (!["running", "awaiting_approval"].includes(run.status)) return json({ run_id: run.id, status: run.status })
-    if ((run.routing as { trial?: unknown } | null)?.trial === true && run.input_tokens + run.output_tokens === 0) {
-      const { error } = await ctx.admin.rpc("trial_run_release", { p_workspace_id: run.workspace_id, p_run_id: run.id })
-      if (error) console.error("trial_run_release", error.code)
-    }
     await ctx.admin
       .from("flow_runs")
       .update({ status: "cancelled", pending_action: null, lease_until: null, finished_at: new Date().toISOString() })
