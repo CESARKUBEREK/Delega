@@ -149,3 +149,16 @@ test("el paso final está encapsulado y conserva la comprobación y el resultado
   assert.match(doneStep, /Abrir y probar esta automatización/)
   assert.match(doneStep, /nada se envía ni modifica sin tu aprobación/)
 })
+
+
+test("el paso de IA está encapsulado y conserva comprobaciones y alternativas", () => {
+  const aiStep = readFileSync(new URL("../src/components/onboarding/ai-step.tsx", import.meta.url), "utf8")
+  assert.match(client, /<AiStep/)
+  assert.match(client, /from "@\/components\/onboarding\/ai-step"/)
+  assert.match(aiStep, /export function AiStep/)
+  assert.match(aiStep, /checkOnboardingAi\(workspaceId\)/)
+  assert.match(aiStep, /window\.setInterval\(\(\) => void check\(\), 8000\)/)
+  assert.match(aiStep, /trackOnboardingStep\(workspaceId, "ai_connected"\)/)
+  assert.match(aiStep, /Guardar el plan como borrador y terminar/)
+  assert.match(aiStep, /Sin tu IA no se ejecuta nada/)
+})
