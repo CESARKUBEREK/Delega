@@ -141,8 +141,32 @@ const normalize = (s: string) =>
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
 
-export function localPlan(text: string): FlowPlan {
+export function localPlan(text: string, businessIntake?: { businessType?: string; mainPain?: string; channels?: string[] }): FlowPlan {
   const t = normalize(text)
+  const businessLabels: Record<string, string> = {
+    professional: "servicios profesionales o consultoría", agency: "agencia o estudio", retail: "comercio o tienda",
+    real_estate: "inmobiliaria", health: "salud o clínica", hospitality: "hostelería o turismo",
+    industry: "industria o fabricación", other: "otro tipo de negocio",
+  }
+  const priorityLabels: Record<string, string> = {
+    customer_messages: "responder consultas y mensajes", appointments: "organizar citas y reservas",
+    sales_followup: "hacer seguimiento de clientes y ventas", admin: "reducir tareas administrativas",
+    billing: "gestionar facturas y cobros", reporting: "preparar informes y controlar el negocio",
+    marketing: "crear contenido y gestionar redes sociales", other: "otra tarea indicada por el usuario",
+  }
+  const channelLabels: Record<string, string> = {
+    email: "correo", whatsapp: "WhatsApp", instagram: "Instagram o redes sociales",
+    website: "web o formularios", phone: "teléfono", in_person: "atención presencial",
+  }
+  const businessType = businessIntake?.businessType && businessLabels[businessIntake.businessType]
+    ? businessLabels[businessIntake.businessType] : ""
+  const mainPain = businessIntake?.mainPain && priorityLabels[businessIntake.mainPain]
+    ? priorityLabels[businessIntake.mainPain] : ""
+  const channels = [...new Set((businessIntake?.channels ?? []).filter((channel) => typeof channel === "string" && channel in channelLabels))]
+    .slice(0, 6).map((channel) => channelLabels[channel])
+  const contextParts = [businessType ? `Tipo de negocio: ${businessType}` : "", mainPain ? `Prioridad: ${mainPain}` : "", channels.length ? `Canales indicados: ${channels.join(", ")}` : ""]
+    .filter(Boolean)
+  const contextLine = contextParts.length ? ` Contexto aportado: ${contextParts.join(" · ")}.` : ""
   let best: Template | null = null
   let bestScore = 0
   for (const tpl of TEMPLATES) {
@@ -152,12 +176,12 @@ export function localPlan(text: string): FlowPlan {
       bestScore = score
     }
   }
-  if (best) return { version: 1, ...best.plan }
+  if (best) return { version: 1, ...best.plan, summary: `${best.plan.summary}${contextLine}` }
 
   return {
     version: 1,
     name: "Tu tarea, a medida",
-    summary: text.trim().slice(0, 200),
+    summary: `${text.trim().slice(0, 200)}${contextLine}`,
     trigger: manual,
     connections: [],
     steps: [
