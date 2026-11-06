@@ -226,7 +226,7 @@ async function fetchSinglePublicPage(input: string, expectedOrigin?: string, blo
 export async function fetchPublicWebsite(input: string): Promise<WebsiteSnapshot> {
   const primary = await fetchSinglePublicPage(input)
   const primaryOrigin = new URL(primary.url).origin
-  const candidates = selectRelevantWebsiteLinks(primary.links, primary.url, 2)
+  const candidates = selectRelevantWebsiteLinks(primary.links, primary.url, 4)
   const blockedUrls = new Set([primary.url])
   const secondary = await Promise.all(candidates.map(async (url) => {
     try {
