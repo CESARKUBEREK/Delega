@@ -326,6 +326,12 @@ export async function checkOnboardingAi(workspaceId: string): Promise<{ ok: true
   return { ok: true, connected: rows.length > 0, label: pick ? (AI_LABELS[pick.provider] ?? pick.provider) : null }
 }
 
+export async function checkOnboardingTrial(workspaceId: string): Promise<{ ok: true; available: boolean; remaining: number } | { ok: false; error: string }> {
+  if (!UUID_RE.test(workspaceId)) return { ok: false, error: "Espacio no válido." }
+  const status = await getTrialStatus(workspaceId)
+  return { ok: true, available: status !== null && !status.exhausted, remaining: status?.remaining ?? 0 }
+}
+
 const AI_LABELS: Record<string, string> = { openai: "OpenAI", anthropic: "Anthropic", deepseek: "DeepSeek", xai: "Grok (xAI)" }
 
 
