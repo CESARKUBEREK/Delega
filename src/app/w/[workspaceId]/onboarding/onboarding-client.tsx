@@ -331,7 +331,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
               const sourceUrl = field.evidenceSources[0] ? ` Fuente: ${field.evidenceSources[0]}` : ""
               return `${label}: ${value}.${evidence}${sourceUrl}`
             }),
-          ].filter(Boolean).join("\\n").slice(0, 3_000)
+          ].filter(Boolean).join("\n").slice(0, 3_000)
         : undefined
       const result = await generateOnboardingPlan({
         workspaceId,
