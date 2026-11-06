@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+import type { FlowPlan } from "@/lib/plan"
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react"
 import { PlanView } from "@/components/plan-view"
 import { DemoApprovalCard, SupervisedNote } from "@/components/onboarding/trust-cards"
@@ -30,6 +32,12 @@ import {
 } from "./actions"
 
 type Step = OnboardingStep
+
+const Check = () => (
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
+  </svg>
+)
 
 const ONBOARDING_STEPS: { id: Step; short: string }[] = [
   { id: "task", short: "Tarea" },
