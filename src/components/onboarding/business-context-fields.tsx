@@ -69,17 +69,19 @@ export function BusinessContextFields({
       <div className="rounded-xl border border-rule bg-paper p-4 flex flex-col gap-3">
         <div>
           <label htmlFor="website-url" className="block text-sm font-semibold text-ink">La web de mi negocio <span className="font-normal text-graphite">(opcional)</span></label>
-          <p className="mt-1 text-sm text-graphite">Si tienes una web, la analizaré para entender mejor qué ofreces, a quién ayudas y cómo trabajas. No necesito acceso ni contraseña.</p>
+          <p className="mt-1 text-sm text-graphite">Escribe tu dominio como lo tengas: marchasolo.com, www.marchasolo.com o https://marchasolo.com. Añadiremos https:// cuando falte. No necesitamos acceso ni contraseña.</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
             id="website-url"
-            type="url"
+            type="text"
             inputMode="url"
             autoComplete="url"
+            autoCapitalize="none"
+            spellCheck={false}
             value={websiteUrl}
             onChange={(event) => onWebsiteUrlChange(event.target.value)}
-            placeholder="https://www.tunegocio.com"
+            placeholder="marchasolo.com o www.marchasolo.com"
             maxLength={2048}
             disabled={semanticPending || websitePending || disabled}
             className="min-w-0 flex-1 rounded-xl border border-rule bg-paper px-3 py-2 text-ink placeholder:text-graphite focus:border-stroke focus:outline-none"
