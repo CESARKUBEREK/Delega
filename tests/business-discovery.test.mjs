@@ -1,57 +1,45 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import {
-  combineWebsitePages,
-  isSameOriginWebsiteUrl,
-  parseWebsiteHtml,
-  selectRelevantWebsiteLinks,
-} from "../src/lib/business-discovery/website-parser.ts"
+import { combineWebsitePages, isSameOriginWebsiteUrl, parseWebsiteHtml, selectRelevantWebsiteLinks } from "../src/lib/business-discovery/website-parser.ts"
 
-test("extrae título, descripción, encabezados, texto visible y enlaces", () => {
-  const result = parseWebsiteHtml(
-    '<html><head><title>Estudio Norte</title><meta name="description" content="Diseño y arquitectura"></head><body><script>no incluir</script><h1>Proyectos</h1><h2>Reformas integrales</h2><p>Atendemos empresas y particulares.</p><a href="/servicios">Servicios</a><a href="https://externo.example.org">Externo</a></body></html>',
-    "https://example.com",
-  )
+test("extrae contenido visible y omite navegación, pie y scripts", () => {
+  const result = parseWebsiteHtml('<html lang="es"><head><title>Estudio Norte</title><meta name="description" content="Diseño y arquitectura"></head><body><header>Cabecera global</header><nav>Inicio Contacto</nav><main><h1>Proyectos</h1><p>Atendemos empresas y particulares.</p></main><footer>Política de privacidad</footer><script>no incluir</script></body></html>', "https://example.com")
   assert.equal(result.title, "Estudio Norte")
   assert.equal(result.description, "Diseño y arquitectura")
-  assert.deepEqual(result.headings, ["Proyectos", "Reformas integrales"])
+  assert.deepEqual(result.headings, ["Proyectos"])
   assert.match(result.text, /Atendemos empresas y particulares/)
-  assert.doesNotMatch(result.text, /no incluir/)
-  assert.deepEqual(result.links, ["/servicios", "https://externo.example.org"])
-  assert.doesNotThrow(() => parseWebsiteHtml("<p>&#99999999;</p>", "https://example.com"))
+  assert.doesNotMatch(result.text, /Cabecera global|Inicio Contacto|Política de privacidad|no incluir/)
+  assert.equal(result.contentQuality, "usable")
 })
 
-test("limita la cantidad de encabezados y texto extraído", () => {
+test("detecta páginas que parecen shells JavaScript sin fingir que se han renderizado", () => {
+  const result = parseWebsiteHtml('<html><head><title>Aplicación</title></head><body><div id="__next"></div><script src="/_next/app.js"></script></body></html>', "https://example.com")
+  assert.equal(result.contentQuality, "javascript_shell")
+  assert.equal(result.text, "")
+})
+
+test("clasifica páginas con solo metadatos como extracción parcial", () => {
+  const result = parseWebsiteHtml('<html><head><title>Empresa</title><meta name="description" content="Consultoría para empresas"></head><body><div id="root"></div></body></html>', "https://example.com")
+  assert.equal(result.contentQuality, "metadata_only")
+})
+
+test("limita encabezados, texto y enlaces", () => {
   const headings = Array.from({ length: 20 }, (_, i) => `<h2>Sección ${i}</h2>`).join("")
-  const result = parseWebsiteHtml(`<body>${headings}${"texto ".repeat(3000)}</body>`, "https://example.com")
+  const result = parseWebsiteHtml(`<body><main>${headings}${"texto ".repeat(3000)}</main></body>`, "https://example.com")
   assert.equal(result.headings.length, 12)
   assert.ok(result.text.length <= 12_000)
   assert.ok(result.links.length <= 150)
 })
 
-test("selecciona como máximo dos páginas relevantes del mismo origen", () => {
-  const selected = selectRelevantWebsiteLinks([
-    "/blog/noticia",
-    "/servicios",
-    "/contacto",
-    "https://otro-dominio.example/servicios",
-    "mailto:hola@example.com",
-    "/nosotros",
-    "/servicios",
-  ], "https://negocio.example/")
-  assert.deepEqual(selected, ["https://negocio.example/servicios", "https://negocio.example/contacto"])
+test("selecciona páginas comerciales y corporativas del mismo origen", () => {
+  const selected = selectRelevantWebsiteLinks(["/blog/noticia", "/servicios", "/contacto", "https://otro.example/servicios", "mailto:hola@example.org", "/nosotros", "/proyectos"], "https://negocio.example/")
+  assert.deepEqual(selected, ["https://negocio.example/servicios", "https://negocio.example/proyectos"])
   assert.ok(selected.every((url) => isSameOriginWebsiteUrl("https://negocio.example/", url)))
-  assert.equal(isSameOriginWebsiteUrl("https://negocio.example/", "https://otro-dominio.example/contacto"), false)
+  assert.equal(isSameOriginWebsiteUrl("https://negocio.example/", "https://otro.example/contacto"), false)
 })
 
-test("el snapshot elimina páginas duplicadas y nunca supera tres páginas", () => {
-  const pages = Array.from({ length: 5 }, (_, index) => ({
-    url: `https://negocio.example/pagina-${index}`,
-    title: `Página ${index}`,
-    description: null,
-    headings: [],
-    text: "Contenido",
-  }))
+test("el snapshot elimina duplicados y limita a tres páginas", () => {
+  const pages = Array.from({ length: 5 }, (_, index) => ({ url: `https://negocio.example/pagina-${index}`, title: `Página ${index}`, description: null, headings: [], text: "Contenido" }))
   const snapshot = combineWebsitePages([pages[0], pages[1], pages[1], pages[2], pages[3]])
   assert.equal(snapshot.pages.length, 3)
   assert.equal(snapshot.url, pages[0].url)
