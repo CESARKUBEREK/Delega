@@ -1024,7 +1024,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       if (ai.trial) {
         // Estimación deliberadamente conservadora para no iniciar una llamada
         // cuyo coste máximo probable ya consuma el presupuesto restante.
-        const estimatedInput = Math.ceil((INSTRUCTIONS.length + JSON.stringify(messages).length) / 2)
+        const estimatedInput = Math.ceil((INSTRUCTIONS.length + JSON.stringify(messages).length + JSON.stringify(tools).length) / 2)
         const estimated = costUsd(await modelInfo(admin, ai.model), { input: estimatedInput, output: 512 })
         if (spent + estimated > cap) {
           return finishRun(admin, run, "failed", "La prueba gratuita no tiene saldo suficiente para continuar esta etapa. Conecta tu propia IA para seguir.")
