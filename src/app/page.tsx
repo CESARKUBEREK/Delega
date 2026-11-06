@@ -32,8 +32,8 @@ export default function HomePage() {
                 <span>Sin hacerlo todo tú.</span>
               </h1>
               <p className="site-lead site-hero-lead">
-                Cuéntale una tarea. MarchaSolo consulta tus aplicaciones y deja el trabajo listo. Tú revisas antes de
-                enviar o cambiar nada.
+                Cuéntale qué te gustaría mejorar. Si aún no lo tienes claro, MarchaSolo te ayuda a descubrirlo y prepara
+                el trabajo. Tú revisas antes de enviar o cambiar nada.
               </p>
               <div className="site-actions">
                 <Link href="/crear-cuenta" className="btn btn-primary">
@@ -76,7 +76,7 @@ export default function HomePage() {
             <ol className="steps">
               <li>
                 <h3 className="site-h3">Dile qué necesitas</h3>
-                <p>Escribes o dictas la tarea con tus palabras, como se lo explicarías a un compañero.</p>
+                <p>Escribes o dictas lo que quieres mejorar con tus palabras, como se lo explicarías a un compañero.</p>
               </li>
               <li>
                 <h3 className="site-h3">MarchaSolo prepara el trabajo</h3>
@@ -197,10 +197,10 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Cuéntale una tarea que te quite tiempo</h2>
+                <h2 className="site-h2">Cuéntanos qué te gustaría mejorar</h2>
                 <p>
-                  Al crear la cuenta te pedimos solo eso. MarchaSolo te prepara el plan antes de que conectes nada. Tú
-                  decides si lo pones en marcha.
+                  Puedes empezar con una tarea concreta o pedir ayuda para descubrir oportunidades. MarchaSolo prepara
+                  una propuesta antes de que conectes tus aplicaciones. Tú decides si la pones en marcha.
                 </p>
                 <ul className="site-hero-note" style={{ marginTop: "0.75rem" }}>
                   <li>Sin tarjeta</li>
