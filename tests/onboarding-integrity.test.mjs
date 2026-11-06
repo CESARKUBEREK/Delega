@@ -177,6 +177,17 @@ test("el paso final está encapsulado y conserva la comprobación y el resultado
 })
 
 
+test("un plan local guardado puede regenerarse con la prueba de MarchaSolo sin conectar IA propia", () => {
+  const aiStep = readFileSync(new URL("../src/components/onboarding/ai-step.tsx", import.meta.url), "utf8")
+  assert.match(actions, /export async function checkOnboardingTrial/)
+  assert.match(aiStep, /checkOnboardingTrial\(workspaceId\)/)
+  assert.match(aiStep, /trialAvailable/)
+  assert.match(aiStep, /Preparar este plan con la IA de MarchaSolo/)
+  assert.match(client, /retryWithMarchaSoloAi/)
+  assert.match(client, /result\.source !== "trial"/)
+  assert.match(client, /saveFlowPlan\(\{ workspaceId, flowId, plan: result\.plan, fileIds: \[\] \}\)/)
+})
+
 test("el paso de IA está encapsulado y conserva comprobaciones y alternativas", () => {
   const aiStep = readFileSync(new URL("../src/components/onboarding/ai-step.tsx", import.meta.url), "utf8")
   assert.match(client, /<AiStep/)
