@@ -25,8 +25,8 @@ function candidateSentences(page: WebsitePage): { text: string; weight: number }
   const candidates: { text: string; weight: number }[] = []
   const add = (value: string | null | undefined, weight: number) => {
     if (!value) return
-    for (const raw of value.split(/(?<=[.!?])\\s+|\\n+/)) {
-      const text = raw.trim().replace(/\\s+/g, " ").replace(/^[•·|–—-]+|[•·|–—-]+$/g, "").trim()
+    for (const raw of value.split(/(?<=[.!?])\s+|\n+/)) {
+      const text = raw.trim().replace(/\s+/g, " ").replace(/^[•·|–—-]+|[•·|–—-]+$/g, "").trim()
       if (text.length < 14 || text.length > 260 || BOILERPLATE.test(text) || GENERIC.test(text)) continue
       if (/^(aceptar|rechazar|configurar|skip to|saltar al contenido)/i.test(text)) continue
       candidates.push({ text, weight })
@@ -45,10 +45,10 @@ function evidence(pages: WebsitePage[], pattern: RegExp): Evidence[] {
     for (const candidate of candidateSentences(page)) {
       if (!pattern.test(candidate.text)) continue
       const normalized = candidate.text.toLocaleLowerCase()
-      const tokens = normalized.split(/\\W+/).filter((token) => token.length > 3)
+      const tokens = normalized.split(/\W+/).filter((token) => token.length > 3)
       const specificity = tokens.length >= 6 ? 2 : tokens.length >= 3 ? 1 : 0
       const score = candidate.weight + specificity
-      const key = normalized.replace(/[^\\p{L}\\p{N}]+/gu, " ")
+      const key = normalized.replace(/[^\p{L}\p{N}]+/gu, " ")
       const previous = found.get(key)
       if (!previous || score > previous.score) found.set(key, { text: candidate.text.slice(0, 240), url: page.url, score })
     }
@@ -72,12 +72,12 @@ function makeField(items: Evidence[]): BusinessProfileField {
 /** Conservative evidence extraction. Generic navigation labels are not treated as business facts. */
 export function analyzeBusinessProfile(source: WebsiteSnapshot): BusinessProfile {
   const pages = source.pages?.length ? source.pages : [source]
-  const activity = evidence(pages, /\\b(clínica|clinic|estudio|studio|agencia|agency|consultor[ií]a|consulting|inmobiliaria|real estate|restaurante|restaurant|taller|workshop|fabricación|manufacturing|inteligencia de mercado|market intelligence|procurement|sourcing|abastecimiento|compras|research|investigación|análisis|analysis|comercio exterior|exportación|importación|logística|healthcare|legal|accounting|engineering|tourism|hospitality)\\b/i)
-  const clients = evidence(pages, /\\b(particulares|empresas|pymes|autónomos|profesionales|familias|pacientes|propietarios|compradores|equipos|importadores|exportadores|inversores|inversionistas|fabricantes|proveedores|distribuidores|instituciones|organizaciones|businesses|companies|investors|buyers|suppliers|manufacturers|entreprises|clients|acheteurs|fournisseurs)\\b/i)
-  const offer = evidence(pages, /\\b(ofrecemos|we offer|realizamos|we provide|ayudamos|we help|tratamientos|treatments|proyectos|projects|catálogo|catalogue|informes|reports|reportes|estudios|studies|diagnósticos|auditorías|inteligencia|market reports|country risk|due diligence|market entry|procurement|sourcing|research|analysis|monitoring|strategy|insights|solutions|services|products|conseil|études|rapports)\\b/i)
-  const acquisition = evidence(pages, /\\b(solicita una cita|reserva|reservar|book a call|schedule a|request a|get in touch|contact us|contacta con|contáctanos|escríbenos|llámanos|presupuesto|newsletter|suscríbete|demander|contacter)\\b/i)
-  const operations = evidence(pages, /\\b(atención personalizada|con cita previa|entrega a domicilio|proceso de|seguimiento de|soporte técnico|monitorización|actualizaciones periódicas|suscripción mensual|research process|monitoring service|delivery process|workflow|accompagnement|suivi personnalisé|livraison)\\b/i)
-  const tools = evidence(pages, /\\b(google workspace|microsoft 365|salesforce|hubspot|holded|excel|teams|slack|sap|oracle|power bi|tableau|sharepoint|notion|airtable|sales navigator|mailchimp|wordpress|shopify|utilizamos [\\w -]+|we use [\\w -]+|herramientas digitales|software de gestión)\\b/i)
+  const activity = evidence(pages, /\b(clínica|clinic|estudio|studio|agencia|agency|consultor[ií]a|consulting|inmobiliaria|real estate|restaurante|restaurant|taller|workshop|fabricación|manufacturing|inteligencia de mercado|market intelligence|procurement|sourcing|abastecimiento|compras|research|investigación|análisis|analysis|comercio exterior|exportación|importación|logística|healthcare|legal|accounting|engineering|tourism|hospitality)\b/i)
+  const clients = evidence(pages, /\b(particulares|empresas|pymes|autónomos|profesionales|familias|pacientes|propietarios|compradores|equipos|importadores|exportadores|inversores|inversionistas|fabricantes|proveedores|distribuidores|instituciones|organizaciones|businesses|companies|investors|buyers|suppliers|manufacturers|entreprises|clients|acheteurs|fournisseurs)\b/i)
+  const offer = evidence(pages, /\b(ofrecemos|we offer|realizamos|we provide|ayudamos|we help|tratamientos|treatments|proyectos|projects|catálogo|catalogue|informes|reports|reportes|estudios|studies|diagnósticos|auditorías|inteligencia|market reports|country risk|due diligence|market entry|procurement|sourcing|research|analysis|monitoring|strategy|insights|solutions|services|products|conseil|études|rapports)\b/i)
+  const acquisition = evidence(pages, /\b(solicita una cita|reserva|reservar|book a call|schedule a|request a|get in touch|contact us|contacta con|contáctanos|escríbenos|llámanos|presupuesto|newsletter|suscríbete|demander|contacter)\b/i)
+  const operations = evidence(pages, /\b(atención personalizada|con cita previa|entrega a domicilio|proceso de|seguimiento de|soporte técnico|monitorización|actualizaciones periódicas|suscripción mensual|research process|monitoring service|delivery process|workflow|accompagnement|suivi personnalisé|livraison)\b/i)
+  const tools = evidence(pages, /\b(google workspace|microsoft 365|salesforce|hubspot|holded|excel|teams|slack|sap|oracle|power bi|tableau|sharepoint|notion|airtable|sales navigator|mailchimp|wordpress|shopify|utilizamos [\w -]+|we use [\w -]+|herramientas digitales|software de gestión)\b/i)
   return {
     activity: makeField(activity), clients: makeField(clients), offer: makeField(offer),
     acquisition: makeField(acquisition), operations: makeField(operations), tools: makeField(tools),
