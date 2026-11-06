@@ -438,7 +438,8 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
               onAnalyzeWebsite={handleWebsiteAnalysis}
               onEnrichWebsite={handleSemanticEnrichment}
               semanticPending={semanticPending}
-              semanticError={semanticError ?? semanticMessage}
+              semanticError={semanticError}
+              semanticMessage={semanticMessage}
               websitePending={websitePending}
               disabled={pending}
               websiteError={websiteError}
