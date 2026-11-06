@@ -19,6 +19,9 @@ type BusinessContextProps = {
   websiteUrl: string
   onWebsiteUrlChange: (value: string) => void
   onAnalyzeWebsite: () => void
+  onEnrichWebsite: () => void
+  semanticPending: boolean
+  semanticError: string | null
   websitePending: boolean
   disabled: boolean
   websiteError: string | null
@@ -40,6 +43,9 @@ export function BusinessContextFields({
   websiteUrl,
   onWebsiteUrlChange,
   onAnalyzeWebsite,
+  onEnrichWebsite,
+  semanticPending,
+  semanticError,
   websitePending,
   disabled,
   websiteError,
@@ -88,6 +94,16 @@ export function BusinessContextFields({
               <p className="mt-1 text-xs text-graphite">{websiteSnapshot.pages.length > 1 ? `Hemos revisado ${websiteSnapshot.pages.length} páginas públicas del mismo dominio.` : "Hemos revisado una página pública."} Usamos títulos, metadatos y contenido visible. Corrige lo que haga falta; los campos vacíos no se han podido verificar.</p>
               {websiteSnapshot.language ? <p className="mt-1 text-xs text-graphite">Idioma detectado: {websiteSnapshot.language}</p> : null}
               <p className="mt-1 break-all text-xs text-graphite">Páginas consultadas: {websiteSnapshot.pages.map((page) => page.url).join(" · ")}</p>
+            </div>
+            <div className="flex flex-col gap-2 rounded-lg border border-rule bg-paper p-3">
+              <div>
+                <p className="text-sm font-semibold text-ink">Completar el análisis con IA</p>
+                <p className="mt-1 text-xs text-graphite">Interpreta el contenido en español, inglés o francés y completa los campos que falten. Al pulsar, autorizas el uso de la IA conectada a tu espacio o, si no tienes una, de un crédito de prueba disponible. No se ejecuta automáticamente.</p>
+              </div>
+              <button type="button" onClick={onEnrichWebsite} disabled={semanticPending || websitePending || disabled} className="inline-flex h-10 items-center justify-center self-start rounded-xl border border-ink px-4 text-sm font-semibold text-ink disabled:opacity-50">
+                {semanticPending ? "Completando el análisis…" : "Completar análisis con IA"}
+              </button>
+              {semanticError ? <p className="text-sm text-alert" role="alert">{semanticError}</p> : null}
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {BUSINESS_PROFILE_FIELDS.map(({ key, label, hint }) => (
