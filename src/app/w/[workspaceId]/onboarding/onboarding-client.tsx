@@ -19,7 +19,8 @@ import {
   type OnboardingStep,
 } from "@/lib/onboarding"
 import type { FlowPlan } from "@/lib/plan"
-import type { BusinessProfile } from "@/lib/business-discovery/business-profile"
+import type { WebsiteSnapshot } from "@/lib/business-discovery/website-parser"
+import { BUSINESS_PROFILE_FIELDS, type BusinessProfile } from "@/lib/business-discovery/business-profile"
 import { saveFlowPlan } from "../flow-editor-actions"
 import {
   analyzeOnboardingWebsite,
