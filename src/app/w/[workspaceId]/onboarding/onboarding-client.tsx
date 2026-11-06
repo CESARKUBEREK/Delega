@@ -61,6 +61,15 @@ const SUGGESTIONS = [
   "Después de cada visita, prepárame el mensaje de seguimiento",
 ]
 
+const CONTACT_CHANNELS = [
+  ["email", "Correo"],
+  ["whatsapp", "WhatsApp"],
+  ["instagram", "Instagram / redes"],
+  ["website", "Web / formularios"],
+  ["phone", "Teléfono"],
+  ["in_person", "En persona"],
+] as const
+
 // Mientras el asistente prepara el plan (puede tardar unos segundos).
 const LOADING_MESSAGES = ["Leyendo tu tarea…", "Eligiendo las herramientas que hacen falta…", "Ordenando los pasos…", "Casi listo…"]
 
@@ -478,14 +487,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
               <fieldset className="flex flex-col gap-2">
                 <legend className="text-sm font-medium text-ink">¿Por dónde te contactan tus clientes? <span className="font-normal text-graphite">(puedes elegir varios)</span></legend>
                 <div className="flex flex-wrap gap-x-4 gap-y-2">
-                  {[
-                    ["email", "Correo"],
-                    ["whatsapp", "WhatsApp"],
-                    ["instagram", "Instagram / redes"],
-                    ["website", "Web / formularios"],
-                    ["phone", "Teléfono"],
-                    ["in_person", "En persona"],
-                  ] as const).map(([value, label]) => (
+                  {CONTACT_CHANNELS.map(([value, label]) => (
                     <label key={value} className="inline-flex items-center gap-2 text-sm text-graphite">
                       <input
                         type="checkbox"
