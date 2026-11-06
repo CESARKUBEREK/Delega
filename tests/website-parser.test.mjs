@@ -47,15 +47,15 @@ test("selecciona páginas de servicios e inteligencia antes que contacto", () =>
     "https://external.example/research",
     "javascript:alert(1)",
   ], "https://example.org/")
-  assert.deepEqual(selected, ["https://example.org/services", "https://example.org/reports"])
+  assert.deepEqual(selected, ["https://example.org/services", "https://example.org/reports", "https://example.org/sectors", "https://example.org/about"])
 })
 
-test("solo selecciona enlaces del mismo origen y limita el análisis a dos páginas adicionales", () => {
+test("solo selecciona enlaces del mismo origen y limita el análisis a cuatro páginas adicionales", () => {
   const selected = selectRelevantWebsiteLinks([
     "/research",
     "/industries",
     "/contact",
     "https://other.example/services",
   ], "https://example.org/", 8)
-  assert.deepEqual(selected, ["https://example.org/research", "https://example.org/industries"])
+  assert.deepEqual(selected, ["https://example.org/research", "https://example.org/industries", "https://example.org/contact"])
 })
