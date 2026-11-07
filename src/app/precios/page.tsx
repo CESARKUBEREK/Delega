@@ -31,7 +31,7 @@ export default function PricingPage() {
             </h2>
             <div className="facts">
               {PLANS.map((plan) => (
-                <div key={plan.id} className={plan.recommended ? "fact is-key" : "fact"}>
+                <div key={plan.id} id={plan.id} className={plan.recommended ? "fact is-key scroll-mt-24" : "fact scroll-mt-24"}>
                   {plan.recommended ? (
                     <p className="site-small m-0 mb-2 font-semibold text-[var(--ms-teal,var(--ms-navy))]">
                       Recomendado para lanzamiento
@@ -74,8 +74,8 @@ export default function PricingPage() {
               <div className="fact">
                 <h3 className="site-h3">La prueba, por nuestra cuenta</h3>
                 <p>
-                  Al empezar, MarchaSolo te prepara hasta {TRIAL.plans} propuestas de automatización y la ejecuta{" "}
-                  {TRIAL.runs === 1 ? "una vez" : `${TRIAL.runs} veces`} de verdad con nuestra IA, sin que conectes la tuya.
+                  Al empezar, MarchaSolo te prepara hasta {TRIAL.plans} propuestas de automatización y te regala{" "}
+                  {TRIAL.usd} $ de IA para ejecutarlas de verdad (manuales o programadas), sin que conectes la tuya.
                   Así ves el resultado antes de decidir.
                 </p>
               </div>
@@ -132,7 +132,7 @@ export default function PricingPage() {
               </details>
               <details>
                 <summary>¿Los precios incluyen impuestos?</summary>
-                <div>No. Los importes indicados están en USD y los impuestos no están incluidos.</div>
+                <div>Sí. Los importes están en dólares (USD) e incluyen los impuestos: lo que ves es lo que pagas.</div>
               </details>
             </div>
           </div>

@@ -72,7 +72,7 @@ export function BusinessContextFields({
     <>
       <div className="rounded-xl border border-rule bg-paper p-4 flex flex-col gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-graphite">1 · Conocer tu negocio</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-graphite">Tu web</p>
           <label htmlFor="website-url" className="mt-1 block text-sm font-semibold text-ink">¿Tienes una web? <span className="font-normal text-graphite">(opcional)</span></label>
           <p className="mt-1 text-sm text-graphite">Analizamos las páginas públicas para preparar un perfil inicial. No necesitamos acceso ni contraseña. Si no tienes web, puedes contarnos tu actividad más abajo.</p>
         </div>
@@ -168,7 +168,7 @@ export function BusinessContextFields({
 
       <div className="rounded-xl border border-rule bg-paper p-4 flex flex-col gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-graphite">2 · Completar el contexto</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-graphite">Tu negocio</p>
           <p className="mt-1 text-sm font-semibold text-ink">Cuéntame cómo funciona tu negocio <span className="font-normal text-graphite">(opcional)</span></p>
           <p className="mt-1 text-xs text-graphite">Estos datos ayudan a no recomendarte automatizaciones genéricas. Puedes completar solo lo que sepas.</p>
         </div>

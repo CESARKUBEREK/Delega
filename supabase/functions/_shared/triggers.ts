@@ -112,7 +112,7 @@ export async function launchEmailFlows(admin: SupabaseClient, workspaceId: strin
       if (perMail >= MAX_FLOWS_PER_MAIL) break
       const settings = (flow.settings ?? {}) as { file_ids?: unknown; model?: unknown; email_filter?: unknown }
       if (!matchesEmail(parseEmailFilter(settings.email_filter), mail)) continue
-      const conn = await planRun(admin, workspaceId, { flowId: flow.id, flowSettings: flow.settings, steps: stepCount(flow.definition) })
+      const conn = await planRun(admin, workspaceId, { flowId: flow.id, flowSettings: flow.settings, steps: stepCount(flow.definition), allowTrialRun: true })
       if (isRouteError(conn)) return launched
       const fileIds = Array.isArray(settings.file_ids) ? settings.file_ids.filter(isUuid).slice(0, 5) : []
       try {

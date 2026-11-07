@@ -105,7 +105,7 @@ export function DoneStep({
         ? (ai.label ?? "Conectada")
         : trialAiAvailable
           ? `IA de prueba de MarchaSolo · ${trialRun?.remaining ?? 0} ejecución disponible`
-          : ai?.error ?? (trialRun === null ? "Comprobando la prueba gratuita…" : "Sin conectar: no hay IA ni ejecución gratuita disponible"),
+          : ai?.error ?? (trialRun === null ? "Comprobando la prueba gratuita…" : "Sin conectar: no hay IA y la prueba gratuita se ha terminado"),
     },
     ...neededConnections.map((connection) => ({
       label: CONNECTION_LABEL[connection],

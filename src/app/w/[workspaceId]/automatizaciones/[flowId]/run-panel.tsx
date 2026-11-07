@@ -99,7 +99,7 @@ export function RunPanel({
 
       {!aiReady ? (
         <p className="text-sm text-graphite">
-          Puedes probar una ejecución gratuita de MarchaSolo si todavía está disponible. Si ya la utilizaste, conecta tu IA en{" "}
+          Puedes ejecutarla con la prueba gratuita de MarchaSolo (1 $ de IA) mientras quede saldo. Si se terminó, conecta tu IA en{" "}
           <Link href={`${base}/integraciones`} className="text-link underline underline-offset-4">Integraciones</Link>.
         </p>
       ) : null}

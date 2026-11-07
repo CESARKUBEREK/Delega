@@ -12,6 +12,7 @@ import { ApprovalCard, RunControls } from "./run-live"
 import { HelpPanel } from "@/components/help-panel"
 import { HELP_GUIDES } from "@/lib/help"
 import { diagnoseRun, type LiveStatus } from "@/lib/run-diagnosis"
+import { SOLO_UPGRADE_IS_EXTERNAL, SOLO_UPGRADE_URL } from "@/lib/upgrade"
 import { DiagnosisActions } from "./diagnosis"
 import { PageHeader, PanelCard } from "@/components/ui"
 
@@ -193,6 +194,15 @@ async function Diagnosis({ workspaceId, flowId, error }: { workspaceId: string; 
         <p className="text-sm text-ink">
           <strong>Qué hacer:</strong> {d.fix}
         </p>
+        {d.kind === "trial_ended" && !d.retry ? (
+          <a
+            href={SOLO_UPGRADE_URL}
+            className="self-start text-sm font-semibold text-link underline underline-offset-4"
+            {...(SOLO_UPGRADE_IS_EXTERNAL ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+          >
+            Pasar al plan Solo →
+          </a>
+        ) : null}
         {guide ? (
           <Link
             href={`/w/${workspaceId}/integraciones?abrir=${guide.id}#${guide.section}`}

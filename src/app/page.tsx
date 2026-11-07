@@ -46,7 +46,7 @@ export default function HomePage() {
               <ul className="site-hero-note">
                 <li>Crear la cuenta es gratis</li>
                 <li>Tú apruebas antes de enviar</li>
-                <li>2 propuestas y 1 ejecución gratis, sin conectar tu IA</li>
+                <li>Prueba gratis: 1 $ de IA por nuestra cuenta</li>
               </ul>
             </div>
             <div className="site-hero-preview">
@@ -204,7 +204,7 @@ export default function HomePage() {
                 </p>
                 <ul className="site-hero-note" style={{ marginTop: "0.75rem" }}>
                   <li>Sin tarjeta</li>
-                  <li>2 propuestas y 1 ejecución gratis</li>
+                  <li>1 $ de IA gratis para probar</li>
                   <li>Nada se envía sin tu aprobación</li>
                 </ul>
               </div>
