@@ -61,7 +61,7 @@ import { downloadXlsx, XLSX_MIME, xlsxInfo, xlsxRead, xlsxWrite } from "./excel.
 import { type Ai, complete, fromResponsesItems, LlmError, type Msg, NO_AI_MESSAGE, providerOf, type ToolDef } from "./llm.ts"
 import { modelInfo } from "./router/catalog.ts"
 import { costUsd, formatUsd } from "./router/core.ts"
-import { aiForRun, parseRunRouting, TRIAL_ENDED_MESSAGE, TRIAL_RUN_CAP_USD, trialRemainingUsd, type PlannedRun, type RunRouting } from "./router/index.ts"
+import { aiForRun, parseRunRouting, TRIAL_ENDED_MESSAGE, trialRemainingUsd, type PlannedRun, type RunRouting } from "./router/index.ts"
 
 export const SLICE_MS = 90_000
 const LEASE_SECONDS = 140
@@ -166,7 +166,7 @@ export type PendingAction =
 // llegó a su máximo y aún queda saldo para otras.
 async function trialStopMessage(admin: SupabaseClient, workspaceId: string): Promise<string> {
   if ((await trialRemainingUsd(admin, workspaceId)) <= 0) return TRIAL_ENDED_MESSAGE
-  return `Esta ejecución llegó al máximo de la prueba gratuita por ejecución (${formatUsd(TRIAL_RUN_CAP_USD)}). Puedes volver a lanzarla o conectar tu IA para tareas más largas.`
+  return "Esta ejecución llegó al máximo de la prueba gratuita por ejecución. Puedes volver a lanzarla o conectar tu IA para tareas más largas."
 }
 
 export type BudgetPending = { call_id: string; tool: "budget_extend"; spent_usd: number; budget_usd: number; extra_usd: number }

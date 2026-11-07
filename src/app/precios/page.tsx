@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { MarketingLayout } from "@/components/marketing-layout"
 import { publicPageMetadata } from "@/lib/seo"
-import { PLANS, TRIAL } from "@/lib/pricing"
+import { PLANS } from "@/lib/pricing"
 
 const pricingIntro = PLANS.length
   ? `Planes MarchaSolo desde ${PLANS[0].price}${PLANS[0].period}. La IA se paga directamente a tu proveedor.`
@@ -112,8 +112,7 @@ export default function PricingPage() {
               <details>
                 <summary>¿Qué incluye la prueba y qué pasa cuando termina?</summary>
                 <div>
-                  La prueba incluye {TRIAL.usd} $ de IA por nuestra cuenta, que alcanza para decenas de tareas. Cuando se
-                  termina, tu cuenta y lo que hayas preparado siguen ahí: pasas al plan Solo y conectas tu propia
+                  La prueba usa nuestra IA, por nuestra cuenta, y alcanza para decenas de tareas. Cuando se termina, tu cuenta y lo que hayas preparado siguen ahí: pasas al plan Solo y conectas tu propia
                   clave de IA. El propio MarchaSolo te guía y te lleva a la web del proveedor.
                 </div>
               </details>

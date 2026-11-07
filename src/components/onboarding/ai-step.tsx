@@ -236,7 +236,7 @@ export function AiStep({
           </button>
         ) : null}
         <p className="text-xs text-graphite">
-          El saldo de la prueba gratuita (1 $ de IA) se comprueba al ejecutar tu plan. Si no queda crédito, puedes conectar tu propia IA. El plan no se pierde.
+          El saldo de la prueba gratuita se comprueba al ejecutar tu plan. Si no queda crédito, puedes conectar tu propia IA. El plan no se pierde.
         </p>
         <button type="button" onClick={onBack} className="text-sm text-graphite">
           ← Volver al plan

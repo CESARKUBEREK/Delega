@@ -296,7 +296,7 @@ function PlanActions({
     <div className="flex flex-col gap-3">
       {trialFunded ? (
         <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-          Esta ejecución la paga MarchaSolo con tu prueba gratuita (1 USD de IA en total, como mucho 0,25 USD por ejecución).
+          Esta ejecución la paga MarchaSolo con tu prueba gratuita.
         </p>
       ) : null}
       {run ? <RunInChat run={run} base={base} /> : null}

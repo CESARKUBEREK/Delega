@@ -115,7 +115,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span id="prueba-terminada" className="font-semibold text-ink">Tu prueba gratuita ha terminado</span>
             <span className="text-sm text-graphite">
-              Has usado los {trial?.usdAllowance ?? 1} $ de IA de la prueba. Pasa al plan Solo ({SOLO_PLAN.price}
+              Has usado toda la prueba. Pasa al plan Solo ({SOLO_PLAN.price}
               {SOLO_PLAN.period}) y conecta tu IA para que tus automatizaciones sigan funcionando.
             </span>
           </span>
@@ -137,8 +137,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="font-semibold text-ink">Estás usando la prueba gratuita</span>
             <span className="text-sm text-graphite">
-              Te quedan {trial!.usdRemaining.toFixed(2).replace(".", ",")} $ de {trial!.usdAllowance} $ de IA por nuestra cuenta. Ejecuta tus
-              automatizaciones sin conectar nada todavía.
+              Tus automatizaciones funcionan con nuestra IA, sin conectar nada todavía.
             </span>
           </span>
           <span className="setup-banner-cta">Mis automatizaciones →</span>
