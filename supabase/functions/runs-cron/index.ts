@@ -1,6 +1,6 @@
 // runs-cron: lanza las automatizaciones programadas que tocan y avanza las
 // ejecuciones que nadie está mirando (las lanzadas por un
-// correo o por Telegram, o las que se quedaron a medias al cerrar el móvil).
+// correo o por Telegram, o las que se quedaron a medias al cerrar el celular).
 // La llama pg_cron cada minuto (ver README). Se despliega SIN verify_jwt y exige
 // la cabecera x-orkesta-cron con el secreto de Vault «orkesta_mail_cron_secret» (ver _shared/cron.ts).
 //

@@ -1192,6 +1192,8 @@ export type Database = {
         Row: {
           allowance_plans: number
           allowance_runs: number
+          allowance_usd: number
+          used_usd: number
           reserved_run_id: string | null
           allowance_tokens: number
           created_at: string
@@ -1204,6 +1206,8 @@ export type Database = {
         Insert: {
           allowance_plans?: number
           allowance_runs?: number
+          allowance_usd?: number
+          used_usd?: number
           reserved_run_id?: string | null
           allowance_tokens?: number
           created_at?: string
@@ -1216,6 +1220,8 @@ export type Database = {
         Update: {
           allowance_plans?: number
           allowance_runs?: number
+          allowance_usd?: number
+          used_usd?: number
           allowance_tokens?: number
           reserved_run_id?: string | null
           created_at?: string
@@ -1398,6 +1404,10 @@ export type Database = {
       }
       trial_consume: {
         Args: { p_tokens: number; p_workspace_id: string }
+        Returns: number
+      }
+      trial_add_cost: {
+        Args: { p_cost: number; p_workspace_id: string }
         Returns: number
       }
       trial_run_consume: {

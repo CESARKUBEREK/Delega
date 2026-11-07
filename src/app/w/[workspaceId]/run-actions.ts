@@ -485,7 +485,7 @@ export async function updateThread(_prev: SettingsState, formData: FormData): Pr
 }
 
 // ---------------------------------------------------------------------------
-// Avisos en el móvil (Web Push)
+// Avisos en el celular (Web Push)
 // ---------------------------------------------------------------------------
 // Servicios de push de los navegadores: el servidor solo envía avisos a estos.
 const PUSH_HOSTS = [

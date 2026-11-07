@@ -31,7 +31,7 @@ export default function PricingPage() {
             </h2>
             <div className="facts">
               {PLANS.map((plan) => (
-                <div key={plan.id} className={plan.recommended ? "fact is-key" : "fact"}>
+                <div key={plan.id} id={plan.id} className={plan.recommended ? "fact is-key scroll-mt-24" : "fact scroll-mt-24"}>
                   {plan.recommended ? (
                     <p className="site-small m-0 mb-2 font-semibold text-[var(--ms-teal,var(--ms-navy))]">
                       Recomendado para lanzamiento
@@ -61,7 +61,7 @@ export default function PricingPage() {
         <section className="site-section" aria-labelledby="como">
           <div className="site-container">
             <h2 id="como" className="site-h2 mb-10">
-              Cómo funciona el coste
+              Cómo funciona el costo
             </h2>
             <div className="facts">
               <div className="fact is-key">
@@ -74,8 +74,8 @@ export default function PricingPage() {
               <div className="fact">
                 <h3 className="site-h3">La prueba, por nuestra cuenta</h3>
                 <p>
-                  Al empezar, MarchaSolo te prepara hasta {TRIAL.plans} propuestas de automatización y la ejecuta{" "}
-                  {TRIAL.runs === 1 ? "una vez" : `${TRIAL.runs} veces`} de verdad con nuestra IA, sin que conectes la tuya.
+                  Al empezar, MarchaSolo te prepara hasta {TRIAL.plans} propuestas de automatización y te regala{" "}
+                  {TRIAL.usd} $ de IA para ejecutarlas de verdad (manuales o programadas), sin que conectes la tuya.
                   Así ves el resultado antes de decidir.
                 </p>
               </div>
@@ -89,7 +89,7 @@ export default function PricingPage() {
               <div className="fact">
                 <h3 className="site-h3">El gasto, a la vista</h3>
                 <p>
-                  Ves el coste estimado de cada ejecución y lo gastado en el mes. Puedes fijar un presupuesto y usar el
+                  Ves el costo estimado de cada ejecución y lo gastado en el mes. Puedes fijar un presupuesto y usar el
                   modo Ahorro para gastar menos.
                 </p>
               </div>
@@ -100,7 +100,7 @@ export default function PricingPage() {
         <section className="site-section is-white" aria-labelledby="dudas">
           <div className="site-container max-w-3xl">
             <h2 id="dudas" className="site-h2 mb-8">
-              Preguntas sobre el coste
+              Preguntas sobre el costo
             </h2>
             <div className="faq">
               <details>
@@ -132,7 +132,7 @@ export default function PricingPage() {
               </details>
               <details>
                 <summary>¿Los precios incluyen impuestos?</summary>
-                <div>No. Los importes indicados están en USD y los impuestos no están incluidos.</div>
+                <div>Los precios están en dólares (USD). Según tu país, tu banco puede sumar impuestos locales al pagar con tarjeta: en Argentina, el IVA y la percepción a cuenta de Ganancias, que puedes recuperar en tu declaración.</div>
               </details>
             </div>
           </div>

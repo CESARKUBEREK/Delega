@@ -80,7 +80,7 @@ async function launchOne(admin: SupabaseClient, flow: DueFlow): Promise<boolean>
   if ((count ?? 0) >= MAX_SCHEDULED_PER_DAY) return false
 
   const settings = flow.settings ?? {}
-  const conn = await planRun(admin, flow.workspace_id, { flowId: flow.id, flowSettings: settings, steps: stepCount(flow.definition) })
+  const conn = await planRun(admin, flow.workspace_id, { flowId: flow.id, flowSettings: settings, steps: stepCount(flow.definition), allowTrialRun: true })
   if (isRouteError(conn)) return false
   const fileIds = Array.isArray(settings.file_ids) ? settings.file_ids.filter(isUuid).slice(0, 5) : []
   await createRun(admin, {

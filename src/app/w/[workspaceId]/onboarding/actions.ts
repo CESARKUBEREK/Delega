@@ -421,3 +421,18 @@ export async function analyzeOnboardingWebsite(input: {
     }
   }
 }
+
+// Si el espacio no tiene zona horaria, adopta la del navegador de quien hace el
+// onboarding. Nunca cambia una ya elegida. La RPC comprueba que sea administrador.
+export async function adoptBrowserTimezone(workspaceId: string, timezone: string): Promise<void> {
+  if (!UUID_RE.test(workspaceId) || !timezone || timezone.length > 64) return
+  try {
+    new Intl.DateTimeFormat("es", { timeZone: timezone })
+  } catch {
+    return
+  }
+  const supabase = await createClient()
+  const { data } = await supabase.from("workspaces").select("timezone").eq("id", workspaceId).maybeSingle()
+  if (!data || data.timezone) return
+  await supabase.rpc("workspace_set_timezone", { p_workspace_id: workspaceId, p_timezone: timezone })
+}

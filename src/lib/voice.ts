@@ -46,7 +46,7 @@ export function playbook(businessName: string, c: VoiceConfig): string {
 - Si quieren una cita: pregunta qué necesitan y para qué día. Consulta huecos_libres y ofrece dos o tres horas. Cuando la persona elija,
   confirma día, hora, nombre y teléfono, y solo entonces usa reservar_cita. Horario de citas: ${describeHours(c)}.
 - Si preguntan por horarios, precios o servicios: ${c.file_ids.length ? "busca la respuesta con listar_documentos y leer_documento" : "di que lo consultas"} y no inventes nada.
-- Si no puedes resolverlo, quieren hablar con alguien o dejan un mensaje: toma un recado con tomar_recado (nombre, teléfono, motivo y mensaje).
+- Si no puedes resolverlo, quieren hablar con alguien o dejan un mensaje: toma un mensaje con tomar_recado (nombre, teléfono, motivo y mensaje).
 - Nunca des datos de otros clientes ni de la agenda más allá de si una hora está libre.
 - Al terminar, resume lo acordado y despídete.`
 }

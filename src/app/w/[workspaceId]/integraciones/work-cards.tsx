@@ -394,7 +394,7 @@ async function voiceData(workspaceId: string) {
 function CalendarWarning() {
   return (
     <p className="integration-notice is-info border-l-2 px-3 py-2 text-sm">
-      Conecta Google Calendar (más abajo, en Calendar) para que el asistente pueda ver huecos y reservar citas. Sin él, solo toma recados.
+      Conecta Google Calendar (más abajo, en Calendar) para que el asistente pueda ver horarios libres y reservar citas. Sin él, solo toma mensajes.
     </p>
   )
 }
@@ -410,7 +410,7 @@ export async function VoiceWebCard({ workspaceId, isAdmin }: { workspaceId: stri
           <h3 className="rotulo text-lg">En tu web</h3>
           <p className="text-sm text-graphite">
             Un botón «Habla con nosotros» en tu web: tus clientes hablan con el asistente desde el navegador, sin llamar. Pide citas en tu horario, toma
-            recados y responde con tus documentos. Todo llega a la Bandeja.
+            mensajes y responde con tus documentos. Todo llega a la Bandeja.
           </p>
         </div>
         {widget?.enabled && !xaiReady ? (
@@ -468,8 +468,8 @@ export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string;
         <div>
           <h3 className="rotulo text-lg">Por teléfono (Grok Voice)</h3>
           <p className="text-sm text-graphite">
-            Un agente de voz de xAI atiende las llamadas de tu negocio: consulta tu agenda y deja la cita reservada, toma recados y responde con
-            tus documentos. Cada cita y cada recado llegan a la Bandeja y te avisan.
+            Un agente de voz de xAI atiende las llamadas de tu negocio: consulta tu agenda y deja la cita reservada, toma mensajes y responde con
+            tus documentos. Cada cita y cada mensaje llegan a la Bandeja y te avisan.
           </p>
         </div>
         <IntegrationStatusBadge status={integration?.status} invalidLabel="Desactivado" />
@@ -499,7 +499,7 @@ export async function VoiceCard({ workspaceId, isAdmin }: { workspaceId: string;
                   </ol>
                   <VoicePlaybook text={playbook(ws?.name ?? "tu negocio", config)} />
                   <p className="text-xs text-graphite">
-                    Coste en tu cuenta de xAI: unos 0,08 $ por minuto de conversación, más 0,01 $/min si usas el número de xAI.
+                    Costo en tu cuenta de xAI: unos 0,08 $ por minuto de conversación, más 0,01 $/min si usas el número de xAI.
                   </p>
                 </section>
                 <DisconnectVoiceForm workspaceId={workspaceId} />

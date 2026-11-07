@@ -20,7 +20,7 @@ const manual = { type: "manual" as const, description: "Cuando lo pidas" }
 
 const TEMPLATES: Template[] = [
   {
-    keywords: ["propiedad", "inmueble", "piso", "alquiler", "visita", "interesad", "inmobiliari", "tokko"],
+    keywords: ["propiedad", "inmueble", "piso", "departamento", "depto", "alquiler", "visita", "interesad", "inmobiliari", "tokko"],
     plan: {
       name: "Responder a los interesados en una propiedad",
       summary: "Detecta las consultas sobre propiedades, busca la ficha y te deja preparada la respuesta con los datos y una propuesta de visita.",
@@ -29,7 +29,7 @@ const TEMPLATES: Template[] = [
       steps: [
         step("s1", "read", "Leer la consulta", "Quién pregunta y por qué propiedad.", "email"),
         step("s2", "read", "Buscar la ficha de la propiedad", "Precio, superficie, disponibilidad y fotos.", "properties"),
-        step("s3", "generate", "Preparar la respuesta", "Con los datos de la ficha y huecos para la visita. Sale solo si la apruebas.", "email", true),
+        step("s3", "generate", "Preparar la respuesta", "Con los datos de la ficha y horarios libres para la visita. Sale solo si la apruebas.", "email", true),
       ],
       open_questions: ["¿Ofrecemos siempre visita o solo cuando la propiedad está disponible?"],
     },

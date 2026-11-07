@@ -31,9 +31,9 @@ const FAQS = [
       "La ejecución te dice por qué ha fallado y qué hacer, con un botón para abrir la conexión que toque o volver a intentarlo. Si tu proveedor de IA se queda sin saldo, MarchaSolo puede seguir con otra IA que tengas conectada.",
   },
   {
-    question: "¿Puedo usarlo desde el móvil?",
+    question: "¿Puedo usarlo desde el celular?",
     answer:
-      "Sí. MarchaSolo se instala en el móvil desde el navegador, te avisa cuando algo espera tu aprobación y puedes dictar las peticiones.",
+      "Sí. MarchaSolo se instala en el celular desde el navegador, te avisa cuando algo espera tu aprobación y puedes dictar las peticiones.",
   },
 ] as const
 
@@ -105,16 +105,16 @@ export default function HowItWorksPage() {
                 Un ejemplo de principio a fin
               </h2>
               <p className="site-lead">
-                Una inmobiliaria recibe cada semana consultas para ver pisos. Así queda la tarea con MarchaSolo:
+                Una inmobiliaria recibe cada semana consultas para ver departamentos. Así queda la tarea con MarchaSolo:
               </p>
               <ol className="mt-8 grid gap-6 pl-5 text-[var(--ms-muted)] [&>li]:pl-1">
                 <li>
-                  <b className="text-[var(--ms-navy)]">Lo pide una vez.</b> «Cuando un cliente pida ver un piso, mira mi
-                  agenda y prepárale una respuesta con un hueco libre».
+                  <b className="text-[var(--ms-navy)]">Lo pide una vez.</b> «Cuando un cliente pida ver un departamento, mira mi
+                  agenda y prepárale una respuesta con un horario libre».
                 </li>
                 <li>
                   <b className="text-[var(--ms-navy)]">MarchaSolo propone el plan.</b> Leer el correo, consultar la agenda,
-                  buscar la ficha del piso y redactar la respuesta. Le pide conectar el correo y el calendario, porque los
+                  buscar la ficha del departamento y redactar la respuesta. Le pide conectar el correo y el calendario, porque los
                   necesita.
                 </li>
                 <li>
@@ -122,7 +122,7 @@ export default function HowItWorksPage() {
                   consultas y deja la respuesta preparada. Nada se envía todavía.
                 </li>
                 <li>
-                  <b className="text-[var(--ms-navy)]">Aviso en el móvil.</b> «Necesita tu aprobación». Abres la tarjeta,
+                  <b className="text-[var(--ms-navy)]">Aviso en el celular.</b> «Necesita tu aprobación». Abres la tarjeta,
                   lees el correo completo, cambias una palabra y apruebas. Solo entonces sale desde tu correo, en el mismo
                   hilo.
                 </li>
@@ -148,7 +148,7 @@ export default function HowItWorksPage() {
                 <h3 className="site-h3">Para probarlo: solo una cuenta</h3>
                 <p>
                   Al crearla te preguntamos qué tarea te quita más tiempo. MarchaSolo te prepara la propuesta y la puedes
-                  ejecutar una vez de verdad con nuestra IA, sin conectar la tuya. Tú decides si la pones en marcha.
+                  ejecutar de verdad con nuestra IA hasta gastar 1 $, sin conectar la tuya. Tú decides si la pones en marcha.
                 </p>
               </div>
               <div className="fact">
@@ -214,9 +214,9 @@ export default function HowItWorksPage() {
                 </div>
               </details>
               <details>
-                <summary>¿Puedo usarlo desde el móvil?</summary>
+                <summary>¿Puedo usarlo desde el celular?</summary>
                 <div>
-                  Sí. MarchaSolo se instala en el móvil desde el navegador, te avisa cuando algo espera tu aprobación y
+                  Sí. MarchaSolo se instala en el celular desde el navegador, te avisa cuando algo espera tu aprobación y
                   puedes dictar las peticiones.
                 </div>
               </details>

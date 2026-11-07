@@ -380,8 +380,8 @@ export async function generateText(ai: Ai, r: { instructions: string; messages: 
 
 export type StepType = "primary" | "fallback" | "escalation" | "verify" | "parallel" | "subtask" | "evaluate"
 
-// Registra el consumo de una llamada con su coste estimado (tokens × precio
-// del catálogo). Nunca guarda texto. Devuelve el coste.
+// Registra el consumo de una llamada con su costo estimado (tokens × precio
+// del catálogo). Nunca guarda texto. Devuelve el costo.
 export async function recordUsage(
   admin: SupabaseClient,
   ai: Ai,

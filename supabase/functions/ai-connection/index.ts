@@ -18,7 +18,7 @@ const KEY_HINT: Record<Provider, string> = {
   xai: "La clave no tiene el formato de una clave de xAI (empieza por xai-).",
 }
 
-// Validación con una llamada sin coste: listar los modelos disponibles.
+// Validación con una llamada sin costo: listar los modelos disponibles.
 function checkRequest(provider: Provider, apiKey: string): [string, Record<string, string>] {
   if (provider === "anthropic") return ["https://api.anthropic.com/v1/models", { "x-api-key": apiKey, "anthropic-version": "2023-06-01" }]
   if (provider === "deepseek") return ["https://api.deepseek.com/models", { Authorization: `Bearer ${apiKey}` }]

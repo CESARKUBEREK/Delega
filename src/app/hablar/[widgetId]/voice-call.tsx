@@ -7,7 +7,7 @@ import { supabasePublishableKey, supabaseUrl } from "@/lib/supabase/env"
 // 1. voice-web (Edge Function) da un token temporal de xAI y la configuración.
 // 2. El navegador abre el WebSocket de xAI, envía el micrófono (PCM 16 bits,
 //    24 kHz) y reproduce la voz que llega.
-// 3. Cuando el agente pide una herramienta (huecos, cita, recado, documentos),
+// 3. Cuando el agente pide una herramienta (horarios libres, cita, mensaje, documentos),
 //    se la pedimos a voice-web y le devolvemos el resultado.
 // Nada de la conversación se guarda en el navegador.
 
@@ -109,7 +109,7 @@ export function VoiceCall({ widgetId }: { widgetId: string }) {
     if (!l) return
     l.pendingTools++
     const r = await callFn<{ output?: string }>({ action: "tool", session_id: l.session.id, session_secret: l.session.secret, name, arguments: args }).catch(() => null)
-    const output = r?.output ?? r?.error?.message ?? "No se pudo completar. Ofrece tomar un recado."
+    const output = r?.output ?? r?.error?.message ?? "No se pudo completar. Ofrece tomar un mensaje."
     const cur = live.current
     if (!cur || cur.ws.readyState !== WebSocket.OPEN) return
     cur.ws.send(JSON.stringify({ type: "conversation.item.create", item: { type: "function_call_output", call_id: callId, output } }))
@@ -261,7 +261,7 @@ export function VoiceCall({ widgetId }: { widgetId: string }) {
         </button>
       )}
       <p className="text-xs text-graphite">
-        Hablas con un asistente de voz con IA. Puede pedir cita y tomar recados para el negocio. No compartas datos de salud ni bancarios.
+        Hablas con un asistente de voz con IA. Puede pedir cita y tomar mensajes para el negocio. No compartas datos de salud ni bancarios.
       </p>
     </div>
   )

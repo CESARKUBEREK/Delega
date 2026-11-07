@@ -32,7 +32,7 @@ export default function TermsPage() {
         <ul>
           <li>Eres responsable de tu cuenta y de lo que hacen las personas a las que invitas a tus espacios.</li>
           <li>
-            Conectas tus propias cuentas (correo, Google, mensajería…) y tu propia clave de IA. Los costes de esos servicios, incluido el
+            Conectas tus propias cuentas (correo, Google, mensajería…) y tu propia clave de IA. Los costos de esos servicios, incluido el
             consumo de la IA, se facturan en tus cuentas.
           </li>
           <li>Solo puedes conectar cuentas y datos que tengas derecho a usar.</li>

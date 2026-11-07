@@ -1,6 +1,6 @@
 // Smart LLM Router (fase 8-1): la parte pura, sin red ni base de datos.
 // La usan las Edge Functions (Deno) y la app (Next, para la vista previa del
-// coste), así que no importa nada.
+// costo), así que no importa nada.
 //
 // Un solo motor: los modos (Ahorro, Inteligente, Máxima calidad) son pesos y
 // reglas distintos de la misma función, rankModels().
@@ -130,7 +130,7 @@ export function toModelInfo(row: Record<string, unknown>): ModelInfo | null {
 }
 
 // ---------------------------------------------------------------------------
-// Coste
+// Costo
 // ---------------------------------------------------------------------------
 // input incluye los tokens en caché y los escritos en caché (como los cuenta
 // llm.ts); reasoning va dentro de output (los proveedores lo cobran como salida).
@@ -161,7 +161,7 @@ export type TaskProfile = {
   // 1–5. Por debajo de 3, la calidad por encima de lo necesario no puntúa.
   complexity: number
   // Tokens de una llamada típica, parte de la entrada que sale de la caché y
-  // llamadas por tarea (para estimar y comparar costes). Calibrado el 3 nov
+  // llamadas por tarea (para estimar y comparar costos). Calibrado el 3 nov
   // con usage_events de producción (agent: 21 llamadas en 6 ejecuciones;
   // classify: 17; draft_reply: 4; plan: 1). Sin datos aún: summarize, help y
   // review (valores de partida). Recalibrar cuando haya más (8-4).
@@ -276,7 +276,7 @@ function reasonFor(input: RouteInput, profile: TaskProfile, chosen: ModelInfo, p
     ? "prima la calidad"
     : chosen.tier === "economy"
     ? "basta para esta tarea"
-    : "equilibrio entre calidad y coste"
+    : "equilibrio entre calidad y costo"
   return `${MODE_LABEL[input.mode]}: ${what} (${chosen.label}) para ${profile.label}; ${why}.`
 }
 

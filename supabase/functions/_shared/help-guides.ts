@@ -443,7 +443,7 @@ export const HELP_GUIDES: HelpGuide[] = [
       "voz",
       "grok voice"
     ],
-    "summary": "Un agente de voz atiende las llamadas: consulta tu agenda y reserva citas, toma recados y responde con tus documentos.",
+    "summary": "Un agente de voz atiende las llamadas: consulta tu agenda y reserva citas, toma mensajes y responde con tus documentos.",
     "steps": [
       "Conecta Google Calendar para que pueda reservar citas.",
       "En la tarjeta «Por teléfono», crea el acceso para el agente de voz.",
@@ -460,7 +460,7 @@ export const HELP_GUIDES: HelpGuide[] = [
       "widget",
       "voz en la web"
     ],
-    "summary": "Un botón en la web de tu negocio para hablar con tu asistente de voz: reserva citas y toma recados.",
+    "summary": "Un botón en la web de tu negocio para hablar con tu asistente de voz: reserva citas y toma mensajes.",
     "steps": [
       "En Integraciones → Asistente de voz → «En tu web», crea el asistente y pruébalo.",
       "Actívalo, indica los dominios de tu web y copia el código.",

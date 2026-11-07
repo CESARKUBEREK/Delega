@@ -12,6 +12,7 @@ import { ApprovalCard, RunControls } from "./run-live"
 import { HelpPanel } from "@/components/help-panel"
 import { HELP_GUIDES } from "@/lib/help"
 import { diagnoseRun, type LiveStatus } from "@/lib/run-diagnosis"
+import { SOLO_UPGRADE_IS_EXTERNAL, SOLO_UPGRADE_URL } from "@/lib/upgrade"
 import { DiagnosisActions } from "./diagnosis"
 import { PageHeader, PanelCard } from "@/components/ui"
 
@@ -75,7 +76,7 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
       <HelpPanel workspaceId={workspaceId} page="ejecucion" runId={run.id} />
       {trialFunded ? (
         <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-          Esta ejecución está financiada por MarchaSolo. Incluye una única prueba gratuita, con un límite de coste de IA de 0,10 USD.
+          Esta ejecución la paga MarchaSolo con tu prueba gratuita (1 USD de IA en total, como mucho 0,25 USD por ejecución).
         </p>
       ) : null}
       <PageHeader eyebrow={run.flow_id ? <Link href={`${base}/automatizaciones/${run.flow_id}`} className="text-link underline underline-offset-4">{run.flow_name}</Link> : chat ? <Link href={`${base}/asistente?c=${chat.conversation_id}`} className="text-link underline underline-offset-4">{run.flow_name} (pedida en el chat)</Link> : <span className="text-graphite">{run.flow_name} (automatización borrada)</span>} title={<>Ejecución del {formatDateTime(run.started_at)}</>} description={<span className="text-sm text-graphite">
@@ -193,6 +194,15 @@ async function Diagnosis({ workspaceId, flowId, error }: { workspaceId: string; 
         <p className="text-sm text-ink">
           <strong>Qué hacer:</strong> {d.fix}
         </p>
+        {d.kind === "trial_ended" && !d.retry ? (
+          <a
+            href={SOLO_UPGRADE_URL}
+            className="self-start text-sm font-semibold text-link underline underline-offset-4"
+            {...(SOLO_UPGRADE_IS_EXTERNAL ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+          >
+            Pasar al plan Solo →
+          </a>
+        ) : null}
         {guide ? (
           <Link
             href={`/w/${workspaceId}/integraciones?abrir=${guide.id}#${guide.section}`}
@@ -210,7 +220,7 @@ async function Diagnosis({ workspaceId, flowId, error }: { workspaceId: string; 
   )
 }
 
-// IA de la ejecución (router, fase 8): modelos, llamadas, coste estimado,
+// IA de la ejecución (router, fase 8): modelos, llamadas, costo estimado,
 // presupuesto, motivo y ahorro frente a usar siempre el modelo más capaz del
 // mismo proveedor (con los mismos tokens).
 function RunAi({
@@ -263,7 +273,7 @@ function RunAi({
               Modelo: <span className="font-medium text-ink">{modelLabel(run.model)}</span>
             </>
           )}
-          {modeLabel ? ` · ${modeLabel}` : ""} · {calls.length} {calls.length === 1 ? "llamada" : "llamadas"} · {trialFunded ? "coste asumido por MarchaSolo" : "coste estimado"}{" "}
+          {modeLabel ? ` · ${modeLabel}` : ""} · {calls.length} {calls.length === 1 ? "llamada" : "llamadas"} · {trialFunded ? "costo asumido por MarchaSolo" : "costo estimado"}{" "}
           <span className="font-medium text-ink">{formatUsd(cost)}</span>
           {run.budget_usd ? trialFunded ? ` de ${formatUsd(Number(run.budget_usd))} de presupuesto gratuito` : ` de ${formatUsd(Number(run.budget_usd))} de presupuesto` : ""}
           {seconds !== null ? ` · ${seconds < 60 ? `${seconds} s` : `${Math.round(seconds / 60)} min`}` : ""}
@@ -280,7 +290,7 @@ function RunAi({
             Un {saving} % menos que con {premium.label} para el mismo trabajo ({formatUsd(reference)}).
           </p>
         ) : null}
-        <p className="text-xs">{trialFunded ? "MarchaSolo asume este coste. No se carga a tu cuenta de IA." : "Estimación con los tokens que informa el proveedor y sus precios oficiales; la factura que vale es la de tu cuenta."}</p>
+        <p className="text-xs">{trialFunded ? "MarchaSolo asume este costo. No se carga a tu cuenta de IA." : "Estimación con los tokens que informa el proveedor y sus precios oficiales; la factura que vale es la de tu cuenta."}</p>
       </div>
     </PanelCard>
   )

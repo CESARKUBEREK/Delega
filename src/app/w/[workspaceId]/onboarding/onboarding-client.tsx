@@ -27,6 +27,7 @@ import {
   analyzeOnboardingWebsite,
   enrichOnboardingWebsite,
   checkOnboardingConnections,
+  adoptBrowserTimezone,
   completeOnboarding,
   generateOnboardingPlan,
   trackOnboardingStep,
@@ -53,12 +54,11 @@ const STEP_ORDER = ONBOARDING_STEPS.map((s) => s.id)
 // Ejemplos de los tres sectores (inmobiliarias, clínicas, profesionales).
 // Cada uno cae en su plan sin IA (src/lib/onboarding-plans.ts).
 const SUGGESTIONS = [
-  "Cuando un cliente escriba por WhatsApp, prepárame la respuesta con mis tarifas",
-  "Cuando pidan una visita o una cita, ofrece dos huecos de mi agenda",
-  "Cuando entre un lead, regístralo en el CRM y prepárame la primera respuesta",
   "Cada mañana, ordena la bandeja y déjame las respuestas urgentes preparadas",
-  "Cuando entre una incidencia, clasifícala y déjame la primera respuesta",
+  "Cuando pidan una visita o una cita, ofrece dos horarios libres de mi agenda",
+  "Cuando entre un lead, regístralo en el CRM y prepárame la primera respuesta",
   "Después de cada visita, prepárame el mensaje de seguimiento",
+  "Cuando un cliente escriba por WhatsApp, prepárame la respuesta con mis tarifas",
 ]
 
 // Mientras el asistente prepara el plan (puede tardar unos segundos).
@@ -114,6 +114,8 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const [mainPain, setMainPain] = useState(savedBusiness?.mainPain ?? "")
   const [channels, setChannels] = useState<string[]>(savedBusiness?.channels ?? [])
   const [websiteUrl, setWebsiteUrl] = useState(savedBusiness?.websiteUrl ?? "")
+  // El bloque «Afinar la propuesta» empieza abierto solo si ya había datos guardados.
+  const [contextOpen, setContextOpen] = useState(Boolean(savedBusiness?.websiteUrl || savedBusiness?.businessType || savedBusiness?.mainPain || savedBusiness?.channels?.length))
   const [websiteSnapshot, setWebsiteSnapshot] = useState<WebsiteSnapshot | null>(savedBusiness?.websiteSnapshot ?? null)
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(savedBusiness?.businessProfile ?? null)
   const [profileConfirmed, setProfileConfirmed] = useState(savedBusiness?.profileConfirmed ?? false)
@@ -136,6 +138,14 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [step])
+
+  // La zona horaria del espacio sale del navegador (Argentina, resto de
+  // Latinoamérica o España) si todavía no tiene ninguna.
+  useEffect(() => {
+    if (!isAdmin) return
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    if (tz) void adoptBrowserTimezone(workspaceId, tz)
+  }, [isAdmin, workspaceId])
 
   // Borra una cookie de vuelta antigua; el paso 4 la vuelve a poner si hace falta.
   useEffect(() => {
@@ -249,6 +259,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const handleTaskSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (websiteSnapshot && !profileConfirmed) {
+      setContextOpen(true)
       setError("Revisa y confirma el perfil de tu negocio antes de preparar la propuesta.")
       return
     }
@@ -473,64 +484,15 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
             <p className="text-sm font-semibold text-graphite">
               Paso {stepOrdinal("task")} de {stepTotal}
             </p>
-            <h2 className="rotulo text-xl mt-1">Primero entendemos tu negocio. Después, elegimos qué delegar.</h2>
+            <h2 className="rotulo text-xl mt-1">¿Qué te gustaría quitarte de encima?</h2>
             <p className="text-graphite mt-1">
-              No vamos a proponerte una automatización a ciegas. Revisamos la información disponible, tú corriges lo que haga falta y nos cuentas qué tarea te gustaría quitarte de encima. No hace falta conectar aplicaciones todavía.
+              Elige un ejemplo o cuéntalo con tus palabras. Te preparamos una propuesta en unos segundos, sin conectar nada todavía.
             </p>
           </div>
 
           <form onSubmit={handleTaskSubmit} className="flex flex-col gap-4">
-            <BusinessContextFields
-              websiteUrl={websiteUrl}
-              onWebsiteUrlChange={(value) => {
-                setWebsiteUrl(value)
-                setWebsiteSnapshot(null)
-                setBusinessProfile(null)
-                setProfileConfirmed(false)
-                setWebsiteError(null)
-                setSemanticError(null)
-                setSemanticMessage(null)
-                setEditedProfileFields(new Set())
-              }}
-              onAnalyzeWebsite={handleWebsiteAnalysis}
-              onEnrichWebsite={handleSemanticEnrichment}
-              semanticPending={semanticPending}
-              semanticError={semanticError}
-              semanticMessage={semanticMessage}
-              websitePending={websitePending}
-              disabled={pending}
-              websiteError={websiteError}
-              websiteSnapshot={websiteSnapshot}
-              businessProfile={businessProfile}
-              onProfileFieldChange={(key, value) => {
-                setEditedProfileFields((current) => new Set(current).add(key))
-                setBusinessProfile((current) => current ? {
-                  ...current,
-                  [key]: { ...current[key], value, evidence: [], evidenceSources: [], confidence: "low", source: "user", confirmed: false },
-                } : current)
-                setProfileConfirmed(false)
-              }}
-              profileConfirmed={profileConfirmed}
-              onConfirmProfile={() => setProfileConfirmed(true)}
-              onRemoveAnalysis={() => {
-                setWebsiteSnapshot(null)
-                setBusinessProfile(null)
-                setProfileConfirmed(false)
-                setSemanticError(null)
-                setSemanticMessage(null)
-                setEditedProfileFields(new Set())
-              }}
-              businessType={businessType}
-              onBusinessTypeChange={setBusinessType}
-              mainPain={mainPain}
-              onMainPainChange={setMainPain}
-              channels={channels}
-              onChannelChange={(value, checked) => setChannels((current) => checked
-                ? [...current, value]
-                : current.filter((channel) => channel !== value))}
-            />
             <div className="flex flex-col gap-1">
-              <label htmlFor="task" className="text-sm font-semibold text-ink">3 · ¿Qué debería hacer MarchaSolo por ti?</label>
+              <label htmlFor="task" className="text-sm font-semibold text-ink">¿Qué debería hacer MarchaSolo por ti?</label>
               <p className="text-xs text-graphite">Describe el resultado que buscas, no hace falta saber cómo automatizarlo. Si no lo tienes claro, déjalo vacío y te ayudaremos a descubrir oportunidades.</p>
             </div>
             <textarea
@@ -564,12 +526,74 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
               ))}
             </div>
 
+            {/* Opcional y plegado: la web y el contexto del negocio afinan la propuesta, pero no frenan a quien solo quiere probar. */}
+            <details
+              className="rounded-xl border border-rule bg-paper"
+              open={contextOpen}
+              onToggle={(e) => setContextOpen((e.currentTarget as HTMLDetailsElement).open)}
+            >
+              <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-ink">
+                Afinar la propuesta con mi web y mi negocio <span className="font-normal text-graphite">(opcional)</span>
+              </summary>
+              <div className="flex flex-col gap-4 px-4 pb-4">
+              <BusinessContextFields
+                websiteUrl={websiteUrl}
+                onWebsiteUrlChange={(value) => {
+                  setWebsiteUrl(value)
+                  setWebsiteSnapshot(null)
+                  setBusinessProfile(null)
+                  setProfileConfirmed(false)
+                  setWebsiteError(null)
+                  setSemanticError(null)
+                  setSemanticMessage(null)
+                  setEditedProfileFields(new Set())
+                }}
+                onAnalyzeWebsite={handleWebsiteAnalysis}
+                onEnrichWebsite={handleSemanticEnrichment}
+                semanticPending={semanticPending}
+                semanticError={semanticError}
+                semanticMessage={semanticMessage}
+                websitePending={websitePending}
+                disabled={pending}
+                websiteError={websiteError}
+                websiteSnapshot={websiteSnapshot}
+                businessProfile={businessProfile}
+                onProfileFieldChange={(key, value) => {
+                  setEditedProfileFields((current) => new Set(current).add(key))
+                  setBusinessProfile((current) => current ? {
+                    ...current,
+                    [key]: { ...current[key], value, evidence: [], evidenceSources: [], confidence: "low", source: "user", confirmed: false },
+                  } : current)
+                  setProfileConfirmed(false)
+                }}
+                profileConfirmed={profileConfirmed}
+                onConfirmProfile={() => setProfileConfirmed(true)}
+                onRemoveAnalysis={() => {
+                  setWebsiteSnapshot(null)
+                  setBusinessProfile(null)
+                  setProfileConfirmed(false)
+                  setSemanticError(null)
+                  setSemanticMessage(null)
+                  setEditedProfileFields(new Set())
+                }}
+                businessType={businessType}
+                onBusinessTypeChange={setBusinessType}
+                mainPain={mainPain}
+                onMainPainChange={setMainPain}
+                channels={channels}
+                onChannelChange={(value, checked) => setChannels((current) => checked
+                  ? [...current, value]
+                  : current.filter((channel) => channel !== value))}
+              />
+              </div>
+            </details>
+
             <button
               type="submit"
               disabled={pending}
               className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
             >
-              {pending ? "Preparando tu propuesta…" : "Descubrir oportunidades y preparar mi propuesta →"}
+              {pending ? "Preparando tu propuesta…" : "Preparar mi propuesta →"}
             </button>
             {pending ? <PlanLoading /> : null}
           </form>

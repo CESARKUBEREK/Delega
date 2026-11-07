@@ -7,13 +7,13 @@
 // impide que dos peticiones avancen la misma ejecución a la vez.
 //
 // Al lanzar una ejecución o decidir una aprobación, el primer tramo arranca
-// también en segundo plano: así avanza aunque se cierre la app del móvil
+// también en segundo plano: así avanza aunque se cierre la app del celular
 // justo después de tocar «Aprobar».
 import { type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { authenticate, fail, isUuid, json, membershipRole, type AuthContext } from "../_shared/core.ts"
 import { addEvent, advance, claim, createRun, RunError, type RunRow } from "../_shared/agent.ts"
 import { decideRun } from "../_shared/decide.ts"
-import { isRouteError, planRun, type PlannedRun, stepCount } from "../_shared/router/index.ts"
+import { isRouteError, planRun, type PlannedRun, stepCount, TRIAL_ENDED_MESSAGE } from "../_shared/router/index.ts"
 
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined
 
@@ -61,7 +61,7 @@ async function reserveTrialRun(ctx: AuthContext, workspaceId: string, runId: str
   if (data === true) return true
   await ctx.admin.from("flow_runs").update({
     status: "failed",
-    error: "La ejecución gratuita ya fue utilizada.",
+    error: TRIAL_ENDED_MESSAGE,
     finished_at: new Date().toISOString(),
   }).eq("id", runId)
   return false
@@ -124,7 +124,7 @@ async function handle(req: Request): Promise<Response> {
       trigger: { type: "manual" },
     })
     if (ai.routing.trial && !(await reserveTrialRun(ctx, workspaceId, run.id))) {
-      return fail(409, "trial_unavailable", "La ejecución gratuita ya se utilizó. Conecta tu propia IA para ejecutar esta automatización.")
+      return fail(409, "trial_unavailable", TRIAL_ENDED_MESSAGE)
     }
     // El panel de la ejecución pide "continue" y va mostrando el avance.
     kick(ctx.admin, run.id)
@@ -184,7 +184,7 @@ async function handle(req: Request): Promise<Response> {
       sourceMessageId: msg.id,
     })
     if (ai.routing.trial && !(await reserveTrialRun(ctx, workspaceId, run.id))) {
-      return fail(409, "trial_unavailable", "La ejecución gratuita ya se utilizó. Conecta tu propia IA para ejecutar esta automatización.")
+      return fail(409, "trial_unavailable", TRIAL_ENDED_MESSAGE)
     }
     kick(ctx.admin, run.id)
     return json({ run_id: run.id, status: "running", trial_funded: ai.routing.trial === true })

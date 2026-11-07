@@ -24,7 +24,7 @@ export type ListThread = {
 }
 
 // Lista de «Todo» (fase 6G-2): categoría arriba de cada fila y cambiable con un
-// toque, selección múltiple y, en el móvil, deslizar a la derecha para archivar
+// toque, selección múltiple y, en el celular, deslizar a la derecha para archivar
 // y a la izquierda para cambiar la categoría.
 export function InboxList({
   workspaceId,

@@ -14,16 +14,16 @@ export type Demo = {
 
 export const VISIT_DEMO: Demo = {
   title: "Responder consultas de visitas",
-  ask: "Cuando un cliente pida ver un piso, mira mi agenda y prepárale una respuesta con un hueco libre.",
+  ask: "Cuando un cliente pida ver un departamento, mira mi agenda y prepárale una respuesta con un horario libre.",
   steps: [
-    { title: "Lee el correo de Laura Gómez", detail: "Quiere ver el piso de la calle Mayor esta semana", app: "Correo" },
+    { title: "Lee el correo de Laura Gómez", detail: "Quiere ver el departamento de Palermo esta semana", app: "Correo" },
     { title: "Mira tu agenda", detail: "Jueves libre de 10:00 a 12:00", app: "Calendar" },
-    { title: "Busca la ficha del piso", detail: "3 habitaciones, disponible", app: "CRM" },
+    { title: "Busca la ficha del departamento", detail: "3 habitaciones, disponible", app: "CRM" },
     { title: "Redacta la respuesta", detail: "Propone el jueves a las 10:00", app: "Borrador" },
   ],
   approval: {
     title: "Enviar la respuesta a Laura Gómez",
-    text: "«Hola, Laura: el jueves a las 10:00 puedo enseñarte el piso de la calle Mayor. ¿Te viene bien?»",
+    text: "«Hola, Laura: el jueves a las 10:00 puedo mostrarte el departamento de Palermo. ¿Te viene bien?»",
   },
 }
 

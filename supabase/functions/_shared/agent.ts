@@ -61,7 +61,7 @@ import { downloadXlsx, XLSX_MIME, xlsxInfo, xlsxRead, xlsxWrite } from "./excel.
 import { type Ai, complete, fromResponsesItems, LlmError, type Msg, NO_AI_MESSAGE, providerOf, type ToolDef } from "./llm.ts"
 import { modelInfo } from "./router/catalog.ts"
 import { costUsd, formatUsd } from "./router/core.ts"
-import { aiForRun, parseRunRouting, type PlannedRun, type RunRouting } from "./router/index.ts"
+import { aiForRun, parseRunRouting, TRIAL_ENDED_MESSAGE, TRIAL_RUN_CAP_USD, trialRemainingUsd, type PlannedRun, type RunRouting } from "./router/index.ts"
 
 export const SLICE_MS = 90_000
 const LEASE_SECONDS = 140
@@ -125,7 +125,7 @@ export type RunRow = {
   started_by: string | null
   trigger: RunTrigger
   flow_id?: string | null
-  // Router (fase 8): decisión, coste acumulado y presupuesto de la ejecución.
+  // Router (fase 8): decisión, costo acumulado y presupuesto de la ejecución.
   routing?: unknown
   cost_usd?: number | string | null
   budget_usd?: number | string | null
@@ -161,6 +161,13 @@ export type PendingAction =
   // La ejecución llegó a su presupuesto de IA: ¿continuar con más? No es una
   // llamada del agente (call_id propio) y nunca se aprueba por voz ni Telegram.
   | BudgetPending
+
+// Por qué se para una ejecución gratuita: se acabó la prueba, o esta ejecución
+// llegó a su máximo y aún queda saldo para otras.
+async function trialStopMessage(admin: SupabaseClient, workspaceId: string): Promise<string> {
+  if ((await trialRemainingUsd(admin, workspaceId)) <= 0) return TRIAL_ENDED_MESSAGE
+  return `Esta ejecución llegó al máximo de la prueba gratuita por ejecución (${formatUsd(TRIAL_RUN_CAP_USD)}). Puedes volver a lanzarla o conectar tu IA para tareas más largas.`
+}
 
 export type BudgetPending = { call_id: string; tool: "budget_extend"; spent_usd: number; budget_usd: number; extra_usd: number }
 
@@ -552,7 +559,7 @@ function toolDefs(r: Resources): ToolDef[] {
   tools.push(
     fn(
       "notify_me",
-      "Envía un aviso al propio usuario (notificación en el móvil y correo a su dirección). No requiere aprobación. " +
+      "Envía un aviso al propio usuario (notificación en el celular y correo a su dirección). No requiere aprobación. " +
         "Úsalo para resúmenes, alertas y recordatorios para él; nunca para escribir a otras personas.",
       {
         subject: { type: "string", description: "Título breve del aviso." },
@@ -1014,7 +1021,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
     const spent = Number(run.cost_usd) || 0
     const cap = Number(run.budget_usd) || 0
     if (cap > 0 && spent >= cap) {
-      if (routing?.trial) return finishRun(admin, run, "failed", "La prueba gratuita alcanzó su límite de 0,10 USD. Conecta tu propia IA para continuar.")
+      if (routing?.trial) return finishRun(admin, run, "failed", await trialStopMessage(admin, run.workspace_id))
       return pauseForBudget(admin, run, spent, cap)
     }
 
@@ -1023,11 +1030,11 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
     try {
       if (ai.trial) {
         // Estimación deliberadamente conservadora para no iniciar una llamada
-        // cuyo coste máximo probable ya consuma el presupuesto restante.
+        // cuyo costo máximo probable ya consuma el presupuesto restante.
         const estimatedInput = Math.ceil((INSTRUCTIONS.length + JSON.stringify(messages).length + JSON.stringify(tools).length) / 2)
         const estimated = costUsd(await modelInfo(admin, ai.model), { input: estimatedInput, output: 512 })
         if (spent + estimated > cap) {
-          return finishRun(admin, run, "failed", "La prueba gratuita no tiene saldo suficiente para continuar esta etapa. Conecta tu propia IA para seguir.")
+          return finishRun(admin, run, "failed", await trialStopMessage(admin, run.workspace_id))
         }
       }
       result = await complete(ai, {
@@ -1066,7 +1073,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
     run.input_tokens += result.usage.input
     run.output_tokens += result.usage.output
     const actualCost = costUsd(await modelInfo(admin, ai.model), result.usage)
-    // El coste de MarchaSolo no se imputa al gasto del cliente, pero sí al
+    // El costo de MarchaSolo no se imputa al gasto del cliente, pero sí al
     // presupuesto interno de esta ejecución.
     const cost = ai.trial ? 0 : actualCost
     run.cost_usd = spent + actualCost
@@ -1090,7 +1097,14 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       const { error: costError } = await admin.rpc("flow_run_add_cost", { p_run_id: run.id, p_cost: actualCost })
       if (costError) {
         console.error("flow_run_add_cost", costError.code)
-        if (ai.trial) return finishRun(admin, run, "failed", "No se pudo verificar el coste de la prueba gratuita. Conecta tu propia IA para continuar.")
+        if (ai.trial) return finishRun(admin, run, "failed", "No se pudo verificar el costo de la prueba gratuita. Conecta tu propia IA para continuar.")
+      }
+    }
+    if (ai.trial && actualCost > 0) {
+      const { error: trialError } = await admin.rpc("trial_add_cost", { p_workspace_id: run.workspace_id, p_cost: actualCost })
+      if (trialError) {
+        console.error("trial_add_cost", trialError.code)
+        return finishRun(admin, run, "failed", "No se pudo verificar el costo de la prueba gratuita. Conecta tu propia IA para continuar.")
       }
     }
     if (ai.trial && run.input_tokens + run.output_tokens === result.usage.input + result.usage.output) {
@@ -1101,7 +1115,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       }
     }
     if (ai.trial && spent + actualCost >= cap) {
-      return finishRun(admin, run, "failed", "La prueba gratuita alcanzó su límite de 0,10 USD. La etapa se detuvo antes de ejecutar acciones. Conecta tu propia IA para continuar.")
+      return finishRun(admin, run, "failed", await trialStopMessage(admin, run.workspace_id))
     }
 
     messages.push(result.message)
@@ -1322,7 +1336,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
         if (!channels.length) throw new RunError("Ningún canal válido: usa los ids de buffer_channels.")
         const when = nstr(args.when, 40)
         let dueAt: string | null = null
-        let whenLabel = "A la cola del canal (siguiente hueco de su horario)"
+        let whenLabel = "A la cola del canal (siguiente horario libre de su horario)"
         if (when) {
           if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(when)) throw new RunError("Fecha no válida: usa AAAA-MM-DDTHH:MM.")
           dueAt = new Date(toRfc3339(when, res.timezone)).toISOString()
@@ -1526,7 +1540,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
 
     await save(admin, run, { status: "awaiting_approval", pending_action: pending, lease_until: null })
     await addEvent(admin, run, "approval_requested", proposalTitle(pending), { tool: pending.tool })
-    // Aviso al móvil; un fallo aquí no detiene la ejecución.
+    // Aviso al celular; un fallo aquí no detiene la ejecución.
     await notifyApproval(admin, run, pending.tool).catch(() => console.error("push: no se pudo avisar"))
     await telegramApproval(admin, run, pending, proposalTitle(pending)).catch(() => console.error("telegram: no se pudo avisar"))
     return "awaiting_approval"

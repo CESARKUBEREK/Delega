@@ -1,5 +1,5 @@
 // Router de IA (fase 8): la parte pura, compartida con las Edge Functions.
-// La app la usa para mostrar el modo, el coste estimado y el motivo.
+// La app la usa para mostrar el modo, el costo estimado y el motivo.
 export {
   autoRunBudget,
   costUsd,

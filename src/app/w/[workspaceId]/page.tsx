@@ -4,13 +4,15 @@ import { runOrigin } from "@/lib/labels"
 import { asPending, pendingKind, pendingTitle } from "@/lib/pending"
 import { createClient } from "@/lib/supabase/server"
 import { setupStatus } from "@/lib/setup"
+import { getTrialStatus } from "@/lib/trial"
+import { SOLO_PLAN, SOLO_UPGRADE_IS_EXTERNAL, SOLO_UPGRADE_URL } from "@/lib/upgrade"
 import { getWorkspace } from "@/lib/workspace"
 import { formatToday, formatWhen, greeting } from "./format"
 
 export const metadata = { title: "Hoy" }
 
 // Hoy: lo que te necesita ahora (aprobaciones), el último resumen y lo que
-// viene. Es la pantalla de entrada del espacio, sobre todo en el móvil.
+// viene. Es la pantalla de entrada del espacio, sobre todo en el celular.
 export default function TodayPage({ params }: PageProps<"/w/[workspaceId]">) {
   return (
     <Suspense fallback={<div className="h-64 rounded-2xl border border-rule bg-sheet" aria-busy="true" />}>
@@ -64,7 +66,10 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
   const firstName = (profile?.display_name ?? "").trim().split(/\s+/)[0]
   const aiActive = (connections ?? []).some((c) => c.status === "active")
   const onboarded = Boolean(ws?.onboarding_completed_at)
-  const setup = await setupStatus(workspaceId)
+  const [setup, trial] = await Promise.all([setupStatus(workspaceId), getTrialStatus(workspaceId)])
+  // Sin IA propia: la prueba gratuita (1 $) sigue o se ha terminado.
+  const trialActive = !aiActive && onboarded && trial !== null && trial.usdRemaining > 0
+  const trialEnded = !aiActive && onboarded && trial !== null && trial.usdRemaining <= 0
   const pendingTotal = waitingCount ?? (waiting ?? []).length
 
   return (
@@ -104,7 +109,41 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
         </form>
       </section>
 
-      {isAdmin && !setup.ia ? (
+      {isAdmin && trialEnded ? (
+        // Al acabar la prueba: invitación al plan Solo (decisión del 7 nov).
+        <section className="setup-banner flex-wrap" aria-labelledby="prueba-terminada">
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span id="prueba-terminada" className="font-semibold text-ink">Tu prueba gratuita ha terminado</span>
+            <span className="text-sm text-graphite">
+              Has usado los {trial?.usdAllowance ?? 1} $ de IA de la prueba. Pasa al plan Solo ({SOLO_PLAN.price}
+              {SOLO_PLAN.period}) y conecta tu IA para que tus automatizaciones sigan funcionando.
+            </span>
+          </span>
+          <span className="flex flex-wrap items-center gap-3">
+            <a
+              href={SOLO_UPGRADE_URL}
+              className="setup-banner-cta"
+              {...(SOLO_UPGRADE_IS_EXTERNAL ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            >
+              Pasar al plan Solo →
+            </a>
+            <Link href={`${base}/integraciones#llms`} className="text-sm font-semibold text-link underline underline-offset-4">
+              Conectar mi IA
+            </Link>
+          </span>
+        </section>
+      ) : isAdmin && trialActive ? (
+        <Link href={`${base}/automatizaciones`} className="setup-banner">
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="font-semibold text-ink">Estás usando la prueba gratuita</span>
+            <span className="text-sm text-graphite">
+              Te quedan {trial!.usdRemaining.toFixed(2).replace(".", ",")} $ de {trial!.usdAllowance} $ de IA por nuestra cuenta. Ejecuta tus
+              automatizaciones sin conectar nada todavía.
+            </span>
+          </span>
+          <span className="setup-banner-cta">Mis automatizaciones →</span>
+        </Link>
+      ) : isAdmin && !setup.ia ? (
         // Sin IA: antes del onboarding, al onboarding; después, a conectar la IA.
         <Link href={onboarded ? `${base}/integraciones#llms` : `${base}/onboarding`} className="setup-banner">
           <span className="setup-banner-ring" aria-hidden="true" style={{ ["--pct" as string]: `${Math.round((setup.done / setup.total) * 100)}%` }}>

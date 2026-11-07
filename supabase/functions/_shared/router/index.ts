@@ -5,7 +5,7 @@
 //   presupuesto. La clave de cada proveedor se descifra solo al usarla.
 // - callRouted(): hace la llamada; si el proveedor falla por saldo, límite,
 //   clave rechazada o caída, pasa al siguiente del respaldo. Registra el
-//   consumo de cada llamada con su coste estimado.
+//   consumo de cada llamada con su costo estimado.
 // - planRun(): lo mismo para una ejecución del agente (modelo, respaldo y
 //   presupuesto de la ejecución), que se guarda en flow_runs.
 // - Presupuesto del espacio: al 80 % avisa; al 100 % pasa a Ahorro (o para,
@@ -184,7 +184,8 @@ export async function routeAi(
     inputTokens?: number
     // Solo el plan del onboarding (decisión del 3 nov).
     allowTrial?: boolean
-    // Solo ejecución manual iniciada por el usuario; nunca triggers ni schedules.
+    // Ejecuciones de automatizaciones (manuales, programadas o por disparador)
+    // con la prueba gratuita mientras quede saldo (1 USD; decisión del 7 nov).
     allowTrialRun?: boolean
   } = {},
 ): Promise<Routed | RouteError> {
@@ -193,13 +194,10 @@ export async function routeAi(
     // La fila de créditos es la concesión explícita del cupo; no limitar por
     // tipo de espacio. Esto permite pruebas financiadas también en organizaciones
     // cuando MarchaSolo les haya asignado créditos.
-    const { data: credits } = await admin
-      .from("workspace_trial_credits")
-      .select("allowance_runs, used_runs, allowance_tokens, used_tokens")
-      .eq("workspace_id", workspaceId)
-      .maybeSingle()
-    if (credits && Number(credits.used_runs) < Number(credits.allowance_runs) &&
-        Number(credits.used_tokens) < Number(credits.allowance_tokens)) {
+    // Solo si el espacio no tiene IA propia: con la suya, nunca gastamos la prueba.
+    const own = await connections(admin, workspaceId)
+    const remaining = own.length ? 0 : await trialRemainingUsd(admin, workspaceId)
+    if (remaining > 0) {
       if (!trialKey) {
         return { error: "La prueba gratuita de MarchaSolo no está disponible ahora. No usaremos tu IA conectada sin tu autorización.", code: "no_ai" }
       }
@@ -357,6 +355,22 @@ export function stepCount(definition: unknown): number {
   return Array.isArray(steps) ? steps.length : 0
 }
 
+// Prueba gratuita (decisión del 7 nov): hasta allowance_usd (1 USD) por espacio
+// en ejecuciones; como mucho TRIAL_RUN_CAP_USD por ejecución.
+export const TRIAL_RUN_CAP_USD = 0.25
+export const TRIAL_ENDED_MESSAGE =
+  "Tu prueba gratuita ha terminado. Pasa al plan Solo y conecta tu IA para seguir usando tus automatizaciones."
+
+export async function trialRemainingUsd(admin: SupabaseClient, workspaceId: string): Promise<number> {
+  const { data } = await admin
+    .from("workspace_trial_credits")
+    .select("allowance_usd, used_usd")
+    .eq("workspace_id", workspaceId)
+    .maybeSingle()
+  if (!data) return 0
+  return Math.max(0, Number(data.allowance_usd) - Number(data.used_usd))
+}
+
 export type PlannedRun = { model: string; routing: RunRouting; routingMode: Mode | "fixed"; budgetUsd: number }
 
 export async function planRun(
@@ -376,7 +390,9 @@ export async function planRun(
   if (isRouteError(routed)) return routed
 
   const settings = await readSettings(admin, workspaceId)
-  let budgetUsd = routed.trial ? 0.10 : flow.runUsd ?? settings.run_usd
+  let budgetUsd = routed.trial
+    ? Math.min(TRIAL_RUN_CAP_USD, await trialRemainingUsd(admin, workspaceId))
+    : flow.runUsd ?? settings.run_usd
   if (!budgetUsd) {
     let recent: number[] = []
     if (opts.flowId) {
@@ -421,14 +437,9 @@ export async function aiForRun(
   if (routing?.trial) {
     const key = Deno.env.get("TRIAL_OPENAI_API_KEY")?.trim()
     if (!key) return null
-    // Cada tramo del agente vuelve a comprobar el saldo de tokens de prueba.
-    // Así una ejecución gratuita no puede seguir generando llamadas sin cupo.
-    const { data: credits } = await admin
-      .from("workspace_trial_credits")
-      .select("allowance_tokens, used_tokens")
-      .eq("workspace_id", workspaceId)
-      .maybeSingle()
-    if (!credits || Number(credits.used_tokens) >= Number(credits.allowance_tokens)) return null
+    // Cada tramo del agente vuelve a comprobar el saldo de la prueba.
+    // Así una ejecución gratuita no puede seguir generando llamadas sin saldo.
+    if ((await trialRemainingUsd(admin, workspaceId)) <= 0) return null
     return { provider: "openai", model: "gpt-6-luna", apiKey: key, trial: true }
   }
   const catalog = await loadCatalog(admin)

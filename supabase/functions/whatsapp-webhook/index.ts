@@ -77,7 +77,7 @@ async function launchFlows(workspaceId: string, msg: Incoming, messageId: number
     if (!(await isWorkspaceAdmin(admin, workspaceId, flow.created_by))) continue
     if (budget-- <= 0) break
     const settings = (flow.settings ?? {}) as { file_ids?: unknown; model?: unknown }
-    const conn = await planRun(admin, workspaceId, { flowId: flow.id, flowSettings: flow.settings, steps: stepCount(flow.definition) })
+    const conn = await planRun(admin, workspaceId, { flowId: flow.id, flowSettings: flow.settings, steps: stepCount(flow.definition), allowTrialRun: true })
     if (isRouteError(conn)) return
     const fileIds = Array.isArray(settings.file_ids) ? settings.file_ids.filter(isUuid).slice(0, 5) : []
     try {

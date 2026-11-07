@@ -139,7 +139,7 @@ async function Integrations({
       <Category
         id="asistente-voz"
         title="Asistente de voz"
-        description="Atiende a tus clientes por voz, en tu web y por teléfono: reserva citas en tu horario, toma recados y responde con tus documentos. Cada conversación llega a la Bandeja."
+        description="Atiende a tus clientes por voz, en tu web y por teléfono: reserva citas en tu horario, toma mensajes y responde con tus documentos. Cada conversación llega a la Bandeja."
       >
         <VoiceWebCard workspaceId={workspaceId} isAdmin={isAdmin} />
         <VoiceCard workspaceId={workspaceId} isAdmin={isAdmin} />

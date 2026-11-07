@@ -41,7 +41,7 @@ const CAPABILITIES = [
   },
   {
     title: "Agenda seguimientos y recordatorios",
-    body: "Programa toques a clientes, resúmenes y tareas repetidas. Usa tu calendario real: propone huecos y deja listo el mensaje.",
+    body: "Programa toques a clientes, resúmenes y tareas repetidas. Usa tu calendario real: propone horarios libres y deja listo el mensaje.",
   },
   {
     title: "Confirma sin soltar el control",
