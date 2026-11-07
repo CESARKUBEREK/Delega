@@ -1,32 +1,46 @@
 import "server-only"
 import { createClient } from "@/lib/supabase/server"
 
-// Planes de prueba del onboarding (decisión de Cesar, 3 nov): mientras el
-// espacio no tenga IA propia, el onboarding prepara el plan con un modelo
-// potente (Claude Sonnet 5.5) y la clave de MarchaSolo, como mucho 2 veces
-// por espacio personal. Nada más usa esta clave: el chat, la bandeja y las
-// automatizaciones necesitan la IA del cliente.
-// Devuelve null si el espacio no tiene planes de prueba o si la prueba no está
-// activada en el servidor: TRIAL_CREDITS_ENABLED=true en Vercel, junto con
-// TRIAL_ANTHROPIC_API_KEY en las Edge Functions de Supabase.
-export type TrialStatus = { allowance: number; used: number; remaining: number; exhausted: boolean }
+// Créditos de prueba financiados por MarchaSolo.
+// El plan de onboarding usa TRIAL_ANTHROPIC_API_KEY; una ejecución manual
+// usa TRIAL_OPENAI_API_KEY y consume un cupo independiente de ejecuciones.
+// Las automatizaciones programadas nunca usan el crédito de ejecución.
+// Devuelve null si la prueba de planes no está habilitada en Vercel o no hay fila.
+export type TrialStatus = {
+  allowance: number
+  used: number
+  remaining: number
+  exhausted: boolean
+  runsAllowance: number
+  runsUsed: number
+  runsRemaining: number
+  runAvailable: boolean
+}
 
 export async function getTrialStatus(workspaceId: string): Promise<TrialStatus | null> {
   if (process.env.TRIAL_CREDITS_ENABLED !== "true") return null
   const supabase = await createClient()
   const { data } = await supabase
     .from("workspace_trial_credits")
-    .select("allowance_plans, used_plans, allowance_tokens, used_tokens")
+    .select("allowance_plans, used_plans, allowance_runs, used_runs, allowance_tokens, used_tokens, reserved_run_id")
     .eq("workspace_id", workspaceId)
     .maybeSingle()
   if (!data) return null
   const allowance = Number(data.allowance_plans)
   const used = Number(data.used_plans)
   const remaining = Math.max(0, allowance - used)
+  const runsAllowance = Number(data.allowance_runs)
+  const runsUsed = Number(data.used_runs)
+  const runsRemaining = Math.max(0, runsAllowance - runsUsed)
+  const tokensAvailable = Number(data.used_tokens) < Number(data.allowance_tokens)
   return {
     allowance,
     used,
     remaining,
-    exhausted: remaining <= 0 || Number(data.used_tokens) >= Number(data.allowance_tokens),
+    exhausted: remaining <= 0 || !tokensAvailable,
+    runsAllowance,
+    runsUsed,
+    runsRemaining,
+    runAvailable: runsRemaining > 0 && tokensAvailable && data.reserved_run_id == null,
   }
 }
