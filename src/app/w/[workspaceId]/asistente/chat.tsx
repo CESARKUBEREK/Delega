@@ -200,7 +200,7 @@ export function Chat({
           e.preventDefault()
           send(draft)
         }}
-        // En el móvil el cuadro queda fijo encima de la barra inferior.
+        // En el celular el cuadro queda fijo encima de la barra inferior.
         className="chat-composer sticky z-10 flex items-end gap-2 p-2"
       >
         <DictateButton
@@ -296,7 +296,7 @@ function PlanActions({
     <div className="flex flex-col gap-3">
       {trialFunded ? (
         <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-          Esta ejecución está financiada por MarchaSolo. Incluye una única prueba gratuita, con un límite de coste de IA de 0,10 USD.
+          Esta ejecución la paga MarchaSolo con tu prueba gratuita (1 USD de IA en total, como mucho 0,25 USD por ejecución).
         </p>
       ) : null}
       {run ? <RunInChat run={run} base={base} /> : null}

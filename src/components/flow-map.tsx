@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { AVAILABLE_CONNECTIONS, CONNECTION_LABEL, STEP_LABEL, TRIGGER_LABEL, type FlowPlan, type FlowSchedule, type PlanStep } from "@/lib/plan"
 
-// Mapa de una automatización: disparador → pasos, en columna en el móvil y en
+// Mapa de una automatización: disparador → pasos, en columna en el celular y en
 // fila en escritorio. No se construye a mano: lo dibuja el plan que propuso el
 // asistente. Cada bloque abre el editor de pasos cuando se puede editar.
 

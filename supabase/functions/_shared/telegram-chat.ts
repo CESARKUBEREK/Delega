@@ -106,7 +106,7 @@ export async function handleOwnerMessage(admin: SupabaseClient, workspaceId: str
     if (cmd === "resumen") return launchSummary(admin, workspaceId, token, userId, chatId, m.message_id!)
     if (cmd === "nuevo") {
       await admin.from("user_channels").update({ telegram_chat_since: new Date().toISOString() }).eq("workspace_id", workspaceId).eq("user_id", userId)
-      return reply(token, chatId, "Vale, empezamos de cero. ¿Qué necesitas?")
+      return reply(token, chatId, "Listo, empezamos de cero. ¿Qué necesitas?")
     }
     return reply(token, chatId, HELP)
   }

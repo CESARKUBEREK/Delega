@@ -12,7 +12,7 @@ import { formatToday, formatWhen, greeting } from "./format"
 export const metadata = { title: "Hoy" }
 
 // Hoy: lo que te necesita ahora (aprobaciones), el último resumen y lo que
-// viene. Es la pantalla de entrada del espacio, sobre todo en el móvil.
+// viene. Es la pantalla de entrada del espacio, sobre todo en el celular.
 export default function TodayPage({ params }: PageProps<"/w/[workspaceId]">) {
   return (
     <Suspense fallback={<div className="h-64 rounded-2xl border border-rule bg-sheet" aria-busy="true" />}>
@@ -116,7 +116,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
             <span id="prueba-terminada" className="font-semibold text-ink">Tu prueba gratuita ha terminado</span>
             <span className="text-sm text-graphite">
               Has usado los {trial?.usdAllowance ?? 1} $ de IA de la prueba. Pasa al plan Solo ({SOLO_PLAN.price}
-              {SOLO_PLAN.period}, impuestos incluidos) y conecta tu IA para que tus automatizaciones sigan funcionando.
+              {SOLO_PLAN.period}) y conecta tu IA para que tus automatizaciones sigan funcionando.
             </span>
           </span>
           <span className="flex flex-wrap items-center gap-3">

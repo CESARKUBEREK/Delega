@@ -304,7 +304,7 @@ export function FlowEditor({
 
       <FormMessage error={error ?? undefined} />
 
-      {/* En el móvil queda fija justo encima de la barra de navegación inferior. */}
+      {/* En el celular queda fija justo encima de la barra de navegación inferior. */}
       <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 grid grid-cols-[1fr_auto] gap-2 border-t border-ink bg-paper px-4 py-3 lg:static lg:mx-0 lg:flex lg:border-0 lg:bg-transparent lg:px-0">
         <PrimaryButton
           type="button"
@@ -409,7 +409,7 @@ function StepCard({
   )
 }
 
-// En el móvil, el paso se edita en un panel que sube desde abajo; en
+// En el celular, el paso se edita en un panel que sube desde abajo; en
 // pantallas grandes, dentro de la propia tarjeta.
 function StepSheet({ id, title, onClose, children }: { id: string; title: string; onClose: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)

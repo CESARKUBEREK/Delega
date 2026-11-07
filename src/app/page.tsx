@@ -155,7 +155,7 @@ export default function HomePage() {
               <div>
                 <h3 className="site-h3">Tus cuentas, tu factura</h3>
                 <p>
-                  Usas tus propias cuentas y tu propia IA. Ves el coste estimado de cada tarea y puedes poner un
+                  Usas tus propias cuentas y tu propia IA. Ves el costo estimado de cada tarea y puedes poner un
                   presupuesto.
                 </p>
               </div>

@@ -27,6 +27,7 @@ import {
   analyzeOnboardingWebsite,
   enrichOnboardingWebsite,
   checkOnboardingConnections,
+  adoptBrowserTimezone,
   completeOnboarding,
   generateOnboardingPlan,
   trackOnboardingStep,
@@ -54,7 +55,7 @@ const STEP_ORDER = ONBOARDING_STEPS.map((s) => s.id)
 // Cada uno cae en su plan sin IA (src/lib/onboarding-plans.ts).
 const SUGGESTIONS = [
   "Cada mañana, ordena la bandeja y déjame las respuestas urgentes preparadas",
-  "Cuando pidan una visita o una cita, ofrece dos huecos de mi agenda",
+  "Cuando pidan una visita o una cita, ofrece dos horarios libres de mi agenda",
   "Cuando entre un lead, regístralo en el CRM y prepárame la primera respuesta",
   "Después de cada visita, prepárame el mensaje de seguimiento",
   "Cuando un cliente escriba por WhatsApp, prepárame la respuesta con mis tarifas",
@@ -137,6 +138,14 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [step])
+
+  // La zona horaria del espacio sale del navegador (Argentina, resto de
+  // Latinoamérica o España) si todavía no tiene ninguna.
+  useEffect(() => {
+    if (!isAdmin) return
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    if (tz) void adoptBrowserTimezone(workspaceId, tz)
+  }, [isAdmin, workspaceId])
 
   // Borra una cookie de vuelta antigua; el paso 4 la vuelve a poner si hace falta.
   useEffect(() => {

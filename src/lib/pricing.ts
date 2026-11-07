@@ -21,7 +21,7 @@ export const PLANS: Plan[] = [
     name: "MarchaSolo Solo",
     price: "19 $",
     period: "/mes",
-    priceYear: "228 $/año · USD · impuestos incluidos",
+    priceYear: "228 $/año · USD",
     tagline: "Para autónomos que quieren automatizar tareas cotidianas.",
     includes: [
       "Asistente de IA",
@@ -39,7 +39,7 @@ export const PLANS: Plan[] = [
     name: "MarchaSolo Pro",
     price: "39 $",
     period: "/mes",
-    priceYear: "468 $/año · USD · impuestos incluidos",
+    priceYear: "468 $/año · USD",
     tagline: "Para profesionales y pequeños negocios que quieren delegar más trabajo.",
     includes: [
       "20 automatizaciones activas",
@@ -56,7 +56,7 @@ export const PLANS: Plan[] = [
     name: "MarchaSolo Business",
     price: "79 $",
     period: "/mes",
-    priceYear: "948 $/año · USD · impuestos incluidos",
+    priceYear: "948 $/año · USD",
     tagline: "Para microempresas y equipos pequeños.",
     includes: [
       "50 automatizaciones activas",

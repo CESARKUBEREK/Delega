@@ -5,7 +5,7 @@
 //   presupuesto. La clave de cada proveedor se descifra solo al usarla.
 // - callRouted(): hace la llamada; si el proveedor falla por saldo, límite,
 //   clave rechazada o caída, pasa al siguiente del respaldo. Registra el
-//   consumo de cada llamada con su coste estimado.
+//   consumo de cada llamada con su costo estimado.
 // - planRun(): lo mismo para una ejecución del agente (modelo, respaldo y
 //   presupuesto de la ejecución), que se guarda en flow_runs.
 // - Presupuesto del espacio: al 80 % avisa; al 100 % pasa a Ahorro (o para,

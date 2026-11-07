@@ -97,7 +97,7 @@ export default function PrivacyPage() {
 
         <p>
           Para elegir en cada tarea el modelo de IA más adecuado y económico, usamos también cifras de uso agregadas de todos los
-          espacios: tipo de tarea, modelo, tokens, coste, tiempo de respuesta y si la tarea salió bien. Nunca el texto de tus mensajes,
+          espacios: tipo de tarea, modelo, tokens, costo, tiempo de respuesta y si la tarea salió bien. Nunca el texto de tus mensajes,
           documentos o respuestas, ni datos que te identifiquen a ti o a tus clientes. La base legal es nuestro interés legítimo en que
           el servicio funcione mejor y cueste menos.
         </p>
@@ -204,6 +204,14 @@ export default function PrivacyPage() {
           a <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>. Te responderemos en un plazo máximo de un mes. También puedes reclamar ante
           la CNIL (Commission nationale de l&apos;informatique et des libertés, en Francia) o ante la autoridad de protección de datos de
           tu país.
+        </p>
+        <p>
+          <strong>Si vives en Argentina</strong>, se aplica además la Ley N° 25.326 de Protección de los Datos Personales. El titular de
+          los datos personales tiene la facultad de ejercer el derecho de acceso a los mismos en forma gratuita a intervalos no
+          inferiores a seis meses, salvo que se acredite un interés legítimo al efecto conforme lo establecido en el artículo 14, inciso
+          3 de la Ley N° 25.326. La Agencia de Acceso a la Información Pública, en su carácter de Órgano de Control de la Ley N° 25.326,
+          tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus derechos por
+          incumplimiento de las normas vigentes en materia de protección de datos personales.
         </p>
 
         <h2>10. Menores</h2>

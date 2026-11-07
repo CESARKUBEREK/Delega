@@ -28,7 +28,7 @@ const CAPABILITIES: Capability[] = [
       "El WhatsApp del negocio no para. Cada mensaje te saca de lo que estabas haciendo; si tardas, el cliente se enfría.",
     solution:
       "MarchaSolo lee el mensaje, busca la respuesta en tus tarifas o FAQ y deja la contestación lista. Solo sale cuando tú la apruebas.",
-    result: "Atiendes el canal del negocio sin vivir pegado al móvil ni soltar el tono de tu marca.",
+    result: "Atiendes el canal del negocio sin vivir pegado al celular ni soltar el tono de tu marca.",
     example:
       "«Cuando escriban por WhatsApp preguntando por precios, usa la tarifa de Drive y déjame la respuesta.»",
     panel: {
@@ -49,20 +49,20 @@ const CAPABILITIES: Capability[] = [
   {
     id: "voz",
     title: "Voz, teléfono y reservas",
-    problem: "Llamadas perdidas, recados en papeles y citas apuntadas a ojo fuera de tu horario real.",
+    problem: "Llamadas perdidas, mensajes en papeles y citas anotadas a ojo fuera de tu horario real.",
     solution:
-      "Asistente de voz en tu web y por teléfono: responde con tus documentos, toma recados y solo ofrece citas en el horario que tú defines. Cada conversación llega a la Bandeja.",
+      "Asistente de voz en tu web y por teléfono: responde con tus documentos, toma mensajes y solo ofrece citas en el horario que tú defines. Cada conversación llega a la Bandeja.",
     result: "Quien llama o habla en la web obtiene una respuesta útil; tú no pierdes el control de la agenda.",
     example:
-      "«Atiende las llamadas, toma el recado y ofrece cita solo de martes a jueves por la mañana.»",
+      "«Atiende las llamadas, toma el mensaje y ofrece cita solo de martes a jueves por la mañana.»",
     panel: {
       title: "Asistente de voz",
       meta: "Llamada · 11:42",
       rows: [
         { title: "Entendió la petición", detail: "Quiere visita el jueves por la mañana", state: "done", label: "Hecho" },
-        { title: "Consultó tu horario", detail: "Huecos que tú definiste", state: "done", label: "Hecho" },
+        { title: "Consultó tu horario", detail: "Horarios libres que tú definiste", state: "done", label: "Hecho" },
         {
-          title: "Recado y propuesta de cita",
+          title: "Mensaje y propuesta de cita",
           detail: "Jueves 10:00 · queda en tu Bandeja",
           state: "info",
           label: "En la bandeja",
@@ -84,7 +84,7 @@ const CAPABILITIES: Capability[] = [
       rows: [
         {
           title: "Laura Gómez",
-          detail: "Quiere ver el piso de la calle Mayor",
+          detail: "Quiere ver el departamento de Palermo",
           state: "wait",
           label: "Respuesta lista",
         },
@@ -137,17 +137,17 @@ const CAPABILITIES: Capability[] = [
     title: "Agenda y citas",
     problem: "Proponer un día y una hora obliga a salir del chat, abrir el calendario y volver a escribir.",
     solution:
-      "Consulta tu Google Calendar, elige huecos reales y deja preparada la propuesta de visita o reunión en el mismo hilo.",
+      "Consulta tu Google Calendar, elige horarios libres reales y deja preparada la propuesta de visita o reunión en el mismo hilo.",
     result: "Del «¿cuándo puedes?» a una propuesta concreta sin cambiar de aplicación.",
-    example: "«Cuando pidan una visita, mira mi agenda y ofrece dos huecos libres esta semana.»",
+    example: "«Cuando pidan una visita, mira mi agenda y ofrece dos horarios libres esta semana.»",
     panel: {
       title: "Propuesta de visita",
       meta: "Laura Gómez",
       rows: [
-        { title: "Leyó la petición", detail: "Quiere ver el piso esta semana", state: "done", label: "Hecho" },
+        { title: "Leyó la petición", detail: "Quiere ver el departamento esta semana", state: "done", label: "Hecho" },
         { title: "Consultó tu agenda", detail: "Jueves 10:00–12:00 libre", state: "done", label: "Hecho" },
         {
-          title: "Respuesta con hueco",
+          title: "Respuesta con horario libre",
           detail: "Propone el jueves a las 10:00",
           state: "wait",
           label: "Espera tu aprobación",

@@ -6,7 +6,7 @@
 //          al día y por visitante), y devuelve un token temporal de xAI (5 min,
 //          solo para conectarse), la configuración de la sesión (instrucciones
 //          y herramientas) y una credencial de sesión para pedir herramientas.
-//   tool   Ejecuta una herramienta (huecos, reservar cita, recado, documentos)
+//   tool   Ejecuta una herramienta (horarios libres, reservar cita, mensaje, documentos)
 //          para una sesión válida: las mismas reglas que el teléfono.
 //   end    Marca la conversación como terminada.
 //
@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
     const { data: widget } = await admin.from("voice_web_widgets").select("enabled, minutes_per_session").eq("workspace_id", workspaceId).maybeSingle()
     const ageMin = (Date.now() - new Date(session.started_at as string).getTime()) / 60_000
     if (!widget?.enabled || session.ended_at || ageMin > (widget.minutes_per_session as number) + 5) return fail(410, "expired", "La conversación terminó.")
-    if ((session.tool_calls as number) >= MAX_TOOL_CALLS) return send({ ok: true, output: "Límite de consultas de esta conversación. Toma un recado para que el negocio contacte." })
+    if ((session.tool_calls as number) >= MAX_TOOL_CALLS) return send({ ok: true, output: "Límite de consultas de esta conversación. Toma un mensaje para que el negocio contacte." })
     await admin.from("voice_web_sessions").update({ tool_calls: (session.tool_calls as number) + 1 }).eq("id", sessionId)
 
     const { data: integ } = await admin.from("integrations").select("id, status, config").eq("workspace_id", workspaceId).eq("provider", VOICE_PROVIDER).maybeSingle()
@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
       return send({ ok: true, output })
     } catch (e) {
       if (!(e instanceof VoiceError)) console.error("voice-web", name, e instanceof Error ? e.name : "error")
-      return send({ ok: true, output: e instanceof VoiceError ? e.message : "No se pudo completar. Toma un recado para que el negocio contacte." })
+      return send({ ok: true, output: e instanceof VoiceError ? e.message : "No se pudo completar. Toma un mensaje para que el negocio contacte." })
     }
   }
 

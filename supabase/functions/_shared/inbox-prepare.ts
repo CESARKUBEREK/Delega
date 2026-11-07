@@ -110,7 +110,7 @@ export async function prepareThread(
       { kind: "email", purpose: "Leer la conversación y responder" },
       { kind: "crm", purpose: "Ficha del contacto, si está conectado" },
       { kind: "properties", purpose: "Propiedades, si está conectado" },
-      { kind: "calendar", purpose: "Huecos libres, si está conectado" },
+      { kind: "calendar", purpose: "Horarios libres, si está conectado" },
     ],
     steps: [
       { id: "s1", kind: "read", title: "Leer la conversación", description: "Los últimos mensajes del hilo.", connection: "email", requires_approval: false },

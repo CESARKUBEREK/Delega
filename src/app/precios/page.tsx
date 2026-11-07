@@ -61,7 +61,7 @@ export default function PricingPage() {
         <section className="site-section" aria-labelledby="como">
           <div className="site-container">
             <h2 id="como" className="site-h2 mb-10">
-              Cómo funciona el coste
+              Cómo funciona el costo
             </h2>
             <div className="facts">
               <div className="fact is-key">
@@ -89,7 +89,7 @@ export default function PricingPage() {
               <div className="fact">
                 <h3 className="site-h3">El gasto, a la vista</h3>
                 <p>
-                  Ves el coste estimado de cada ejecución y lo gastado en el mes. Puedes fijar un presupuesto y usar el
+                  Ves el costo estimado de cada ejecución y lo gastado en el mes. Puedes fijar un presupuesto y usar el
                   modo Ahorro para gastar menos.
                 </p>
               </div>
@@ -100,7 +100,7 @@ export default function PricingPage() {
         <section className="site-section is-white" aria-labelledby="dudas">
           <div className="site-container max-w-3xl">
             <h2 id="dudas" className="site-h2 mb-8">
-              Preguntas sobre el coste
+              Preguntas sobre el costo
             </h2>
             <div className="faq">
               <details>
@@ -132,7 +132,7 @@ export default function PricingPage() {
               </details>
               <details>
                 <summary>¿Los precios incluyen impuestos?</summary>
-                <div>Sí. Los importes están en dólares (USD) e incluyen los impuestos: lo que ves es lo que pagas.</div>
+                <div>Los precios están en dólares (USD). Según tu país, tu banco puede sumar impuestos locales al pagar con tarjeta: en Argentina, el IVA y la percepción a cuenta de Ganancias, que puedes recuperar en tu declaración.</div>
               </details>
             </div>
           </div>

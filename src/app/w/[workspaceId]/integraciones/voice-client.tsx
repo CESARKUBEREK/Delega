@@ -199,7 +199,7 @@ export function DisconnectVoiceForm({ workspaceId }: { workspaceId: string }) {
       action={action}
       className="flex flex-col gap-2 border-t border-rule pt-4"
       onSubmit={(e) => {
-        if (!window.confirm("¿Desactivar la atención telefónica? El agente de xAI dejará de poder consultar la agenda y tomar recados.")) e.preventDefault()
+        if (!window.confirm("¿Desactivar la atención telefónica? El agente de xAI dejará de poder consultar la agenda y tomar mensajes.")) e.preventDefault()
       }}
     >
       <input type="hidden" name="workspaceId" value={workspaceId} />

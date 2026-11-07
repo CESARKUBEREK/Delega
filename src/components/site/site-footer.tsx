@@ -5,7 +5,7 @@ import { CONTACT_EMAIL, SITE_LINKS, SOCIAL_LINKS } from "./nav-links"
 
 // Pie del sitio público: enlaces del producto (sin Precios ni Cómo funciona),
 // contacto y redes.
-// inApp: dentro de la app deja sitio para la barra inferior del móvil.
+// inApp: dentro de la app deja sitio para la barra inferior del celular.
 export function SiteFooter({ inApp = false }: { inApp?: boolean }) {
   return (
     <footer className={inApp ? "site-footer is-app" : "site-footer"}>

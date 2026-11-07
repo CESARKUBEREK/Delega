@@ -48,7 +48,7 @@ export function NoticePrefsForm({
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-medium text-ink">Por dónde te llegan los avisos de tus automatizaciones</legend>
         <label className="flex items-center gap-2 text-sm text-ink">
-          <input type="checkbox" name="push" defaultChecked={prefs.push} /> Notificación en el móvil (solo el nombre de la automatización)
+          <input type="checkbox" name="push" defaultChecked={prefs.push} /> Notificación en el celular (solo el nombre de la automatización)
         </label>
         <label className="flex items-center gap-2 text-sm text-ink">
           <input type="checkbox" name="email" defaultChecked={prefs.email} /> Correo a tu dirección, con el texto completo

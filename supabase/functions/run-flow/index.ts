@@ -7,7 +7,7 @@
 // impide que dos peticiones avancen la misma ejecución a la vez.
 //
 // Al lanzar una ejecución o decidir una aprobación, el primer tramo arranca
-// también en segundo plano: así avanza aunque se cierre la app del móvil
+// también en segundo plano: así avanza aunque se cierre la app del celular
 // justo después de tocar «Aprobar».
 import { type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0"
 import { authenticate, fail, isUuid, json, membershipRole, type AuthContext } from "../_shared/core.ts"

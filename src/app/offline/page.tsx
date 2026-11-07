@@ -1,7 +1,7 @@
 import { Logo } from "@/components/logo"
 
 // Página que muestra el service worker cuando no hay conexión. Es estática y
-// no contiene datos: nada de lo que se ve en la app queda guardado en el móvil.
+// no contiene datos: nada de lo que se ve en la app queda guardado en el celular.
 export const metadata = { title: "Sin conexión" }
 
 export default function OfflinePage() {
