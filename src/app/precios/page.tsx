@@ -72,11 +72,10 @@ export default function PricingPage() {
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">La prueba, por nuestra cuenta</h3>
+                <h3 className="site-h3">Pruébalo gratis</h3>
                 <p>
-                  Al empezar, MarchaSolo te prepara hasta {TRIAL.plans} propuestas de automatización y te regala{" "}
-                  {TRIAL.usd} $ de IA para ejecutarlas de verdad (manuales o programadas), sin que conectes la tuya.
-                  Así ves el resultado antes de decidir.
+                  Te preparamos tus primeras automatizaciones y las ponemos a trabajar con nuestra IA, sin que conectes nada
+                  ni pongas tarjeta.
                 </p>
               </div>
               <div className="fact">
@@ -111,11 +110,11 @@ export default function PricingPage() {
                 </div>
               </details>
               <details>
-                <summary>¿Qué pasa cuando termina la prueba?</summary>
+                <summary>¿Qué incluye la prueba y qué pasa cuando termina?</summary>
                 <div>
-                  Tu cuenta y lo que hayas preparado siguen ahí. Para seguir usando el asistente, la bandeja y las
-                  automatizaciones, conecta tu propia clave de IA: el propio onboarding te guía y te lleva a la web del
-                  proveedor.
+                  La prueba incluye {TRIAL.usd} $ de IA por nuestra cuenta, que alcanza para decenas de tareas. Cuando se
+                  termina, tu cuenta y lo que hayas preparado siguen ahí: pasas al plan Solo y conectas tu propia
+                  clave de IA. El propio MarchaSolo te guía y te lleva a la web del proveedor.
                 </div>
               </details>
               <details>
