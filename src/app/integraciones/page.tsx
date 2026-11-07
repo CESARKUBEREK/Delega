@@ -12,8 +12,8 @@ export const metadata = publicPageMetadata({
 type AppIcon = {
   id: string
   name: string
-  /** Ruta en /public/brand */
-  logo: string
+  /** Ruta en /public/brand. Sin logotipo, se muestran las iniciales. */
+  logo?: string
   status?: "soon"
   /** Aclaración corta bajo el nombre (p. ej. cómo se conecta). */
   note?: string
@@ -25,12 +25,15 @@ const APPS: AppIcon[] = [
   { id: "drive", name: "Google Drive", logo: "/brand/googledrive.svg" },
   { id: "whatsapp", name: "WhatsApp", logo: "/brand/whatsapp.svg" },
   { id: "telegram", name: "Telegram", logo: "/brand/telegram.svg" },
+  { id: "tokko", name: "Tokko Broker", note: "Inmobiliarias" },
+  { id: "xubio", name: "Xubio", note: "Contabilidad, solo lectura" },
   { id: "hubspot", name: "HubSpot", logo: "/brand/hubspot.svg" },
   { id: "sheets", name: "Google Sheets", logo: "/brand/googlesheets.svg" },
   { id: "docs", name: "Google Docs", logo: "/brand/googledocs.svg" },
   { id: "outlook", name: "Outlook", logo: "/brand/microsoftoutlook.svg", status: "soon" },
   { id: "openai", name: "OpenAI", logo: "/brand/openai.svg" },
   { id: "anthropic", name: "Anthropic", logo: "/brand/anthropic.svg" },
+  { id: "deepseek", name: "DeepSeek" },
   { id: "grok", name: "Grok", logo: "/brand/x.svg" },
 ]
 
@@ -88,16 +91,27 @@ export default function IntegrationsMarketingPage() {
                     aria-hidden="true"
                   >
                     {/* Logos en /public/brand (mismo origen: pasan el CSP). */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={app.logo}
-                      alt=""
-                      width={28}
-                      height={28}
-                      className="h-7 w-7 object-contain"
-                      loading="lazy"
-                      decoding="async"
-                    />
+                    {app.logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={app.logo}
+                        alt=""
+                        width={28}
+                        height={28}
+                        className="h-7 w-7 object-contain"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <span className="text-sm font-bold text-[var(--ms-navy)]">
+                        {app.name
+                          .split(" ")
+                          .map((w) => w[0])
+                          .join("")
+                          .slice(0, 2)
+                          .toUpperCase()}
+                      </span>
+                    )}
                   </span>
                   <span className="flex min-w-0 flex-col">
                     <span className="font-semibold text-ink">{app.name}</span>

@@ -7,7 +7,7 @@ import { publicPageMetadata } from "@/lib/seo"
 export const metadata = publicPageMetadata({
   title: "Casos de uso",
   description:
-    "WhatsApp del negocio, voz y reservas, ventas, atención al cliente y soporte técnico. MarchaSolo prepara el trabajo; tú apruebas antes de enviar o cambiar nada.",
+    "WhatsApp del negocio, voz y reservas, ventas, atención al cliente, inmobiliarias y despachos. MarchaSolo prepara el trabajo; tú apruebas antes de enviar o cambiar nada.",
   path: "/casos-de-uso",
 })
 
@@ -28,9 +28,9 @@ const GROUPS: { id: string; title: string; ids: string[] }[] = [
     ids: ["bandeja-clientes", "consultas-repetidas", "postventa"],
   },
   {
-    id: "soporte",
-    title: "Soporte técnico",
-    ids: ["tickets", "diagnostico", "escalado"],
+    id: "sectores",
+    title: "Inmobiliarias y despachos",
+    ids: ["inmobiliaria-tokko", "vencimientos", "documentos-modelo"],
   },
 ]
 
@@ -48,7 +48,7 @@ export default function UseCasesPage() {
           <div className="site-container">
             <h1 className="site-h1">Casos de uso</h1>
             <p className="site-lead">
-              WhatsApp, voz, reservas, ventas, atención y soporte. Se lo pides como a un compañero: MarchaSolo prepara el
+              WhatsApp, voz, reservas, ventas, atención, inmobiliarias y despachos. Se lo pides como a un compañero: MarchaSolo prepara el
               trabajo con tus aplicaciones; tú decides qué se envía o se cambia.
             </p>
             <nav aria-label="Áreas" className="mt-8 flex flex-wrap gap-2">

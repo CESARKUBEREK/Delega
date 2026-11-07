@@ -3,8 +3,8 @@
 // ni testimonios inventados.
 //
 // Posicionamiento: compañero que prepara el trabajo; la decisión final es del usuario.
-// Casos: ventas, atención al cliente, soporte técnico y canales del negocio
-// (WhatsApp, voz, reservas).
+// Casos: canales del negocio (WhatsApp, voz, reservas), ventas, atención al
+// cliente y los sectores de lanzamiento (inmobiliarias y despachos).
 
 export type UseCase = {
   id: string
@@ -123,39 +123,39 @@ export const USE_CASES: UseCase[] = [
     tags: ["Google Calendar", "HubSpot", "Correo", "WhatsApp"],
   },
 
-  // ——— Soporte técnico ———
+  // ——— Inmobiliarias y despachos (sectores de lanzamiento) ———
   {
-    id: "tickets",
-    title: "Clasificar incidencias y preparar la primera respuesta",
+    id: "inmobiliaria-tokko",
+    title: "Responder consultas por una propiedad con la ficha de Tokko",
     before:
-      "Llegan avisos por correo o chat; lees, decides prioridad, buscas si ya hubo un caso parecido y contestas cuando puedes.",
-    ask: "Cuando entre una incidencia, clasifícala, busca si hay un caso similar y déjame una primera respuesta con lo que sepamos.",
-    does: "Lee el mensaje, propone prioridad y tipo, busca en historial o base de conocimiento y redacta una respuesta inicial.",
-    waits: "La primera respuesta al usuario.",
-    result: "El usuario no espera en silencio. Tú revisas la clasificación y el tono antes de enviar.",
-    tags: ["Correo", "Telegram", "Google Drive"],
+      "Te escriben por un aviso; buscas la propiedad en Tokko, copias los datos, contestas y después cargas el contacto a mano.",
+    ask: "Cuando alguien pregunte por una propiedad, búscala en Tokko, prepárame la respuesta con la ficha y registra la consulta.",
+    does: "Lee el mensaje, encuentra la propiedad en Tokko, redacta la respuesta con sus datos y prepara el alta de la consulta.",
+    waits: "La respuesta al interesado y el registro en Tokko.",
+    result: "Contestas en minutos con datos correctos y la consulta queda cargada sin pasarla a mano.",
+    tags: ["Tokko Broker", "Correo", "WhatsApp"],
   },
   {
-    id: "diagnostico",
-    title: "Reunir contexto antes de diagnosticar",
+    id: "vencimientos",
+    title: "Avisarte de vencimientos y papeles pendientes",
     before:
-      `Antes de tocar un caso abres correo, CRM, documentación y capturas. Pierdes tiempo armando el contexto.`,
-    ask: "Cuando abra una incidencia, reúne el historial del cliente, los últimos mensajes y los documentos relacionados en un solo resumen.",
-    does: "Consulta correo, CRM y archivos vinculados y deja un resumen listo para que empieces a diagnosticar.",
+      "Contratos, renovaciones y documentación de clientes viven en una planilla que revisas cuando te acuerdas.",
+    ask: "Cada lunes, revisa mi planilla de vencimientos y avísame de lo que vence esta semana y de lo que falta pedir.",
+    does: "Lee la planilla, ordena lo que vence y lo que falta, y te manda el resumen.",
     waits: null,
-    result: "Llegas al caso con el contexto montado. Es un aviso para ti: no necesita aprobación.",
-    tags: ["Correo", "HubSpot", "Google Drive"],
+    result: "Nada vence por olvido. Es un aviso para ti: no necesita aprobación.",
+    tags: ["Google Sheets", "Excel"],
   },
   {
-    id: "escalado",
-    title: "Preparar el traspaso cuando hay que escalar",
+    id: "documentos-modelo",
+    title: "Preparar documentos a partir de tus modelos",
     before:
-      "Al escalar copias hilos, adjuntas capturas y escribes a mano qué se ha probado. El siguiente nivel pierde tiempo reconstruyendo el caso.",
-    ask: "Cuando haya que escalar, prepárame el resumen del caso, qué se ha intentado y el mensaje para el equipo de segundo nivel.",
-    does: "Reúne el hilo, el historial y los pasos ya dados, y redacta el paquete de traspaso.",
-    waits: "El envío al equipo interno (o la tarea creada).",
-    result: "El escalado llega completo a la primera. Tú revisas y envías o asignas.",
-    tags: ["Correo", "Telegram", "Google Docs"],
+      "Cada propuesta, presupuesto o carta empieza copiando el último documento y cambiando nombres y datos a mano.",
+    ask: "Cuando confirme un cliente nuevo, prepárame la propuesta en Google Docs a partir de mi modelo con sus datos.",
+    does: "Lee tu modelo, toma los datos del cliente del correo o del CRM y crea un documento nuevo en tu Drive con el texto completo.",
+    waits: "La creación del documento.",
+    result: "Revisas un borrador ya completo en lugar de empezar de cero.",
+    tags: ["Google Docs", "Google Drive", "HubSpot"],
   },
 ]
 
