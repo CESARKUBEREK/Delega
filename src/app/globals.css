@@ -106,21 +106,11 @@ body {
   background:var(--paper);
 }
 
-/* Onboarding:entrada y respiración suave del equipo digital. */
+/* Onboarding: entrada del anillo de la bienvenida. */
 .onboarding-orb-enter { animation:onboarding-orb-enter .8s cubic-bezier(.2,.75,.25,1) both; }
-.onboarding-orb-float { animation:onboarding-orb-float 7s ease-in-out .8s infinite; }
-.onboarding-orb-core { transform-box:fill-box; transform-origin:center; animation:onboarding-orb-breathe 5.5s ease-in-out infinite; }
 @keyframes onboarding-orb-enter {
   from { opacity:0; transform:translateY(10px) scale(.97); }
   to { opacity:1; transform:translateY(0) scale(1); }
-}
-@keyframes onboarding-orb-float {
-  0%,100% { transform:translateY(0); }
-  50% { transform:translateY(-4px); }
-}
-@keyframes onboarding-orb-breathe {
-  0%,100% { transform:scale(1); }
-  50% { transform:scale(1.035); }
 }
 
 /* Logotipo:mayúsculas anchas y compactas. */
@@ -1734,22 +1724,6 @@ button.setup-step-link:focus-visible { outline:2px solid var(--link); outline-of
   from { opacity:0; transform:translate3d(0,14px,0); filter:blur(3px); }
   to { opacity:1; transform:translate3d(0,0,0); filter:blur(0); }
 }
-@keyframes onboarding-soft-glow {
-  0%,100% { opacity:.55; transform:scale(.92); }
-  50% { opacity:1; transform:scale(1.08); }
-}
-@keyframes onboarding-orbit-spin-a {
-  from { transform:rotate(-18deg); }
-  to { transform:rotate(342deg); }
-}
-@keyframes onboarding-orbit-spin-b {
-  from { transform:rotate(34deg); }
-  to { transform:rotate(-326deg); }
-}
-@keyframes onboarding-spark-drift {
-  0%,100% { opacity:.45; }
-  50% { opacity:1; }
-}
 @keyframes onboarding-step-pulse {
   0%,100% { box-shadow:0 0 0 0 rgb(0 194 168 / 0%); }
   50% { box-shadow:0 0 0 5px rgb(0 194 168 / 10%); }
@@ -1780,20 +1754,12 @@ button.setup-step-link:focus-visible { outline:2px solid var(--link); outline-of
 .setup-panel .setup-cards > *:nth-child(3) { animation-delay:.22s; }
 .setup-panel .setup-cards > *:nth-child(4) { animation-delay:.29s; }
 .setup-panel .setup-cards > *:nth-child(5) { animation-delay:.36s; }
-.onboarding-orbit { transform-box:view-box; transform-origin:120px 77px; }
-.onboarding-orbit-a { animation:onboarding-orbit-spin-a 24s linear infinite; }
-.onboarding-orbit-b { animation:onboarding-orbit-spin-b 32s linear infinite; }
-.onboarding-orb-spark { transform-box:fill-box; transform-origin:center; animation:onboarding-spark-drift 2.8s ease-in-out infinite; }
-.onboarding-orb-spark-b { animation-delay:.7s; }
-.onboarding-orb-spark-c { animation-delay:1.4s; }
 .setup > section[aria-labelledby="intro-title"] { animation:onboarding-content-enter .75s .12s cubic-bezier(.2,.75,.25,1) both; }
-.setup > section[aria-labelledby="intro-title"] > div[aria-hidden="true"] { animation:onboarding-soft-glow 8s ease-in-out infinite; }
 @media (prefers-reduced-motion:reduce) {
   .setup-header, .setup-header .app-eyebrow, .setup-header h1, .setup-steps,
   .setup-panel, .setup-panel > *, .setup-panel .setup-cards > *,
   .setup > section[aria-labelledby="intro-title"],
-  .setup > section[aria-labelledby="intro-title"] > div[aria-hidden="true"],
-  .onboarding-orbit, .onboarding-orb-spark, .setup-step-link.is-current {
+  .onboarding-orb-enter, .setup-step-link.is-current {
     animation:none !important; opacity:1 !important; filter:none !important;
   }
   .setup-panel button, .setup-panel a, .setup-step-link, .setup-panel textarea { transition:none !important; }

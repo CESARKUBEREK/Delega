@@ -53,12 +53,14 @@ const STEP_ORDER = ONBOARDING_STEPS.map((s) => s.id)
 
 // Ejemplos de los tres sectores (inmobiliarias, clínicas, profesionales).
 // Cada uno cae en su plan sin IA (src/lib/onboarding-plans.ts).
+// Orden pensado para Argentina y Latinoamérica: la bandeja (lo más fácil de
+// conectar) y WhatsApp (el canal principal de los clientes) primero.
 const SUGGESTIONS = [
   "Cada mañana, ordena la bandeja y déjame las respuestas urgentes preparadas",
+  "Cuando un cliente escriba por WhatsApp, prepárame la respuesta con mis tarifas",
   "Cuando pidan una visita o una cita, ofrece dos horarios libres de mi agenda",
   "Cuando entre un lead, regístralo en el CRM y prepárame la primera respuesta",
   "Después de cada visita, prepárame el mensaje de seguimiento",
-  "Cuando un cliente escriba por WhatsApp, prepárame la respuesta con mis tarifas",
 ]
 
 // Mientras el asistente prepara el plan (puede tardar unos segundos).
