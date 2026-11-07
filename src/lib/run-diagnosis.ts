@@ -51,7 +51,7 @@ export function diagnoseRun(error: string | null | undefined, live: LiveStatus =
     const anyAi = ["openai", "anthropic", "deepseek", "xai"].some((g) => live[g])
     return anyAi
       ? { kind: "trial_ended", cause: "Se terminó la prueba gratuita de MarchaSolo.", fix: "Ya tienes tu IA conectada: puedes ejecutarla otra vez.", guide: null, retry: true, editable: false }
-      : { kind: "trial_ended", cause: "Se terminó la prueba gratuita de MarchaSolo (1 $ de IA).", fix: "Pasa al plan Solo y conecta tu IA en Integraciones para que tus automatizaciones sigan funcionando.", guide: "openai", retry: false, editable: false }
+      : { kind: "trial_ended", cause: "Se terminó la prueba gratuita de MarchaSolo.", fix: "Pasa al plan Solo y conecta tu IA en Integraciones para que tus automatizaciones sigan funcionando.", guide: "openai", retry: false, editable: false }
   }
   if (/m[aá]ximo de la prueba gratuita por ejecuci[oó]n/i.test(e)) {
     return { kind: "trial_run_cap", cause: "La ejecución llegó al máximo de gasto de la prueba gratuita por ejecución.", fix: "Vuelve a lanzarla o haz la tarea más concreta. Con tu IA conectada no hay este límite.", guide: null, retry: true, editable: true }

@@ -204,7 +204,7 @@ test("el paso de IA está encapsulado y conserva comprobaciones y alternativas",
   assert.match(aiStep, /Ya estás usando la IA de MarchaSolo/)
   assert.match(aiStep, /Continuar con la prueba gratuita/)
   assert.match(aiStep, /Conectar mi propia IA \(opcional\)/)
-  assert.match(aiStep, /El saldo de la prueba gratuita \(1 \$ de IA\) se comprueba al ejecutar tu plan/)
+  assert.match(aiStep, /El saldo de la prueba gratuita se comprueba al ejecutar tu plan/)
 })
 
 

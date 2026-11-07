@@ -76,7 +76,7 @@ async function Run({ params }: { params: PageProps<"/w/[workspaceId]/ejecuciones
       <HelpPanel workspaceId={workspaceId} page="ejecucion" runId={run.id} />
       {trialFunded ? (
         <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-          Esta ejecución la paga MarchaSolo con tu prueba gratuita (1 USD de IA en total, como mucho 0,25 USD por ejecución).
+          Esta ejecución la paga MarchaSolo con tu prueba gratuita.
         </p>
       ) : null}
       <PageHeader eyebrow={run.flow_id ? <Link href={`${base}/automatizaciones/${run.flow_id}`} className="text-link underline underline-offset-4">{run.flow_name}</Link> : chat ? <Link href={`${base}/asistente?c=${chat.conversation_id}`} className="text-link underline underline-offset-4">{run.flow_name} (pedida en el chat)</Link> : <span className="text-graphite">{run.flow_name} (automatización borrada)</span>} title={<>Ejecución del {formatDateTime(run.started_at)}</>} description={<span className="text-sm text-graphite">

@@ -148,7 +148,7 @@ export default function HowItWorksPage() {
                 <h3 className="site-h3">Para probarlo: solo una cuenta</h3>
                 <p>
                   Al crearla te preguntamos qué tarea te quita más tiempo. MarchaSolo te prepara la propuesta y la puedes
-                  ejecutar de verdad con nuestra IA hasta gastar 1 $, sin conectar la tuya. Tú decides si la pones en marcha.
+                  ejecutar de verdad con nuestra IA, sin conectar la tuya. Tú decides si la pones en marcha.
                 </p>
               </div>
               <div className="fact">
