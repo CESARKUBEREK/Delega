@@ -5,7 +5,7 @@ import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import type { FlowPlan } from "@/lib/plan"
 import { CONNECTION_LABEL, type OnboardingConnection } from "@/lib/onboarding"
-import { checkOnboardingAi, checkOnboardingConnections, getOnboardingResult, type OnboardingResult } from "@/app/w/[workspaceId]/onboarding/actions"
+import { checkOnboardingAi, checkOnboardingConnections, checkOnboardingTrial, getOnboardingResult, type OnboardingResult } from "@/app/w/[workspaceId]/onboarding/actions"
 
 const Check = () => (
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -40,6 +40,7 @@ export function DoneStep({
 }) {
   const router = useRouter()
   const [ai, setAi] = useState<{ ok: boolean; label: string | null; error?: string } | null>(null)
+  const [trialRun, setTrialRun] = useState<{ available: boolean; remaining: number } | null>(null)
   const [toolCheck, setToolCheck] = useState<
     | { ok: true; statuses: Partial<Record<OnboardingConnection, boolean>> }
     | { ok: false; error: string }
@@ -56,6 +57,11 @@ export function DoneStep({
         if (!stop) setAi(r.ok ? { ok: r.connected, label: r.label } : { ok: false, label: null, error: r.error })
       })
       .catch(() => !stop && setAi({ ok: false, label: null, error: "No se pudo comprobar la conexión de IA." }))
+    void checkOnboardingTrial(workspaceId)
+      .then((r) => {
+        if (!stop) setTrialRun(r.ok ? { available: r.runAvailable, remaining: r.runsRemaining } : { available: false, remaining: 0 })
+      })
+      .catch(() => !stop && setTrialRun({ available: false, remaining: 0 }))
     if (neededConnections.length > 0) {
       void checkOnboardingConnections({ workspaceId, connections: neededConnections })
         .then((result) => {
@@ -69,9 +75,11 @@ export function DoneStep({
   }, [workspaceId, neededConnections, checkVersion])
 
   const toolReady = neededConnections.every((connection) => toolCheck?.ok === true && toolCheck.statuses[connection] === true)
-  const ready = ai?.ok === true && toolReady
-  const loading = ai === null || toolCheck === null
-  const verificationError = ai?.error ?? (toolCheck?.ok === false ? toolCheck.error : null)
+  const trialAiAvailable = trialRun?.available === true
+  const aiAvailable = ai?.ok === true || trialAiAvailable
+  const ready = aiAvailable && toolReady
+  const loading = ai === null || trialRun === null || toolCheck === null
+  const verificationError = (ai?.error && !trialAiAvailable ? ai.error : null) ?? (toolCheck?.ok === false ? toolCheck.error : null)
 
   const saveAndOpen = () => {
     if (!plan) return
@@ -90,7 +98,15 @@ export function DoneStep({
 
   const items: { label: string; ok: boolean | null; detail: string }[] = [
     { label: "Tu plan", ok: plan !== null, detail: plan?.name ?? "" },
-    { label: "Tu IA", ok: ai?.error ? null : ai?.ok ?? null, detail: ai?.error ?? (ai?.ok ? (ai.label ?? "Conectada") : "Sin conectar: sin ella no se ejecuta nada") },
+    {
+      label: "Tu IA",
+      ok: ai?.ok === true || trialAiAvailable ? true : ai?.error ? null : ai?.ok ?? (trialRun === null ? null : false),
+      detail: ai?.ok
+        ? (ai.label ?? "Conectada")
+        : trialAiAvailable
+          ? `IA de prueba de MarchaSolo · ${trialRun?.remaining ?? 0} ejecución disponible`
+          : ai?.error ?? (trialRun === null ? "Comprobando la prueba gratuita…" : "Sin conectar: no hay IA ni ejecución gratuita disponible"),
+    },
     ...neededConnections.map((connection) => ({
       label: CONNECTION_LABEL[connection],
       ok: toolCheck?.ok === true ? toolCheck.statuses[connection] ?? false : null,
@@ -144,6 +160,7 @@ export function DoneStep({
           {verificationError ? (
             <button type="button" onClick={() => {
               setAi(null)
+              setTrialRun(null)
               setToolCheck(neededConnections.length === 0 ? { ok: true, statuses: {} } : null)
               setCheckVersion((version) => version + 1)
             }} className={primary}>
