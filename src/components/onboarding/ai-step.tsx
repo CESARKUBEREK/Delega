@@ -236,7 +236,7 @@ export function AiStep({
           </button>
         ) : null}
         <p className="text-xs text-graphite">
-          Sin tu IA no se ejecuta nada. El plan no se pierde: puedes conectar la clave cuando quieras.
+          La disponibilidad de una ejecución gratuita se comprueba al abrir tu plan. Si no queda crédito, puedes conectar tu propia IA. El plan no se pierde.
         </p>
         <button type="button" onClick={onBack} className="text-sm text-graphite">
           ← Volver al plan
