@@ -72,16 +72,17 @@ export default function PricingPage() {
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Tus primeros planes, por nuestra cuenta</h3>
+                <h3 className="site-h3">La prueba, por nuestra cuenta</h3>
                 <p>
-                  Al empezar, MarchaSolo te prepara hasta {TRIAL.plans} planes con un modelo de IA avanzado, sin que
-                  conectes nada. Para ponerlos en marcha, conectas tu propia IA.
+                  Al empezar, MarchaSolo te prepara hasta {TRIAL.plans} propuestas de automatización y la ejecuta{" "}
+                  {TRIAL.runs === 1 ? "una vez" : `${TRIAL.runs} veces`} de verdad con nuestra IA, sin que conectes la tuya.
+                  Así ves el resultado antes de decidir.
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">La IA, con tu propia clave</h3>
+                <h3 className="site-h3">Después, la IA con tu propia clave</h3>
                 <p>
-                  Para ejecutar automatizaciones conectas OpenAI, Anthropic, DeepSeek o Grok. Cada proveedor te factura lo
+                  Para seguir ejecutando automatizaciones conectas OpenAI, Anthropic, DeepSeek o Grok. Cada proveedor te factura lo
                   que consumes; MarchaSolo no cobra nada encima.
                 </p>
               </div>
@@ -110,10 +111,11 @@ export default function PricingPage() {
                 </div>
               </details>
               <details>
-                <summary>¿Qué pasa después de los planes de prueba?</summary>
+                <summary>¿Qué pasa cuando termina la prueba?</summary>
                 <div>
-                  Tu cuenta y lo que hayas preparado siguen ahí. Para el asistente, la bandeja y las automatizaciones,
-                  conecta tu propia clave de IA: el propio onboarding te guía y te lleva a la web del proveedor.
+                  Tu cuenta y lo que hayas preparado siguen ahí. Para seguir usando el asistente, la bandeja y las
+                  automatizaciones, conecta tu propia clave de IA: el propio onboarding te guía y te lleva a la web del
+                  proveedor.
                 </div>
               </details>
               <details>

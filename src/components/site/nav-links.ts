@@ -9,7 +9,7 @@ export const SITE_LINKS = [
 
 // Contacto y redes del pie. Las redes sin dirección se muestran como texto
 // hasta que se rellene su enlace.
-export const CONTACT_EMAIL = "hola@MarchaSolo.com"
+export const CONTACT_EMAIL = "hola@marchasolo.com"
 
 export const SOCIAL_LINKS: { label: string; href: string }[] = [
   { label: "LinkedIn", href: "" },

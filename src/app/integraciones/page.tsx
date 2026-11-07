@@ -15,10 +15,12 @@ type AppIcon = {
   /** Ruta en /public/brand */
   logo: string
   status?: "soon"
+  /** Aclaración corta bajo el nombre (p. ej. cómo se conecta). */
+  note?: string
 }
 
 const APPS: AppIcon[] = [
-  { id: "gmail", name: "Gmail", logo: "/brand/gmail.svg" },
+  { id: "gmail", name: "Gmail", logo: "/brand/gmail.svg", note: "Con contraseña de aplicación" },
   { id: "calendar", name: "Google Calendar", logo: "/brand/googlecalendar.svg" },
   { id: "drive", name: "Google Drive", logo: "/brand/googledrive.svg" },
   { id: "whatsapp", name: "WhatsApp", logo: "/brand/whatsapp.svg" },
@@ -102,7 +104,7 @@ export default function IntegrationsMarketingPage() {
                     {app.status === "soon" ? (
                       <span className="text-xs text-graphite">Próximamente</span>
                     ) : (
-                      <span className="text-xs text-graphite">Disponible</span>
+                      <span className="text-xs text-graphite">{app.note ?? "Disponible"}</span>
                     )}
                   </span>
                 </li>

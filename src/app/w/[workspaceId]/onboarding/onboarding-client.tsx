@@ -593,7 +593,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
                     ? ` (te queda ${trialRemaining} ${trialRemaining === 1 ? "plan" : "planes"} de prueba)`
                     : " (era tu último plan de prueba)"
                   : ""}
-                . Para ejecutarlo, en el paso siguiente conectas tu propia IA.
+                . En el paso siguiente puedes probarlo gratis con nuestra IA o conectar la tuya.
               </p>
             )}
             {source === "local" && (
