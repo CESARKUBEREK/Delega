@@ -35,13 +35,16 @@ test("el servidor comprueba los proveedores reales y limita los archivos a Googl
 })
 
 test("el estado final distingue conexiones pendientes de errores de verificación", () => {
-  assert.match(doneStep, /verificationError = ai\?\.error/)
+  assert.match(doneStep, /verificationError = \(ai\?\.error && !trialAiAvailable/)
   assert.match(doneStep, /No pude verificar toda la configuración/)
   assert.match(doneStep, /Configuración pendiente/)
   assert.match(doneStep, /Preparado para probar/)
   assert.match(doneStep, /Volver a comprobar conexiones/)
   assert.match(doneStep, /setAi\(r\.ok \? \{ ok: r\.connected, label: r\.label \} : \{ ok: false, label: null, error: r\.error \}\)/)
-  assert.match(doneStep, /ok: ai\?\.error \? null : ai\?\.ok \?\? null/)
+  assert.match(doneStep, /const aiAvailable = ai\?\.ok === true \|\| trialAiAvailable/)
+  assert.match(doneStep, /trialRun\?\.available === true/)
+  assert.match(doneStep, /IA de prueba de MarchaSolo/)
+  assert.match(actions, /runAvailable: status\?\.runAvailable/)
 })
 
 test("la demostración de aprobación es local y nunca ejecuta acciones externas", () => {
@@ -201,7 +204,7 @@ test("el paso de IA está encapsulado y conserva comprobaciones y alternativas",
   assert.match(aiStep, /Ya estás usando la IA de MarchaSolo/)
   assert.match(aiStep, /Continuar con la prueba gratuita/)
   assert.match(aiStep, /Conectar mi propia IA \(opcional\)/)
-  assert.match(aiStep, /Sin tu IA no se ejecuta nada/)
+  assert.match(aiStep, /La disponibilidad de una ejecución gratuita se comprueba al abrir tu plan/)
 })
 
 
