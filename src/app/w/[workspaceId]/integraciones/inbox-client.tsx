@@ -318,14 +318,28 @@ export function ImapForm({ workspaceId, current }: { workspaceId: string; curren
         hint="Si tu proveedor ofrece «contraseñas de aplicación», crea una para MarchaSolo y úsala aquí. Se guarda cifrada y no se vuelve a mostrar."
       />
       {provider === "gmail" ? (
-        <p className="border-l-2 border-stroke pl-3 text-xs text-graphite">
-          Gmail no admite tu contraseña normal: activa la verificación en dos pasos en tu cuenta de Google y crea una
-          «contraseña de aplicación» (Cuenta de Google → Seguridad → Contraseñas de aplicación). En Google Workspace, el
-          administrador tiene que permitir IMAP.
-          <span className="mt-2 block">
-            <ExternalLink link={PROVIDER_LINKS.gmailAppPassword} compact />
-          </span>
-        </p>
+        <div className="border-l-2 border-stroke pl-3 text-xs text-graphite">
+          <p className="font-semibold text-ink">Gmail no acepta tu contraseña normal. En 2 minutos:</p>
+          <ol className="mt-2 flex list-decimal flex-col gap-2 pl-4">
+            <li>
+              Activa la verificación en dos pasos (si ya la tienes, salta este paso).
+              <span className="mt-1 block">
+                <ExternalLink link={PROVIDER_LINKS.gmailTwoStep} compact />
+              </span>
+            </li>
+            <li>
+              Crea una contraseña de aplicación: escribe «MarchaSolo» como nombre y pulsa Crear.
+              <span className="mt-1 block">
+                <ExternalLink link={PROVIDER_LINKS.gmailAppPassword} compact />
+              </span>
+            </li>
+            <li>Copia las 16 letras que te da Google y pégalas abajo, en Contraseña. Los espacios dan igual.</li>
+          </ol>
+          <p className="mt-2">
+            Si el enlace dice que la opción no está disponible, falta el paso 1. En Google Workspace, el administrador tiene que
+            permitir IMAP.
+          </p>
+        </div>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field

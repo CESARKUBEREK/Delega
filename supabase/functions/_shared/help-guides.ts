@@ -304,7 +304,7 @@ export const HELP_GUIDES: HelpGuide[] = [
     "errors": [
       {
         "q": "Gmail rechaza la contraseña",
-        "a": "Gmail no admite tu contraseña normal: activa la verificación en dos pasos en tu cuenta de Google y crea una «contraseña de aplicación» (Cuenta de Google → Seguridad → Contraseñas de aplicación). En Google Workspace, el administrador tiene que permitir IMAP."
+        "a": "Gmail no admite tu contraseña normal. 1) Activa la verificación en dos pasos (myaccount.google.com/signinoptions/twosv). 2) Crea una contraseña de aplicación con el nombre «MarchaSolo» (myaccount.google.com/apppasswords). 3) Pega las 16 letras en Contraseña; los espacios dan igual. Si Google dice que la opción no está disponible, falta el paso 1. En Google Workspace, el administrador tiene que permitir IMAP."
       },
       {
         "q": "Falla el envío por SMTP",

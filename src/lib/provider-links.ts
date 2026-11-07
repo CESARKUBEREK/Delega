@@ -16,6 +16,7 @@ export const PROVIDER_LINKS = {
   buffer: { href: "https://publish.buffer.com/settings/api", label: "Abrir la API de Buffer" },
   telegram: { href: "https://t.me/BotFather", label: "Abrir @BotFather en Telegram" },
   twilio: { href: "https://console.twilio.com/", label: "Abrir la consola de Twilio" },
+  gmailTwoStep: { href: "https://myaccount.google.com/signinoptions/twosv", label: "Activar la verificación en dos pasos" },
   gmailAppPassword: { href: "https://myaccount.google.com/apppasswords", label: "Crear una contraseña de aplicación de Google" },
   supabase: { href: "https://supabase.com/dashboard", label: "Abrir Supabase" },
 } satisfies Record<string, ProviderLink>
