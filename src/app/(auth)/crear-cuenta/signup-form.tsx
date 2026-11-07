@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useActionState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Divider, Field, FormMessage, SubmitButton } from "@/components/form"
@@ -45,6 +46,17 @@ export function SignupForm({ initialPlan }: { initialPlan?: string }) {
         <FormMessage error={state.error} />
         <SubmitButton pendingLabel="Creando cuenta…">Crear cuenta</SubmitButton>
       </form>
+      <p className="text-xs text-graphite">
+        Al crear la cuenta, con tu correo o con Google, aceptas los{" "}
+        <Link href="/terminos" className="text-link underline underline-offset-4">
+          Términos de uso
+        </Link>{" "}
+        y la{" "}
+        <Link href="/privacidad" className="text-link underline underline-offset-4">
+          Política de privacidad
+        </Link>
+        .
+      </p>
     </>
   )
 }

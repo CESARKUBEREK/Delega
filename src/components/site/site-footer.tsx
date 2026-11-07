@@ -32,20 +32,19 @@ export function SiteFooter({ inApp = false }: { inApp?: boolean }) {
             <li>
               <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
             </li>
-            <li>
-              {SOCIAL_LINKS.map((s, i) => (
-                <span key={s.label}>
-                  {i > 0 ? ", " : null}
-                  {s.href ? (
+            {/* Solo las redes con dirección: sin enlace no se muestran. */}
+            {SOCIAL_LINKS.some((s) => s.href) ? (
+              <li>
+                {SOCIAL_LINKS.filter((s) => s.href).map((s, i) => (
+                  <span key={s.label}>
+                    {i > 0 ? ", " : null}
                     <a href={s.href} target="_blank" rel="noopener noreferrer">
                       {s.label}
                     </a>
-                  ) : (
-                    s.label
-                  )}
-                </span>
-              ))}
-            </li>
+                  </span>
+                ))}
+              </li>
+            ) : null}
           </ul>
         </div>
         <div>

@@ -147,22 +147,21 @@ export default function HowItWorksPage() {
               <div className="fact is-key">
                 <h3 className="site-h3">Para probarlo: solo una cuenta</h3>
                 <p>
-                  Al crearla te preguntamos qué tarea te quita más tiempo y MarchaSolo te prepara el plan con un modelo de
-                  IA avanzado, por nuestra cuenta: no hace falta conectar nada. Tú decides si lo pones en marcha.
+                  Al crearla te preguntamos qué tarea te quita más tiempo. MarchaSolo te prepara la propuesta y la puedes
+                  ejecutar una vez de verdad con nuestra IA, sin conectar la tuya. Tú decides si la pones en marcha.
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Para que trabaje: tu IA y tus aplicaciones</h3>
+                <h3 className="site-h3">Para que trabaje: tus aplicaciones</h3>
                 <p>
-                  Primero tu IA (OpenAI, Anthropic, DeepSeek o Grok), con tu propia clave. Después, solo lo que pida tu
-                  tarea: el correo, Drive, la agenda o el CRM. Cada tarjeta te lleva a la web del proveedor y explica cómo
-                  hacerlo paso a paso.
+                  Solo lo que pida tu tarea: el correo, Drive, la agenda o el CRM. Cada tarjeta te lleva a la web del
+                  proveedor y explica cómo hacerlo paso a paso.
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Para ejecutar: tu propia IA</h3>
+                <h3 className="site-h3">Para seguir después de la prueba: tu propia IA</h3>
                 <p>
-                  Las automatizaciones usan tu cuenta de OpenAI, Anthropic, DeepSeek o Grok. Pegas tu clave una vez; se
+                  Después de la prueba, las automatizaciones usan tu cuenta de OpenAI, Anthropic, DeepSeek o Grok. Pegas tu clave una vez; se
                   guarda cifrada y el consumo se factura en tu cuenta. MarchaSolo elige en cada tarea el modelo adecuado y
                   respeta el presupuesto que marques.
                 </p>

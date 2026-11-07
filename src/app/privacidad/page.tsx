@@ -96,6 +96,13 @@ export default function PrivacyPage() {
         </p>
 
         <p>
+          Para elegir en cada tarea el modelo de IA más adecuado y económico, usamos también cifras de uso agregadas de todos los
+          espacios: tipo de tarea, modelo, tokens, coste, tiempo de respuesta y si la tarea salió bien. Nunca el texto de tus mensajes,
+          documentos o respuestas, ni datos que te identifiquen a ti o a tus clientes. La base legal es nuestro interés legítimo en que
+          el servicio funcione mejor y cueste menos.
+        </p>
+
+        <p>
           Base legal: tratamos tus datos para prestarte el servicio que contratas al crear la cuenta (ejecución del contrato), para
           mantenerlo seguro y evitar abusos (interés legítimo) y, cuando la ley lo exige, con tu consentimiento, que puedes retirar en
           cualquier momento desconectando el servicio correspondiente.
@@ -139,12 +146,19 @@ export default function PrivacyPage() {
             transcribe con OpenAI.
           </li>
           <li>
-            <strong>Los planes de prueba del onboarding:</strong> mientras no conectes tu IA, la tarea que nos cuentas al empezar (y nada
-            más) se envía a Anthropic con una clave de MarchaSolo para prepararte el plan, como mucho dos veces.
+            <strong>La prueba gratuita del onboarding:</strong> mientras no conectes tu IA, usamos OpenAI con una clave de MarchaSolo, con
+            las mismas condiciones que arriba. Le enviamos la tarea que nos cuentas y, si nos das tu web, el texto de sus páginas públicas
+            (como mucho dos propuestas). Si ejecutas gratis tu primera automatización, recibe además lo que esa ejecución necesite leer
+            (por ejemplo, los correos de tu bandeja), solo durante esa ejecución.
+          </li>
+          <li>
+            <strong>Análisis de tu web:</strong> si nos das la dirección, descargamos sus páginas públicas. Cuando una página necesita un
+            navegador para mostrarse, la abre por nosotros Browserless (Países Bajos). No pedimos ni usamos ninguna contraseña.
           </li>
           <li>
             <strong>Proveedores que hacen funcionar el servicio:</strong> Supabase (base de datos y funciones del servidor, en Estados
-            Unidos) y Vercel (alojamiento de la web). Tratan los datos por cuenta nuestra y solo para prestar el servicio.
+            Unidos, región de Oregón), Vercel (alojamiento de la web, con el servidor en Dublín) y Cloudflare (la comprobación
+            antirrobots del acceso). Tratan los datos por cuenta nuestra y solo para prestar el servicio.
           </li>
           <li>
             <strong>Los servicios que conectas</strong> (Google, tu proveedor de correo, Telegram, Twilio para WhatsApp, Buffer para tus
@@ -176,7 +190,15 @@ export default function PrivacyPage() {
           reglas de la base de datos solo dejan ver los datos de un espacio a sus miembros.
         </p>
 
-        <h2>8. Tus derechos</h2>
+        <h2>8. Cookies</h2>
+        <p>
+          Solo usamos cookies y almacenamiento del navegador necesarios para que el servicio funcione: mantener tu sesión iniciada,
+          recordar el espacio en el que trabajas, volver al paso correcto después de conectar una cuenta, guardar durante 7 días tu
+          avance en el onboarding y la comprobación antirrobots de Cloudflare al entrar. No usamos cookies de publicidad ni de
+          analítica, así que no necesitamos pedirte consentimiento para ellas.
+        </p>
+
+        <h2>9. Tus derechos</h2>
         <p>
           Puedes pedir acceder a tus datos, corregirlos, borrarlos, llevártelos a otro servicio, limitar su uso u oponerte a él escribiendo
           a <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>. Te responderemos en un plazo máximo de un mes. También puedes reclamar ante
@@ -184,10 +206,10 @@ export default function PrivacyPage() {
           tu país.
         </p>
 
-        <h2>9. Menores</h2>
+        <h2>10. Menores</h2>
         <p>MarchaSolo es una herramienta de trabajo y no está dirigida a menores de 18 años.</p>
 
-        <h2>10. Cambios</h2>
+        <h2>11. Cambios</h2>
         <p>
           Si cambiamos esta política, actualizaremos la fecha de arriba y, si el cambio es importante, te avisaremos en la aplicación.
           Consulta también los <Link href="/terminos">términos de uso</Link>.

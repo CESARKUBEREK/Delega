@@ -2,8 +2,8 @@ import "server-only"
 import { createClient } from "@/lib/supabase/server"
 
 // Créditos de prueba financiados por MarchaSolo.
-// El plan de onboarding usa TRIAL_ANTHROPIC_API_KEY; una ejecución manual
-// usa TRIAL_OPENAI_API_KEY y consume un cupo independiente de ejecuciones.
+// Los planes del onboarding y la ejecución manual gratuita usan
+// TRIAL_OPENAI_API_KEY; la ejecución consume un cupo independiente.
 // Las automatizaciones programadas nunca usan el crédito de ejecución.
 // Devuelve null si la prueba de planes no está habilitada en Vercel o no hay fila.
 export type TrialStatus = {

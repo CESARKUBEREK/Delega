@@ -71,4 +71,5 @@ export const PLANS: Plan[] = [
 ]
 
 // Planes de prueba del onboarding (por espacio personal).
-export const TRIAL = { plans: 2 }
+/** Prueba gratuita: propuestas preparadas y ejecuciones reales con la IA de MarchaSolo. */
+export const TRIAL = { plans: 2, runs: 1 }
