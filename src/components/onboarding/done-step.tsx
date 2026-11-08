@@ -5,6 +5,7 @@ import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import type { FlowPlan } from "@/lib/plan"
 import { CONNECTION_LABEL, type OnboardingConnection } from "@/lib/onboarding"
+import { FirstRun } from "@/components/onboarding/first-run"
 import { checkOnboardingAi, checkOnboardingConnections, checkOnboardingTrial, getOnboardingResult, type OnboardingResult } from "@/app/w/[workspaceId]/onboarding/actions"
 
 const Check = () => (
@@ -78,6 +79,13 @@ export function DoneStep({
   const trialAiAvailable = trialRun?.available === true
   const aiAvailable = ai?.ok === true || trialAiAvailable
   const ready = aiAvailable && toolReady
+  // Se prueba aquí mismo si arranca a mano o programada y no hay que elegir
+  // archivos (planillas, documentos o Drive se eligen en su página).
+  const canRunHere =
+    flowId !== null &&
+    plan !== null &&
+    (plan.trigger.type === "manual" || plan.trigger.type === "schedule") &&
+    !neededConnections.some((c) => c === "spreadsheet" || c === "documents" || c === "drive")
   const loading = ai === null || trialRun === null || toolCheck === null
   const verificationError = (ai?.error && !trialAiAvailable ? ai.error : null) ?? (toolCheck?.ok === false ? toolCheck.error : null)
 
@@ -166,6 +174,13 @@ export function DoneStep({
             }} className={primary}>
               Volver a comprobar conexiones →
             </button>
+          ) : ready && plan && canRunHere && flowId ? (
+            <>
+              <FirstRun workspaceId={workspaceId} base={base} flowId={flowId} primaryClass={primary} />
+              <Link href={`${base}/automatizaciones/${flowId}`} className={secondary}>
+                Abrir la automatización
+              </Link>
+            </>
           ) : ready && plan ? (
             <button type="button" onClick={saveAndOpen} disabled={saving} className={primary}>
               {saving ? "Guardando…" : "Abrir y probar esta automatización →"}
