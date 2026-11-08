@@ -85,7 +85,7 @@ export async function prepareThread(
     throw new PrepareError("limit", "Se alcanzó el límite diario de respuestas preparadas.")
   }
 
-  const ai = await planRun(admin, workspaceId, { task: "draft_reply" })
+  const ai = await planRun(admin, workspaceId, { task: "draft_reply", allowTrialRun: true })
   if (isRouteError(ai)) throw new PrepareError(ai.code === "budget" ? "limit" : "no_ai", ai.code === "budget" ? ai.error : "Conecta una IA en Integraciones.")
 
   // El mensaje de referencia: el último recibido (respuesta) o el último

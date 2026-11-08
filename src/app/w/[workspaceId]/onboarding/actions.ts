@@ -250,6 +250,8 @@ export async function completeOnboarding(workspaceId: string): Promise<{ ok: tru
 // enseñar (sin correo conectado ni conversaciones).
 export type OnboardingResult = {
   ownAi: boolean
+  // Sin IA propia pero con saldo de la prueba: la bandeja también se ordena.
+  trialAi: boolean
   total: number
   classified: number
   awaiting: number
@@ -284,8 +286,10 @@ export async function getOnboardingResult(workspaceId: string): Promise<Onboardi
       .eq("status", "awaiting_approval"),
   ])
   if (!status.correo && !total) return null
+  const trial = status.ia ? null : await getTrialStatus(workspaceId)
   return {
     ownAi: status.ia,
+    trialAi: !status.ia && trial !== null && trial.runAvailable,
     total: total ?? 0,
     classified: classified ?? 0,
     awaiting: awaiting ?? 0,

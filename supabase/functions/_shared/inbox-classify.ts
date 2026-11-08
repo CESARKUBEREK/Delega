@@ -137,7 +137,9 @@ export async function classifyPending(
   if (!forAi.length) return { classified, byRules, remaining: all.length - classified, failed: 0 }
 
   // 2. Con IA, por tandas.
-  const routed = await routeAi(admin, workspaceId, "classify")
+  // Sin IA propia, la prueba gratuita de MarchaSolo (8 nov): ordenar la bandeja
+  // es lo que primero enseña el valor, y con el modelo económico cuesta céntimos.
+  const routed = await routeAi(admin, workspaceId, "classify", { allowTrialRun: true })
   if (isRouteError(routed)) {
     return {
       classified,
