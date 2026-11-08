@@ -22,7 +22,7 @@ export const PLANS: Plan[] = [
     price: "19 $",
     period: "/mes",
     priceYear: "228 $/año · USD",
-    tagline: "Para autónomos que quieren automatizar tareas cotidianas.",
+    tagline: "Para profesionales independientes que quieren automatizar tareas cotidianas.",
     includes: [
       "Asistente de IA",
       "5 automatizaciones activas",

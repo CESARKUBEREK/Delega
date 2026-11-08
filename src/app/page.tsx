@@ -6,19 +6,20 @@ import { publicPageMetadata } from "@/lib/seo"
 import { USE_CASES } from "@/lib/site-content"
 
 export const metadata = publicPageMetadata({
-  title: "Tu negocio, en automático",
-  absoluteTitle: "MarchaSolo · Tu negocio, en automático",
+  title: "Tu trabajo, en marcha",
+  absoluteTitle: "MarchaSolo · Tu trabajo, en marcha, sin hacerlo todo tú",
   description:
-    "Un compañero de trabajo con IA: conecta tus aplicaciones, prepara lo que hay que hacer y se detiene antes de enviar o cambiar nada. Tú revisas y das el visto bueno.",
+    "Un compañero de trabajo con IA: ordena tu correo, prepara las respuestas a tus clientes y se detiene antes de enviar o cambiar nada. Pruébalo gratis con nuestra IA, sin tarjeta.",
   path: "/",
 })
 
 // Portada pública, también con sesión (el logo de la app lleva aquí); la
 // cabecera cambia «Entrar» por «Ir a mi espacio».
 export default function HomePage() {
-  const preview = USE_CASES.filter((c) =>
-    ["whatsapp-negocio", "voz-reservas", "leads"].includes(c.id)
-  )
+  // Lo que más se usa al empezar: la bandeja, WhatsApp y el caso inmobiliario.
+  const preview = ["bandeja-clientes", "whatsapp-negocio", "inmobiliaria-tokko"]
+    .map((id) => USE_CASES.find((c) => c.id === id))
+    .filter((c): c is (typeof USE_CASES)[number] => Boolean(c))
   return (
     <MarketingLayout>
       <main>
@@ -32,8 +33,8 @@ export default function HomePage() {
                 <span>Sin hacerlo todo tú.</span>
               </h1>
               <p className="site-lead site-hero-lead">
-                Cuéntale qué te gustaría mejorar. Si aún no lo tienes claro, MarchaSolo te ayuda a descubrirlo y prepara
-                el trabajo. Tú revisas antes de enviar o cambiar nada.
+                Ordena tu correo, deja listas las respuestas a tus clientes y te avisa de lo importante. Tú revisas y
+                apruebas antes de que salga nada.
               </p>
               <div className="site-actions">
                 <Link href="/crear-cuenta" className="btn btn-primary">
@@ -44,9 +45,9 @@ export default function HomePage() {
                 </Link>
               </div>
               <ul className="site-hero-note">
-                <li>Crear la cuenta es gratis</li>
+                <li>Sin tarjeta</li>
+                <li>Listo en minutos, sin conectar tu IA</li>
                 <li>Tú apruebas antes de enviar</li>
-                <li>Prueba gratis con nuestra IA</li>
               </ul>
             </div>
             <div className="site-hero-preview">
@@ -75,12 +76,12 @@ export default function HomePage() {
             </div>
             <ol className="steps">
               <li>
-                <h3 className="site-h3">Dile qué necesitas</h3>
-                <p>Escribes o dictas lo que quieres mejorar con tus palabras, como se lo explicarías a un compañero.</p>
+                <h3 className="site-h3">Dile qué quieres quitarte de encima</h3>
+                <p>Elige un ejemplo o escríbelo con tus palabras. En unos segundos tienes la propuesta.</p>
               </li>
               <li>
-                <h3 className="site-h3">MarchaSolo prepara el trabajo</h3>
-                <p>Organiza los pasos, consulta tus apps y deja listo el borrador o el cambio.</p>
+                <h3 className="site-h3">Pruébalo con tu correo</h3>
+                <p>Con nuestra IA, gratis: ordena tu bandeja y deja las respuestas preparadas desde el primer día.</p>
               </li>
               <li>
                 <h3 className="site-h3">Tú decides</h3>
@@ -155,8 +156,8 @@ export default function HomePage() {
               <div>
                 <h3 className="site-h3">Tus cuentas, tu factura</h3>
                 <p>
-                  Usas tus propias cuentas y tu propia IA. Ves el costo estimado de cada tarea y puedes poner un
-                  presupuesto.
+                  Empiezas gratis con nuestra IA. Después usas tu propia IA: ves el costo estimado de cada tarea y puedes
+                  poner un presupuesto.
                 </p>
               </div>
             </div>
@@ -173,7 +174,7 @@ export default function HomePage() {
             </div>
             <ul className="audience">
               <li>
-                <h3 className="site-h3">Freelancers y autónomos</h3>
+                <h3 className="site-h3">Profesionales independientes</h3>
                 <p>
                   Atiendes clientes y haces el trabajo. MarchaSolo prepara lo repetitivo; tú decides qué se envía.
                 </p>
@@ -183,9 +184,10 @@ export default function HomePage() {
                 <p>Espacios compartidos con funciones: cada persona revisa y aprueba lo que le toca.</p>
               </li>
               <li>
-                <h3 className="site-h3">Negocios de correo, citas y planillas</h3>
+                <h3 className="site-h3">Inmobiliarias y despachos</h3>
                 <p>
-                  Inmobiliarias, despachos y negocios con muchos mensajes: el trabajo avanza, pero nada sale sin revisión.
+                  Consultas por propiedades con la ficha de Tokko, vencimientos y documentos a partir de tus modelos. Con
+                  Xubio, consulta si alguien ya es cliente.
                 </p>
               </li>
             </ul>
@@ -199,8 +201,8 @@ export default function HomePage() {
               <div>
                 <h2 className="site-h2">Cuéntanos qué te gustaría mejorar</h2>
                 <p>
-                  Puedes empezar con una tarea concreta o pedir ayuda para descubrir oportunidades. MarchaSolo prepara
-                  una propuesta antes de que conectes tus aplicaciones. Tú decides si la pones en marcha.
+                  Empieza con una tarea concreta o pide ayuda para descubrirla. MarchaSolo te prepara la propuesta y la
+                  pruebas gratis con nuestra IA. Tú decides si la pones en marcha.
                 </p>
                 <ul className="site-hero-note" style={{ marginTop: "0.75rem" }}>
                   <li>Sin tarjeta</li>

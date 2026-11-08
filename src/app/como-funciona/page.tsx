@@ -31,6 +31,16 @@ const FAQS = [
       "La ejecución te dice por qué ha fallado y qué hacer, con un botón para abrir la conexión que toque o volver a intentarlo. Si tu proveedor de IA se queda sin saldo, MarchaSolo puede seguir con otra IA que tengas conectada.",
   },
   {
+    question: "¿Qué pasa cuando termina la prueba?",
+    answer:
+      "Tu cuenta, tus automatizaciones y tu bandeja siguen ahí. Para seguir, pasas al plan Solo y conectas tu propia IA (OpenAI, Anthropic, DeepSeek o Grok); MarchaSolo te guía paso a paso.",
+  },
+  {
+    question: "¿Y si mis clientes me escriben por WhatsApp?",
+    answer:
+      "MarchaSolo funciona con WhatsApp a través de Twilio, el proveedor oficial. El número se conecta en alrededor de una hora, pero hasta que Meta verifica tu negocio (puede tardar una o dos semanas y pide documentos) funciona con límites. Mientras tanto, puedes empezar con tu correo y sumar WhatsApp cuando esté listo.",
+  },
+  {
     question: "¿Puedo usarlo desde el celular?",
     answer:
       "Sí. MarchaSolo se instala en el celular desde el navegador, te avisa cuando algo espera tu aprobación y puedes dictar las peticiones.",
@@ -139,16 +149,16 @@ export default function HowItWorksPage() {
                 Qué necesitas para empezar
               </h2>
               <p className="site-lead">
-                Menos de lo que parece. Primero ves el plan que te propone; las conexiones llegan después, cuando hacen
-                falta.
+                Menos de lo que parece. Primero ves la propuesta; las conexiones llegan después, cuando hacen falta.
               </p>
             </div>
             <div className="facts">
               <div className="fact is-key">
                 <h3 className="site-h3">Para probarlo: solo una cuenta</h3>
                 <p>
-                  Al crearla te preguntamos qué tarea te quita más tiempo. MarchaSolo te prepara la propuesta y la puedes
-                  ejecutar de verdad con nuestra IA, sin conectar la tuya. Tú decides si la pones en marcha.
+                  Al crearla te preguntamos qué te gustaría quitarte de encima. MarchaSolo te prepara la propuesta y la
+                  pruebas de verdad con nuestra IA, sin conectar la tuya: si conectas el correo, también ordena tu bandeja.
+                  Tú decides si la pones en marcha.
                 </p>
               </div>
               <div className="fact">
@@ -235,7 +245,8 @@ export default function HowItWorksPage() {
               <div>
                 <h2 className="site-h2">Pruébalo con una tarea tuya</h2>
                 <p>
-                  MarchaSolo te prepara el plan antes de que conectes nada. Tú decides si lo pones en marcha.
+                  MarchaSolo te prepara la propuesta antes de que conectes nada y la pruebas gratis. Tú decides si la pones
+                  en marcha.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
