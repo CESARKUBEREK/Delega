@@ -97,14 +97,14 @@ export function DoneStep({
   const secondary = "inline-flex h-11 items-center justify-center rounded-xl border border-ink px-5 font-medium text-ink"
 
   const items: { label: string; ok: boolean | null; detail: string }[] = [
-    { label: "Tu plan", ok: plan !== null, detail: plan?.name ?? "" },
+    { label: "Tu automatización", ok: plan !== null, detail: plan?.name ?? "" },
     {
       label: "Tu IA",
       ok: ai?.ok === true || trialAiAvailable ? true : ai?.error ? null : ai?.ok ?? (trialRun === null ? null : false),
       detail: ai?.ok
         ? (ai.label ?? "Conectada")
         : trialAiAvailable
-          ? `IA de prueba de MarchaSolo · ${trialRun?.remaining ?? 0} ejecución disponible`
+          ? "Prueba gratuita de MarchaSolo: no hace falta conectar la tuya"
           : ai?.error ?? (trialRun === null ? "Comprobando la prueba gratuita…" : "Sin conectar: no hay IA y la prueba gratuita se ha terminado"),
     },
     ...neededConnections.map((connection) => ({
@@ -112,7 +112,7 @@ export function DoneStep({
       ok: toolCheck?.ok === true ? toolCheck.statuses[connection] ?? false : null,
       detail: toolCheck?.ok === false
         ? toolCheck.error
-        : toolCheck?.statuses[connection] === true ? "Conectado" : "Sin conectar: lo necesita tu plan",
+        : toolCheck?.statuses[connection] === true ? "Conectado" : "Sin conectar: lo necesita tu automatización",
     })),
   ]
 
@@ -123,10 +123,10 @@ export function DoneStep({
         <h2 className="rotulo text-xl mt-1">{ready ? "Preparado para probar" : loading ? "Comprobando conexiones…" : verificationError ? "No pude verificar toda la configuración" : "Configuración pendiente"}</h2>
         <p className="text-graphite mt-1">
           {ready
-            ? "Tu plan y sus conexiones están preparados. Podrás probarlo antes de activarlo; nada se envía ni modifica sin tu aprobación."
+            ? "Tu automatización y sus conexiones están listas. Podrás probarla antes de activarla; nada se envía ni modifica sin tu aprobación."
             : loading
               ? "Estoy comprobando qué servicios están conectados."
-              : verificationError ? "No voy a dar por conectada una herramienta si no he podido comprobarla. Puedes volver a intentarlo." : "Tu plan está guardado, pero todavía falta conectar los servicios que necesita para poder probarlo."}
+              : verificationError ? "No voy a dar por conectada una herramienta si no he podido comprobarla. Puedes volver a intentarlo." : "Tu automatización está guardada, pero todavía falta conectar los servicios que necesita para poder probarla."}
         </p>
       </div>
 
@@ -196,7 +196,7 @@ export function DoneStep({
           )}
           {ai?.ok ? (
             <Link href={chatLink} className={secondary}>
-              Seguir con este plan en el chat
+              Seguir con esta automatización en el chat
             </Link>
           ) : null}
           <Link href={base} className="text-sm font-semibold text-link underline underline-offset-4 text-center">

@@ -73,7 +73,8 @@ export function AiStep({
     let active = true
     const checkTrial = async () => {
       const result = await checkOnboardingTrial(workspaceId).catch(() => null)
-      if (active && result?.ok) setTrialAvailable(result.available)
+      // Lo que importa aquí es si quedan ejecuciones gratis, no propuestas.
+      if (active && result?.ok) setTrialAvailable(result.runAvailable)
     }
     void checkTrial()
     const id = window.setInterval(() => void checkTrial(), 15000)
@@ -100,7 +101,7 @@ export function AiStep({
     <section className="setup-panel flex flex-col gap-5">
       <div>
         <p className="text-sm font-semibold text-graphite">{stepLabel}</p>
-        <h2 className="rotulo text-xl mt-1">{fromTrial || trialAvailable ? "Tu IA para la prueba" : "Conecta tu IA"}</h2>
+        <h2 className="rotulo text-xl mt-1">{fromTrial || trialAvailable ? "Tu IA para la prueba" : "Tu prueba gratuita ha terminado: conecta tu IA"}</h2>
         <p className="text-graphite mt-1">
           Puedes continuar con la IA de prueba de MarchaSolo si tienes créditos disponibles, o conectar tu propia cuenta de IA como alternativa. Para ejecutar automatizaciones fuera de la prueba necesitarás tu propia IA y las aplicaciones que utilice el plan.
         </p>
@@ -122,34 +123,14 @@ export function AiStep({
             {next}
           </button>
         </div>
-      ) : fromTrial ? (
-        <div className="rounded-2xl border border-ok bg-paper p-5 flex flex-col gap-3">
-          <div>
-            <p className="font-semibold text-ink">✓ Ya estás usando la IA de MarchaSolo</p>
-            <p className="mt-1 text-sm text-graphite">
-              Esta propuesta la ha preparado nuestra IA con el crédito gratuito de prueba. No necesitas conectar una cuenta propia para continuar ni para probar tu primera automatización.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onContinue}
-            disabled={pending}
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
-          >
-            {pending ? "Continuando…" : "Continuar con la prueba gratuita →"}
-          </button>
-          <Link href={`${base}/integraciones#llms`} className="text-sm text-graphite underline underline-offset-4">
-            Conectar mi propia IA (opcional)
-          </Link>
-        </div>
       ) : (fromTrial || trialAvailable) ? (
         <div className="rounded-2xl border border-ok bg-paper p-5 flex flex-col gap-3">
           <div>
             <p className="font-semibold text-ink">{fromTrial ? "✓ Ya estás usando la IA de MarchaSolo" : "Prueba gratuita de MarchaSolo disponible"}</p>
             <p className="mt-1 text-sm text-graphite">
               {fromTrial
-                ? "Esta propuesta la ha preparado nuestra IA con el crédito gratuito de prueba. No necesitas conectar una cuenta propia para continuar ni para probar tu primera automatización."
-                : "Tu plan anterior quedó guardado sin IA. Puedes volver a prepararlo ahora con la IA de MarchaSolo, sin conectar una cuenta propia."}
+                ? "Esta propuesta la ha preparado nuestra IA, por cuenta de MarchaSolo. Puedes seguir y probar tus automatizaciones sin conectar una cuenta propia."
+                : "Tu propuesta anterior quedó guardada sin IA. Puedes volver a prepararla ahora con la IA de MarchaSolo, sin conectar una cuenta propia."}
             </p>
           </div>
           <button
@@ -162,7 +143,7 @@ export function AiStep({
               ? "Preparando con la IA de MarchaSolo…"
               : fromTrial
                 ? "Continuar con la prueba gratuita →"
-                : "Preparar este plan con la IA de MarchaSolo →"}
+                : "Preparar esta propuesta con la IA de MarchaSolo →"}
           </button>
           <Link href={`${base}/integraciones#llms`} className="text-sm text-graphite underline underline-offset-4">
             Conectar mi propia IA (opcional)
@@ -188,7 +169,7 @@ export function AiStep({
             <p className="text-sm font-semibold text-ink">
               Recomendada: Anthropic
               <span className="font-normal text-graphite">
-                {fromTrial ? " · es la IA que te ha preparado el plan" : " · da muy buenos resultados redactando y razonando"}
+                {" · da muy buenos resultados redactando y razonando"}
               </span>
             </p>
             <div ref={recommendedBox} className="setup-cards flex flex-col gap-3">
@@ -232,14 +213,14 @@ export function AiStep({
             disabled={pending}
             className="inline-flex h-11 items-center justify-center rounded-xl border border-ink px-5 font-medium text-ink disabled:opacity-60"
           >
-            {pending ? "Guardando…" : "Guardar el plan como borrador y terminar"}
+            {pending ? "Guardando…" : "Guardar como borrador y terminar"}
           </button>
         ) : null}
         <p className="text-xs text-graphite">
-          El saldo de la prueba gratuita se comprueba al ejecutar tu plan. Si no queda crédito, puedes conectar tu propia IA. El plan no se pierde.
+          El saldo de la prueba gratuita se comprueba en cada ejecución. Si se termina, conectas tu propia IA; la automatización no se pierde.
         </p>
         <button type="button" onClick={onBack} className="text-sm text-graphite">
-          ← Volver al plan
+          ← Volver a la propuesta
         </button>
       </div>
     </section>

@@ -18,6 +18,7 @@ export function ConnectStep({
   error: finishError,
   pending,
   stepLabel,
+  backLabel = "← Volver",
   onBack,
   onContinue,
 }: {
@@ -29,6 +30,7 @@ export function ConnectStep({
   error: string | null
   pending: boolean
   stepLabel: string
+  backLabel?: string
   onBack: () => void
   onContinue: () => void
 }) {
@@ -90,7 +92,7 @@ export function ConnectStep({
         <p className="text-sm font-semibold text-graphite">{stepLabel}</p>
         <h2 className="rotulo text-xl mt-1">Solo falta una cosa</h2>
         <p className="text-graphite mt-1">
-          Para este plan necesito acceso a <strong>{label}</strong>. {card ? "Conéctalo aquí mismo; el resto puede esperar." : "Abre Integraciones para configurarlo; el resto puede esperar."}
+          Para esta automatización necesito acceso a <strong>{label}</strong>. {card ? "Conéctalo aquí mismo; el resto puede esperar." : "Abre Integraciones para configurarlo; el resto puede esperar."}
         </p>
       </div>
 
@@ -151,7 +153,7 @@ export function ConnectStep({
           </button>
         ) : null}
         <button type="button" onClick={onBack} className="text-sm text-graphite">
-          ← Volver a tu IA
+          {backLabel}
         </button>
       </div>
     </section>

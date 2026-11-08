@@ -43,7 +43,7 @@ test("el estado final distingue conexiones pendientes de errores de verificació
   assert.match(doneStep, /setAi\(r\.ok \? \{ ok: r\.connected, label: r\.label \} : \{ ok: false, label: null, error: r\.error \}\)/)
   assert.match(doneStep, /const aiAvailable = ai\?\.ok === true \|\| trialAiAvailable/)
   assert.match(doneStep, /trialRun\?\.available === true/)
-  assert.match(doneStep, /IA de prueba de MarchaSolo/)
+  assert.match(doneStep, /Prueba gratuita de MarchaSolo: no hace falta conectar la tuya/)
   assert.match(actions, /runAvailable: status\?\.runAvailable/)
 })
 
@@ -185,7 +185,8 @@ test("un plan local guardado puede regenerarse con la prueba de MarchaSolo sin c
   assert.match(actions, /export async function checkOnboardingTrial/)
   assert.match(aiStep, /checkOnboardingTrial\(workspaceId\)/)
   assert.match(aiStep, /trialAvailable/)
-  assert.match(aiStep, /Preparar este plan con la IA de MarchaSolo/)
+  assert.match(aiStep, /Preparar esta propuesta con la IA de MarchaSolo/)
+  assert.match(aiStep, /setTrialAvailable\(result\.runAvailable\)/)
   assert.match(client, /retryWithMarchaSoloAi/)
   assert.match(client, /result\.source !== "trial"/)
   assert.match(client, /saveFlowPlan\(\{ workspaceId, flowId, plan: result\.plan, fileIds: \[\] \}\)/)
@@ -199,12 +200,21 @@ test("el paso de IA está encapsulado y conserva comprobaciones y alternativas",
   assert.match(aiStep, /checkOnboardingAi\(workspaceId\)/)
   assert.match(aiStep, /window\.setInterval\(\(\) => void check\(\), 8000\)/)
   assert.match(aiStep, /trackOnboardingStep\(workspaceId, "ai_connected"\)/)
-  assert.match(aiStep, /Guardar el plan como borrador y terminar/)
-  assert.match(aiStep, /\) : fromTrial \? \(/)
+  assert.match(aiStep, /Guardar como borrador y terminar/)
+  assert.match(aiStep, /\) : \(fromTrial \|\| trialAvailable\) \? \(/)
   assert.match(aiStep, /Ya estás usando la IA de MarchaSolo/)
   assert.match(aiStep, /Continuar con la prueba gratuita/)
   assert.match(aiStep, /Conectar mi propia IA \(opcional\)/)
-  assert.match(aiStep, /El saldo de la prueba gratuita se comprueba al ejecutar tu plan/)
+  assert.match(aiStep, /El saldo de la prueba gratuita se comprueba en cada ejecución/)
+})
+
+test("«Tu IA» se salta si ya hay IA conectada o queda prueba gratuita", () => {
+  assert.match(client, /const ready = \(ai\?\.ok && ai\.connected\) \|\| \(trial\?\.ok && trial\.runAvailable\)/)
+  assert.match(client, /setAiSkipped\(true\)\s*\n\s*afterAi\(savedFlowId\)/)
+  assert.match(client, /!\(s\.id === "ai" && aiSkipped\)/)
+  // El borrador recién guardado se reutiliza: no se crea otro al terminar.
+  assert.match(client, /const savedFlowId = existingFlowId \?\? \(await persistPlan\(\)\)/)
+  assert.match(client, /onContinue=\{\(\) => afterAi\(\)\}/)
 })
 
 
