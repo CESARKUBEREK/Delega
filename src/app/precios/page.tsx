@@ -4,7 +4,7 @@ import { publicPageMetadata } from "@/lib/seo"
 import { PLANS } from "@/lib/pricing"
 
 const pricingIntro = PLANS.length
-  ? `Planes MarchaSolo desde ${PLANS[0].price}${PLANS[0].period}. La IA se paga directamente a tu proveedor.`
+  ? `Empieza gratis con nuestra IA. Después, planes desde ${PLANS[0].price}${PLANS[0].period}; la IA se paga directamente a tu proveedor.`
   : "Hoy MarchaSolo no tiene planes de pago: crear la cuenta y usarlo no cuesta nada. Lo único que pagas es la inteligencia artificial, directamente a tu proveedor."
 
 export const metadata = publicPageMetadata({
@@ -142,7 +142,8 @@ export default function PricingPage() {
               <div>
                 <h2 className="site-h2">Empieza con el plan que te encaje</h2>
                 <p>
-                  Crea la cuenta, cuéntale una tarea y mira el plan que te prepara. Tú decides si lo pones en marcha.
+                  Crea la cuenta, cuéntale una tarea y prueba gratis la propuesta que te prepara. Tú decides si la pones en
+                  marcha.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
