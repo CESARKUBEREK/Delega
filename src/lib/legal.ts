@@ -3,7 +3,7 @@
 // reales al verificar la app.
 export const LEGAL = {
   // Nombre de la persona o razón social de la empresa que ofrece MarchaSolo.
-  owner: "Cyrano SAS",
+  owner: "CYRANO SAS",
   // Número de registro (SIREN) y domicilio, tal como figuran en el Kbis.
   // Meta y Google comparan estos datos con los documentos de la empresa.
   siren: "820 897 502",
