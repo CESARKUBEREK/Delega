@@ -361,6 +361,10 @@ export const HELP_GUIDES: HelpGuide[] = [
       {
         "q": "Solo pueden escribir algunos números",
         "a": "Es el entorno de pruebas de Twilio: solo escriben los números unidos con «join …», y la unión caduca a los 3 días. Para tu propio número hay que darlo de alta en Twilio con verificación de Meta."
+      },
+      {
+        "q": "¿Cuánto tarda conectar mi propio número?",
+        "a": "Dar de alta el número en Twilio (Messaging → Senders → WhatsApp senders) lleva alrededor de una hora y pide una cuenta de Meta Business. Funciona enseguida, pero con límites, hasta que Meta verifica tu negocio: puede tardar una o dos semanas y pide documentos legales. El nombre que se muestra debe coincidir con el de tu negocio en Meta. Mientras tanto, puedes usar MarchaSolo con tu correo."
       }
     ]
   },

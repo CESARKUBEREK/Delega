@@ -128,9 +128,10 @@ export function ConnectStep({
             <div className="rounded-2xl border border-stroke bg-paper p-5 flex flex-col gap-3">
               <p className="font-semibold text-ink">¿Empezamos por el correo?</p>
               <p className="text-sm text-graphite">
-                Conectar WhatsApp lleva su tiempo: hace falta una cuenta de Twilio, el proveedor oficial, y que Meta apruebe tu
-                número para empresas, algo que suele tardar unos días. Con el número de pruebas de Twilio se puede probar en
-                minutos, pero solo con los teléfonos que se unan a él.
+                Conectar WhatsApp lleva su tiempo: hace falta una cuenta de Twilio, el proveedor oficial. Tu número se conecta
+                en alrededor de una hora, pero funciona con límites hasta que Meta verifica tu negocio, algo que puede tardar
+                una o dos semanas y pide documentos. Con el número de pruebas de Twilio se puede probar en minutos, pero solo
+                con los teléfonos que se unan a él.
               </p>
               <p className="text-sm text-graphite">
                 Para no esperar, preparo la misma automatización con tu correo y sumamos WhatsApp cuando esté listo.

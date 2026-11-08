@@ -38,7 +38,7 @@ const FAQS = [
   {
     question: "¿Y si mis clientes me escriben por WhatsApp?",
     answer:
-      "MarchaSolo funciona con WhatsApp a través de Twilio, el proveedor oficial. Como Meta tarda unos días en aprobar el número de un negocio, puedes empezar con tu correo y sumar WhatsApp cuando esté listo.",
+      "MarchaSolo funciona con WhatsApp a través de Twilio, el proveedor oficial. El número se conecta en alrededor de una hora, pero hasta que Meta verifica tu negocio (puede tardar una o dos semanas y pide documentos) funciona con límites. Mientras tanto, puedes empezar con tu correo y sumar WhatsApp cuando esté listo.",
   },
   {
     question: "¿Puedo usarlo desde el celular?",

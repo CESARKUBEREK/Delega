@@ -29,7 +29,7 @@ const CAPABILITIES: Capability[] = [
     solution:
       "MarchaSolo lee el mensaje, busca la respuesta en tus tarifas o FAQ y deja la contestación lista. Solo sale cuando tú la apruebas.",
     result:
-      "Atiendes el canal del negocio sin vivir pegado al celular ni soltar el tono de tu marca. Mientras Meta aprueba tu número, puedes empezar con el correo.",
+      "Atiendes el canal del negocio sin vivir pegado al celular ni soltar el tono de tu marca. Mientras Meta verifica tu negocio, puedes empezar con el correo.",
     example:
       "«Cuando escriban por WhatsApp preguntando por precios, usa la tarifa de Drive y déjame la respuesta.»",
     panel: {
