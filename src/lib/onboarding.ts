@@ -313,3 +313,44 @@ export function supervisedPreview(plan: FlowPlan | null): SupervisedPreview {
     approvals: approvalSteps.map((s) => ({ id: s.id, title: s.title })),
   }
 }
+
+// WhatsApp (Twilio + aprobación de Meta) puede tardar días en conectarse. En
+// el onboarding se ofrece empezar con el correo: la misma automatización,
+// cambiando el canal, y una nota para sumar WhatsApp cuando esté listo.
+export const WHATSAPP_LATER_NOTE = "Sumar WhatsApp cuando esté conectado (Integraciones → Comunicaciones)."
+
+export function usesWhatsapp(plan: FlowPlan): boolean {
+  return requiredConnections(plan).includes("whatsapp")
+}
+
+export function planWithEmailInsteadOfWhatsapp(plan: FlowPlan): FlowPlan {
+  const swap = (text: string) =>
+    text
+      .replace(/\bun WhatsApp\b/g, "un correo")
+      .replace(/\bpor WhatsApp\b/g, "por correo")
+      .replace(/\bWhatsApp\b/g, "correo")
+  const connections: FlowPlan["connections"] = []
+  for (const c of plan.connections) {
+    const kind = c.kind === "whatsapp" ? "email" : c.kind
+    if (connections.some((x) => x.kind === kind)) continue
+    connections.push({ kind, purpose: swap(c.purpose) })
+  }
+  return {
+    ...plan,
+    name: swap(plan.name),
+    summary: swap(plan.summary),
+    trigger:
+      plan.trigger.type === "whatsapp_message"
+        ? { type: "email_message", description: swap(plan.trigger.description) || "Al recibir un correo" }
+        : { ...plan.trigger, description: swap(plan.trigger.description) },
+    connections,
+    steps: plan.steps.map((s) =>
+      s.connection === "whatsapp"
+        ? { ...s, connection: "email", title: swap(s.title), description: swap(s.description) }
+        : { ...s, title: swap(s.title), description: swap(s.description) },
+    ),
+    open_questions: plan.open_questions.includes(WHATSAPP_LATER_NOTE)
+      ? plan.open_questions
+      : [...plan.open_questions, WHATSAPP_LATER_NOTE],
+  }
+}

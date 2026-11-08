@@ -21,6 +21,7 @@ export function ConnectStep({
   backLabel = "← Volver",
   onBack,
   onContinue,
+  onUseEmailInstead,
 }: {
   workspaceId: string
   base: string
@@ -33,6 +34,8 @@ export function ConnectStep({
   backLabel?: string
   onBack: () => void
   onContinue: () => void
+  // Solo para WhatsApp: cambiar la automatización al correo y seguir.
+  onUseEmailInstead?: () => void
 }) {
   const [status, setStatus] = useState<"loading" | "connected" | "missing" | "error">("loading")
   const [error, setError] = useState<string | null>(null)
@@ -121,6 +124,28 @@ export function ConnectStep({
         </div>
       ) : (
         <div className="flex flex-col gap-3">
+          {needed === "whatsapp" && onUseEmailInstead ? (
+            <div className="rounded-2xl border border-stroke bg-paper p-5 flex flex-col gap-3">
+              <p className="font-semibold text-ink">¿Empezamos por el correo?</p>
+              <p className="text-sm text-graphite">
+                Conectar WhatsApp lleva su tiempo: hace falta una cuenta de Twilio, el proveedor oficial, y que Meta apruebe tu
+                número para empresas, algo que suele tardar unos días. Con el número de pruebas de Twilio se puede probar en
+                minutos, pero solo con los teléfonos que se unan a él.
+              </p>
+              <p className="text-sm text-graphite">
+                Para no esperar, preparo la misma automatización con tu correo y sumamos WhatsApp cuando esté listo.
+              </p>
+              <button
+                type="button"
+                onClick={onUseEmailInstead}
+                disabled={pending}
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
+              >
+                {pending ? "Cambiando al correo…" : "Empezar con el correo →"}
+              </button>
+              <p className="text-xs text-graphite">O conecta WhatsApp ahora con la tarjeta de abajo.</p>
+            </div>
+          ) : null}
           <div ref={box} className="setup-cards">
             {card}
           </div>

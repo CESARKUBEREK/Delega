@@ -14,6 +14,7 @@ import {
   clearOnboarding,
   CONNECTION_LABEL,
   loadOnboarding,
+  planWithEmailInsteadOfWhatsapp,
   requiredConnections,
   saveOnboarding,
   type OnboardingConnection,
@@ -422,6 +423,27 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     })
   }
 
+  // WhatsApp tarda en conectarse: la misma automatización con el correo, que
+  // se guarda en el borrador; WhatsApp queda como nota para después.
+  const useEmailInstead = () => {
+    if (!plan || pending) return
+    setError(null)
+    startTransition(async () => {
+      const next = planWithEmailInsteadOfWhatsapp(plan)
+      const savedPlan = await saveFlowPlan({ workspaceId, flowId, plan: next, fileIds: [] }).catch(() => null)
+      if (!savedPlan?.ok) {
+        setError(savedPlan?.error || "No se pudo cambiar la automatización al correo. Inténtalo de nuevo.")
+        return
+      }
+      setPlan(next)
+      setFlowId(savedPlan.flowId)
+      const nextRequirements = requiredConnections(next)
+      const emailIndex = nextRequirements.indexOf("email")
+      setConnectionIndex(emailIndex >= 0 ? emailIndex : 0)
+      if (nextRequirements.length === 0) finish(savedPlan.flowId)
+    })
+  }
+
   // Volver a empezar desde el paso 1 (sin salir de la página).
   const restart = () => {
     setStep("task")
@@ -703,6 +725,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           backLabel={aiSkipped ? "← Volver a la propuesta" : "← Volver a tu IA"}
           onBack={() => setStep(aiSkipped ? "plan" : "ai")}
           onContinue={() => finish()}
+          onUseEmailInstead={needed === "whatsapp" ? useEmailInstead : undefined}
         />
       )}
 
