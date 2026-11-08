@@ -27,7 +27,7 @@ export default function PrivacyPage() {
 
         <h2>1. Responsable</h2>
         <p>
-          El responsable del tratamiento es {LEGAL.owner} ({LEGAL.country}). Para cualquier cuestión de privacidad, escribe a{" "}
+          El responsable del tratamiento es {LEGAL.owner} (SIREN {LEGAL.siren}), con domicilio en {LEGAL.address}, {LEGAL.country}. Para cualquier cuestión de privacidad, escribe a{" "}
           <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>.
         </p>
 
@@ -67,7 +67,8 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong>Telegram y WhatsApp:</strong> los mensajes que recibe tu bot o tu número conectado, y los que envías con tu
-                aprobación.
+                aprobación. En WhatsApp solo se leen los mensajes del número de empresa que conectas: nunca tu WhatsApp personal ni los
+                grupos. Las notas de voz se transcriben y el audio no se guarda.
               </li>
               <li>
                 <strong>Otras herramientas</strong> que conectes (CRM, inmobiliaria, contabilidad, bases de datos o APIs propias): los
@@ -161,7 +162,7 @@ export default function PrivacyPage() {
             antirrobots del acceso). Tratan los datos por cuenta nuestra y solo para prestar el servicio.
           </li>
           <li>
-            <strong>Los servicios que conectas</strong> (Google, tu proveedor de correo, Telegram, Twilio para WhatsApp, Buffer para tus
+            <strong>Los servicios que conectas</strong> (Google, tu proveedor de correo, Telegram, Twilio o Meta Platforms para WhatsApp, Buffer para tus
             redes sociales, tu CRM…), para leer o enviar lo que pides.
           </li>
         </ul>

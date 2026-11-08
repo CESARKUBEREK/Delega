@@ -18,7 +18,7 @@ export default function TermsPage() {
         <p className="legal-updated">Última actualización: {LEGAL.updated}</p>
 
         <p>
-          Estos términos regulan el uso de MarchaSolo, que ofrece {LEGAL.owner} ({LEGAL.country}). Al crear una cuenta los aceptas. Cómo
+          Estos términos regulan el uso de MarchaSolo, que ofrece {LEGAL.owner} (SIREN {LEGAL.siren}, {LEGAL.address}, {LEGAL.country}). Al crear una cuenta los aceptas. Cómo
           tratamos tus datos se explica en la <Link href="/privacidad">política de privacidad</Link>.
         </p>
 

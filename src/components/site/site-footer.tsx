@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Logo } from "@/components/logo"
 import { FooterAccountLinks } from "./account-hint"
 import { CONTACT_EMAIL, SITE_LINKS, SOCIAL_LINKS } from "./nav-links"
+import { LEGAL } from "@/lib/legal"
 
 // Pie del sitio público: enlaces del producto (sin Precios ni Cómo funciona),
 // contacto y redes.
@@ -60,7 +61,9 @@ export function SiteFooter({ inApp = false }: { inApp?: boolean }) {
         </div>
       </div>
       <div className="site-container site-footer-bottom">
-        <span>© 2026 MarchaSolo</span>
+        <span>
+          © 2026 MarchaSolo, un servicio de {LEGAL.owner} · SIREN {LEGAL.siren} · {LEGAL.address}, {LEGAL.country}
+        </span>
         <FooterAccountLinks />
       </div>
     </footer>
