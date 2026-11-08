@@ -150,7 +150,7 @@ export function DoneStep({
         ))}
       </ul>
 
-      {isAdmin && ai?.ok && toolReady && neededConnections.includes("email") ? <InboxResult workspaceId={workspaceId} base={base} /> : null}
+      {isAdmin && aiAvailable && toolReady && neededConnections.includes("email") ? <InboxResult workspaceId={workspaceId} base={base} /> : null}
 
       {toolCheck?.ok === false ? <p className="text-sm text-alert" role="alert">{toolCheck.error}</p> : null}
       {error && <p className="text-sm text-alert">{error}</p>}
@@ -228,7 +228,7 @@ function InboxResult({ workspaceId, base }: { workspaceId: string; base: string 
       const r = await getOnboardingResult(workspaceId).catch(() => null)
       if (stop) return
       setResult(r)
-      const settling = r !== null && (r.total === 0 || (r.ownAi && r.classified < r.total))
+      const settling = r !== null && (r.total === 0 || ((r.ownAi || r.trialAi) && r.classified < r.total))
       if (settling && Date.now() - started < 180_000) timer = window.setTimeout(tick, 10_000)
     }
     void tick()
@@ -252,7 +252,7 @@ function InboxResult({ workspaceId, base }: { workspaceId: string; base: string 
     )
   }
 
-  if (!result.ownAi) {
+  if (!result.ownAi && !result.trialAi) {
     return (
       <div className={box}>
         <p className="app-eyebrow">TU BANDEJA</p>

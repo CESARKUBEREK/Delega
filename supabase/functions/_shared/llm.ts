@@ -396,8 +396,10 @@ export async function recordUsage(
     latencyMs?: number | null
   },
 ): Promise<number> {
-  // Lo gastado con los planes de prueba no cuenta en el gasto del cliente.
-  const cost = ai.trial ? 0 : costUsd(await modelInfo(admin, ai.model), usage)
+  // Lo gastado con la prueba no cuenta en el gasto del cliente, pero sí en el
+  // saldo de la prueba.
+  const realCost = costUsd(await modelInfo(admin, ai.model), usage)
+  const cost = ai.trial ? 0 : realCost
   await admin.from("usage_events").insert({
     workspace_id: extra.workspaceId,
     provider: ai.provider,
@@ -416,8 +418,15 @@ export async function recordUsage(
     created_by: extra.userId,
   })
   if (ai.trial) {
-    const { error } = await admin.rpc("trial_consume", { p_workspace_id: extra.workspaceId, p_tokens: usage.input + usage.output })
-    if (error) console.error("trial_consume", error.code)
+    if (extra.task === "plan" || extra.task === "review") {
+      // Propuestas del onboarding y análisis de la web: cupo de propuestas (máx. 2).
+      const { error } = await admin.rpc("trial_consume", { p_workspace_id: extra.workspaceId, p_tokens: usage.input + usage.output })
+      if (error) console.error("trial_consume", error.code)
+    } else {
+      // Bandeja y lo demás: saldo en USD de la prueba (decisión del 8 nov).
+      const { error } = await admin.rpc("trial_add_cost", { p_workspace_id: extra.workspaceId, p_cost: realCost })
+      if (error) console.error("trial_add_cost", error.code)
+    }
   }
   return cost
 }

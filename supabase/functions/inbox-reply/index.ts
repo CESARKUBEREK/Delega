@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
 
   // ---------------------------------------------------------------------------
   if (body?.action === "draft") {
-    const routed = await routeAi(admin, workspaceId, "draft_reply")
+    const routed = await routeAi(admin, workspaceId, "draft_reply", { allowTrialRun: true })
     if (isRouteError(routed)) return fail(409, routed.code === "budget" ? "budget" : "no_ai", routed.error)
     const hint = typeof body.instructions === "string" ? body.instructions.trim().slice(0, 1000) : ""
     const transcript = messages
