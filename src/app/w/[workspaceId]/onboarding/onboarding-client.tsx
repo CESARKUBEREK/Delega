@@ -28,6 +28,8 @@ import {
   enrichOnboardingWebsite,
   checkOnboardingConnections,
   adoptBrowserTimezone,
+  checkOnboardingAi,
+  checkOnboardingTrial,
   completeOnboarding,
   generateOnboardingPlan,
   trackOnboardingStep,
@@ -43,7 +45,7 @@ const Check = () => (
 
 const ONBOARDING_STEPS: { id: Step; short: string }[] = [
   { id: "task", short: "Tarea" },
-  { id: "plan", short: "Plan" },
+  { id: "plan", short: "Propuesta" },
   { id: "ai", short: "Tu IA" },
   { id: "connect", short: "Conectar" },
   { id: "done", short: "Listo" },
@@ -134,6 +136,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   const [conversationId, setConversationId] = useState<string | null>(saved?.conversationId ?? null)
   const [trialRemaining, setTrialRemaining] = useState<number | null>(saved?.trialRemaining ?? null)
   const [flowId, setFlowId] = useState<string | null>(saved?.flowId ?? null)
+  // «Tu IA» se salta si ya hay IA conectada o queda prueba gratuita: en ese caso
+  // no hay nada que decidir y el paso solo añadía un clic.
+  const [aiSkipped, setAiSkipped] = useState(false)
   const [pending, startTransition] = useTransition()
 
   // Cada paso comienza desde arriba, aunque el contenido nuevo sea más corto.
@@ -184,6 +189,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     if (i < 0 || i >= currentIndex) return false
     if (target !== "task" && !plan) return false
     if (target === "connect" && needed === "none") return false
+    if (target === "ai" && aiSkipped) return false
     return true
   }
   const goToStep = (target: Step) => {
@@ -194,7 +200,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
 
   const validateTask = useCallback((value: string) => {
     if (value.length < 12) {
-      setError("Cuéntame un poco más o utiliza la opción de descubrir oportunidades.")
+      setError("Cuéntame un poco más, o pulsa «No sé todavía; ayúdame a descubrirlo».")
       return false
     }
     if (value.length > 500) {
@@ -258,6 +264,24 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     }
   }
 
+  // Contexto de la web confirmado por la persona, para preparar la propuesta.
+  const buildWebsiteContext = (): string | undefined => {
+    if (!websiteSnapshot || !businessProfile || !profileConfirmed) return undefined
+    return [
+      websiteSnapshot.title ? `Título de la web: ${websiteSnapshot.title}` : "",
+      websiteSnapshot.description ? `Descripción pública: ${websiteSnapshot.description}` : "",
+      websiteSnapshot.language ? `Idioma detectado: ${websiteSnapshot.language}` : "",
+      ...BUSINESS_PROFILE_FIELDS.map(({ key, label }) => {
+        const field = businessProfile[key]
+        const value = field.value.trim()
+        if (!value) return ""
+        const evidence = field.evidence[0] ? ` Evidencia: ${field.evidence[0]}` : ""
+        const sourceUrl = field.evidenceSources[0] ? ` Fuente: ${field.evidenceSources[0]}` : ""
+        return `${label}: ${value}.${evidence}${sourceUrl}`
+      }),
+    ].filter(Boolean).join("\n").slice(0, 3_000)
+  }
+
   const handleTaskSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (websiteSnapshot && !profileConfirmed) {
@@ -270,21 +294,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     setTask(requestedTask)
 
     startTransition(async () => {
-      const websiteContext = websiteSnapshot && businessProfile && profileConfirmed
-        ? [
-            websiteSnapshot.title ? `Título de la web: ${websiteSnapshot.title}` : "",
-            websiteSnapshot.description ? `Descripción pública: ${websiteSnapshot.description}` : "",
-            websiteSnapshot.language ? `Idioma detectado: ${websiteSnapshot.language}` : "",
-            ...BUSINESS_PROFILE_FIELDS.map(({ key, label }) => {
-              const field = businessProfile[key]
-              const value = field.value.trim()
-              if (!value) return ""
-              const evidence = field.evidence[0] ? ` Evidencia: ${field.evidence[0]}` : ""
-              const sourceUrl = field.evidenceSources[0] ? ` Fuente: ${field.evidenceSources[0]}` : ""
-              return `${label}: ${value}.${evidence}${sourceUrl}`
-            }),
-          ].filter(Boolean).join("\n").slice(0, 3_000)
-        : undefined
+      const websiteContext = buildWebsiteContext()
       const result = await generateOnboardingPlan({
         workspaceId,
         message: requestedTask,
@@ -331,21 +341,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     if (!plan || !task.trim() || pending || source === "trial") return
     setError(null)
     startTransition(async () => {
-      const websiteContext = websiteSnapshot && businessProfile && profileConfirmed
-        ? [
-            websiteSnapshot.title ? `Título de la web: ${websiteSnapshot.title}` : "",
-            websiteSnapshot.description ? `Descripción pública: ${websiteSnapshot.description}` : "",
-            websiteSnapshot.language ? `Idioma detectado: ${websiteSnapshot.language}` : "",
-            ...BUSINESS_PROFILE_FIELDS.map(({ key, label }) => {
-              const field = businessProfile[key]
-              const value = field.value.trim()
-              if (!value) return ""
-              const evidence = field.evidence[0] ? ` Evidencia: ${field.evidence[0]}` : ""
-              const sourceUrl = field.evidenceSources[0] ? ` Fuente: ${field.evidenceSources[0]}` : ""
-              return `${label}: ${value}.${evidence}${sourceUrl}`
-            }),
-          ].filter(Boolean).join("\n").slice(0, 3_000)
-        : undefined
+      const websiteContext = buildWebsiteContext()
       const result = await generateOnboardingPlan({
         workspaceId,
         message: task,
@@ -357,7 +353,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
         return
       }
       if (result.source !== "trial") {
-        setError("La IA de prueba no pudo preparar el plan. No se ha consumido una ejecución de automatización; puedes volver a intentarlo o continuar con el borrador.")
+        setError("La IA de prueba no pudo preparar la propuesta. Puedes volver a intentarlo o seguir con el borrador.")
         return
       }
       const savedPlan = await saveFlowPlan({ workspaceId, flowId, plan: result.plan, fileIds: [] })
@@ -374,20 +370,33 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     })
   }
 
-  // Plan aceptado → persistirlo una sola vez antes de continuar.
+  // Plan aceptado → persistirlo una sola vez antes de continuar. Si ya hay IA
+  // conectada o queda prueba gratuita, se salta «Tu IA».
   const acceptPlan = () => {
     if (!plan || pending) return
     setError(null)
     startTransition(async () => {
       const savedFlowId = await persistPlan()
       if (!savedFlowId) return
-      setStep("ai")
+      const [ai, trial] = await Promise.all([
+        checkOnboardingAi(workspaceId).catch(() => null),
+        checkOnboardingTrial(workspaceId).catch(() => null),
+      ])
+      const ready = (ai?.ok && ai.connected) || (trial?.ok && trial.runAvailable)
+      if (ready) {
+        setAiSkipped(true)
+        afterAi(savedFlowId)
+      } else {
+        setAiSkipped(false)
+        setStep("ai")
+      }
     })
   }
 
   // Después de la IA, la herramienta que pide el plan (si pide alguna).
-  const afterAi = () => {
-    if (requirements.length === 0) finish()
+  // savedFlowId: el borrador recién guardado (el estado aún no se ha actualizado).
+  const afterAi = (savedFlowId?: string) => {
+    if (requirements.length === 0) finish(savedFlowId)
     else {
       setConnectionIndex(0)
       setStep("connect")
@@ -395,10 +404,10 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   }
 
   // Al llegar a «Listo» se marca el onboarding como terminado.
-  const finish = () => {
+  const finish = (existingFlowId?: string) => {
     setError(null)
     startTransition(async () => {
-      const savedFlowId = await persistPlan()
+      const savedFlowId = existingFlowId ?? (await persistPlan())
       if (!savedFlowId) return
       try {
         const result = await completeOnboarding(workspaceId)
@@ -425,8 +434,10 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
     setError(null)
   }
 
-  // Pasos visibles (si el plan no pide herramienta, «Conectar» no cuenta).
-  const visibleSteps = ONBOARDING_STEPS.filter((s) => !(s.id === "connect" && requirements.length === 0))
+  // Pasos visibles: sin herramienta, «Conectar» no cuenta; con IA o prueba, «Tu IA» tampoco.
+  const visibleSteps = ONBOARDING_STEPS.filter(
+    (s) => !(s.id === "connect" && requirements.length === 0) && !(s.id === "ai" && aiSkipped),
+  )
   const stepOrdinal = (id: Step) => {
     const i = visibleSteps.findIndex((s) => s.id === id)
     return i >= 0 ? i + 1 : 1
@@ -436,7 +447,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   return (
     <div className="setup flex flex-col gap-6 max-w-2xl mx-auto" data-step={step}>
       <div className="setup-header flex flex-col gap-2">
-        <p className="app-eyebrow">ONBOARDING · {workspaceName.toUpperCase()}</p>
+        <p className="app-eyebrow">PRIMEROS PASOS · {workspaceName.toUpperCase()}</p>
         <h1 className="rotulo text-2xl">
           {userName ? `Hola ${userName}, ¡pongamos a rodar MarchaSolo!` : "¡Pongamos a rodar MarchaSolo!"}
         </h1>
@@ -613,18 +624,18 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
             {reply && <p className="text-graphite mt-1 whitespace-pre-wrap">{reply}</p>}
             {source === "trial" && (
               <p className="mt-2 text-xs text-graphite">
-                Plan preparado con un modelo de IA avanzado, por cuenta de MarchaSolo
+                Preparada por nuestra IA, por cuenta de MarchaSolo
                 {trialRemaining !== null
                   ? trialRemaining > 0
-                    ? ` (te queda ${trialRemaining} ${trialRemaining === 1 ? "plan" : "planes"} de prueba)`
-                    : " (era tu último plan de prueba)"
+                    ? ` (puedes pedir ${trialRemaining} ${trialRemaining === 1 ? "propuesta más" : "propuestas más"})`
+                    : " (era tu última propuesta gratis)"
                   : ""}
-                . En el paso siguiente puedes probarlo gratis con nuestra IA o conectar la tuya.
+                . Podrás probarla gratis con nuestra IA, sin conectar la tuya.
               </p>
             )}
             {source === "local" && (
               <p className="mt-2 text-xs text-graphite">
-                Plan orientativo creado sin IA. Al conectar tu IA, podremos adaptarlo mejor a tu negocio.
+                Propuesta orientativa preparada sin IA. Con IA, podremos adaptarla mejor a tu negocio.
               </p>
             )}
           </div>
@@ -640,7 +651,7 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
               disabled={pending}
               className="inline-flex h-11 items-center rounded-xl bg-stroke px-5 font-semibold text-stroke-ink disabled:opacity-60"
             >
-              {pending ? "Guardando el plan…" : "Me gusta, continuar →"}
+              {pending ? "Guardando la propuesta…" : "Me gusta, seguir →"}
             </button>
             <button
               onClick={() => {
@@ -672,9 +683,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           lastStep={needed === "none"}
           stepLabel={`Paso ${stepOrdinal("ai")} de ${stepTotal}`}
           onBack={() => setStep("plan")}
-          onContinue={afterAi}
+          onContinue={() => afterAi()}
           onRetryTrial={retryWithMarchaSoloAi}
-          onFinishDraft={finish}
+          onFinishDraft={() => finish()}
         />
       )}
 
@@ -689,8 +700,9 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           error={error}
           pending={pending}
           stepLabel={`Paso ${stepOrdinal("connect")} de ${stepTotal}`}
-          onBack={() => setStep("ai")}
-          onContinue={finish}
+          backLabel={aiSkipped ? "← Volver a la propuesta" : "← Volver a tu IA"}
+          onBack={() => setStep(aiSkipped ? "plan" : "ai")}
+          onContinue={() => finish()}
         />
       )}
 
@@ -705,7 +717,10 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
           flowId={flowId}
           chatLink={chatHref(base, conversationId, task)}
           stepLabel={`Paso ${stepOrdinal("done")} de ${stepTotal}`}
-          onConnectAi={() => setStep("ai")}
+          onConnectAi={() => {
+            setAiSkipped(false)
+            setStep("ai")
+          }}
           onConnectTool={(connection) => {
             const index = requirements.indexOf(connection)
             setConnectionIndex(index >= 0 ? index : 0)
@@ -718,31 +733,28 @@ function OnboardingFlow({ workspaceId, workspaceName, isAdmin, userName, cards, 
   )
 }
 
-// Bienvenida: presenta MarchaSolo antes de pedir la primera tarea.
+// Bienvenida: presenta MarchaSolo antes de pedir la primera tarea. Compacta,
+// para que en el celular la pregunta del paso 1 se vea sin desplazarse mucho.
 // Marca clara (decisión del 2 nov): fondo claro, azul marino y turquesa; sin
 // modo oscuro ni brillos violeta.
 function Intro() {
   return (
-    <section aria-labelledby="intro-title" className="relative overflow-hidden rounded-[24px] border border-rule bg-[#f3f6fa] px-6 py-7 text-[#0b1f3b] sm:px-8 sm:py-9">
+    <section aria-labelledby="intro-title" className="relative overflow-hidden rounded-[24px] border border-rule bg-[#f3f6fa] px-5 py-5 text-[#0b1f3b] sm:px-8 sm:py-7">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
-        <svg viewBox="0 0 120 120" className="onboarding-orb-enter h-16 w-16 shrink-0 sm:h-24 sm:w-24" role="img" aria-label="El anillo de MarchaSolo">
+        <svg viewBox="0 0 120 120" className="onboarding-orb-enter hidden h-20 w-20 shrink-0 sm:block" role="img" aria-label="El anillo de MarchaSolo">
           <circle cx="60" cy="60" r="44" fill="none" stroke="#0b1f3b" strokeOpacity=".12" strokeWidth="10" />
           <circle cx="60" cy="60" r="44" fill="none" stroke="#00c2a8" strokeWidth="10" strokeLinecap="round" strokeDasharray="190 87" transform="rotate(-90 60 60)" />
           <circle cx="60" cy="60" r="14" fill="#34d399" />
         </svg>
         <div className="max-w-xl">
           <p className="text-[11px] font-bold tracking-[.16em] text-[#007a6c]">TU ESPACIO DE TRABAJO</p>
-          <h2 id="intro-title" className="mt-2 text-balance text-[clamp(26px,4vw,34px)] font-semibold leading-[1.1] tracking-[-.03em]">
+          <h2 id="intro-title" className="mt-2 text-balance text-[clamp(22px,4vw,30px)] font-semibold leading-[1.1] tracking-[-.03em]">
             Tu negocio. <span className="text-[#007a6c]">Tu equipo.</span>
             <br />
             Tu manera de trabajar.
           </h2>
-          <p className="mt-3 max-w-lg text-sm leading-6 text-graphite sm:text-[15px]">MarchaSolo conoce cómo trabajas, identifica tareas que puede asumir y prepara un equipo digital adaptado a tu negocio. Tú revisas cada propuesta y mantienes el control de las acciones.</p>
+          <p className="mt-2 max-w-lg text-sm leading-6 text-graphite sm:text-[15px]">MarchaSolo prepara el trabajo repetitivo de tu negocio. Tú revisas y apruebas cada acción antes de que salga.</p>
         </div>
-      </div>
-      <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-rule pt-4">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs text-[#0b1f3b]"><svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="#007a6c" strokeWidth="1.8" aria-hidden="true"><path d="M10 2.5 16 5v4.2c0 3.5-2.5 6.3-6 8.3-3.5-2-6-4.8-6-8.3V5l6-2.5Z"/><path d="m7 9.8 2 2 4-4" /></svg>Tú decides. Nada se ejecuta sin permiso.</span>
-        <span className="text-xs text-graphite">Personalizado · Sin conocimientos técnicos</span>
       </div>
     </section>
   )
