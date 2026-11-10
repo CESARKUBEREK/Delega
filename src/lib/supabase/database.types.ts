@@ -887,6 +887,87 @@ export type Database = {
         }
         Relationships: []
       }
+      pages: {
+        Row: {
+          archived_at: string | null
+          content_md: string
+          created_at: string
+          created_by: string | null
+          flow_id: string | null
+          id: string
+          sections: Json
+          slug: string
+          source_ref: Json
+          template: string | null
+          title: string
+          updated_at: string
+          updated_by_run: string | null
+          workspace_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          content_md?: string
+          created_at?: string
+          created_by?: string | null
+          flow_id?: string | null
+          id?: string
+          sections?: Json
+          slug: string
+          source_ref?: Json
+          template?: string | null
+          title: string
+          updated_at?: string
+          updated_by_run?: string | null
+          workspace_id: string
+        }
+        Update: {
+          archived_at?: string | null
+          content_md?: string
+          created_at?: string
+          created_by?: string | null
+          flow_id?: string | null
+          id?: string
+          sections?: Json
+          slug?: string
+          source_ref?: Json
+          template?: string | null
+          title?: string
+          updated_at?: string
+          updated_by_run?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      page_versions: {
+        Row: {
+          content_md: string
+          created_at: string
+          edited_by: string | null
+          flow_run_id: string | null
+          id: number
+          page_id: string
+          workspace_id: string
+        }
+        Insert: {
+          content_md: string
+          created_at?: string
+          edited_by?: string | null
+          flow_run_id?: string | null
+          id?: never
+          page_id: string
+          workspace_id: string
+        }
+        Update: {
+          content_md?: string
+          created_at?: string
+          edited_by?: string | null
+          flow_run_id?: string | null
+          id?: never
+          page_id?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

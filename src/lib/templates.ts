@@ -583,6 +583,40 @@ export const TEMPLATES: FlowTemplate[] = [
     },
   },
   {
+    id: "informe-propietario",
+    category: "Inmobiliaria",
+    needs: ["ai", "tokko", "imap"],
+    settings: { schedule: { frequency: "weekly", time: "08:00", weekday: 1, day_of_month: 1 } },
+    setup:
+      "Cada lunes a las 8:00 deja en Páginas un informe por propiedad con lo que pasó en la semana: consultas, visitas y cambios en Tokko. No envía nada: tú decides qué compartir con cada propietario.",
+    plan: {
+      version: 1,
+      name: "Informe para el propietario",
+      summary: "Cada lunes actualiza una página por propiedad con las consultas, las visitas y los cambios de la semana, lista para enseñársela al propietario.",
+      trigger: { type: "schedule", description: "Cada lunes a las 8:00" },
+      connections: [
+        { kind: "email", purpose: "Consultas de la bandeja (correo y WhatsApp) sobre cada propiedad" },
+        { kind: "properties", purpose: "Ficha de cada propiedad en Tokko" },
+        { kind: "calendar", purpose: "Visitas de la semana, si Google Calendar está conectado" },
+      ],
+      steps: steps([
+        { kind: "read", title: "Consultas de la semana", description: "Conversaciones de la bandeja de los últimos 7 días que preguntan por una propiedad concreta (por dirección, código o enlace).", connection: "email", requires_approval: false },
+        { kind: "read", title: "Ficha en Tokko", description: "Para cada propiedad con consultas (como mucho 10): dirección, operación, precio y estado actuales.", connection: "properties", requires_approval: false },
+        { kind: "read", title: "Visitas", description: "Si Calendar está conectado, eventos de los últimos 7 días con «visita» y la dirección de la propiedad en el título.", connection: "calendar", requires_approval: false },
+        {
+          kind: "generate",
+          title: "Actualizar el informe de cada propiedad",
+          description:
+            "Una página por propiedad llamada «Informe – {dirección}», con las secciones Resumen (consultas, visitas y cambios de precio o estado), Consultas (nombre del interesado, canal, fecha, qué preguntó y si se respondió), Visitas y Próximos pasos. Solo datos de las fuentes; nunca teléfonos ni correos.",
+          connection: "none",
+          requires_approval: false,
+        },
+        { kind: "notify", title: "Avisarte", description: "Qué informes se actualizaron. Si no hubo consultas, no avisar.", connection: "none", requires_approval: false },
+      ]),
+      open_questions: [],
+    },
+  },
+  {
     id: "propiedades-nuevas",
     category: "Inmobiliaria",
     needs: ["ai", "tokko", "imap"],
@@ -873,7 +907,7 @@ export const VERTICALS: Vertical[] = [
     pitch: "Cada interesado recibe al momento las propiedades que encajan, las visitas tienen seguimiento y ninguna consulta se queda sin respuesta.",
     needs: ["imap", "tokko", "calendar", "contacts"],
     routines: ["bandeja", "agenda", "seguimiento", "recepcionista"],
-    templates: ["consultas-propiedades", "seguimiento-visitas", "propiedades-nuevas"],
+    templates: ["consultas-propiedades", "seguimiento-visitas", "propiedades-nuevas", "informe-propietario"],
   },
   {
     id: "clinicas",
