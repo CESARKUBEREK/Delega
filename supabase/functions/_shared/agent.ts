@@ -30,6 +30,7 @@ import { apiRequest } from "./api-integrations.ts"
 import { MailError, replyHeaders, sendAndRecord } from "./imap.ts"
 import { inboxList, inboxRead, loadThread } from "./inbox-read.ts"
 import { notifyMe } from "./notify.ts"
+import { MAX_PAGE_UPDATES_PER_RUN, updatePage, updatePageTitle } from "./pages/index.ts"
 import { isWorkspaceAdmin, workspaceTimezone } from "./core.ts"
 import { BUSINESS_READS, businessRead, businessTools, type TokkoLeadPending, tokkoLeadPending } from "./business-tools.ts"
 import { createLead, TokkoError, tokkoKey } from "./tokko.ts"
@@ -199,6 +200,9 @@ type Resources = {
   // Agenda: la automatización permite crear citas sin aprobación (si la hora
   // está libre y dentro de su horario). Solo en ejecuciones de administradores.
   autoBooking: VoiceConfig | null
+  // Páginas vivas (fase 10): solo en ejecuciones de administradores, que son
+  // quienes las ven.
+  pagesActive: boolean
 }
 
 function kindOf(mime: string | null): FileKind {
@@ -305,6 +309,7 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
       starterIsAdmin && calendarSettings?.mode === "auto" && calendar?.status === "active"
         ? readVoiceConfig({ ...((find("grok_voice")?.config ?? {}) as Record<string, unknown>), ...(calendarSettings.days ? { days: calendarSettings.days } : {}), ...(calendarSettings.ranges ? { ranges: calendarSettings.ranges } : {}) })
         : null,
+    pagesActive: starterIsAdmin,
   }
 }
 
@@ -556,6 +561,21 @@ function toolDefs(r: Resources): ToolDef[] {
       )
     }
   }
+  if (r.pagesActive) {
+    tools.push(
+      fn(
+        "update_page",
+        "Crea o actualiza una página viva del espacio (Markdown). Sin sección, reemplaza la página entera; con sección, " +
+          "reemplaza solo «## Sección» (o la añade al final). No requiere aprobación: la página no sale del espacio. " +
+          `Como mucho ${MAX_PAGE_UPDATES_PER_RUN} veces por ejecución y 50 KB por página.`,
+        {
+          page: { type: "string", description: "Nombre de la página, el mismo en cada ejecución (p. ej. «Informe Corrientes 1234»)." },
+          section: { type: "string", description: "Nombre de la sección «## …» a reemplazar, sin los ##; vacío = toda la página." },
+          content: { type: "string", description: "Markdown de la sección (sin su título) o de la página entera." },
+        },
+      ),
+    )
+  }
   tools.push(
     fn(
       "notify_me",
@@ -599,6 +619,9 @@ Reglas:
 - Xubio es contabilidad: solo puedes consultar (xubio_list, xubio_get). No digas que creaste facturas ni cobros.
 - Redes sociales (Buffer): mira los canales con buffer_channels y prepara la publicación con buffer_post (requiere
   aprobación). Adapta el texto a la red (más corto en X, sin enlaces en el texto de Instagram). Sin imágenes por ahora.
+- Páginas vivas (update_page): usa siempre el mismo nombre de página para que se actualice y no se cree otra. Escribe
+  solo datos de las fuentes (fechas, cifras, nombres tal como aparecen); si falta un dato, escribe «sin datos». Nunca
+  pongas teléfonos ni correos de terceros en una página. Markdown sencillo: ##, listas, tablas y **negrita**.
 - Cuando acabes, llama a finish con un resumen en español: qué hiciste, resultados clave y qué quedó pendiente.`
 
 // ---------------------------------------------------------------------------
@@ -1267,6 +1290,26 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       const out = await notifyMe(admin, run, { subject: str(args.subject, 300), text: str(args.text, 8000) }, res.mailActive)
       respond(out)
       if (!out.ok) await addEvent(admin, run, "error", `No se pudo enviar el aviso: ${out.error}`, { tool: call.name })
+      await save(admin, run, {})
+      continue
+    }
+
+    // Página viva: no sale del espacio, sin aprobación (fase 10).
+    if (call.name === "update_page") {
+      let out: Awaited<ReturnType<typeof updatePage>>
+      if (!res.pagesActive) out = { ok: false, error: "Las páginas solo están disponibles en ejecuciones de administradores." }
+      else {
+        const { count } = await admin.from("run_events").select("id", { count: "exact", head: true }).eq("run_id", run.id).eq("detail->>tool", "update_page").eq("kind", "tool")
+        out = await updatePage(admin, run, args, count ?? 0)
+      }
+      respond(out)
+      await addEvent(
+        admin,
+        run,
+        out.ok ? "tool" : "error",
+        updatePageTitle(out),
+        out.ok ? { tool: "update_page", page_id: out.page_id, section: out.section, added: out.added, removed: out.removed } : { tool: "update_page" },
+      )
       await save(admin, run, {})
       continue
     }
