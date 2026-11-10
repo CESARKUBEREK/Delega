@@ -69,6 +69,17 @@ const nextConfig: NextConfig = {
       { source: "/como-empezar", destination: "/como-funciona#empezar", permanent: true },
     ]
   },
+  // Servidor MCP de MarchaSolo (fase 11): la URL pública es /mcp y la sirve la
+  // Edge Function mcp de Supabase. También sus metadatos OAuth (RFC 9728).
+  async rewrites() {
+    if (!supabaseUrl) return []
+    const fn = `${supabaseUrl}/functions/v1/mcp`
+    return [
+      { source: "/mcp", destination: fn },
+      { source: "/.well-known/oauth-protected-resource", destination: `${fn}/.well-known/oauth-protected-resource` },
+      { source: "/.well-known/oauth-protected-resource/mcp", destination: `${fn}/.well-known/oauth-protected-resource/mcp` },
+    ]
+  },
   async headers() {
     return [
       { source: "/((?!hablar/).*)", headers: securityHeaders },

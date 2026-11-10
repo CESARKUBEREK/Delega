@@ -70,7 +70,7 @@ jobs:
       - name: Funciones sin verificación de JWT (webhook y tareas periódicas)
         run: |
           set -o pipefail
-          supabase functions deploy telegram-webhook whatsapp-webhook mail-cron runs-cron voice-mcp voice-web \
+          supabase functions deploy telegram-webhook whatsapp-webhook mail-cron runs-cron voice-mcp voice-web mcp \
             --no-verify-jwt --project-ref "$PROJECT_REF" --use-api 2>&1 | tee /tmp/deploy2.txt || {
               echo "::error::$(tail -n 8 /tmp/deploy2.txt | tr '\n' ' ' | cut -c1-900)"
               exit 1

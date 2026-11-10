@@ -6,7 +6,8 @@ import { supabasePublishableKey, supabaseUrl } from "./env"
 // Rutas que exigen sesión y rutas que solo tienen sentido sin ella.
 // /integraciones es la página pública de marketing; el OAuth de Google
 // vive en /integraciones/google y sí requiere sesión.
-const PROTECTED_PREFIXES = ["/w", "/reset-password", "/abrir"]
+// /oauth: la pantalla de consentimiento de los asistentes conectados (fase 11).
+const PROTECTED_PREFIXES = ["/w", "/reset-password", "/abrir", "/oauth"]
 const PROTECTED_EXACT_OR_NESTED = ["/integraciones/google"]
 // /w/<espacio>/…: se recuerda el último espacio para abrir la app instalada en él.
 const WORKSPACE_PATH = /^\/w\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\/|$)/i

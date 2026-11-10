@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { requireUser } from "@/lib/auth"
@@ -146,6 +147,20 @@ async function Workspace({ params }: { params: PageProps<"/w/[workspaceId]/confi
                   La hora a la que se ejecutan las automatizaciones programadas y la que usa el agente para fechas y agenda.
                 </p>
                 <TimezoneForm workspaceId={workspace.id} current={workspace.timezone} zones={zones} />
+              </div>
+            </div>
+          ) : null}
+
+          {isAdmin ? (
+            <div className="settings-card">
+              <h2 className="border-b border-ink px-5 py-3 font-semibold">Asistentes conectados</h2>
+              <div className="flex flex-col gap-3 px-5 py-4 text-sm">
+                <p className="text-graphite">
+                  Usa MarchaSolo desde Claude, ChatGPT o Grok Bot: pueden leer y ordenar tu bandeja y dejarte borradores. Nada se envía sin que lo apruebes aquí.
+                </p>
+                <Link href={`/w/${workspace.id}/asistentes`} className="text-link underline underline-offset-4">
+                  Ver y gestionar asistentes
+                </Link>
               </div>
             </div>
           ) : null}
