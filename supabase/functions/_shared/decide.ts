@@ -57,6 +57,15 @@ export async function decideRun(
     await addEvent(admin, claimed, "message", "Decisión tomada desde Telegram", { tool: pending.tool, decided_by: userId, via: "telegram" })
   }
 
+  // Borrador de un asistente (MCP, fase 11): no hay agente que siga. Al decidir,
+  // la ejecución termina; así nunca llama a una IA.
+  if (claimed.trigger?.type === "mcp_draft") {
+    const sent = approve && (JSON.parse(output) as { ok?: boolean }).ok === true
+    const text = !approve ? "Borrador descartado." : sent ? "Enviado." : "No se pudo enviar."
+    await finishRun(admin, claimed, approve && !sent ? "failed" : "succeeded", text)
+    return { ok: true, run: claimed, pending, output }
+  }
+
   appendToolResult(claimed, pending.call_id, output)
   claimed.status = "running"
   claimed.pending_action = null

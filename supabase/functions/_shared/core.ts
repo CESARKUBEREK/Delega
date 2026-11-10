@@ -58,6 +58,11 @@ export async function authenticate(req: Request): Promise<AuthContext | Response
   const { data, error } = await userClient.auth.getClaims(token)
   const sub = data?.claims?.sub
   if (error || typeof sub !== "string") return fail(401, "unauthenticated", "La sesión no es válida.")
+  // Tokens OAuth de asistentes conectados (fase 11): solo valen en /mcp. Así un
+  // asistente no puede aprobar sus propios borradores ni usar otras funciones.
+  if ((data?.claims as { client_id?: unknown } | undefined)?.client_id) {
+    return fail(403, "assistant_token", "Las conexiones de asistentes solo pueden usar el servidor MCP.")
+  }
 
   const admin = createClient(SUPABASE_URL, keyFromEnv("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY"), {
     auth: { persistSession: false, autoRefreshToken: false },

@@ -22,5 +22,9 @@ export function runOrigin(trigger: unknown): string {
   if (type === "email_message") return "Lanzada por un correo"
   if (type === "inbox_prepare") return (trigger as { mode?: string }).mode === "followup" ? "Recordatorio desde la bandeja" : "Respuesta desde la bandeja"
   if (type === "schedule") return "Ejecución programada"
+  if (type === "mcp_draft") {
+    const name = (trigger as { connection_name?: string }).connection_name
+    return name ? `Borrador de ${name} (asistente conectado)` : "Borrador de un asistente conectado"
+  }
   return "Automatización"
 }

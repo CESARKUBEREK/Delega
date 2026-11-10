@@ -739,6 +739,78 @@ export type Database = {
           },
         ]
       }
+      mcp_connections: {
+        Row: {
+          created_at: string
+          id: string
+          key_prefix: string | null
+          kind: string
+          last_used_at: string | null
+          name: string
+          oauth_client_id: string | null
+          revoked_at: string | null
+          scopes: string[]
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_prefix?: string | null
+          kind: string
+          last_used_at?: string | null
+          name: string
+          oauth_client_id?: string | null
+          revoked_at?: string | null
+          scopes?: string[]
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_prefix?: string | null
+          kind?: string
+          last_used_at?: string | null
+          name?: string
+          oauth_client_id?: string | null
+          revoked_at?: string | null
+          scopes?: string[]
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      mcp_calls: {
+        Row: {
+          connection_id: string
+          created_at: string
+          error_code: string | null
+          id: number
+          ok: boolean
+          tool: string
+          workspace_id: string
+        }
+        Insert: {
+          connection_id: string
+          created_at?: string
+          error_code?: string | null
+          id?: never
+          ok: boolean
+          tool: string
+          workspace_id: string
+        }
+        Update: {
+          connection_id?: string
+          created_at?: string
+          error_code?: string | null
+          id?: never
+          ok?: boolean
+          tool?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -1362,6 +1434,15 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { p_token: string }; Returns: string }
+      mcp_key_create: {
+        Args: { p_name: string; p_scopes: string[]; p_workspace_id: string }
+        Returns: { api_key: string; id: string }[]
+      }
+      mcp_oauth_connect: {
+        Args: { p_client_id: string; p_name: string; p_scopes: string[]; p_workspace_id: string }
+        Returns: string
+      }
+      mcp_connection_revoke: { Args: { p_id: string }; Returns: string | null }
       ai_connection_delete: {
         Args: { p_actor: string; p_provider: string; p_workspace_id: string }
         Returns: boolean

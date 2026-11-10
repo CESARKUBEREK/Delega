@@ -78,6 +78,9 @@ export type Admin = SupabaseClient
 
 export type RunTrigger =
   | { type: "manual" }
+  // Borrador que deja un asistente conectado por MCP (fase 11). No lo ejecuta
+  // ningún agente: espera la aprobación y termina (decide.ts).
+  | { type: "mcp_draft"; connection_id: string; connection_name: string; thread_id: string }
   | { type: "telegram_message"; chat_id: string; name?: string | null; message_id: number; text: string }
   // WhatsApp de un cliente (vía Twilio). phone = +34600111222.
   | { type: "whatsapp_message"; phone: string; name?: string | null; message_id: number; text: string }
