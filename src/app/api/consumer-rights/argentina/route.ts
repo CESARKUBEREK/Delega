@@ -2,8 +2,6 @@ import { createHash } from "node:crypto"
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
-export const runtime = "nodejs"
-
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(request: Request) {
