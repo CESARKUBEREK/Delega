@@ -1,6 +1,6 @@
 # Entrega de notificaciones del outbox
 
-El endpoint `GET /api/internal/outbox/dispatch` procesa hasta 25 eventos pendientes. Vercel Cron lo invoca cada cinco minutos. La ruta exige `Authorization: Bearer <OUTBOX_CRON_SECRET>` y usa exclusivamente credenciales de servidor.
+El endpoint `GET /api/internal/outbox/dispatch` procesa hasta 25 eventos pendientes. Vercel Cron lo invoca cada cinco minutos en despliegues de producción. La ruta valida `Authorization: Bearer <CRON_SECRET>` (nombre estándar de Vercel) y usa exclusivamente credenciales de servidor. Las ejecuciones Cron no se disparan en Preview.
 
 ## Variables de entorno
 
@@ -8,7 +8,7 @@ Configurar en Vercel (Production y Preview según corresponda):
 
 - `NEXT_PUBLIC_SUPABASE_URL`: URL del proyecto DOrkesta.
 - `SUPABASE_SERVICE_ROLE_KEY`: clave service-role, solo servidor.
-- `OUTBOX_CRON_SECRET`: secreto aleatorio largo compartido con el cron.
+- `CRON_SECRET`: secreto aleatorio largo compartido con el cron.
 - `RESEND_API_KEY`: clave de API de Resend.
 - `EMAIL_FROM`: remitente verificado en Resend, por ejemplo `MarchaSolo <notificaciones@marchasolo.com>`.
 - `NEXT_PUBLIC_SITE_URL`: URL pública de MarchaSolo para enlaces de facturación.
