@@ -9,14 +9,14 @@ export const metadata = publicPageMetadata({
   title: "Tu negocio, en automático",
   absoluteTitle: "MarchaSolo · Tu negocio, en automático",
   description:
-    "Un equipo digital con IA que conecta tus aplicaciones, coordina procesos y realiza tareas para tu negocio. Empieza gratis, sin tarjeta.",
+    "MarchaSolo conecta las aplicaciones que utilizas, organiza tareas y automatiza procesos para que dediques menos tiempo al trabajo repetitivo y más a tu negocio.",
   path: "/",
 })
 
 // Portada pública, también con sesión (el logo de la app lleva aquí); la
 // cabecera cambia «Entrar» por «Ir a mi espacio».
 export default function HomePage() {
-  // Lo que más se usa al empezar: la bandeja, WhatsApp y el caso inmobiliario.
+  // Ejemplos de procesos para distintos tipos de negocio y equipos.
   const preview = ["bandeja-clientes", "whatsapp-negocio", "inmobiliaria-tokko"]
     .map((id) => USE_CASES.find((c) => c.id === id))
     .filter((c): c is (typeof USE_CASES)[number] => Boolean(c))
@@ -27,25 +27,25 @@ export default function HomePage() {
         <section className="site-hero">
           <div className="site-container site-hero-grid">
             <div className="site-hero-copy">
-              <p className="site-kicker site-hero-kicker">UN EQUIPO DIGITAL PARA TU NEGOCIO</p>
+              <p className="site-kicker site-hero-kicker">AUTOMATIZACIÓN PARA TU NEGOCIO</p>
               <h1 className="site-display">
-                Un equipo digital para que tu negocio avance.
-                <span>Menos trabajo manual. Más tiempo para hacer crecer tu negocio.</span>
+                Tu negocio, en automático.
+                <span>Más tiempo para lo que realmente importa.</span>
               </h1>
               <p className="site-lead site-hero-lead">
-                MarchaSolo conecta tus aplicaciones, organiza procesos y coordina tareas de principio a fin. Consulta información, prepara respuestas y ejecuta los pasos autorizados. Tú mantienes el control de las acciones que requieren revisión.
+                MarchaSolo conecta las aplicaciones que utilizas, organiza tareas y automatiza procesos para que puedas dedicar menos tiempo al trabajo repetitivo y más a tu negocio.
               </p>
               <div className="site-actions">
                 <Link href="/crear-cuenta" className="btn btn-primary">
-                  Probar gratis
+                  Comenzar gratis
                 </Link>
                 <Link href="/como-funciona" className="btn btn-secondary">
                   Ver cómo funciona
                 </Link>
               </div>
               <ul className="site-hero-note">
-                <li>Sin tarjeta</li>
-                <li>Primeros pasos sin conectar una IA propia</li>
+                <li>Sin conocimientos técnicos</li>
+                <li>Empieza con una tarea</li>
                 <li>Control sobre las acciones externas</li>
               </ul>
             </div>
@@ -67,7 +67,7 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="pasos" className="site-h2">
-                Así de simple
+                De una instrucción a un proceso coordinado
               </h2>
               <p className="site-lead">
                 Describe el resultado que necesitas. MarchaSolo organiza los pasos, utiliza las aplicaciones conectadas y te muestra qué está haciendo.
@@ -95,7 +95,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 4. Tres tareas ejemplo */}
+        {/* 4. Procesos de ejemplo */}
         <section className="site-section" aria-labelledby="casos">
           <div className="site-container">
             <div className="site-section-head">
@@ -162,24 +162,24 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="para-quien" className="site-h2">
-                Más capacidad para trabajar. Sin perder el control.
+                Para profesionales, pequeños negocios y equipos.
               </h2>
             </div>
             <ul className="audience">
               <li>
                 <h3 className="site-h3">Profesionales independientes</h3>
                 <p>
-                  La atención al cliente y el trabajo diario ocupan la jornada. MarchaSolo prepara las tareas repetitivas y facilita su revisión.
+                  La atención al cliente y el trabajo diario ocupan la jornada. MarchaSolo ayuda a organizar las tareas repetitivas y facilita su revisión.
                 </p>
               </li>
               <li>
-                <h3 className="site-h3">Pequeños equipos y agencias</h3>
-                <p>Espacios compartidos y funciones para que cada integrante revise las tareas que le corresponden.</p>
+                <h3 className="site-h3">Pequeños negocios y agencias</h3>
+                <p>Conecta las herramientas del equipo y coordina tareas para que el trabajo avance de forma más ordenada.</p>
               </li>
               <li>
                 <h3 className="site-h3">Inmobiliarias y despachos</h3>
                 <p>
-                  Consultas sobre propiedades con la ficha de Tokko, avisos de vencimientos y documentos preparados a partir de modelos. Xubio permite consultar si un contacto ya es cliente.
+                  Coordina consultas, información de propiedades, avisos de vencimientos y documentos a partir de las aplicaciones conectadas.
                 </p>
               </li>
             </ul>
@@ -191,18 +191,18 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Empieza por un proceso de tu negocio</h2>
+                <h2 className="site-h2">Más tiempo para lo que realmente importa.</h2>
                 <p>
-                  Elige un proceso que hoy te quite tiempo. MarchaSolo te ayuda a organizarlo y probar cómo puede funcionar con tus aplicaciones.
+                  Empieza con una tarea que hoy haces manualmente. Conecta las aplicaciones que utilizas y descubre cómo simplificar ese trabajo.
                 </p>
                 <ul className="site-hero-note" style={{ marginTop: "0.75rem" }}>
                   <li>Sin tarjeta</li>
-                  <li>Prueba gratis con nuestra IA</li>
-                  <li>Revisión de acciones que requieren autorización</li>
+                  <li>Empieza con una tarea concreta</li>
+                  <li>Control sobre las acciones que requieren autorización</li>
                 </ul>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
-                Probar gratis
+                Comenzar gratis
               </Link>
             </div>
           </div>
