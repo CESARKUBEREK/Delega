@@ -2,8 +2,6 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { UUID_RE } from "@/lib/workspace"
 
-export const runtime = "nodejs"
-
 type RouteContext = { params: Promise<{ workspaceId: string }> }
 
 const CUSTOMER_TYPES = new Set(["consumer", "professional", "business"])
