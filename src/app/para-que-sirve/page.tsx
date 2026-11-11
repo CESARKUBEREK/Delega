@@ -23,7 +23,7 @@ type Capability = {
 const CAPABILITIES: Capability[] = [
   {
     id: "whatsapp",
-    title: "WhatsApp del negocio",
+    title: "Atención de consultas por WhatsApp",
     problem:
       "El WhatsApp del negocio no se detiene. Cada mensaje interrumpe otras tareas y una respuesta tardía puede enfriar el interés del cliente.",
     solution:
@@ -49,7 +49,7 @@ const CAPABILITIES: Capability[] = [
   },
   {
     id: "voz",
-    title: "Voz, teléfono y reservas",
+    title: "Atención telefónica y reservas",
     problem: "Llamadas perdidas, mensajes en papel y citas anotadas sin consultar la disponibilidad real.",
     solution:
       "Asistente de voz en la web y por teléfono: responde a partir de los documentos conectados, toma mensajes y ofrece citas dentro del horario configurado. Cada conversación llega a la Bandeja.",
@@ -61,10 +61,10 @@ const CAPABILITIES: Capability[] = [
       meta: "Llamada · 11:42",
       rows: [
         { title: "Entendió la petición", detail: "Quiere visita el jueves por la mañana", state: "done", label: "Hecho" },
-        { title: "Consultó tu horario", detail: "Horarios libres que tú definiste", state: "done", label: "Hecho" },
+        { title: "Consultó el horario", detail: "Horarios libres configurados", state: "done", label: "Hecho" },
         {
           title: "Mensaje y propuesta de cita",
-          detail: "Jueves 10:00 · queda en tu Bandeja",
+          detail: "Jueves 10:00 · queda en la bandeja de entrada",
           state: "info",
           label: "En la bandeja",
         },
@@ -73,7 +73,7 @@ const CAPABILITIES: Capability[] = [
   },
   {
     id: "comunicaciones",
-    title: "Correo y mensajes",
+    title: "Correo y mensajería organizados",
     problem: "Los mensajes llegan por correo, WhatsApp y Telegram, y lo importante se pierde entre boletines y avisos.",
     solution:
       "Una bandeja organizada que clasifica conversaciones, identifica lo urgente y prepara respuestas en el mismo hilo.",
@@ -85,7 +85,7 @@ const CAPABILITIES: Capability[] = [
       rows: [
         {
           title: "Laura Gómez",
-          detail: "Quiere ver el departamento de Palermo",
+          detail: "Consulta por un inmueble en Palermo",
           state: "wait",
           label: "Respuesta lista",
         },
@@ -97,7 +97,7 @@ const CAPABILITIES: Capability[] = [
         },
         {
           title: "Boletines y avisos de la semana",
-          detail: "Apartados para que no te distraigan",
+          detail: "Apartados para reducir interrupciones",
           state: "info",
           label: "Apartados",
         },
@@ -106,7 +106,7 @@ const CAPABILITIES: Capability[] = [
   },
   {
     id: "clientes",
-    title: "Clientes y oportunidades",
+    title: "Gestión y seguimiento de clientes",
     problem:
       "Los contactos y los negocios están en un sitio y las conversaciones en otro; los seguimientos se olvidan.",
     solution:
@@ -126,7 +126,7 @@ const CAPABILITIES: Capability[] = [
         },
         {
           title: "Alta de Clínica Norte",
-          detail: "Contacto nuevo para tu CRM",
+          detail: "Nuevo contacto para el CRM",
           state: "wait",
           label: "Pendiente de aprobación",
         },
@@ -135,7 +135,7 @@ const CAPABILITIES: Capability[] = [
   },
   {
     id: "agenda",
-    title: "Agenda y citas",
+    title: "Organización de citas y reuniones",
     problem: "Proponer un día y una hora obliga a salir del chat, abrir el calendario y volver a escribir.",
     solution:
       "Consulta Google Calendar, identifica horarios disponibles y prepara una propuesta de visita o reunión en el mismo hilo.",
@@ -145,8 +145,8 @@ const CAPABILITIES: Capability[] = [
       title: "Propuesta de visita",
       meta: "Laura Gómez",
       rows: [
-        { title: "Leyó la petición", detail: "Quiere ver el departamento esta semana", state: "done", label: "Hecho" },
-        { title: "Consultó tu agenda", detail: "Jueves 10:00–12:00 libre", state: "done", label: "Hecho" },
+        { title: "Leyó la petición", detail: "Consulta por un inmueble esta semana", state: "done", label: "Hecho" },
+        { title: "Consultó la agenda", detail: "Jueves 10:00–12:00 libre", state: "done", label: "Hecho" },
         {
           title: "Respuesta con horario libre",
           detail: "Propone el jueves a las 10:00",
@@ -158,7 +158,7 @@ const CAPABILITIES: Capability[] = [
   },
   {
     id: "rutinas",
-    title: "Tareas repetitivas",
+    title: "Automatización de tareas recurrentes",
     problem: "Hay trabajo que se repite cada día o cada semana, siempre igual, y siempre a mano.",
     solution:
       "Automatizaciones que se activan a una hora determinada o cuando llega un correo, un mensaje de Telegram o de WhatsApp.",
@@ -166,7 +166,7 @@ const CAPABILITIES: Capability[] = [
     example:
       "«Cada día laborable a las 8:00, prepara un resumen de la bandeja, la agenda y las tareas pendientes de revisión.»",
     panel: {
-      title: "Tus automatizaciones",
+      title: "Automatizaciones del negocio",
       rows: [
         { title: "Resumen de la mañana", detail: "Días laborables, 8:00", state: "done", label: "Activa" },
         { title: "WhatsApp de clientes", detail: "Al llegar un mensaje", state: "done", label: "Activa" },
@@ -231,9 +231,9 @@ export default function WhatYouCanDoPage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Empieza por un proceso</h2>
+                <h2 className="site-h2">Comenzar por un proceso</h2>
                 <p>
-                  Elige un proceso que hoy dependa de varias tareas manuales. Empieza con las aplicaciones necesarias y amplía el trabajo a medida que lo necesites.
+                  Seleccionar un proceso que dependa de tareas manuales. Comenzar con las aplicaciones necesarias y ampliar la automatización progresivamente.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
