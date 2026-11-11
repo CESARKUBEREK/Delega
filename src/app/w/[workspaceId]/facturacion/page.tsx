@@ -3,6 +3,7 @@ import { PageHeader, PanelCard, StatusBadge, InfoBanner } from "@/components/ui"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
 import { BillingProfileForm } from "./billing-profile-form"
+import { MexicoSubscriptionControls } from "@/components/mexico-subscription-controls"
 
 export const metadata = { title: "Facturación" }
 
@@ -19,12 +20,13 @@ async function BillingContent({ params }: { params: PageProps<"/w/[workspaceId]/
   const { isAdmin } = await getWorkspace(workspaceId, "/w/" + workspaceId + "/facturacion")
   const supabase = await createClient()
 
-  const [{ data: plans }, { data: prices }, { data: profile }] = await Promise.all([
+  const [{ data: plans }, { data: prices }, { data: profile }, { data: subscriptions }] = await Promise.all([
     supabase.from("billing_plans").select("id, code, name, description, capabilities").eq("active", true).order("code"),
     supabase.from("plan_prices").select("id, plan_id, market_code, currency, amount_minor, interval_unit, interval_count").eq("active", true).eq("market_code", "GLOBAL").eq("currency", "USD").order("amount_minor"),
     isAdmin
       ? supabase.from("billing_customers").select("customer_type, legal_name, billing_email, country_code, region, city, postal_code, address_line1, address_line2").eq("workspace_id", workspaceId).maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase.from("subscriptions").select("id, status, current_period_end, provider").eq("workspace_id", workspaceId).in("status", ["active", "trialing", "past_due", "cancel_at_period_end"]).order("created_at", { ascending: false }),
   ])
 
   const currency = new Intl.NumberFormat("es-ES", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
@@ -40,6 +42,7 @@ async function BillingContent({ params }: { params: PageProps<"/w/[workspaceId]/
       <InfoBanner tone="info">
         La contratación y los cobros en línea todavía no están habilitados. Esta sección prepara el perfil de facturación y muestra las tarifas configuradas; no realiza cargos ni crea suscripciones.
       </InfoBanner>
+      <MexicoSubscriptionControls countryCode={profile?.country_code ?? null} subscriptions={subscriptions ?? []} />
       <section className="flex flex-col gap-4" aria-labelledby="plans-title">
         <div>
           <p className="app-eyebrow">PLANES DISPONIBLES</p>
