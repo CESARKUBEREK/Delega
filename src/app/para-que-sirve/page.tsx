@@ -6,7 +6,7 @@ import { publicPageMetadata } from "@/lib/seo"
 export const metadata = publicPageMetadata({
   title: "Qué puedes hacer con MarchaSolo",
   description:
-    "Canales del negocio, clientes y rutinas: MarchaSolo prepara el trabajo con las aplicaciones que ya usas. En todos, lo que se envía o se cambia espera tu aprobación.",
+    "Canales del negocio, clientes y tareas recurrentes: MarchaSolo organiza el trabajo con las aplicaciones conectadas. Las acciones que requieren autorización quedan pendientes de revisión.",
   path: "/para-que-sirve",
 })
 
@@ -25,13 +25,13 @@ const CAPABILITIES: Capability[] = [
     id: "whatsapp",
     title: "WhatsApp del negocio",
     problem:
-      "El WhatsApp del negocio no para. Cada mensaje te saca de lo que estabas haciendo; si tardas, el cliente se enfría.",
+      "El WhatsApp del negocio no se detiene. Cada mensaje interrumpe otras tareas y una respuesta tardía puede enfriar el interés del cliente.",
     solution:
-      "MarchaSolo lee el mensaje, busca la respuesta en tus tarifas o FAQ y deja la contestación lista. Solo sale cuando tú la apruebas.",
+      "MarchaSolo analiza el mensaje, consulta las tarifas o preguntas frecuentes y prepara una respuesta para revisión antes del envío, según los permisos configurados.",
     result:
-      "Atiendes el canal del negocio sin vivir pegado al celular ni soltar el tono de tu marca. Mientras Meta verifica tu negocio, puedes empezar con el correo.",
+      "El canal del negocio recibe atención más organizada, sin perder el tono de marca. Mientras Meta verifica la cuenta, es posible comenzar con el correo.",
     example:
-      "«Cuando escriban por WhatsApp preguntando por precios, usa la tarifa de Drive y déjame la respuesta.»",
+      "«Cuando llegue una consulta por WhatsApp sobre precios, consulta la tarifa de Drive y prepara una respuesta.»",
     panel: {
       title: "WhatsApp",
       meta: "Cliente nuevo",
@@ -50,12 +50,12 @@ const CAPABILITIES: Capability[] = [
   {
     id: "voz",
     title: "Voz, teléfono y reservas",
-    problem: "Llamadas perdidas, mensajes en papeles y citas anotadas a ojo fuera de tu horario real.",
+    problem: "Llamadas perdidas, mensajes en papel y citas anotadas sin consultar la disponibilidad real.",
     solution:
-      "Asistente de voz en tu web y por teléfono: responde con tus documentos, toma mensajes y solo ofrece citas en el horario que tú defines. Cada conversación llega a la Bandeja.",
-    result: "Quien llama o habla en la web obtiene una respuesta útil; tú no pierdes el control de la agenda.",
+      "Asistente de voz en la web y por teléfono: responde a partir de los documentos conectados, toma mensajes y ofrece citas dentro del horario configurado. Cada conversación llega a la Bandeja.",
+    result: "Las personas que llaman o utilizan el asistente web reciben una respuesta útil, con la agenda bajo control.",
     example:
-      "«Atiende las llamadas, toma el mensaje y ofrece cita solo de martes a jueves por la mañana.»",
+      "«Atiende las llamadas, toma el mensaje y ofrece citas de martes a jueves por la mañana.»",
     panel: {
       title: "Asistente de voz",
       meta: "Llamada · 11:42",
@@ -76,8 +76,8 @@ const CAPABILITIES: Capability[] = [
     title: "Correo y mensajes",
     problem: "Los mensajes llegan por correo, WhatsApp y Telegram, y lo importante se pierde entre boletines y avisos.",
     solution:
-      "Una bandeja que se ordena sola: clasifica cada conversación, marca lo urgente y prepara la respuesta en el mismo hilo.",
-    result: "Abres «Para hoy» y ves solo lo que espera respuesta, con el borrador listo.",
+      "Una bandeja organizada que clasifica conversaciones, identifica lo urgente y prepara respuestas en el mismo hilo.",
+    result: "En «Para hoy» aparecen las conversaciones que esperan respuesta, con un borrador preparado.",
     example: "«Cuando escriba un cliente que ya conozco, déjame la respuesta preparada.»",
     panel: {
       title: "Para hoy",
@@ -110,10 +110,10 @@ const CAPABILITIES: Capability[] = [
     problem:
       "Los contactos y los negocios están en un sitio y las conversaciones en otro; los seguimientos se olvidan.",
     solution:
-      "Busca a cada remitente en HubSpot o en Google Contacts, propone altas, notas y tareas, y detecta los negocios parados.",
-    result: "Junto a cada conversación ves quién es y en qué punto está su negocio.",
+      "Busca cada remitente en HubSpot o Google Contacts, propone nuevos registros, notas y tareas, y detecta oportunidades sin actividad.",
+    result: "Cada conversación muestra quién es el contacto y en qué etapa se encuentra la oportunidad.",
     example:
-      "«Los lunes, dime qué negocios llevan dos semanas parados y prepárame un recordatorio para cada cliente.»",
+      "«Cada lunes, identifica las oportunidades sin actividad durante dos semanas y prepara un recordatorio para cada contacto.»",
     panel: {
       title: "Negocios parados",
       meta: "Lunes, 9:00",
@@ -138,9 +138,9 @@ const CAPABILITIES: Capability[] = [
     title: "Agenda y citas",
     problem: "Proponer un día y una hora obliga a salir del chat, abrir el calendario y volver a escribir.",
     solution:
-      "Consulta tu Google Calendar, elige horarios libres reales y deja preparada la propuesta de visita o reunión en el mismo hilo.",
-    result: "Del «¿cuándo puedes?» a una propuesta concreta sin cambiar de aplicación.",
-    example: "«Cuando pidan una visita, mira mi agenda y ofrece dos horarios libres esta semana.»",
+      "Consulta Google Calendar, identifica horarios disponibles y prepara una propuesta de visita o reunión en el mismo hilo.",
+    result: "De la pregunta por disponibilidad a una propuesta concreta, sin cambiar de aplicación.",
+    example: "«Cuando llegue una solicitud de visita, consulta el calendario y ofrece dos horarios disponibles esta semana.»",
     panel: {
       title: "Propuesta de visita",
       meta: "Laura Gómez",
@@ -161,10 +161,10 @@ const CAPABILITIES: Capability[] = [
     title: "Tareas repetitivas",
     problem: "Hay trabajo que se repite cada día o cada semana, siempre igual, y siempre a mano.",
     solution:
-      "Automatizaciones que arrancan solas: a una hora fija o al llegar un correo, un Telegram o un WhatsApp.",
-    result: "Las rutinas se hacen solas; tú solo apruebas lo que sale hacia fuera.",
+      "Automatizaciones que se activan a una hora determinada o cuando llega un correo, un mensaje de Telegram o de WhatsApp.",
+    result: "Las tareas recurrentes se ejecutan según la configuración; las acciones que requieren autorización quedan pendientes de revisión.",
     example:
-      "«Cada día laborable a las 8:00, resúmeme la bandeja, la agenda y lo que espera mi aprobación.»",
+      "«Cada día laborable a las 8:00, prepara un resumen de la bandeja, la agenda y las tareas pendientes de revisión.»",
     panel: {
       title: "Tus automatizaciones",
       rows: [
@@ -184,8 +184,7 @@ export default function WhatYouCanDoPage() {
           <div className="site-container">
             <h1 className="site-h1">Qué puedes hacer con MarchaSolo</h1>
             <p className="site-lead">
-              Canales del negocio, clientes y rutinas: MarchaSolo prepara el trabajo con las aplicaciones que ya usas. En
-              todos, lo que se envía o se cambia espera tu aprobación.
+              Canales del negocio, clientes y tareas recurrentes: MarchaSolo organiza el trabajo con las aplicaciones conectadas. Las acciones que requieren autorización quedan pendientes de revisión.
             </p>
             <nav aria-label="Categorías" className="mt-8 flex flex-wrap gap-2">
               {CAPABILITIES.map((c) => (
@@ -234,8 +233,7 @@ export default function WhatYouCanDoPage() {
               <div>
                 <h2 className="site-h2">Empieza por una sola tarea</h2>
                 <p>
-                  Elige la que más tiempo te quita —WhatsApp, voz o un seguimiento de ventas—. Cuando funcione, añade la
-                  siguiente.
+                  Empieza por la tarea que más tiempo consume —WhatsApp, atención telefónica o seguimiento comercial—. Cuando esté ajustada, añade otra.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
