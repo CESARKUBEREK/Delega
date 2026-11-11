@@ -150,7 +150,7 @@ async function Integrations({
       <Category
         id="llms"
         title="LLMs"
-        description="La IA que prepara y ejecuta tus automatizaciones, con tu propia clave. Es lo primero que hay que conectar: sin ella MarchaSolo no puede trabajar. MarchaSolo elige el modelo de cada tarea según el modo y tu presupuesto (en «Cómo elige la IA»)."
+        description="Opcional: tu propia cuenta de IA. Sin ella, MarchaSolo usa la IA incluida en tu plan (o la de la prueba gratuita). Con la tuya no hay límite de tareas, y MarchaSolo elige el modelo de cada tarea según el modo y tu presupuesto (en «Cómo elige la IA»)."
       >
         {AI_PROVIDERS.map((p) => (
           <AiCard key={p.id} workspaceId={workspaceId} isAdmin={isAdmin} provider={p.id} />

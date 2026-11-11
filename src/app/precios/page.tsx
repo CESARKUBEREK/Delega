@@ -4,12 +4,12 @@ import { publicPageMetadata } from "@/lib/seo"
 import { PLANS } from "@/lib/pricing"
 
 const pricingIntro =
-  "Empieza con las automatizaciones que necesitas hoy y amplía tu capacidad cuando tu negocio lo requiera. Precios en USD y condiciones claras desde el principio."
+  "Elige un plan y empieza a trabajar. Cada plan incluye la IA de MarchaSolo con un número de tareas al mes. Si ya tienes una cuenta de OpenAI, Anthropic, DeepSeek o Grok, puedes conectarla y usar MarchaSolo sin límite de tareas."
 
 export const metadata = publicPageMetadata({
   title: "Precios",
   description:
-    "Compara los planes MarchaSolo Solo, Pro y Business. Elige cuántas automatizaciones necesitas y conoce qué incluye el plan y qué servicios se pagan por separado.",
+    "Planes Solo, Negocio y Equipo de MarchaSolo, con la IA incluida y un número de tareas al mes. Prueba gratis 14 días, sin tarjeta.",
   path: "/precios",
 })
 
@@ -22,18 +22,18 @@ export default function PricingPage() {
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--ms-teal-ink)]">
               Precios
             </p>
-            <h1 className="site-h1">Empieza con lo que necesitas. Crece a tu ritmo.</h1>
+            <h1 className="site-h1">Tu trabajo, en marcha. La IA ya va incluida.</h1>
             <p className="site-lead">{pricingIntro}</p>
             <div className="site-actions">
               <Link href="/crear-cuenta" className="btn btn-primary">
-                Comenzar gratis
+                Pruébalo gratis 14 días
               </Link>
               <Link href="/como-funciona" className="btn btn-secondary">
                 Cómo funciona
               </Link>
             </div>
             <p className="mt-4 text-sm text-[var(--ms-muted)]">
-              Todos los planes incluyen revisión y aprobación de acciones.
+              Sin tarjeta. Nada sale sin tu aprobación.
             </p>
           </div>
         </section>
@@ -42,11 +42,11 @@ export default function PricingPage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="planes" className="site-h2">
-                Elige el nivel de automatización que acompaña tu trabajo
+                Elige cuánto trabajo quieres quitarte de encima
               </h2>
               <p className="site-lead">
-                La diferencia está en la cantidad de automatizaciones, la variedad de conexiones
-                y la capacidad de coordinar procesos y personas.
+                Todos los planes incluyen la IA, la bandeja ordenada y la aprobación de cada acción.
+                Cambian las tareas al mes, los canales y las personas del equipo.
               </p>
             </div>
 
@@ -59,7 +59,7 @@ export default function PricingPage() {
                 >
                   {plan.recommended ? (
                     <p className="site-small m-0 mb-3 font-semibold text-[var(--ms-teal-ink)]">
-                      Para empezar
+                      Recomendado
                     </p>
                   ) : (
                     <p className="site-small m-0 mb-3 text-[var(--ms-muted)]">
@@ -96,8 +96,8 @@ export default function PricingPage() {
               ))}
             </div>
             <p className="mt-6 text-sm text-[var(--ms-muted)]">
-              Los importes están expresados en dólares estadounidenses (USD). El detalle de cada
-              plan se basa en las condiciones comerciales vigentes de MarchaSolo.
+              Precios en dólares estadounidenses (USD). Una tarea es una automatización ejecutada
+              o una respuesta preparada; ordenar tu bandeja no cuenta.
             </p>
           </div>
         </section>
@@ -109,51 +109,47 @@ export default function PricingPage() {
                 Sin sorpresas
               </p>
               <h2 id="incluido" className="site-h2">
-                Qué pagas a MarchaSolo y qué se paga por separado
+                Qué incluye tu plan y qué se paga aparte
               </h2>
               <p className="site-lead">
-                El plan cubre el uso de MarchaSolo. Algunos servicios externos tienen sus propias
-                condiciones y facturación.
+                La IA va incluida. Solo se pagan aparte los mensajes de WhatsApp que cobra Meta.
               </p>
             </div>
 
             <div className="facts">
               <div className="fact is-key">
-                <h3 className="site-h3">Incluido en tu plan</h3>
+                <h3 className="site-h3">Qué es una tarea</h3>
                 <p>
-                  El acceso a MarchaSolo, las automatizaciones según el límite de tu plan, las
-                  integraciones disponibles, el historial de ejecuciones y las herramientas para
-                  revisar y aprobar acciones.
+                  Cada vez que MarchaSolo hace un trabajo por ti: ejecutar una automatización o
+                  prepararte una respuesta. Ordenar tu bandeja no cuenta.
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Consumo de servicios de IA</h3>
+                <h3 className="site-h3">Si llegas al límite</h3>
                 <p>
-                  La prueba inicial permite preparar y probar automatizaciones con la IA de
-                  MarchaSolo, sin conectar una cuenta propia ni registrar una tarjeta. Al terminar
-                  la prueba, para continuar con las ejecuciones se conecta una cuenta propia de
-                  OpenAI, Anthropic, DeepSeek o Grok.
-                </p>
-                <p>
-                  El proveedor elegido factura directamente ese consumo. MarchaSolo no añade un
-                  recargo por su uso.
+                  Te avisamos antes. Si llegas al límite, MarchaSolo pausa lo que usa IA hasta el mes
+                  siguiente. Nunca te cobramos de más sin preguntarte.
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Control del consumo</h3>
+                <h3 className="site-h3">Con tu propia IA</h3>
                 <p>
-                  El costo depende del proveedor, el modelo y el volumen de uso. Puedes consultar
-                  el consumo y configurar límites desde las herramientas que ofrezca el proveedor
-                  conectado.
+                  Si conectas tu cuenta de OpenAI, Anthropic, DeepSeek o Grok, no hay límite de
+                  tareas. Ese consumo lo factura tu proveedor, sin recargo de MarchaSolo.
+                </p>
+              </div>
+              <div className="fact">
+                <h3 className="site-h3">WhatsApp</h3>
+                <p>
+                  Los mensajes de WhatsApp que cobra Meta se pagan con tu tarjeta en tu cuenta de
+                  Meta.
                 </p>
               </div>
               <div className="fact">
                 <h3 className="site-h3">Impuestos y moneda</h3>
                 <p>
-                  Los precios de MarchaSolo están expresados en dólares estadounidenses (USD).
-                  Según el país, el banco o el medio de pago puede aplicar impuestos, percepciones,
-                  conversiones o cargos adicionales. Consulta las condiciones locales antes de
-                  realizar el pago.
+                  Precios en USD. Según tu país y tu medio de pago, el banco puede sumar impuestos o
+                  percepciones.
                 </p>
               </div>
             </div>
@@ -169,44 +165,40 @@ export default function PricingPage() {
             </div>
             <div className="faq">
               <details>
+                <summary>¿La IA está incluida?</summary>
+                <div>
+                  Sí. Cada plan trae tareas al mes con la IA de MarchaSolo. Si prefieres usar tu
+                  propia cuenta, la conectas y no tienes límite.
+                </div>
+              </details>
+              <details>
                 <summary>¿Qué plan me conviene para empezar?</summary>
                 <div>
-                  Si quieres automatizar algunas tareas individuales, puedes comenzar con Solo.
-                  Pro está pensado para coordinar más automatizaciones y varias aplicaciones.
-                  Business suma usuarios, procesos compartidos y herramientas de supervisión del
-                  equipo.
+                  Si trabajas solo y quieres ordenar tu correo y tu agenda, Solo. Si atiendes a tus
+                  clientes por WhatsApp, Negocio. Si son varias personas, Equipo.
                 </div>
               </details>
               <details>
-                <summary>¿El precio del plan incluye el consumo de IA?</summary>
+                <summary>¿Cuántas tareas necesito?</summary>
                 <div>
-                  No. El plan cubre MarchaSolo. Después de la prueba inicial, el consumo de los
-                  servicios de IA se factura directamente a través del proveedor y la cuenta que
-                  conectes.
+                  Un resumen diario y un repaso de correos sin responder son unas 45 tareas al mes.
+                  Con Solo te sobra para empezar.
                 </div>
               </details>
               <details>
-                <summary>¿Qué pasa cuando termina la prueba?</summary>
+                <summary>¿Qué pasa al terminar la prueba?</summary>
                 <div>
-                  La cuenta y las automatizaciones preparadas permanecen disponibles. Para
-                  continuar con las ejecuciones, eliges un plan y conectas una cuenta propia de un
-                  proveedor de IA compatible. MarchaSolo guía el proceso.
+                  La prueba dura 14 días. Tu cuenta y tus automatizaciones siguen ahí. Para que
+                  sigan trabajando, eliges un plan.
                 </div>
               </details>
               <details>
-                <summary>¿Puedo controlar cuánto gasto en servicios de IA?</summary>
-                <div>
-                  Los límites y las alertas dependen de las herramientas disponibles en el
-                  proveedor conectado. Puedes revisar y configurar esos controles directamente
-                  desde la cuenta correspondiente.
-                </div>
+                <summary>¿Puedo cambiar de plan?</summary>
+                <div>Sí, cuando quieras. El cambio se aplica en el próximo periodo.</div>
               </details>
               <details>
-                <summary>¿Las aprobaciones tienen un costo adicional?</summary>
-                <div>
-                  No. Las funciones de revisión y aprobación de acciones están incluidas en todos
-                  los planes.
-                </div>
+                <summary>¿Las aprobaciones cuentan como tareas?</summary>
+                <div>No. Revisar y aprobar está incluido siempre.</div>
               </details>
               <details>
                 <summary>¿Los precios incluyen impuestos?</summary>
@@ -225,12 +217,12 @@ export default function PricingPage() {
               <div>
                 <h2 className="site-h2">Empieza por una tarea. Amplía cuando lo necesites.</h2>
                 <p>
-                  Crea tu cuenta, prueba una automatización y elige el plan que acompañe el
-                  crecimiento de tu trabajo.
+                  Crea tu cuenta y pruébalo 14 días con tu correo. Sin tarjeta y sin conectar tu
+                  propia IA.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
-                Comenzar gratis
+                Pruébalo gratis 14 días
               </Link>
             </div>
           </div>
