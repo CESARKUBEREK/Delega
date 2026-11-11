@@ -17,6 +17,9 @@ export type TrialStatus = {
   usdAllowance: number
   usdUsed: number
   usdRemaining: number
+  // Fin de la prueba (14 días o 1 USD, lo que llegue antes; decisión del 11 nov).
+  expiresAt: string | null
+  expired: boolean
 }
 
 export async function getTrialStatus(workspaceId: string): Promise<TrialStatus | null> {
@@ -24,7 +27,7 @@ export async function getTrialStatus(workspaceId: string): Promise<TrialStatus |
   const supabase = await createClient()
   const { data } = await supabase
     .from("workspace_trial_credits")
-    .select("allowance_plans, used_plans, allowance_runs, used_runs, allowance_tokens, used_tokens, allowance_usd, used_usd")
+    .select("allowance_plans, used_plans, allowance_runs, used_runs, allowance_tokens, used_tokens, allowance_usd, used_usd, expires_at")
     .eq("workspace_id", workspaceId)
     .maybeSingle()
   if (!data) return null
@@ -36,7 +39,9 @@ export async function getTrialStatus(workspaceId: string): Promise<TrialStatus |
   const runsRemaining = Math.max(0, runsAllowance - runsUsed)
   const usdAllowance = Number(data.allowance_usd)
   const usdUsed = Number(data.used_usd)
-  const usdRemaining = Math.max(0, Math.round((usdAllowance - usdUsed) * 100) / 100)
+  const expiresAt = data.expires_at ?? null
+  const expired = expiresAt !== null && new Date(expiresAt).getTime() <= Date.now()
+  const usdRemaining = expired ? 0 : Math.max(0, Math.round((usdAllowance - usdUsed) * 100) / 100)
   const tokensAvailable = Number(data.used_tokens) < Number(data.allowance_tokens)
   return {
     allowance,
@@ -51,5 +56,7 @@ export async function getTrialStatus(workspaceId: string): Promise<TrialStatus |
     usdAllowance,
     usdUsed,
     usdRemaining,
+    expiresAt,
+    expired,
   }
 }
