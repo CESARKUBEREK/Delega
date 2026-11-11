@@ -24,7 +24,7 @@ const GROUPS: { title: string; description: string; apps: AppIcon[] }[] = [
     apps: [
       { id: "gmail", name: "Gmail", logo: "/brand/gmail.svg", note: "Con contraseña de aplicación" },
       { id: "imap", name: "Correo IMAP", note: "Configuración de servidor y cuenta" },
-      { id: "whatsapp", name: "WhatsApp", logo: "/brand/whatsapp.svg" },
+      { id: "whatsapp", name: "WhatsApp Business", logo: "https://www.svgrepo.com/show/505086/whatsapp-business.svg" },
       { id: "telegram", name: "Telegram", logo: "/brand/telegram.svg" },
       { id: "outlook", name: "Outlook", logo: "/brand/microsoftoutlook.svg", status: "soon" },
     ],
@@ -78,7 +78,7 @@ const STEPS = [
     number: "01",
     title: "Llega una consulta",
     body: "Un mensaje o correo inicia el proceso.",
-    app: "WhatsApp · Gmail",
+    app: "WhatsApp Business · Gmail",
   },
   {
     number: "02",
