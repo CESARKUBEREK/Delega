@@ -94,6 +94,13 @@ export function SiteHeader() {
           </button>
         </div>
       </div>
+      <div className="border-t border-[var(--ms-line)] bg-[var(--ms-white)]">
+        <div className="site-container flex flex-wrap items-center justify-end gap-2 py-2 text-xs">
+          <span className="mr-1 font-medium text-[var(--ms-graphite)]">Argentina · Derechos del consumidor</span>
+          <Link href="/boton-de-arrepentimiento" className="btn btn-secondary btn-sm">Botón de arrepentimiento</Link>
+          <Link href="/boton-de-baja" className="btn btn-secondary btn-sm">Botón de baja</Link>
+        </div>
+      </div>
       <div id="menu-movil" className="site-mobile-menu" data-open={open} hidden={!open}>
         <div className="site-container">
           <nav aria-label="Principal (móvil)">
