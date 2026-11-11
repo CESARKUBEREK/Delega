@@ -47,7 +47,7 @@ export function assertTransition<T extends string>(
   allowed: (from: T, to: T) => boolean,
 ): void {
   if (!allowed(from, to)) {
-    throw new Error(\`Invalid \${entity} transition: \${from} -> \${to}\`)
+    throw new Error("Invalid " + entity + " transition: " + from + " -> " + to)
   }
 }
 
