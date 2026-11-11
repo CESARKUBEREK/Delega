@@ -1,243 +1,221 @@
 import Link from "next/link"
 import { MarketingLayout } from "@/components/marketing-layout"
-import { Panel, type PanelRow } from "@/components/site/panel"
+import { CaseTrail } from "@/components/site/case-trail"
 import { publicPageMetadata } from "@/lib/seo"
+import { USE_CASES } from "@/lib/site-content"
 
 export const metadata = publicPageMetadata({
-  title: "Funcionalidades de MarchaSolo",
+  title: "Para qué sirve MarchaSolo",
   description:
-    "Un asistente de IA que conecta aplicaciones, coordina tareas y automatiza el trabajo cotidiano. Las acciones sujetas a autorización quedan pendientes de aprobación.",
+    "Descubre cómo MarchaSolo conecta las aplicaciones de tu negocio, coordina tareas y automatiza procesos para reducir el trabajo manual.",
   path: "/para-que-sirve",
 })
 
-type Capability = {
-  id: string
-  title: string
-  problem: string
-  solution: string
-  result: string
-  example: string
-  panel: { title: string; meta?: string; rows: PanelRow[] }
-}
+const FEATURED_CASES = [
+  "leads",
+  "bandeja-clientes",
+  "seguimiento-ventas",
+  "reservas-agenda",
+  "documentos-modelo",
+  "vencimientos",
+] as const
 
-const CAPABILITIES: Capability[] = [
+const STEPS = [
   {
-    id: "whatsapp",
-    title: "Atención de consultas por WhatsApp",
-    problem:
-      "El WhatsApp del negocio no se detiene. Cada mensaje interrumpe otras tareas y una respuesta tardía puede enfriar el interés del cliente.",
-    solution:
-      "MarchaSolo analiza el mensaje, consulta las tarifas o preguntas frecuentes y prepara una respuesta para revisión antes del envío, según los permisos configurados.",
-    result:
-      "El canal del negocio recibe atención más organizada, sin perder el tono de marca. Mientras Meta verifica la cuenta, es posible comenzar con el correo.",
-    example:
-      "«Cuando llegue una consulta por WhatsApp sobre precios, consulta la tarifa de Drive y prepara una respuesta.»",
-    panel: {
-      title: "WhatsApp",
-      meta: "Cliente nuevo",
-      rows: [
-        { title: "Leyó el mensaje", detail: "Pregunta por precios del pack básico", state: "done", label: "Hecho" },
-        { title: "Consultó «Tarifas 2026»", detail: "Google Drive", state: "done", label: "Hecho" },
-        {
-          title: "Respuesta lista",
-          detail: "Texto breve con el precio y la forma de reserva",
-          state: "wait",
-          label: "Pendiente de aprobación",
-        },
-      ],
-    },
+    number: "01",
+    title: "Llega una tarea",
+    description: "Un mensaje, un correo, una solicitud o una hora programada pone en marcha el proceso.",
   },
   {
-    id: "voz",
-    title: "Atención telefónica y reservas",
-    problem: "Llamadas perdidas, mensajes en papel y citas anotadas sin consultar la disponibilidad real.",
-    solution:
-      "Asistente de voz en la web y por teléfono: responde a partir de los documentos conectados, toma mensajes y ofrece citas dentro del horario configurado. Cada conversación llega a la Bandeja.",
-    result: "Las personas que llaman o utilizan el asistente web reciben una respuesta útil, con la agenda bajo control.",
-    example:
-      "«Atiende las llamadas, toma el mensaje y ofrece citas de martes a jueves por la mañana.»",
-    panel: {
-      title: "Asistente de voz",
-      meta: "Llamada · 11:42",
-      rows: [
-        { title: "Entendió la petición", detail: "Quiere visita el jueves por la mañana", state: "done", label: "Hecho" },
-        { title: "Consultó el horario", detail: "Horarios libres configurados", state: "done", label: "Hecho" },
-        {
-          title: "Mensaje y propuesta de cita",
-          detail: "Jueves 10:00 · queda en la bandeja de entrada",
-          state: "info",
-          label: "En la bandeja",
-        },
-      ],
-    },
+    number: "02",
+    title: "Se reúne la información",
+    description: "MarchaSolo consulta las aplicaciones conectadas y reúne el contexto necesario.",
   },
   {
-    id: "comunicaciones",
-    title: "Correo y mensajería organizados",
-    problem: "Los mensajes llegan por correo, WhatsApp y Telegram, y lo importante se pierde entre boletines y avisos.",
-    solution:
-      "Una bandeja organizada que clasifica conversaciones, identifica lo urgente y prepara respuestas en el mismo hilo.",
-    result: "En «Para hoy» aparecen las conversaciones que esperan respuesta, con un borrador preparado.",
-    example: "«Cuando escriba un cliente que ya conozco, déjame la respuesta preparada.»",
-    panel: {
-      title: "Para hoy",
-      meta: "Bandeja",
-      rows: [
-        {
-          title: "Laura Gómez",
-          detail: "Consulta por un inmueble en Palermo",
-          state: "wait",
-          label: "Respuesta lista",
-        },
-        {
-          title: "Marcos Ruiz",
-          detail: "Pregunta por el presupuesto enviado el lunes",
-          state: "wait",
-          label: "Respuesta lista",
-        },
-        {
-          title: "Boletines y avisos de la semana",
-          detail: "Apartados para reducir interrupciones",
-          state: "info",
-          label: "Apartados",
-        },
-      ],
-    },
+    number: "03",
+    title: "El trabajo avanza",
+    description: "Coordina los pasos, prepara respuestas, organiza datos y deja visible el progreso.",
   },
   {
-    id: "clientes",
-    title: "Gestión y seguimiento de clientes",
-    problem:
-      "Los contactos y los negocios están en un sitio y las conversaciones en otro; los seguimientos se olvidan.",
-    solution:
-      "Busca cada remitente en HubSpot o Google Contacts, propone nuevos registros, notas y tareas, y detecta oportunidades sin actividad.",
-    result: "Cada conversación muestra quién es el contacto y en qué etapa se encuentra la oportunidad.",
-    example:
-      "«Cada lunes, identifica las oportunidades sin actividad durante dos semanas y prepara un recordatorio para cada contacto.»",
-    panel: {
-      title: "Negocios parados",
-      meta: "Lunes, 9:00",
-      rows: [
-        {
-          title: "Reforma oficina Ruiz",
-          detail: "Propuesta enviada hace 16 días, sin cambios",
-          state: "wait",
-          label: "Recordatorio listo",
-        },
-        {
-          title: "Alta de Clínica Norte",
-          detail: "Nuevo contacto para el CRM",
-          state: "wait",
-          label: "Pendiente de aprobación",
-        },
-      ],
-    },
-  },
-  {
-    id: "agenda",
-    title: "Organización de citas y reuniones",
-    problem: "Proponer un día y una hora obliga a salir del chat, abrir el calendario y volver a escribir.",
-    solution:
-      "Consulta Google Calendar, identifica horarios disponibles y prepara una propuesta de visita o reunión en el mismo hilo.",
-    result: "De la pregunta por disponibilidad a una propuesta concreta, sin cambiar de aplicación.",
-    example: "«Cuando llegue una solicitud de visita, consulta el calendario y ofrece dos horarios disponibles esta semana.»",
-    panel: {
-      title: "Propuesta de visita",
-      meta: "Laura Gómez",
-      rows: [
-        { title: "Leyó la petición", detail: "Consulta por un inmueble esta semana", state: "done", label: "Hecho" },
-        { title: "Consultó la agenda", detail: "Jueves 10:00–12:00 libre", state: "done", label: "Hecho" },
-        {
-          title: "Respuesta con horario libre",
-          detail: "Propone el jueves a las 10:00",
-          state: "wait",
-          label: "Pendiente de aprobación",
-        },
-      ],
-    },
-  },
-  {
-    id: "rutinas",
-    title: "Automatización de tareas recurrentes",
-    problem: "Hay trabajo que se repite cada día o cada semana, siempre igual, y siempre a mano.",
-    solution:
-      "Automatizaciones que se activan a una hora determinada o cuando llega un correo, un mensaje de Telegram o de WhatsApp.",
-    result: "Las tareas recurrentes se ejecutan según la configuración; las acciones que requieren autorización quedan pendientes de revisión.",
-    example:
-      "«Cada día laborable a las 8:00, prepara un resumen de la bandeja, la agenda y las tareas pendientes de revisión.»",
-    panel: {
-      title: "Automatizaciones del negocio",
-      rows: [
-        { title: "Resumen de la mañana", detail: "Días laborables, 8:00", state: "done", label: "Activa" },
-        { title: "WhatsApp de clientes", detail: "Al llegar un mensaje", state: "done", label: "Activa" },
-        { title: "Agenda de mañana", detail: "Días laborables, 18:00", state: "done", label: "Activa" },
-      ],
-    },
+    number: "04",
+    title: "Tú mantienes el control",
+    description: "Revisas y autorizas las acciones externas cuando la configuración lo requiere.",
   },
 ]
 
-export default function WhatYouCanDoPage() {
+export default function WhatIsItForPage() {
+  const cases = FEATURED_CASES
+    .map((id) => USE_CASES.find((item) => item.id === id))
+    .filter((item): item is (typeof USE_CASES)[number] => Boolean(item))
+
   return (
     <MarketingLayout>
       <main>
         <section className="page-intro">
           <div className="site-container">
-            <h1 className="site-h1">Un negocio. Muchas tareas. Una sola forma de automatizarlas.</h1>
-            <p className="site-lead">
-              Un asistente de IA que conecta aplicaciones, coordina tareas y automatiza el trabajo cotidiano. La información y las acciones de cada proceso permanecen visibles, con aprobación cuando corresponde.
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--ms-accent)]">
+              Para qué sirve
             </p>
-            <nav aria-label="Categorías" className="mt-8 flex flex-wrap gap-2">
-              {CAPABILITIES.map((c) => (
-                <a key={c.id} href={`#${c.id}`} className="chip no-underline hover:border-[var(--ms-navy)]">
-                  {c.title}
-                </a>
-              ))}
-            </nav>
+            <h1 className="site-h1">Menos tareas manuales. Más negocio en marcha.</h1>
+            <p className="site-lead">
+              MarchaSolo conecta las aplicaciones que ya utilizas y coordina el trabajo que pasa
+              entre ellas. Desde responder una consulta hasta preparar un documento o dar
+              seguimiento a un cliente, puedes automatizar procesos sin tener que aprender
+              herramientas complicadas.
+            </p>
+            <div className="site-actions mt-8">
+              <Link href="/crear-cuenta" className="btn btn-primary">
+                Comenzar gratis
+              </Link>
+              <Link href="/como-funciona" className="btn btn-secondary">
+                Ver cómo funciona
+              </Link>
+            </div>
+            <p className="mt-4 text-sm text-[var(--ms-muted)]">
+              Empieza con una tarea concreta. Amplía la automatización cuando la necesites.
+            </p>
           </div>
         </section>
 
-        <div className="site-container py-10">
-          {CAPABILITIES.map((c) => (
-            <section key={c.id} id={c.id} className="capability scroll-mt-24" aria-labelledby={`${c.id}-t`}>
+        <section className="site-section is-white" aria-labelledby="workflow">
+          <div className="site-container">
+            <div className="site-section-head">
+              <h2 id="workflow" className="site-h2">
+                De aplicaciones separadas a un proceso coordinado
+              </h2>
+              <p className="site-lead">
+                En lugar de copiar información de una herramienta a otra, MarchaSolo conecta los
+                pasos para que el trabajo avance con más continuidad.
+              </p>
+            </div>
+            <ol className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4">
+              {STEPS.map((step) => (
+                <li key={step.number} className="rounded-2xl border border-rule bg-paper p-5">
+                  <span className="text-sm font-bold tracking-widest text-[var(--ms-accent)]">
+                    {step.number}
+                  </span>
+                  <h3 className="site-h3 mt-3">{step.title}</h3>
+                  <p className="mt-2 text-sm text-graphite">{step.description}</p>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-5 text-sm text-graphite">
+              Cada proceso utiliza las aplicaciones y los permisos que hayas configurado. Las
+              acciones externas sujetas a aprobación quedan pendientes de tu revisión.
+            </p>
+          </div>
+        </section>
+
+        <section className="site-section" aria-labelledby="examples">
+          <div className="site-container">
+            <div className="site-section-head">
+              <h2 id="examples" className="site-h2">
+                ¿Qué puedes dejar de hacer manualmente?
+              </h2>
+              <p className="site-lead">
+                Estos son algunos ejemplos de tareas que puedes convertir en procesos coordinados.
+                Cada flujo se adapta a las aplicaciones y reglas de tu negocio.
+              </p>
+            </div>
+            <div className="grid gap-10 md:grid-cols-2">
+              {cases.map((item) => (
+                <article key={item.id} className="flex flex-col gap-4">
+                  <div>
+                    <h3 className="site-h3">{item.title}</h3>
+                    <p className="mt-2 text-sm text-graphite">{item.before}</p>
+                  </div>
+                  <CaseTrail item={item} />
+                  <p className="site-small m-0">{item.result}</p>
+                  <ul className="m-0 flex list-none flex-wrap gap-2 p-0" aria-label="Aplicaciones relacionadas">
+                    {item.tags.map((tag) => (
+                      <li key={tag} className="chip">{tag}</li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+            <p className="mt-10">
+              <Link href="/casos-de-uso" className="link">
+                Explorar todos los casos de uso →
+              </Link>
+            </p>
+          </div>
+        </section>
+
+        <section className="site-section is-navy" aria-labelledby="who">
+          <div className="site-container">
+            <div className="site-section-head">
+              <h2 id="who" className="site-h2">
+                Para quienes necesitan hacer más con menos trabajo manual.
+              </h2>
+              <p className="site-lead">
+                MarchaSolo puede adaptarse a distintas actividades: lo importante es identificar
+                tareas repetitivas, información dispersa o procesos que dependen de varias
+                aplicaciones.
+              </p>
+            </div>
+            <ul className="audience">
+              <li>
+                <h3 className="site-h3">Profesionales independientes</h3>
+                <p>Organiza consultas, prepara respuestas, gestiona citas y reserva tiempo para el trabajo con tus clientes.</p>
+              </li>
+              <li>
+                <h3 className="site-h3">Pequeños negocios y equipos</h3>
+                <p>Conecta las herramientas del negocio, coordina tareas y facilita el seguimiento de cada oportunidad.</p>
+              </li>
+              <li>
+                <h3 className="site-h3">Agencias y actividades especializadas</h3>
+                <p>Reúne información de clientes, prepara documentos y coordina procesos que hoy pasan por varias aplicaciones.</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section className="site-section is-white" aria-labelledby="start-small">
+          <div className="site-container">
+            <div className="site-section-head">
+              <h2 id="start-small" className="site-h2">
+                No necesitas automatizar todo de una vez.
+              </h2>
+              <p className="site-lead">
+                Elige una tarea que se repita, conecta solo las aplicaciones necesarias y revisa
+                cómo funciona. Después puedes ajustar el proceso y sumar nuevos pasos.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-3">
               <div>
-                <h2 id={`${c.id}-t`} className="site-h2">
-                  {c.title}
-                </h2>
-                <dl className="capability-facts">
-                  <div>
-                    <dt>El problema</dt>
-                    <dd>{c.problem}</dd>
-                  </div>
-                  <div>
-                    <dt>Cómo se resuelve</dt>
-                    <dd>{c.solution}</dd>
-                  </div>
-                  <div>
-                    <dt>Resultado</dt>
-                    <dd>{c.result}</dd>
-                  </div>
-                  <div>
-                    <dt>Ejemplo de instrucción</dt>
-                    <dd className="text-[var(--ms-navy)]">{c.example}</dd>
-                  </div>
-                </dl>
+                <h3 className="site-h3">Empieza por lo cotidiano</h3>
+                <p className="text-sm text-graphite">Una consulta, un seguimiento semanal o un resumen de tareas pendientes.</p>
               </div>
-              <Panel {...c.panel} />
-            </section>
-          ))}
-        </div>
+              <div>
+                <h3 className="site-h3">Conecta lo necesario</h3>
+                <p className="text-sm text-graphite">Correo, calendario, documentos, mensajería o CRM, según el proceso.</p>
+              </div>
+              <div>
+                <h3 className="site-h3">Amplía a tu ritmo</h3>
+                <p className="text-sm text-graphite">Añade nuevas automatizaciones cuando el primer proceso ya te resulte útil.</p>
+              </div>
+            </div>
+            <p className="mt-8">
+              <Link href="/integraciones" className="link">
+                Ver aplicaciones que puedes conectar →
+              </Link>
+            </p>
+          </div>
+        </section>
 
         <section className="site-section pt-0">
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Comenzar por un proceso</h2>
+                <h2 className="site-h2">Tu negocio, en automático.</h2>
                 <p>
-                  Seleccionar un proceso que dependa de tareas manuales. Comenzar con las aplicaciones necesarias y ampliar la automatización progresivamente.
+                  Empieza por el trabajo que más tiempo te quita. MarchaSolo te ayuda a conectar
+                  los pasos y mantener el control del proceso.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
-                Probar gratis
+                Comenzar gratis
               </Link>
             </div>
           </div>
