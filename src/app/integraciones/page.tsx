@@ -44,7 +44,7 @@ const GROUPS: { title: string; description: string; apps: AppIcon[] }[] = [
       { id: "drive", name: "Google Drive", logo: "/brand/googledrive.svg" },
       { id: "sheets", name: "Google Sheets", logo: "/brand/googlesheets.svg" },
       { id: "docs", name: "Google Docs", logo: "/brand/googledocs.svg" },
-      { id: "excel", name: "Microsoft Excel" },
+      { id: "excel", name: "Archivos Excel", note: "Formato de archivo compatible" },
     ],
   },
   {
