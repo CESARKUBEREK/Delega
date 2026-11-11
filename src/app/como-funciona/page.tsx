@@ -4,46 +4,63 @@ import { CommandDemo } from "@/components/site/command-demo"
 import { publicPageMetadata } from "@/lib/seo"
 
 export const metadata = publicPageMetadata({
-  title: "Cómo funciona",
-  description: "Indicar un objetivo. MarchaSolo lo organiza en pasos, conecta las aplicaciones necesarias y coordina el proceso. Las acciones que requieren autorización quedan pendientes de aprobación.",
+  title: "Cómo funciona MarchaSolo",
+  description:
+    "Conoce cómo MarchaSolo convierte una tarea cotidiana en un proceso coordinado: defines qué necesitas, conectas tus aplicaciones y supervisas cada paso.",
   path: "/como-funciona",
 })
 
+const STEPS = [
+  {
+    number: "01",
+    title: "Elige una tarea",
+    description:
+      "Empieza por algo que se repite y te quita tiempo: responder consultas, hacer seguimientos, organizar información o preparar documentos.",
+    detail: "No necesitas cambiar la forma de trabajar de todo tu negocio.",
+  },
+  {
+    number: "02",
+    title: "Explica qué necesitas",
+    description:
+      "Escribe la tarea con tus propias palabras o parte de un ejemplo. MarchaSolo organiza el objetivo en pasos y te muestra qué aplicaciones necesita.",
+    detail: "Puedes revisar y ajustar la propuesta antes de ponerla en marcha.",
+  },
+  {
+    number: "03",
+    title: "Conecta las aplicaciones",
+    description:
+      "Autoriza solo los servicios que intervienen en ese proceso: por ejemplo, correo, calendario, archivos, mensajería o CRM.",
+    detail: "Cada conexión se configura desde el proveedor correspondiente.",
+  },
+  {
+    number: "04",
+    title: "Supervisa el resultado",
+    description:
+      "Sigue el avance, consulta lo que se ha preparado y revisa las acciones que necesitan tu autorización antes de ejecutarse.",
+    detail: "Mantienes visibilidad y control sobre el proceso.",
+  },
+] as const
+
 const FAQS = [
   {
-    question: "¿Qué acciones requieren revisión antes de ejecutarse?",
+    question: "¿Necesito conocimientos técnicos?",
     answer:
-      "Las operaciones externas requieren aprobación, salvo las excepciones expresamente configuradas. Los avisos internos y las automatizaciones autorizadas pueden ejecutarse según los permisos del espacio.",
+      "No. Puedes describir lo que necesitas con palabras cotidianas y seguir la configuración paso a paso. Solo tienes que conectar las aplicaciones que el proceso vaya a utilizar.",
   },
   {
-    question: "¿MarchaSolo puede ejecutar tareas automáticamente?",
+    question: "¿Tengo que conectar todas mis aplicaciones?",
     answer:
-      "MarchaSolo puede automatizar pasos de lectura, consulta y preparación. Las acciones sensibles pueden requerir aprobación; el comportamiento depende de los permisos y las reglas configuradas.",
+      "No. Cada proceso utiliza únicamente las aplicaciones necesarias. Puedes comenzar con una conexión y sumar otras cuando amplíes la automatización.",
   },
   {
-    question: "¿Tengo que saber de inteligencia artificial?",
+    question: "¿MarchaSolo realiza acciones sin consultarme?",
     answer:
-      "No. Basta con describir la tarea en lenguaje cotidiano. También es posible elegir entre los modos Ahorro, Inteligente o Máxima calidad.",
+      "Depende de los permisos y las reglas que configures. Las acciones externas sujetas a aprobación quedan pendientes para que puedas revisar, editar, autorizar o descartar antes de ejecutarlas.",
   },
   {
-    question: "¿Qué pasa si una ejecución falla?",
+    question: "¿Puedo empezar con una sola tarea?",
     answer:
-      "La ejecución informa del motivo del fallo y de los pasos disponibles, como revisar la conexión o volver a intentarlo. Si el proveedor de IA no tiene saldo, se puede utilizar otro proveedor conectado, si la configuración lo permite.",
-  },
-  {
-    question: "¿Qué pasa cuando termina la prueba?",
-    answer:
-      "La cuenta, las automatizaciones y la bandeja siguen disponibles. Para continuar, se elige el plan Solo y se conecta una cuenta propia de IA (OpenAI, Anthropic, DeepSeek o Grok). MarchaSolo guía el proceso paso a paso.",
-  },
-  {
-    question: "¿Cómo se conecta WhatsApp?",
-    answer:
-      "La conexión se realiza mediante un proveedor compatible con la API oficial de WhatsApp Business. La disponibilidad, los requisitos de verificación y los plazos dependen del proveedor y de la revisión de Meta. Mientras se completa el proceso, es posible comenzar con el correo y añadir WhatsApp más adelante.",
-  },
-  {
-    question: "¿Se puede utilizar desde un teléfono móvil?",
-    answer:
-      "MarchaSolo puede instalarse desde el navegador del teléfono, enviar avisos cuando hay tareas pendientes y permitir dictar instrucciones.",
+      "Sí. Lo recomendable es elegir una tarea concreta, probar el proceso y ajustarlo. Cuando te resulte útil, puedes incorporar otros pasos o crear nuevas automatizaciones.",
   },
 ] as const
 
@@ -63,152 +80,184 @@ export default function HowItWorksPage() {
       <main>
         <section className="page-intro">
           <div className="site-container">
-            <h1 className="site-h1">Cómo funciona</h1>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--ms-accent)]">
+              Cómo funciona
+            </p>
+            <h1 className="site-h1">De una tarea cotidiana a un proceso que avanza.</h1>
             <p className="site-lead">
-              De una instrucción a un trabajo terminado: MarchaSolo organiza los pasos, conecta las aplicaciones necesarias y permite supervisar el resultado.
+              Le cuentas a MarchaSolo qué necesitas resolver. MarchaSolo organiza los pasos,
+              conecta las aplicaciones necesarias y te permite seguir el trabajo y decidir
+              sobre las acciones que requieren tu autorización.
+            </p>
+            <div className="site-actions mt-8">
+              <Link href="/crear-cuenta" className="btn btn-primary">
+                Comenzar gratis
+              </Link>
+              <Link href="/para-que-sirve" className="btn btn-secondary">
+                Descubrir para qué sirve
+              </Link>
+            </div>
+            <p className="mt-4 text-sm text-[var(--ms-muted)]">
+              Sin conocimientos técnicos. Empieza con una tarea y amplía a tu ritmo.
             </p>
           </div>
         </section>
 
         <section className="site-section is-white" aria-labelledby="pasos">
           <div className="site-container">
-            <h2 id="pasos" className="sr-only">
-              Los cuatro pasos
-            </h2>
-            <ol className="steps is-four">
-              <li>
-                <h3 className="site-h3">Describir la tarea</h3>
-                <p>
-                  Describir la tarea en lenguaje cotidiano, por escrito o mediante dictado, o seleccionar una plantilla.
-                </p>
-              </li>
-              <li>
-                <h3 className="site-h3">MarchaSolo organiza el trabajo</h3>
-                <p>
-                  Interpreta el objetivo, lo divide en pasos e identifica las aplicaciones necesarias. El plan puede revisarse y ajustarse antes de continuar.
-                </p>
-              </li>
-              <li>
-                <h3 className="site-h3">MarchaSolo prepara el trabajo</h3>
-                <p>
-                  Coordina consultas y tareas con las aplicaciones conectadas, bajo demanda o según el horario configurado. Prepara resultados y acciones, y muestra el avance de cada paso.
-                </p>
-              </li>
-              <li>
-                <h3 className="site-h3">Revisión y autorización</h3>
-                <p>
-                  Las acciones sujetas a aprobación muestran el contenido completo o los valores anteriores y nuevos antes de ejecutarse. Las excepciones autorizadas siguen las reglas configuradas.
-                </p>
-              </li>
+            <div className="site-section-head">
+              <h2 id="pasos" className="site-h2">
+                Cuatro pasos para ponerlo en marcha.
+              </h2>
+              <p className="site-lead">
+                No tienes que diseñar un sistema complejo. Empiezas por el trabajo que quieres
+                simplificar y avanzas paso a paso.
+              </p>
+            </div>
+            <ol className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4">
+              {STEPS.map((step) => (
+                <li key={step.number} className="rounded-2xl border border-rule bg-paper p-5">
+                  <span className="text-sm font-bold tracking-widest text-[var(--ms-accent)]">
+                    {step.number}
+                  </span>
+                  <h3 className="site-h3 mt-3">{step.title}</h3>
+                  <p className="mt-2 text-sm text-graphite">{step.description}</p>
+                  <p className="mt-4 text-xs font-medium text-[var(--ms-muted)]">{step.detail}</p>
+                </li>
+              ))}
             </ol>
           </div>
         </section>
 
         <section className="site-section" aria-labelledby="ejemplo">
-          <div className="site-container grid items-start gap-12 lg:grid-cols-2">
+          <div className="site-container grid items-start gap-10 lg:grid-cols-2 lg:gap-14">
             <div>
-              <h2 id="ejemplo" className="site-h2">
-                Un proceso real, de principio a fin
-              </h2>
-              <p className="site-lead">
-                Una inmobiliaria recibe consultas sobre propiedades y necesita responder, comprobar disponibilidad y registrar el seguimiento. Así coordina ese proceso con MarchaSolo:
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--ms-accent)]">
+                Un ejemplo práctico
               </p>
-              <ol className="mt-8 grid gap-6 pl-5 text-[var(--ms-muted)] [&>li]:pl-1">
+              <h2 id="ejemplo" className="site-h2">
+                Del primer contacto al seguimiento, sin empezar de cero cada vez.
+              </h2>
+              <p className="site-lead mt-4">
+                Imagina que cada día recibes consultas de posibles clientes. Para darles
+                seguimiento, necesitas revisar mensajes, buscar información y preparar una
+                respuesta.
+              </p>
+              <ul className="mt-6 grid gap-4 text-sm text-graphite">
                 <li>
-                  <b className="text-[var(--ms-navy)]">Lo pide una vez.</b> «Cuando llegue una consulta para visitar una propiedad, consulta la agenda y prepara una respuesta con un horario disponible».
+                  <strong className="text-[var(--ms-navy)]">La instrucción:</strong> explicas
+                  qué información reunir y qué seguimiento quieres preparar.
                 </li>
                 <li>
-                  <b className="text-[var(--ms-navy)]">MarchaSolo propone el plan.</b> Leer el correo, consultar la agenda,
-                  buscar la ficha del departamento y redactar la respuesta. Identifica la necesidad de conectar el correo electrónico y el calendario.
+                  <strong className="text-[var(--ms-navy)]">El proceso:</strong> MarchaSolo
+                  coordina la consulta de los canales y herramientas conectados y reúne el
+                  contexto disponible.
                 </li>
                 <li>
-                  <b className="text-[var(--ms-navy)]">Llega un correo de Laura.</b> La automatización arranca, hace las
-                  consultas y deja la respuesta preparada. El envío queda pendiente de aprobación.
+                  <strong className="text-[var(--ms-navy)]">El resultado:</strong> deja el
+                  seguimiento preparado para que puedas revisarlo y autorizar el envío cuando
+                  corresponda.
                 </li>
-                <li>
-                  <b className="text-[var(--ms-navy)]">Aviso en el teléfono.</b> «Hay una respuesta pendiente de revisión». La tarjeta permite consultar el correo completo y ajustar el texto antes de autorizar el envío desde la misma cuenta.
-                </li>
-              </ol>
+              </ul>
+              <p className="mt-7">
+                <Link href="/casos-de-uso" className="link">
+                  Ver más ejemplos de automatización →
+                </Link>
+              </p>
             </div>
             <CommandDemo animate={false} />
           </div>
         </section>
 
-        <section className="site-section is-white" aria-labelledby="empezar" id="empezar">
+        <section className="site-section is-navy" aria-labelledby="control">
           <div className="site-container">
             <div className="site-section-head">
-              <h2 id="empezar" className="site-h2">
-                Qué necesitas para empezar
+              <h2 id="control" className="site-h2">
+                La automatización avanza. Tú mantienes el control.
               </h2>
               <p className="site-lead">
-                Menos de lo que parece. Primero ves la propuesta; las conexiones llegan después, cuando hacen falta.
+                Puedes ver cómo se organiza el trabajo y qué ocurre en cada paso. Las acciones
+                externas sujetas a aprobación esperan tu revisión.
               </p>
             </div>
-            <div className="facts">
-              <div className="fact is-key">
-                <h3 className="site-h3">Para probarlo: solo una cuenta</h3>
+            <div className="trust">
+              <div>
+                <h3 className="site-h3">Pasos visibles</h3>
                 <p>
-                  Al crearla, se puede indicar qué tarea conviene mejorar. MarchaSolo prepara una propuesta para probar con su IA, sin conectar una IA propia. Si se conecta el correo, también puede organizar la bandeja.
+                  Consulta el proceso, el estado de cada paso y los resultados que se van
+                  preparando.
                 </p>
               </div>
-              <div className="fact">
-                <h3 className="site-h3">Para que trabaje: las aplicaciones del negocio</h3>
+              <div>
+                <h3 className="site-h3">Decisiones bajo tu control</h3>
                 <p>
-                  Solo se conectan los servicios necesarios para cada tarea: correo, Drive, calendario o CRM. Cada tarjeta dirige al proveedor y explica el proceso de conexión.
+                  Cuando una acción necesita autorización, puedes revisar su contenido y
+                  aprobarla, editarla o descartarla según las opciones disponibles.
                 </p>
               </div>
-              <div className="fact">
-                <h3 className="site-h3">Después de la prueba: una cuenta propia de IA</h3>
+              <div>
+                <h3 className="site-h3">Empieza de forma gradual</h3>
                 <p>
-                  Después de la prueba, las automatizaciones utilizan una cuenta propia de OpenAI, Anthropic, DeepSeek o Grok. La clave se guarda cifrada y el consumo se factura directamente en esa cuenta. MarchaSolo selecciona el modelo según la tarea y respeta el presupuesto configurado.
-                </p>
-              </div>
-              <div className="fact">
-                <h3 className="site-h3">Asistencia para la configuración</h3>
-                <p>
-                  En Integraciones y en las automatizaciones hay un asistente que conoce el estado del espacio, guía la conexión de cada cuenta y explica los motivos de los fallos.
+                  Configura una tarea, comprueba cómo funciona y ajusta sus pasos antes de
+                  incorporar otros procesos.
                 </p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="site-section is-white" aria-labelledby="conexiones">
+          <div className="site-container">
+            <div className="site-section-head">
+              <h2 id="conexiones" className="site-h2">
+                Conecta solo lo que necesitas.
+              </h2>
+              <p className="site-lead">
+                MarchaSolo coordina el trabajo entre las herramientas que ya utilizas. Las
+                conexiones dependen de cada proceso y puedes incorporarlas cuando hagan falta.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-3">
+              <div>
+                <h3 className="site-h3">Comunicación</h3>
+                <p className="text-sm text-graphite">
+                  Correo y canales de mensajería para reunir consultas y preparar respuestas.
+                </p>
+              </div>
+              <div>
+                <h3 className="site-h3">Información y organización</h3>
+                <p className="text-sm text-graphite">
+                  Archivos, documentos, hojas de cálculo y calendario para consultar y organizar
+                  información.
+                </p>
+              </div>
+              <div>
+                <h3 className="site-h3">Gestión del negocio</h3>
+                <p className="text-sm text-graphite">
+                  CRM y otras herramientas para mantener el seguimiento de clientes y procesos.
+                </p>
+              </div>
+            </div>
+            <p className="mt-8">
+              <Link href="/integraciones" className="link">
+                Consultar aplicaciones e integraciones →
+              </Link>
+            </p>
           </div>
         </section>
 
         <section className="site-section" aria-labelledby="dudas">
           <div className="site-container max-w-3xl">
             <h2 id="dudas" className="site-h2 mb-8">
-              Dudas habituales
+              Preguntas frecuentes
             </h2>
             <div className="faq">
-              <details>
-                <summary>¿Qué acciones requieren revisión antes de ejecutarse?</summary>
-                <div>
-                  Las acciones externas configuradas para aprobación quedan pendientes de revisión. Los avisos internos y las automatizaciones expresamente autorizadas pueden ejecutarse según los permisos del espacio.
-                </div>
-              </details>
-              <details>
-                <summary>¿Es un agente que actúa solo?</summary>
-                <div>
-                  MarchaSolo automatiza tareas de lectura, consulta y preparación. Las acciones sensibles pueden requerir autorización según los permisos y reglas configurados.
-                </div>
-              </details>
-              <details>
-                <summary>¿Tengo que saber de inteligencia artificial?</summary>
-                <div>
-                  No. Basta con describir la tarea en lenguaje cotidiano. También se puede elegir entre los modos Ahorro, Inteligente o Máxima calidad.
-                </div>
-              </details>
-              <details>
-                <summary>¿Qué pasa si una ejecución falla?</summary>
-                <div>
-                  La ejecución informa del motivo del fallo y de los pasos disponibles, como revisar la conexión o volver a intentarlo. Si el proveedor de IA no tiene saldo, se puede utilizar otro proveedor conectado, si la configuración lo permite.
-                </div>
-              </details>
-              <details>
-                <summary>¿Se puede utilizar desde un teléfono?</summary>
-                <div>
-                  MarchaSolo puede instalarse desde el navegador del teléfono, enviar avisos cuando hay tareas pendientes y permitir dictar instrucciones.
-                </div>
-              </details>
+              {FAQS.map((faq) => (
+                <details key={faq.question}>
+                  <summary>{faq.question}</summary>
+                  <div>{faq.answer}</div>
+                </details>
+              ))}
             </div>
           </div>
         </section>
@@ -222,13 +271,14 @@ export default function HowItWorksPage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Comenzar con un proceso real</h2>
+                <h2 className="site-h2">Empieza por el trabajo que más tiempo te quita.</h2>
                 <p>
-                  MarchaSolo prepara una propuesta antes de conectar las aplicaciones y permite probarla sin costo inicial.
+                  Elige una tarea, explica qué necesitas y descubre cómo MarchaSolo puede
+                  ayudarte a coordinarla.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
-                Crear cuenta gratis
+                Comenzar gratis
               </Link>
             </div>
           </div>
