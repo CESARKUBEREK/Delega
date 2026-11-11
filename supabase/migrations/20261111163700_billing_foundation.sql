@@ -32,6 +32,8 @@ create table public.plan_prices (
 create index plan_prices_lookup_idx
   on public.plan_prices (market_code, currency, active, valid_from desc);
 
+create index billing_customers_country_idx on public.billing_customers (country_code, created_at desc);
+
 create table public.billing_customers (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null unique references public.workspaces(id) on delete restrict,
@@ -245,6 +247,18 @@ create policy billing_customers_select_billing_admin
   using (private.has_role(workspace_id, 'owner'::public.workspace_role)
       or private.has_role(workspace_id, 'admin'::public.workspace_role));
 
+create policy billing_customers_insert_billing_admin
+  on public.billing_customers for insert to authenticated
+  with check (private.has_role(workspace_id, 'owner'::public.workspace_role)
+      or private.has_role(workspace_id, 'admin'::public.workspace_role));
+
+create policy billing_customers_update_billing_admin
+  on public.billing_customers for update to authenticated
+  using (private.has_role(workspace_id, 'owner'::public.workspace_role)
+      or private.has_role(workspace_id, 'admin'::public.workspace_role))
+  with check (private.has_role(workspace_id, 'owner'::public.workspace_role)
+      or private.has_role(workspace_id, 'admin'::public.workspace_role));
+
 create policy checkout_sessions_select_billing_admin
   on public.checkout_sessions for select to authenticated
   using (private.has_role(workspace_id, 'owner'::public.workspace_role)
@@ -271,13 +285,22 @@ create policy billing_audit_events_select_billing_admin
         (private.has_role(workspace_id, 'owner'::public.workspace_role)
          or private.has_role(workspace_id, 'admin'::public.workspace_role)));
 
--- Global catalog, legal source documents, webhook inbox and outbox are server-only.
+-- Public-to-authenticated catalog; legal source documents, webhook inbox and outbox remain server-only.
 revoke all on public.billing_plans, public.plan_prices, public.legal_documents,
   public.payment_events, public.outbox_events from anon, authenticated;
-revoke insert, update, delete on public.billing_customers, public.checkout_sessions,
+grant select on public.billing_plans, public.plan_prices to authenticated;
+create policy billing_plans_read_active
+  on public.billing_plans for select to authenticated using (active = true);
+create policy plan_prices_read_active
+  on public.plan_prices for select to authenticated using (
+    active = true and valid_from <= now() and (valid_until is null or valid_until > now())
+    and exists (select 1 from public.billing_plans p where p.id = plan_id and p.active = true)
+  );
+revoke insert, update, delete on public.checkout_sessions,
   public.subscriptions, public.payment_transactions, public.consent_records,
   public.billing_audit_events from anon, authenticated;
-grant select on public.billing_customers, public.checkout_sessions,
+grant select, insert, update on public.billing_customers to authenticated;
+grant select on public.checkout_sessions,
   public.subscriptions, public.payment_transactions, public.consent_records,
   public.billing_audit_events to authenticated;
 grant all on public.billing_plans, public.plan_prices, public.billing_customers,
