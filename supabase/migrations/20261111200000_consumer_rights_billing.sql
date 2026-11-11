@@ -186,3 +186,39 @@ end;
 $$;
 revoke all on function public.cancel_mexico_subscription_immediately(uuid) from public, anon;
 grant execute on function public.cancel_mexico_subscription_immediately(uuid) to authenticated;
+
+
+-- Alert the legal operations inbox immediately; an outbox worker must deliver it
+-- and track the 24-hour response SLA. The public form never exposes this queue.
+create or replace function public.consumer_rights_request_notify()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.outbox_events
+    (aggregate_type, aggregate_id, event_type, payload, dedupe_key, available_at)
+  values
+    ('consumer_rights_request', new.id, 'legal.consumer_rights_request_received',
+     jsonb_build_object(
+       'to_email', 'legal@marchasolo.com',
+       'reference_code', new.reference_code,
+       'request_type', new.request_type,
+       'full_name', new.full_name,
+       'email', new.email,
+       'order_reference', new.order_reference,
+       'submitted_at', new.submitted_at,
+       'response_deadline', new.submitted_at + interval '24 hours'
+     ),
+     'consumer-rights:' || new.id::text, now())
+  on conflict (dedupe_key) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists consumer_rights_request_notify on public.consumer_rights_requests;
+create trigger consumer_rights_request_notify
+  after insert on public.consumer_rights_requests
+  for each row execute function public.consumer_rights_request_notify();
+revoke all on function public.consumer_rights_request_notify() from public, anon, authenticated;
