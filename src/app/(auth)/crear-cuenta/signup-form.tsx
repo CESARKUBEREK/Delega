@@ -27,7 +27,7 @@ export function SignupForm({ initialPlan }: { initialPlan?: string }) {
           id="email"
           name="email"
           type="email"
-          label="Correo"
+          label="Correo electrónico"
           autoComplete="email"
           required
           defaultValue={state.email}
@@ -40,14 +40,14 @@ export function SignupForm({ initialPlan }: { initialPlan?: string }) {
           autoComplete="new-password"
           minLength={10}
           required
-          hint="Al menos 10 caracteres. Una frase corta es más segura que una palabra con símbolos."
+          hint="Mínimo 10 caracteres. Una frase corta es más segura que una palabra con símbolos."
         />
         <Captcha resetKey={state} />
         <FormMessage error={state.error} />
         <SubmitButton pendingLabel="Creando cuenta…">Crear cuenta</SubmitButton>
       </form>
       <p className="text-xs text-graphite">
-        Al crear la cuenta, con tu correo o con Google, aceptas los{" "}
+        Al crear la cuenta con correo electrónico o Google, se aceptan los{" "}
         <Link href="/terminos" className="text-link underline underline-offset-4">
           Términos de uso
         </Link>{" "}

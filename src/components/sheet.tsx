@@ -30,41 +30,41 @@ export function Sheet({
           <div className="access-story-main">
             {story === "signup" ? (
               <>
-                <h2>Qué pasa al crear tu cuenta</h2>
+                <h2>Qué ocurre al crear una cuenta</h2>
                 <ol className="access-next">
                   <li>
-                    <b>Confirmas tu correo</b>
-                    Te enviamos un enlace. Si entras con Google, te lo ahorras.
+                    <b>Confirmación del correo</b>
+                    Se envía un enlace de confirmación. Con Google, este paso no es necesario.
                   </li>
                   <li>
-                    <b>Nos cuentas qué te gustaría mejorar</b>
-                    Puedes describir una tarea o pedirnos ayuda para descubrir oportunidades en tu negocio.
+                    <b>Definición de objetivos</b>
+                    Es posible describir una tarea o identificar oportunidades de mejora para el negocio.
                   </li>
                   <li>
-                    <b>Conocemos tu negocio y preparamos una propuesta</b>
-                    Si tienes web, la analizamos; tú revisas el perfil antes de confirmarlo. Después ves el plan, sin conectar nada.
+                    <b>Propuesta inicial</b>
+                    Si existe una web del negocio, se puede analizar y revisar el perfil antes de confirmarlo. Después se muestran las opciones de plan, sin conectar aplicaciones.
                   </li>
                   <li>
-                    <b>Conectas lo que haga falta</b>
-                    Primero tu IA; después el correo, Drive o la agenda. Nada se envía sin tu aprobación.
+                    <b>Conexión de aplicaciones</b>
+                    Se conectan los servicios necesarios para la tarea. Las acciones que requieren autorización quedan pendientes de revisión.
                   </li>
                 </ol>
               </>
             ) : (
               <>
-                <h2>Las tareas avanzan. Tú decides.</h2>
+                <h2>Las tareas avanzan con supervisión.</h2>
                 <ol className="access-next">
                   <li>
-                    <b>Lo pides con tus palabras</b>
-                    MarchaSolo lo convierte en pasos.
+                    <b>Descripción de la tarea</b>
+                    MarchaSolo la convierte en pasos.
                   </li>
                   <li>
                     <b>MarchaSolo hace el trabajo</b>
                     Lee, consulta y redacta con tus aplicaciones.
                   </li>
                   <li>
-                    <b>Tú apruebas</b>
-                    Nada se envía ni se cambia sin tu visto bueno.
+                    <b>Revisión y autorización</b>
+                    Las acciones que requieren aprobación quedan pendientes hasta su revisión.
                   </li>
                 </ol>
               </>

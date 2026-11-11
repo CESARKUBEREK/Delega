@@ -12,7 +12,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <Sheet
-      title="Recupera el acceso"
+      title="Recuperar el acceso"
       sheetName="Contraseña"
       footer={
         <Link href="/entrar" className="text-link underline underline-offset-4">
@@ -20,9 +20,9 @@ export default function ForgotPasswordPage() {
         </Link>
       }
     >
-      <p className="mb-5 text-graphite">Te enviaremos un enlace para crear una contraseña nueva. Caduca en una hora.</p>
+      <p className="mb-5 text-graphite">Se enviará un enlace para crear una contraseña nueva. Caduca en una hora.</p>
       <form action={action} className="flex flex-col gap-4" noValidate>
-        <Field id="email" name="email" type="email" label="Correo" autoComplete="email" required defaultValue={state.email} />
+        <Field id="email" name="email" type="email" label="Correo electrónico" autoComplete="email" required defaultValue={state.email} />
         <Captcha resetKey={state} />
         <FormMessage error={state.error} message={state.message} />
         <SubmitButton pendingLabel="Enviando…">Enviar enlace</SubmitButton>

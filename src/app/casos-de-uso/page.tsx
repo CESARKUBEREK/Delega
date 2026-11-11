@@ -7,7 +7,7 @@ import { publicPageMetadata } from "@/lib/seo"
 export const metadata = publicPageMetadata({
   title: "Casos de uso",
   description:
-    "WhatsApp del negocio, voz y reservas, ventas, atención al cliente, inmobiliarias y despachos. MarchaSolo prepara el trabajo; tú apruebas antes de enviar o cambiar nada.",
+    "WhatsApp del negocio, atención por voz, reservas, ventas, atención al cliente e inmobiliarias. MarchaSolo organiza tareas y prepara acciones para su revisión cuando corresponde.",
   path: "/casos-de-uso",
 })
 
@@ -48,8 +48,7 @@ export default function UseCasesPage() {
           <div className="site-container">
             <h1 className="site-h1">Casos de uso</h1>
             <p className="site-lead">
-              WhatsApp, voz, reservas, ventas, atención, inmobiliarias y despachos. Se lo pides como a un compañero: MarchaSolo prepara el
-              trabajo con tus aplicaciones; tú decides qué se envía o se cambia.
+              WhatsApp, atención por voz, reservas, ventas, atención al cliente e inmobiliarias. Describe la tarea en lenguaje cotidiano: MarchaSolo organiza el trabajo con las aplicaciones conectadas y facilita la revisión de las acciones.
             </p>
             <nav aria-label="Áreas" className="mt-8 flex flex-wrap gap-2">
               {GROUPS.map((g) => (
@@ -106,10 +105,9 @@ export default function UseCasesPage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">¿Tu tarea no está aquí?</h2>
+                <h2 className="site-h2">¿La tarea que buscas no aparece aquí?</h2>
                 <p>
-                  Descríbela con tus palabras al crear la cuenta. MarchaSolo te propone el plan; tú decides si lo pones en
-                  marcha.
+                  Describe la tarea al crear la cuenta. MarchaSolo propone un proceso para organizarla y probarla.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">

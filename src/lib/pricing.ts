@@ -1,6 +1,6 @@
 // Condiciones comerciales que se muestran en /precios.
 // La IA se paga aparte al proveedor (BYOK). Los límites de automatizaciones
-// son del plan; el control (aprobación antes de enviar/cambiar) va en todos.
+// son del plan; las funciones de revisión y aprobación de acciones están incluidas en todos.
 // Precios en dólares estadounidenses (USD).
 
 export type Plan = {
@@ -22,14 +22,14 @@ export const PLANS: Plan[] = [
     price: "19 $",
     period: "/mes",
     priceYear: "228 $/año · USD",
-    tagline: "Para profesionales independientes que quieren automatizar tareas cotidianas.",
+    tagline: "Para profesionales independientes que buscan automatizar tareas cotidianas.",
     includes: [
       "Asistente de IA",
       "5 automatizaciones activas",
       "Integraciones básicas",
       "1 modelo de IA conectado",
       "Historial de ejecuciones",
-      "Nada se envía sin tu aprobación",
+      "Revisión de acciones sujetas a aprobación",
     ],
     cta: "Empezar con Solo",
     recommended: true,
@@ -40,7 +40,7 @@ export const PLANS: Plan[] = [
     price: "39 $",
     period: "/mes",
     priceYear: "468 $/año · USD",
-    tagline: "Para profesionales y pequeños negocios que quieren delegar más trabajo.",
+    tagline: "Para profesionales y pequeños negocios que buscan delegar más tareas.",
     includes: [
       "20 automatizaciones activas",
       "Flujos con múltiples pasos y agentes",

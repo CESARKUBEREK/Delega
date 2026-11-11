@@ -1,12 +1,11 @@
 import type { UseCase } from "@/lib/site-content"
 
-// Rastro de un caso: lo que pides, lo que hace MarchaSolo, lo que espera tu
-// aprobación y el resultado. Mismo lenguaje visual que la consola del inicio.
+// Rastro de un caso: la tarea solicitada, el trabajo de MarchaSolo y las acciones pendientes de revisión. Mismo lenguaje visual que la consola del inicio.
 export function CaseTrail({ item, short = false }: { item: UseCase; short?: boolean }) {
   return (
     <dl className="trail">
       <div className="is-ask">
-        <dt>Le pides</dt>
+        <dt>La tarea</dt>
         <dd>{item.ask}</dd>
       </div>
       <div>
@@ -15,8 +14,8 @@ export function CaseTrail({ item, short = false }: { item: UseCase; short?: bool
       </div>
       {!short ? (
         <div className={item.waits ? "is-wait" : undefined}>
-          <dt>{item.waits ? "Espera tu aprobación" : "Sin aprobación"}</dt>
-          <dd>{item.waits ?? "Solo te avisa a ti."}</dd>
+          <dt>{item.waits ? "Pendiente de revisión" : "Aviso interno"}</dt>
+          <dd>{item.waits ?? "Envía un aviso interno."}</dd>
         </div>
       ) : null}
     </dl>

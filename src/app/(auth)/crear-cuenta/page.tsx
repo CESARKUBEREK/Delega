@@ -8,7 +8,7 @@ import { SignupForm } from "./signup-form"
 export const metadata = publicPageMetadata({
   title: "Crear cuenta",
   description:
-    "Crea tu cuenta de MarchaSolo sin costo. Cuéntanos qué quieres mejorar o descubre oportunidades para tu negocio antes de conectar tus aplicaciones.",
+    "Crea una cuenta de MarchaSolo sin costo. Indica qué conviene mejorar en el negocio o descubre oportunidades antes de conectar las aplicaciones.",
   path: "/crear-cuenta",
 })
 
@@ -28,11 +28,11 @@ async function SignupContent({ searchParams }: SignupPageProps) {
 
   return (
     <Sheet
-      title="Crea tu cuenta"
+      title="Crear cuenta"
       intro={
         plan
-          ? `Has elegido ${plan.name} (${plan.price}${plan.period}). Sin costo al empezar y sin tarjeta: cuéntanos qué quieres mejorar en tu negocio.`
-          : "Sin costo y sin tarjeta. Cuéntanos qué quieres mejorar; si aún no lo sabes, te ayudamos a descubrirlo."
+          ? `Plan seleccionado: ${plan.name} (${plan.price}${plan.period}). Inicio sin costo y sin tarjeta. Indica qué conviene mejorar en el negocio.`
+          : "Sin costo y sin tarjeta. Indica qué conviene mejorar; si aún no está definido, es posible descubrir oportunidades durante el proceso."
       }
       story="signup"
       footer={<SignupFooter />}
@@ -44,7 +44,7 @@ async function SignupContent({ searchParams }: SignupPageProps) {
 
 function SignupPageFallback() {
   return (
-    <Sheet title="Crea tu cuenta" intro="Sin costo y sin tarjeta. Cuéntanos qué quieres mejorar; si aún no lo sabes, te ayudamos a descubrirlo." story="signup">
+    <Sheet title="Crear cuenta" intro="Sin costo y sin tarjeta. Indica qué conviene mejorar; si aún no está definido, es posible descubrir oportunidades durante el proceso." story="signup">
       <div className="h-96" aria-busy="true" />
     </Sheet>
   )
@@ -53,7 +53,7 @@ function SignupPageFallback() {
 function SignupFooter() {
   return (
     <>
-      ¿Ya tienes cuenta?{" "}
+      ¿Ya existe una cuenta?{" "}
       <Link href="/entrar" className="text-link underline underline-offset-4">
         Entrar
       </Link>

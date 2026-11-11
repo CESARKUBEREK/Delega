@@ -9,13 +9,13 @@ const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://marchasolo.com").repl
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: { default: "MarchaSolo", template: "%s · MarchaSolo" },
-  description: "Tu negocio, en automático. Las tareas avanzan; tú decides antes de que se envíe nada.",
+  description: "Tu negocio, en automático. MarchaSolo conecta aplicaciones y organiza tareas con inteligencia artificial.",
   openGraph: {
     type: "website",
-    locale: "es_ES",
+    locale: "es",
     siteName: "MarchaSolo",
     title: "MarchaSolo · Tu negocio, en automático",
-    description: "MarchaSolo automatiza las tareas de tu negocio, conecta tus aplicaciones y trabaja por ti. Tú mantienes el control.",
+    description: "MarchaSolo conecta las aplicaciones del negocio y automatiza tareas cotidianas con inteligencia artificial.",
   },
   twitter: { card: "summary_large_image" },
   applicationName: "MarchaSolo",

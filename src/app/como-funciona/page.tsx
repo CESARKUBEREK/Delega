@@ -5,30 +5,30 @@ import { publicPageMetadata } from "@/lib/seo"
 
 export const metadata = publicPageMetadata({
   title: "Cómo funciona",
-  description: "Cuatro pasos, siempre los mismos. MarchaSolo prepara el trabajo; la decisión final es siempre tuya.",
+  description: "Cuatro pasos para pasar de una tarea a un proceso organizado. MarchaSolo prepara el trabajo y permite revisar las acciones que requieren autorización.",
   path: "/como-funciona",
 })
 
 const FAQS = [
   {
-    question: "¿Puede enviar algo sin que yo lo vea?",
+    question: "¿Qué acciones requieren revisión antes de ejecutarse?",
     answer:
-      "No. Correos, mensajes, cambios en planillas, documentos, CRM y agenda esperan tu aprobación. Las excepciones son los avisos que te manda a ti y, solo si lo activas, las citas que reserva dentro del horario que tú fijes.",
+      "Las acciones externas configuradas para aprobación —como ciertos envíos o cambios— quedan pendientes de revisión. Los avisos internos y las automatizaciones expresamente autorizadas pueden ejecutarse según la configuración del espacio.",
   },
   {
-    question: "¿Es un agente que actúa solo?",
+    question: "¿MarchaSolo puede ejecutar tareas automáticamente?",
     answer:
-      "No. MarchaSolo prepara el trabajo como un compañero: lee, consulta y deja listo el borrador o el cambio. La decisión de enviar o modificar es siempre tuya.",
+      "MarchaSolo puede automatizar pasos de lectura, consulta y preparación. Las acciones sensibles pueden requerir aprobación; el comportamiento depende de los permisos y las reglas configuradas.",
   },
   {
     question: "¿Tengo que saber de inteligencia artificial?",
     answer:
-      "No. Describes la tarea con tus palabras. Si quieres, puedes elegir entre los modos Ahorro, Inteligente o Máxima calidad, pero Inteligente funciona bien sin tocar nada.",
+      "No. Basta con describir la tarea en lenguaje cotidiano. También es posible elegir entre los modos Ahorro, Inteligente o Máxima calidad.",
   },
   {
     question: "¿Qué pasa si una ejecución falla?",
     answer:
-      "La ejecución te dice por qué ha fallado y qué hacer, con un botón para abrir la conexión que toque o volver a intentarlo. Si tu proveedor de IA se queda sin saldo, MarchaSolo puede seguir con otra IA que tengas conectada.",
+      "La ejecución informa del motivo del fallo y de los pasos disponibles, como revisar la conexión o volver a intentarlo. Si el proveedor de IA no tiene saldo, se puede utilizar otro proveedor conectado, si la configuración lo permite.",
   },
   {
     question: "¿Qué pasa cuando termina la prueba?",
@@ -36,14 +36,14 @@ const FAQS = [
       "Tu cuenta, tus automatizaciones y tu bandeja siguen ahí. Para seguir, pasas al plan Solo y conectas tu propia IA (OpenAI, Anthropic, DeepSeek o Grok); MarchaSolo te guía paso a paso.",
   },
   {
-    question: "¿Y si mis clientes me escriben por WhatsApp?",
+    question: "¿Cómo se conecta WhatsApp?",
     answer:
-      "MarchaSolo funciona con WhatsApp a través de Twilio, el proveedor oficial. El número se conecta en alrededor de una hora, pero hasta que Meta verifica tu negocio (puede tardar una o dos semanas y pide documentos) funciona con límites. Mientras tanto, puedes empezar con tu correo y sumar WhatsApp cuando esté listo.",
+      "La conexión se realiza mediante un proveedor compatible con la API oficial de WhatsApp Business. La disponibilidad, los requisitos de verificación y los plazos dependen del proveedor y de la revisión de Meta. Mientras se completa el proceso, es posible comenzar con el correo y añadir WhatsApp más adelante.",
   },
   {
-    question: "¿Puedo usarlo desde el celular?",
+    question: "¿Se puede utilizar desde un teléfono móvil?",
     answer:
-      "Sí. MarchaSolo se instala en el celular desde el navegador, te avisa cuando algo espera tu aprobación y puedes dictar las peticiones.",
+      "Sí. MarchaSolo puede instalarse desde el navegador del teléfono móvil, enviar avisos cuando hay tareas pendientes y permitir dictar instrucciones.",
   },
 ] as const
 
@@ -65,7 +65,7 @@ export default function HowItWorksPage() {
           <div className="site-container">
             <h1 className="site-h1">Cómo funciona</h1>
             <p className="site-lead">
-              Cuatro pasos, siempre los mismos. MarchaSolo prepara el trabajo; la decisión final es siempre tuya.
+              Cuatro pasos para organizar el trabajo. MarchaSolo prepara las tareas y facilita la revisión de las acciones que requieren autorización.
             </p>
           </div>
         </section>
@@ -77,31 +77,27 @@ export default function HowItWorksPage() {
             </h2>
             <ol className="steps is-four">
               <li>
-                <h3 className="site-h3">Dile qué necesitas</h3>
+                <h3 className="site-h3">Describe la tarea</h3>
                 <p>
-                  Escribes o dictas la tarea con tus palabras, como se lo explicarías a un compañero. También puedes
-                  empezar desde una plantilla.
+                  La tarea se puede escribir o dictar en lenguaje cotidiano, o comenzar a partir de una plantilla.
                 </p>
               </li>
               <li>
                 <h3 className="site-h3">MarchaSolo organiza el trabajo</h3>
                 <p>
-                  Interpreta la petición, la convierte en pasos y te dice qué aplicaciones necesita. Puedes ajustar
-                  cualquier paso antes de seguir.
+                  Interpreta la petición, la convierte en pasos e identifica las aplicaciones necesarias. El proceso se puede ajustar antes de continuar.
                 </p>
               </li>
               <li>
                 <h3 className="site-h3">MarchaSolo prepara el trabajo</h3>
                 <p>
-                  Lee, consulta y redacta con tus apps, cuando tú quieras o a la hora fijada. Deja listo el borrador o el
-                  cambio y ves el progreso en directo.
+                  Lee, consulta y redacta con las aplicaciones conectadas, bajo demanda o en el horario configurado. Deja preparado el borrador o el cambio y muestra el progreso.
                 </p>
               </li>
               <li>
-                <h3 className="site-h3">Tú decides</h3>
+                <h3 className="site-h3">Revisión y autorización</h3>
                 <p>
-                  Lo que se envía o se cambia espera tu aprobación, con el texto completo o las celdas de antes y después.
-                  Hasta que no lo apruebes, no sale nada.
+                  Las acciones configuradas para requerir aprobación muestran el contenido completo o los valores anteriores y nuevos antes de ejecutarse.
                 </p>
               </li>
             </ol>
@@ -115,12 +111,11 @@ export default function HowItWorksPage() {
                 Un ejemplo de principio a fin
               </h2>
               <p className="site-lead">
-                Una inmobiliaria recibe cada semana consultas para ver departamentos. Así queda la tarea con MarchaSolo:
+                Una inmobiliaria recibe cada semana consultas para visitar propiedades. Así se organiza la tarea con MarchaSolo:
               </p>
               <ol className="mt-8 grid gap-6 pl-5 text-[var(--ms-muted)] [&>li]:pl-1">
                 <li>
-                  <b className="text-[var(--ms-navy)]">Lo pide una vez.</b> «Cuando un cliente pida ver un departamento, mira mi
-                  agenda y prepárale una respuesta con un horario libre».
+                  <b className="text-[var(--ms-navy)]">Lo pide una vez.</b> «Cuando llegue una consulta para visitar una propiedad, consulta la agenda y prepara una respuesta con un horario disponible».
                 </li>
                 <li>
                   <b className="text-[var(--ms-navy)]">MarchaSolo propone el plan.</b> Leer el correo, consultar la agenda,
@@ -132,9 +127,7 @@ export default function HowItWorksPage() {
                   consultas y deja la respuesta preparada. Nada se envía todavía.
                 </li>
                 <li>
-                  <b className="text-[var(--ms-navy)]">Aviso en el celular.</b> «Necesita tu aprobación». Abres la tarjeta,
-                  lees el correo completo, cambias una palabra y apruebas. Solo entonces sale desde tu correo, en el mismo
-                  hilo.
+                  <b className="text-[var(--ms-navy)]">Aviso en el celular.</b> «Hay una respuesta pendiente de revisión». Se abre la tarjeta, se consulta el correo completo y se ajusta el texto antes de autorizar el envío desde la misma cuenta.
                 </li>
               </ol>
             </div>
@@ -156,31 +149,25 @@ export default function HowItWorksPage() {
               <div className="fact is-key">
                 <h3 className="site-h3">Para probarlo: solo una cuenta</h3>
                 <p>
-                  Al crearla te preguntamos qué te gustaría quitarte de encima. MarchaSolo te prepara la propuesta y la
-                  pruebas de verdad con nuestra IA, sin conectar la tuya: si conectas el correo, también ordena tu bandeja.
-                  Tú decides si la pones en marcha.
+                  Al crearla, se puede indicar qué tarea conviene mejorar. MarchaSolo prepara una propuesta para probar con su IA, sin conectar una IA propia. Si se conecta el correo, también puede organizar la bandeja.
                 </p>
               </div>
               <div className="fact">
                 <h3 className="site-h3">Para que trabaje: tus aplicaciones</h3>
                 <p>
-                  Solo lo que pida tu tarea: el correo, Drive, la agenda o el CRM. Cada tarjeta te lleva a la web del
-                  proveedor y explica cómo hacerlo paso a paso.
+                  Solo se conectan los servicios necesarios para cada tarea: correo, Drive, calendario o CRM. Cada tarjeta dirige al proveedor y explica el proceso de conexión.
                 </p>
               </div>
               <div className="fact">
                 <h3 className="site-h3">Para seguir después de la prueba: tu propia IA</h3>
                 <p>
-                  Después de la prueba, las automatizaciones usan tu cuenta de OpenAI, Anthropic, DeepSeek o Grok. Pegas tu clave una vez; se
-                  guarda cifrada y el consumo se factura en tu cuenta. MarchaSolo elige en cada tarea el modelo adecuado y
-                  respeta el presupuesto que marques.
+                  Después de la prueba, las automatizaciones utilizan una cuenta propia de OpenAI, Anthropic, DeepSeek o Grok. La clave se guarda cifrada y el consumo se factura directamente en esa cuenta. MarchaSolo selecciona el modelo según la tarea y respeta el presupuesto configurado.
                 </p>
               </div>
               <div className="fact">
                 <h3 className="site-h3">Si te atascas: el ayudante</h3>
                 <p>
-                  En Integraciones y en tus automatizaciones tienes un ayudante que conoce el estado de tu espacio, te guía
-                  para conectar cada cuenta y te explica por qué ha fallado una ejecución.
+                  En Integraciones y en las automatizaciones hay un asistente que conoce el estado del espacio, guía la conexión de cada cuenta y explica los motivos de los fallos.
                 </p>
               </div>
             </div>
@@ -194,40 +181,33 @@ export default function HowItWorksPage() {
             </h2>
             <div className="faq">
               <details>
-                <summary>¿Puede enviar algo sin que yo lo vea?</summary>
+                <summary>¿Qué acciones requieren revisión antes de ejecutarse?</summary>
                 <div>
-                  No. Correos, mensajes, cambios en planillas, documentos, CRM y agenda esperan tu aprobación. Las
-                  excepciones son los avisos que te manda a ti y, solo si lo activas, las citas que reserva dentro del
-                  horario que tú fijes.
+                  Las acciones externas configuradas para aprobación quedan pendientes de revisión. Los avisos internos y las automatizaciones expresamente autorizadas pueden ejecutarse según los permisos del espacio.
                 </div>
               </details>
               <details>
                 <summary>¿Es un agente que actúa solo?</summary>
                 <div>
-                  No. MarchaSolo prepara el trabajo como un compañero: lee, consulta y deja listo el borrador o el cambio.
-                  La decisión de enviar o modificar es siempre tuya.
+                  MarchaSolo automatiza tareas de lectura, consulta y preparación. Las acciones sensibles pueden requerir autorización según los permisos y reglas configurados.
                 </div>
               </details>
               <details>
                 <summary>¿Tengo que saber de inteligencia artificial?</summary>
                 <div>
-                  No. Describes la tarea con tus palabras. Si quieres, puedes elegir entre los modos Ahorro, Inteligente o
-                  Máxima calidad, pero Inteligente funciona bien sin tocar nada.
+                  No. Basta con describir la tarea en lenguaje cotidiano. También se puede elegir entre los modos Ahorro, Inteligente o Máxima calidad.
                 </div>
               </details>
               <details>
                 <summary>¿Qué pasa si una ejecución falla?</summary>
                 <div>
-                  La ejecución te dice por qué ha fallado y qué hacer, con un botón para abrir la conexión que toque o
-                  volver a intentarlo. Si tu proveedor de IA se queda sin saldo, MarchaSolo puede seguir con otra IA que
-                  tengas conectada.
+                  La ejecución informa del motivo del fallo y de los pasos disponibles, como revisar la conexión o volver a intentarlo. Si el proveedor de IA no tiene saldo, se puede utilizar otro proveedor conectado, si la configuración lo permite.
                 </div>
               </details>
               <details>
                 <summary>¿Puedo usarlo desde el celular?</summary>
                 <div>
-                  Sí. MarchaSolo se instala en el celular desde el navegador, te avisa cuando algo espera tu aprobación y
-                  puedes dictar las peticiones.
+                  Sí. MarchaSolo puede instalarse desde el navegador del teléfono móvil, enviar avisos cuando hay tareas pendientes y permitir dictar instrucciones.
                 </div>
               </details>
             </div>
@@ -243,10 +223,9 @@ export default function HowItWorksPage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Pruébalo con una tarea tuya</h2>
+                <h2 className="site-h2">Prueba MarchaSolo con una tarea real</h2>
                 <p>
-                  MarchaSolo te prepara la propuesta antes de que conectes nada y la pruebas gratis. Tú decides si la pones
-                  en marcha.
+                  MarchaSolo prepara una propuesta antes de conectar las aplicaciones y permite probarla sin costo inicial.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">

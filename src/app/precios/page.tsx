@@ -4,8 +4,8 @@ import { publicPageMetadata } from "@/lib/seo"
 import { PLANS } from "@/lib/pricing"
 
 const pricingIntro = PLANS.length
-  ? `Empieza gratis con nuestra IA. Después, planes desde ${PLANS[0].price}${PLANS[0].period}; la IA se paga directamente a tu proveedor.`
-  : "Hoy MarchaSolo no tiene planes de pago: crear la cuenta y usarlo no cuesta nada. Lo único que pagas es la inteligencia artificial, directamente a tu proveedor."
+  ? `Prueba MarchaSolo gratis. Después, planes desde ${PLANS[0].price}${PLANS[0].period}; el consumo de IA se paga directamente al proveedor elegido.`
+  : "Consulta las opciones disponibles para empezar con MarchaSolo y el costo del consumo de inteligencia artificial, que se paga directamente al proveedor elegido."
 
 export const metadata = publicPageMetadata({
   title: "Precios",
@@ -67,29 +67,25 @@ export default function PricingPage() {
               <div className="fact is-key">
                 <h3 className="site-h3">El plan de MarchaSolo</h3>
                 <p>
-                  Cubre el producto: bandeja, asistente, automatizaciones, aprobaciones y conexiones. El control —nada se
-                  envía sin tu visto bueno— va incluido en todos los planes.
+                  Incluye la plataforma: bandeja, asistente, automatizaciones, aprobaciones y conexiones. Las funciones de revisión y control están incluidas en todos los planes.
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Pruébalo gratis</h3>
+                <h3 className="site-h3">Prueba gratuita</h3>
                 <p>
-                  Te preparamos tus primeras automatizaciones y las ponemos a trabajar con nuestra IA, sin que conectes nada
-                  ni pongas tarjeta.
+                  MarchaSolo prepara las primeras automatizaciones y permite probarlas con su IA, sin conectar una IA propia ni registrar una tarjeta.
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Después, la IA con tu propia clave</h3>
+                <h3 className="site-h3">Después de la prueba: una IA propia</h3>
                 <p>
-                  Para seguir ejecutando automatizaciones conectas OpenAI, Anthropic, DeepSeek o Grok. Cada proveedor te factura lo
-                  que consumes; MarchaSolo no cobra nada encima.
+                  Para continuar ejecutando automatizaciones, se conecta una cuenta de OpenAI, Anthropic, DeepSeek o Grok. Cada proveedor factura el consumo directamente; MarchaSolo no añade un recargo por ese uso.
                 </p>
               </div>
               <div className="fact">
                 <h3 className="site-h3">El gasto, a la vista</h3>
                 <p>
-                  Ves el costo estimado de cada ejecución y lo gastado en el mes. Puedes fijar un presupuesto y usar el
-                  modo Ahorro para gastar menos.
+                  El panel muestra el costo estimado de cada ejecución y el consumo mensual. Es posible fijar un presupuesto y utilizar el modo Ahorro.
                 </p>
               </div>
             </div>
@@ -105,32 +101,30 @@ export default function PricingPage() {
               <details>
                 <summary>¿El precio del plan incluye la IA?</summary>
                 <div>
-                  No. El plan cubre MarchaSolo (producto, aprobaciones y conexiones). La IA la pagas a tu proveedor con tu
-                  propia clave, según lo que consumas.
+                  No. El plan cubre MarchaSolo (plataforma, aprobaciones y conexiones). El consumo de IA se factura por separado a través del proveedor y la cuenta conectados.
                 </div>
               </details>
               <details>
                 <summary>¿Qué incluye la prueba y qué pasa cuando termina?</summary>
                 <div>
-                  La prueba usa nuestra IA, por nuestra cuenta, y alcanza para decenas de tareas. Cuando se termina, tu cuenta y lo que hayas preparado siguen ahí: pasas al plan Solo y conectas tu propia
-                  clave de IA. El propio MarchaSolo te guía y te lleva a la web del proveedor.
+                  La prueba utiliza la IA de MarchaSolo e incluye un cupo de uso limitado. Al terminar, la cuenta y las automatizaciones preparadas permanecen disponibles. Para continuar, se elige un plan y se conecta una cuenta de IA propia. MarchaSolo guía el proceso.
                 </div>
               </details>
               <details>
                 <summary>¿Puedo poner un límite de gasto de IA?</summary>
                 <div>
-                  Sí. Al llegar al 80 % te avisamos; al 100 %, MarchaSolo pasa al modo Ahorro, o se para si lo prefieres.
+                  Sí. Al alcanzar el 80 % del presupuesto se envía un aviso. Al llegar al 100 %, MarchaSolo pasa al modo Ahorro o detiene el uso, según la configuración disponible.
                 </div>
               </details>
               <details>
                 <summary>¿Pago algo extra por las aprobaciones?</summary>
                 <div>
-                  No. Revisar y aprobar antes de que se envíe o se cambie nada forma parte de todos los planes.
+                  No. Las funciones de revisión y aprobación de acciones están incluidas en todos los planes.
                 </div>
               </details>
               <details>
                 <summary>¿Los precios incluyen impuestos?</summary>
-                <div>Los precios están en dólares (USD). Según tu país, tu banco puede sumar impuestos locales al pagar con tarjeta: en Argentina, el IVA y la percepción a cuenta de Ganancias, que puedes recuperar en tu declaración.</div>
+                <div>Los precios están expresados en dólares estadounidenses (USD). El banco o el medio de pago puede aplicar impuestos, percepciones, conversiones o cargos adicionales según el país y la normativa vigente. Consulta las condiciones locales antes de pagar.</div>
               </details>
             </div>
           </div>
@@ -140,10 +134,9 @@ export default function PricingPage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Empieza con el plan que te encaje</h2>
+                <h2 className="site-h2">Elige el plan adecuado para cada etapa</h2>
                 <p>
-                  Crea la cuenta, cuéntale una tarea y prueba gratis la propuesta que te prepara. Tú decides si la pones en
-                  marcha.
+                  Crea una cuenta, describe una tarea y prueba la propuesta que prepara MarchaSolo, sin costo inicial.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">

@@ -19,7 +19,7 @@ export function LoginForm() {
       <Divider>o con tu correo</Divider>
       <form action={action} className="flex flex-col gap-4" noValidate>
         <input type="hidden" name="next" value={next} />
-        <Field id="email" name="email" type="email" label="Correo" autoComplete="email" required defaultValue={state.email} />
+        <Field id="email" name="email" type="email" label="Correo electrónico" autoComplete="email" required defaultValue={state.email} />
         <Field id="password" name="password" type="password" label="Contraseña" autoComplete="current-password" required />
         <Captcha resetKey={state} />
         <FormMessage error={state.error} />
@@ -27,7 +27,7 @@ export function LoginForm() {
       </form>
       <p className="mt-4 text-sm">
         <Link href="/forgot-password" className="text-link underline underline-offset-4">
-          He olvidado mi contraseña
+          ¿Olvidaste la contraseña?
         </Link>
       </p>
     </>
