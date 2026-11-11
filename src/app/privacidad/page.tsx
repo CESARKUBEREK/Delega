@@ -15,21 +15,50 @@ export default function PrivacyPage() {
   return (
     <MarketingLayout>
       <main className="legal-page">
-        <p className="app-eyebrow">LEGAL</p>
+        <p className="app-eyebrow">PRIVACIDAD Y DATOS</p>
         <h1 className="rotulo">Política de privacidad</h1>
         <p className="legal-updated">Última actualización: {LEGAL.updated}</p>
+
+        <div className="mt-6 rounded-2xl border border-[var(--ms-line)] bg-[var(--ms-white)] p-5">
+          <h2 className="m-0 text-lg font-semibold">En pocas palabras</h2>
+          <p className="mb-0 mt-2">
+            Esta política explica qué información utiliza MarchaSolo para prestar el servicio,
+            qué ocurre cuando conectas otras aplicaciones, con qué proveedores se comparte y
+            cómo puedes ejercer tus derechos.
+          </p>
+          <p className="mb-0 mt-3 text-sm">
+            Para consultas o solicitudes relacionadas con tus datos:{" "}
+            <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>.
+          </p>
+        </div>
+        <nav aria-label="Contenido de la política de privacidad" className="mt-8 rounded-2xl border border-[var(--ms-line)] p-5">
+          <h2 className="m-0 text-lg font-semibold">Contenido de esta política</h2>
+          <ol className="mb-0 mt-3 grid gap-x-8 gap-y-2 sm:grid-cols-2">
+            <li><a href="#responsable">Responsable</a></li>
+            <li><a href="#datos-tratados">Qué datos tratamos</a></li>
+            <li><a href="#finalidades">Para qué los usamos</a></li>
+            <li><a href="#datos-google">Datos de las API de Google</a></li>
+            <li><a href="#compartir">Con quién se comparten</a></li>
+            <li><a href="#conservacion">Cuánto tiempo los conservamos</a></li>
+            <li><a href="#seguridad">Seguridad</a></li>
+            <li><a href="#cookies">Cookies</a></li>
+            <li><a href="#derechos">Tus derechos</a></li>
+            <li><a href="#menores">Menores</a></li>
+            <li><a href="#cambios">Cambios</a></li>
+          </ol>
+        </nav>
 
         <p>
           MarchaSolo es una aplicación de inteligencia artificial que conecta aplicaciones, coordina tareas y automatiza procesos cotidianos. Las operaciones externas requieren aprobación, salvo las excepciones expresamente configuradas. Esta política explica qué datos se tratan, para qué y cómo ejercer los derechos correspondientes.
         </p>
 
-        <h2>1. Responsable</h2>
+        <h2 id="responsable">1. Responsable</h2>
         <p>
           El responsable del tratamiento es {LEGAL.owner} (SIREN {LEGAL.siren}), con domicilio en {LEGAL.address}, {LEGAL.country}. Para cualquier cuestión de privacidad, escribe a{" "}
           <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>.
         </p>
 
-        <h2>2. Qué datos tratamos</h2>
+        <h2 id="datos-tratados">2. Qué datos tratamos</h2>
         <ul>
           <li>
             <strong>Tu cuenta:</strong> correo electrónico, nombre si lo indicas, y los espacios de trabajo a los que perteneces.
@@ -87,7 +116,7 @@ export default function PrivacyPage() {
           </li>
         </ul>
 
-        <h2>3. Para qué los usamos</h2>
+        <h2 id="finalidades">3. Para qué los usamos</h2>
         <p>
           Solo para darte las funciones que tú pides: leer y ordenar tu bandeja, responder a tus preguntas, preparar y ejecutar tus
           automatizaciones, y mostrarte lo que hace cada una. No vendemos tus datos, no los usamos para publicidad y no creamos perfiles
@@ -107,7 +136,7 @@ export default function PrivacyPage() {
           cualquier momento desconectando el servicio correspondiente.
         </p>
 
-        <h2 id="google">4. Datos de las API de Google</h2>
+        <h2 id="datos-google">4. Datos de las API de Google</h2>
         <p>
           El uso y la transferencia a cualquier otra aplicación de la información recibida de las API de Google se ajustan a la{" "}
           <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener noreferrer" target="_blank">
@@ -135,7 +164,7 @@ export default function PrivacyPage() {
           .
         </p>
 
-        <h2>5. Con quién se comparten</h2>
+        <h2 id="compartir">5. Con quién se comparten</h2>
         <ul>
           <li>
             <strong>El proveedor de IA que tú conectas</strong> con tu propia clave (OpenAI, Anthropic, DeepSeek o xAI/Grok). Recibe el
@@ -169,7 +198,7 @@ export default function PrivacyPage() {
           garantías previstas por la ley, como las cláusulas contractuales tipo de la Comisión Europea.
         </p>
 
-        <h2>6. Cuánto tiempo los conservamos</h2>
+        <h2 id="conservacion">6. Cuánto tiempo los conservamos</h2>
         <ul>
           <li>Mientras tengas la cuenta, salvo lo que borres antes.</li>
           <li>
@@ -183,13 +212,13 @@ export default function PrivacyPage() {
           </li>
         </ul>
 
-        <h2>7. Seguridad</h2>
+        <h2 id="seguridad">7. Seguridad</h2>
         <p>
           Todo viaja cifrado (HTTPS). Las claves y los permisos de acceso se guardan cifrados. Cada espacio está aislado del resto: las
           reglas de la base de datos solo dejan ver los datos de un espacio a sus miembros.
         </p>
 
-        <h2>8. Cookies</h2>
+        <h2 id="cookies">8. Cookies</h2>
         <p>
           Solo usamos cookies y almacenamiento del navegador necesarios para que el servicio funcione: mantener tu sesión iniciada,
           recordar el espacio en el que trabajas, volver al paso correcto después de conectar una cuenta, guardar durante 7 días tu
@@ -197,7 +226,7 @@ export default function PrivacyPage() {
           analítica, así que no necesitamos pedirte consentimiento para ellas.
         </p>
 
-        <h2>9. Tus derechos</h2>
+        <h2 id="derechos">9. Tus derechos</h2>
         <p>
           Puedes pedir acceder a tus datos, corregirlos, borrarlos, llevártelos a otro servicio, limitar su uso u oponerte a él escribiendo
           a <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>. Te responderemos en un plazo máximo de un mes. También puedes reclamar ante
@@ -213,10 +242,10 @@ export default function PrivacyPage() {
           incumplimiento de las normas vigentes en materia de protección de datos personales.
         </p>
 
-        <h2>10. Menores</h2>
+        <h2 id="menores">10. Menores</h2>
         <p>MarchaSolo es una herramienta de trabajo y no está dirigida a menores de 18 años.</p>
 
-        <h2>11. Cambios</h2>
+        <h2 id="cambios">11. Cambios</h2>
         <p>
           Si cambiamos esta política, actualizaremos la fecha de arriba y, si el cambio es importante, te avisaremos en la aplicación.
           Consulta también los <Link href="/terminos">términos de uso</Link>.
