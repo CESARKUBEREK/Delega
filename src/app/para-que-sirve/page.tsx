@@ -4,7 +4,7 @@ import { Panel, type PanelRow } from "@/components/site/panel"
 import { publicPageMetadata } from "@/lib/seo"
 
 export const metadata = publicPageMetadata({
-  title: "Qué puedes hacer con MarchaSolo",
+  title: "Funcionalidades de MarchaSolo",
   description:
     "MarchaSolo funciona como un equipo digital: conecta canales, clientes y herramientas para coordinar procesos del negocio. Las acciones que requieren autorización quedan pendientes de revisión.",
   path: "/para-que-sirve",
@@ -42,7 +42,7 @@ const CAPABILITIES: Capability[] = [
           title: "Respuesta lista",
           detail: "Texto breve con el precio y la forma de reserva",
           state: "wait",
-          label: "Espera tu aprobación",
+          label: "Pendiente de aprobación",
         },
       ],
     },
@@ -128,7 +128,7 @@ const CAPABILITIES: Capability[] = [
           title: "Alta de Clínica Norte",
           detail: "Contacto nuevo para tu CRM",
           state: "wait",
-          label: "Espera tu aprobación",
+          label: "Pendiente de aprobación",
         },
       ],
     },
@@ -151,7 +151,7 @@ const CAPABILITIES: Capability[] = [
           title: "Respuesta con horario libre",
           detail: "Propone el jueves a las 10:00",
           state: "wait",
-          label: "Espera tu aprobación",
+          label: "Pendiente de aprobación",
         },
       ],
     },
@@ -182,9 +182,9 @@ export default function WhatYouCanDoPage() {
       <main>
         <section className="page-intro">
           <div className="site-container">
-            <h1 className="site-h1">Qué puedes hacer con MarchaSolo</h1>
+            <h1 className="site-h1">Un negocio. Muchas tareas. Una sola forma de automatizarlas.</h1>
             <p className="site-lead">
-              Un equipo digital para conectar conversaciones, información y tareas. MarchaSolo coordina el trabajo entre las aplicaciones que utilizas y mantiene visibles las acciones que requieren tu autorización.
+              Un asistente de IA que conecta aplicaciones, coordina tareas y automatiza el trabajo cotidiano. La información y las acciones de cada proceso permanecen visibles, con aprobación cuando corresponde.
             </p>
             <nav aria-label="Categorías" className="mt-8 flex flex-wrap gap-2">
               {CAPABILITIES.map((c) => (
@@ -205,11 +205,11 @@ export default function WhatYouCanDoPage() {
                 </h2>
                 <dl className="capability-facts">
                   <div>
-                    <dt>Lo habitual</dt>
+                    <dt>El problema</dt>
                     <dd>{c.problem}</dd>
                   </div>
                   <div>
-                    <dt>Cómo ayuda MarchaSolo</dt>
+                    <dt>Cómo se resuelve</dt>
                     <dd>{c.solution}</dd>
                   </div>
                   <div>
@@ -217,7 +217,7 @@ export default function WhatYouCanDoPage() {
                     <dd>{c.result}</dd>
                   </div>
                   <div>
-                    <dt>Puedes pedirlo así</dt>
+                    <dt>Ejemplo de instrucción</dt>
                     <dd className="text-[var(--ms-navy)]">{c.example}</dd>
                   </div>
                 </dl>
