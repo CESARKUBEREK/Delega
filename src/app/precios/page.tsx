@@ -3,9 +3,8 @@ import { MarketingLayout } from "@/components/marketing-layout"
 import { publicPageMetadata } from "@/lib/seo"
 import { PLANS } from "@/lib/pricing"
 
-const pricingIntro = PLANS.length
-  ? `Prueba gratuita. Después, planes desde ${PLANS[0].price}${PLANS[0].period}; el consumo de IA se paga directamente al proveedor elegido.`
-  : "Consulta las opciones disponibles para empezar con MarchaSolo y el costo del consumo de inteligencia artificial, que se paga directamente al proveedor elegido."
+const pricingIntro =
+  "Elegir el nivel de automatización adecuado, con una estructura de costos transparente y control sobre el consumo de inteligencia artificial."
 
 export const metadata = publicPageMetadata({
   title: "Precios",
@@ -58,34 +57,37 @@ export default function PricingPage() {
           </div>
         </section>
 
-        <section className="site-section" aria-labelledby="como">
+        <section className="site-section" aria-labelledby="costos">
           <div className="site-container">
-            <h2 id="como" className="site-h2 mb-10">
+            <h2 id="costos" className="site-h2 mb-10">
               Una estructura de costos transparente
             </h2>
             <div className="facts">
               <div className="fact is-key">
                 <h3 className="site-h3">El plan de MarchaSolo</h3>
                 <p>
-                  Incluye la plataforma: bandeja, asistente, automatizaciones, aprobaciones y conexiones. Las funciones de revisión y control están incluidas en todos los planes.
+                  Incluye el acceso a la plataforma, la bandeja, el asistente, las automatizaciones, las integraciones y las herramientas de revisión y aprobación. Estas funciones están incluidas en todos los planes.
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Prueba gratuita</h3>
+                <h3 className="site-h3">Inteligencia artificial</h3>
                 <p>
-                  MarchaSolo prepara las primeras automatizaciones y permite probarlas con su IA, sin conectar una IA propia ni registrar una tarjeta.
+                  La prueba inicial permite preparar y probar automatizaciones con la IA de MarchaSolo, sin conectar una cuenta propia ni registrar una tarjeta. Después de la prueba, para continuar con las ejecuciones se conecta una cuenta de OpenAI, Anthropic, DeepSeek o Grok.
+                </p>
+                <p>
+                  El consumo se factura directamente a través del proveedor elegido. MarchaSolo no añade un recargo por ese uso.
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Después de la prueba: una IA propia</h3>
+                <h3 className="site-h3">Control del gasto</h3>
                 <p>
-                  Para continuar ejecutando automatizaciones, se conecta una cuenta de OpenAI, Anthropic, DeepSeek o Grok. Cada proveedor factura el consumo directamente; MarchaSolo no añade un recargo por ese uso.
+                  El costo de la inteligencia artificial depende del proveedor, el modelo y el volumen de uso. La consulta del consumo y la configuración de límites deben realizarse de acuerdo con las herramientas disponibles en la cuenta del proveedor.
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">El gasto, a la vista</h3>
+                <h3 className="site-h3">Transparencia</h3>
                 <p>
-                  El panel muestra el costo estimado de cada ejecución y el consumo mensual. Es posible fijar un presupuesto y utilizar el modo Ahorro.
+                  Los precios de los planes están expresados en dólares estadounidenses (USD). El banco o el medio de pago puede aplicar impuestos, percepciones, conversiones o cargos adicionales según el país y la normativa vigente. Conviene consultar las condiciones locales antes de pagar.
                 </p>
               </div>
             </div>
@@ -113,7 +115,7 @@ export default function PricingPage() {
               <details>
                 <summary>¿Puedo poner un límite de gasto de IA?</summary>
                 <div>
-                  Sí. Al alcanzar el 80 % del presupuesto se envía un aviso. Al llegar al 100 %, MarchaSolo pasa al modo Ahorro o detiene el uso, según la configuración disponible.
+                  Los límites y alertas de consumo dependen de las herramientas disponibles en el proveedor de inteligencia artificial conectado. Se recomienda revisar y configurar esos controles directamente en la cuenta correspondiente.
                 </div>
               </details>
               <details>
@@ -124,7 +126,9 @@ export default function PricingPage() {
               </details>
               <details>
                 <summary>¿Los precios incluyen impuestos?</summary>
-                <div>Los precios están expresados en dólares estadounidenses (USD). El banco o el medio de pago puede aplicar impuestos, percepciones, conversiones o cargos adicionales según el país y la normativa vigente. Consulta las condiciones locales antes de pagar.</div>
+                <div>
+                  Los precios están expresados en dólares estadounidenses (USD). El banco o el medio de pago puede aplicar impuestos, percepciones, conversiones o cargos adicionales según el país y la normativa vigente. Conviene consultar las condiciones locales antes de pagar.
+                </div>
               </details>
             </div>
           </div>
