@@ -16,7 +16,7 @@ export default function AuthErrorPage() {
     >
       <p className="text-ink">El enlace ha caducado, ya se usó o el inicio de sesión se canceló.</p>
       <p className="mt-3 text-graphite">
-        Vuelve a entrar. Si venías de un correo de confirmación o de recuperación, pide uno nuevo desde la pantalla de acceso.
+        Intenta iniciar sesión nuevamente. Si el enlace provenía de un correo de confirmación o recuperación, solicita uno nuevo desde la pantalla de acceso.
       </p>
     </Sheet>
   )
