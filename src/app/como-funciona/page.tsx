@@ -5,7 +5,7 @@ import { publicPageMetadata } from "@/lib/seo"
 
 export const metadata = publicPageMetadata({
   title: "Cómo funciona",
-  description: "Describe un objetivo y MarchaSolo lo organiza en pasos, conecta las aplicaciones necesarias y coordina el proceso. Tú conservas el control de las acciones que requieren autorización.",
+  description: "Indicar un objetivo. MarchaSolo lo organiza en pasos, conecta las aplicaciones necesarias y coordina el proceso. Las acciones que requieren autorización quedan pendientes de aprobación.",
   path: "/como-funciona",
 })
 
@@ -13,7 +13,7 @@ const FAQS = [
   {
     question: "¿Qué acciones requieren revisión antes de ejecutarse?",
     answer:
-      "Las acciones externas configuradas para aprobación —como ciertos envíos o cambios— quedan pendientes de revisión. Los avisos internos y las automatizaciones expresamente autorizadas pueden ejecutarse según la configuración del espacio.",
+      "Las operaciones externas requieren aprobación, salvo las excepciones expresamente configuradas. Los avisos internos y las automatizaciones autorizadas pueden ejecutarse según los permisos del espacio.",
   },
   {
     question: "¿MarchaSolo puede ejecutar tareas automáticamente?",
@@ -65,7 +65,7 @@ export default function HowItWorksPage() {
           <div className="site-container">
             <h1 className="site-h1">Cómo funciona</h1>
             <p className="site-lead">
-              De una instrucción a un proceso coordinado: MarchaSolo organiza los pasos, trabaja con tus aplicaciones conectadas y te permite supervisar el resultado.
+              De una instrucción a un trabajo terminado: MarchaSolo organiza los pasos, conecta las aplicaciones necesarias y permite supervisar el resultado.
             </p>
           </div>
         </section>
@@ -79,25 +79,25 @@ export default function HowItWorksPage() {
               <li>
                 <h3 className="site-h3">Describe la tarea</h3>
                 <p>
-                  Escribe o dicta lo que necesitas en lenguaje cotidiano, o comienza con una plantilla.
+                  Describir la tarea en lenguaje cotidiano, por escrito o mediante dictado, o seleccionar una plantilla.
                 </p>
               </li>
               <li>
                 <h3 className="site-h3">MarchaSolo organiza el trabajo</h3>
                 <p>
-                  Interpreta el objetivo, lo divide en pasos e identifica qué aplicaciones necesita. Puedes revisar y ajustar el plan antes de continuar.
+                  Interpreta el objetivo, lo divide en pasos e identifica las aplicaciones necesarias. El plan puede revisarse y ajustarse antes de continuar.
                 </p>
               </li>
               <li>
                 <h3 className="site-h3">MarchaSolo prepara el trabajo</h3>
                 <p>
-                  Coordina consultas y tareas con las aplicaciones conectadas, bajo demanda o según el horario configurado. Prepara resultados y acciones, y muestra el progreso de cada paso.
+                  Coordina consultas y tareas con las aplicaciones conectadas, bajo demanda o según el horario configurado. Prepara resultados y acciones, y muestra el avance de cada paso.
                 </p>
               </li>
               <li>
                 <h3 className="site-h3">Revisión y autorización</h3>
                 <p>
-                  Las acciones configuradas para requerir aprobación muestran el contenido completo o los valores anteriores y nuevos antes de ejecutarse.
+                  Las acciones sujetas a aprobación muestran el contenido completo o los valores anteriores y nuevos antes de ejecutarse. Las excepciones autorizadas siguen las reglas configuradas.
                 </p>
               </li>
             </ol>
@@ -119,15 +119,14 @@ export default function HowItWorksPage() {
                 </li>
                 <li>
                   <b className="text-[var(--ms-navy)]">MarchaSolo propone el plan.</b> Leer el correo, consultar la agenda,
-                  buscar la ficha del departamento y redactar la respuesta. Le pide conectar el correo y el calendario, porque los
-                  necesita.
+                  buscar la ficha del departamento y redactar la respuesta. Identifica la necesidad de conectar el correo electrónico y el calendario.
                 </li>
                 <li>
                   <b className="text-[var(--ms-navy)]">Llega un correo de Laura.</b> La automatización arranca, hace las
-                  consultas y deja la respuesta preparada. Nada se envía todavía.
+                  consultas y deja la respuesta preparada. El envío queda pendiente de aprobación.
                 </li>
                 <li>
-                  <b className="text-[var(--ms-navy)]">Aviso en el celular.</b> «Hay una respuesta pendiente de revisión». Se abre la tarjeta, se consulta el correo completo y se ajusta el texto antes de autorizar el envío desde la misma cuenta.
+                  <b className="text-[var(--ms-navy)]">Aviso en el teléfono.</b> «Hay una respuesta pendiente de revisión». La tarjeta permite consultar el correo completo y ajustar el texto antes de autorizar el envío desde la misma cuenta.
                 </li>
               </ol>
             </div>
@@ -153,7 +152,7 @@ export default function HowItWorksPage() {
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Para que trabaje: tus aplicaciones</h3>
+                <h3 className="site-h3">Para que trabaje: las aplicaciones del negocio</h3>
                 <p>
                   Solo se conectan los servicios necesarios para cada tarea: correo, Drive, calendario o CRM. Cada tarjeta dirige al proveedor y explica el proceso de conexión.
                 </p>
@@ -165,7 +164,7 @@ export default function HowItWorksPage() {
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Si te atascas: el ayudante</h3>
+                <h3 className="site-h3">Asistencia para la configuración</h3>
                 <p>
                   En Integraciones y en las automatizaciones hay un asistente que conoce el estado del espacio, guía la conexión de cada cuenta y explica los motivos de los fallos.
                 </p>
@@ -205,7 +204,7 @@ export default function HowItWorksPage() {
                 </div>
               </details>
               <details>
-                <summary>¿Puedo usarlo desde el celular?</summary>
+                <summary>¿Se puede utilizar desde un teléfono?</summary>
                 <div>
                   Sí. MarchaSolo puede instalarse desde el navegador del teléfono móvil, enviar avisos cuando hay tareas pendientes y permitir dictar instrucciones.
                 </div>
@@ -223,13 +222,13 @@ export default function HowItWorksPage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Prueba MarchaSolo con un proceso real</h2>
+                <h2 className="site-h2">Comenzar con un proceso real</h2>
                 <p>
                   MarchaSolo prepara una propuesta antes de conectar las aplicaciones y permite probarla sin costo inicial.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
-                Probar gratis
+                Crear cuenta gratis
               </Link>
             </div>
           </div>
