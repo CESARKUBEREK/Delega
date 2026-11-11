@@ -39,19 +39,19 @@ const APPS: AppIcon[] = [
 
 const CAPABILITIES = [
   {
-    title: "Conecta eventos con procesos",
+    title: "Conectar eventos con procesos",
     body: "Cuando llega un correo, un mensaje o una cita, MarchaSolo puede iniciar el proceso correspondiente, consultar la información necesaria y preparar la siguiente acción.",
   },
   {
-    title: "Coordina tareas y seguimientos",
+    title: "Coordinar tareas y seguimientos",
     body: "Organiza seguimientos, resúmenes y tareas recurrentes. Consulta el calendario conectado, identifica horarios disponibles y prepara los pasos siguientes.",
   },
   {
-    title: "Mantén el control de cada acción",
+    title: "Control de cada acción",
     body: "Los envíos y cambios sujetos a autorización en hojas de cálculo, CRM o agenda quedan pendientes de revisión. Si hace falta intervención humana, MarchaSolo prepara el contexto para que puedas continuar.",
   },
   {
-    title: "Integra tus sistemas internos",
+    title: "Integración de sistemas internos",
     body: "APIs REST y bases de datos propias permiten enlazar CRM, inventarios y herramientas a medida. Las operaciones de escritura requieren la autorización configurada.",
   },
 ]
