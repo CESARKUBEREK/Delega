@@ -5,7 +5,7 @@ import { publicPageMetadata } from "@/lib/seo"
 export const metadata = publicPageMetadata({
   title: "Integraciones",
   description:
-    "Conecta Gmail, Google Calendar, WhatsApp, Google Drive y más. MarchaSolo organiza tareas, prepara seguimientos y facilita la revisión de acciones.",
+    "Conecta tus aplicaciones para que MarchaSolo coordine procesos entre ellas: consulta información, organiza tareas y prepara o ejecuta acciones según los permisos configurados.",
   path: "/integraciones",
 })
 
@@ -39,19 +39,19 @@ const APPS: AppIcon[] = [
 
 const CAPABILITIES = [
   {
-    title: "Dispara flujos en el momento",
-    body: "Cuando llega un correo, un mensaje o una cita, MarchaSolo prepara la respuesta, el seguimiento o la confirmación para su revisión.",
+    title: "Conecta eventos con procesos",
+    body: "Cuando llega un correo, un mensaje o una cita, MarchaSolo puede iniciar el proceso correspondiente, consultar la información necesaria y preparar la siguiente acción.",
   },
   {
-    title: "Agenda seguimientos y recordatorios",
-    body: "Programa seguimientos, resúmenes y tareas recurrentes. Consulta el calendario conectado, identifica horarios disponibles y prepara el mensaje.",
+    title: "Coordina tareas y seguimientos",
+    body: "Organiza seguimientos, resúmenes y tareas recurrentes. Consulta el calendario conectado, identifica horarios disponibles y prepara los pasos siguientes.",
   },
   {
-    title: "Confirma sin soltar el control",
-    body: "Los envíos y cambios sujetos a autorización en hojas de cálculo, CRM o agenda quedan pendientes de revisión. Si hace falta intervención humana, MarchaSolo deriva el caso.",
+    title: "Mantén el control de cada acción",
+    body: "Los envíos y cambios sujetos a autorización en hojas de cálculo, CRM o agenda quedan pendientes de revisión. Si hace falta intervención humana, MarchaSolo prepara el contexto para que puedas continuar.",
   },
   {
-    title: "Conecta tus sistemas internos",
+    title: "Integra tus sistemas internos",
     body: "APIs REST y bases de datos propias permiten enlazar CRM, inventarios y herramientas a medida. Las operaciones de escritura requieren la autorización configurada.",
   },
 ]
@@ -64,7 +64,7 @@ export default function IntegrationsMarketingPage() {
           <div className="site-container">
             <h1 className="site-h1">Integraciones</h1>
             <p className="site-lead">
-              Conecta las aplicaciones disponibles, como Gmail, Google Calendar, WhatsApp y Google Drive. Outlook se incorporará próximamente. MarchaSolo organiza tareas, prepara seguimientos y deja las acciones sujetas a autorización pendientes de revisión.
+              Conecta las herramientas que ya utilizas —correo, calendario, mensajería, documentos y CRM—. MarchaSolo las utiliza en conjunto para coordinar procesos del negocio. Outlook se incorporará próximamente; las acciones sujetas a autorización quedan pendientes de revisión.
             </p>
           </div>
         </section>
@@ -73,7 +73,7 @@ export default function IntegrationsMarketingPage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="apps" className="site-h2">
-                Aplicaciones para el trabajo diario
+                Las herramientas de tu equipo digital
               </h2>
               <p className="site-lead">
                 Solo se conectan las aplicaciones necesarias para cada tarea. MarchaSolo utiliza las cuentas autorizadas y almacena las credenciales cifradas.
@@ -133,7 +133,7 @@ export default function IntegrationsMarketingPage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="cap" className="site-h2">
-                Qué hace con tus aplicaciones
+                Cómo trabaja MarchaSolo entre tus aplicaciones
               </h2>
             </div>
             <div className="facts">
@@ -182,9 +182,9 @@ export default function IntegrationsMarketingPage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Empieza por una sola conexión</h2>
+                <h2 className="site-h2">Empieza por el proceso que más tiempo consume</h2>
                 <p>
-                  Describe una tarea. MarchaSolo identifica las aplicaciones necesarias y guía el proceso de conexión. Las acciones sujetas a aprobación quedan pendientes hasta su revisión.
+                  Describe el proceso que quieres mejorar. MarchaSolo identifica las aplicaciones necesarias y guía las conexiones. Puedes comenzar con pocas herramientas y sumar otras cuando el proceso lo requiera.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">

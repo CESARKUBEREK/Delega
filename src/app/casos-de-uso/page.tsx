@@ -48,7 +48,7 @@ export default function UseCasesPage() {
           <div className="site-container">
             <h1 className="site-h1">Casos de uso</h1>
             <p className="site-lead">
-              WhatsApp, atención por voz, reservas, ventas, atención al cliente e inmobiliarias. Describe la tarea en lenguaje cotidiano: MarchaSolo organiza el trabajo con las aplicaciones conectadas y facilita la revisión de las acciones.
+              Ventas, atención al cliente, reservas e inmobiliarias: MarchaSolo conecta los pasos de cada proceso y coordina el trabajo entre las aplicaciones disponibles. Describe el resultado que necesitas y revisa las acciones que requieren autorización.
             </p>
             <nav aria-label="Áreas" className="mt-8 flex flex-wrap gap-2">
               {GROUPS.map((g) => (
@@ -105,9 +105,9 @@ export default function UseCasesPage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">¿La tarea que buscas no aparece aquí?</h2>
+                <h2 className="site-h2">¿El proceso que necesitas no aparece aquí?</h2>
                 <p>
-                  Describe la tarea al crear la cuenta. MarchaSolo propone un proceso para organizarla y probarla.
+                  Describe qué necesitas resolver. MarchaSolo te ayuda a convertirlo en un proceso organizado que puedes probar.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">

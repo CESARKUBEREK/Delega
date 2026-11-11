@@ -2,7 +2,7 @@
 // producto (plantillas, conectores y aprobaciones); nada de cifras de ahorro
 // ni testimonios inventados.
 //
-// Posicionamiento: asistente de IA que conecta aplicaciones, coordina tareas y automatiza trabajo cotidiano.
+// Posicionamiento: equipo digital con IA que conecta aplicaciones, coordina procesos y realiza tareas con supervisión y permisos configurables.
 // Casos: canales del negocio (WhatsApp, voz, reservas), ventas, atención al
 // cliente y los sectores de lanzamiento (inmobiliarias y despachos).
 

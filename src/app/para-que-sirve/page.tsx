@@ -6,7 +6,7 @@ import { publicPageMetadata } from "@/lib/seo"
 export const metadata = publicPageMetadata({
   title: "Qué puedes hacer con MarchaSolo",
   description:
-    "Canales del negocio, clientes y tareas recurrentes: MarchaSolo organiza el trabajo con las aplicaciones conectadas. Las acciones que requieren autorización quedan pendientes de revisión.",
+    "MarchaSolo funciona como un equipo digital: conecta canales, clientes y herramientas para coordinar procesos del negocio. Las acciones que requieren autorización quedan pendientes de revisión.",
   path: "/para-que-sirve",
 })
 
@@ -184,7 +184,7 @@ export default function WhatYouCanDoPage() {
           <div className="site-container">
             <h1 className="site-h1">Qué puedes hacer con MarchaSolo</h1>
             <p className="site-lead">
-              Canales del negocio, clientes y tareas recurrentes: MarchaSolo organiza el trabajo con las aplicaciones conectadas. Las acciones que requieren autorización quedan pendientes de revisión.
+              Un equipo digital para conectar conversaciones, información y tareas. MarchaSolo coordina el trabajo entre las aplicaciones que utilizas y mantiene visibles las acciones que requieren tu autorización.
             </p>
             <nav aria-label="Categorías" className="mt-8 flex flex-wrap gap-2">
               {CAPABILITIES.map((c) => (
@@ -209,7 +209,7 @@ export default function WhatYouCanDoPage() {
                     <dd>{c.problem}</dd>
                   </div>
                   <div>
-                    <dt>Con MarchaSolo</dt>
+                    <dt>Cómo ayuda MarchaSolo</dt>
                     <dd>{c.solution}</dd>
                   </div>
                   <div>
@@ -217,7 +217,7 @@ export default function WhatYouCanDoPage() {
                     <dd>{c.result}</dd>
                   </div>
                   <div>
-                    <dt>Se lo pides así</dt>
+                    <dt>Puedes pedirlo así</dt>
                     <dd className="text-[var(--ms-navy)]">{c.example}</dd>
                   </div>
                 </dl>
@@ -231,9 +231,9 @@ export default function WhatYouCanDoPage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Empieza por una sola tarea</h2>
+                <h2 className="site-h2">Empieza por un proceso</h2>
                 <p>
-                  Empieza por la tarea que más tiempo consume —WhatsApp, atención telefónica o seguimiento comercial—. Cuando esté ajustada, añade otra.
+                  Elige un proceso que hoy dependa de varias tareas manuales. Empieza con las aplicaciones necesarias y amplía el trabajo a medida que lo necesites.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
