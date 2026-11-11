@@ -391,3 +391,20 @@ Alertas: firmas inválidas en volumen, evento financiero sin procesar, importe/m
 10. Atención de reclamaciones y escalado humano.
 
 **Regla de salida:** no activar contratación recurrente en un mercado hasta que pagos, avisos, cancelación, derechos del consumidor, facturación, privacidad y textos legales estén implementados y probados de extremo a extremo.
+
+
+---
+
+## 23. Alineación con la fundación de billing existente
+
+**Actualización:** 11 de noviembre de 2026.
+
+La implementación de la fundación ya existe en DOrkesta mediante `supabase/migrations/20261111163700_billing_foundation.sql`. Esta especificación funcional debe leerse junto con el plan técnico de implementación:
+
+[`docs/payment-orchestrator-implementation-plan.md`](./payment-orchestrator-implementation-plan.md).
+
+La fundación existente incluye `billing_plans`, `plan_prices`, `billing_customers`, `legal_documents`, `checkout_sessions`, `subscriptions`, `payment_transactions`, `payment_events`, `consent_records`, `billing_audit_events` y `outbox_events`. La capa de derechos de uso también debe reutilizar `workspace_usage_periods` y las capacidades de `billing_plans`.
+
+Por tanto, las entidades de este documento que describen esas mismas responsabilidades son el modelo funcional de referencia, no instrucciones para crear tablas duplicadas. Las entidades complementarias (por ejemplo, reembolsos, facturas, notas de crédito, mapeo de clientes de proveedor y conciliación) se implementarán solo cuando la fase correspondiente las necesite y después de verificar que no exista ya una equivalente.
+
+La integración inicial se realizará con Stripe en sandbox. Mercado Pago Argentina y México permanecerán deshabilitados hasta que se confirme la elegibilidad contractual y de liquidación de CYRANO SAS. No se activarán cobros reales como parte de la actualización documental.
