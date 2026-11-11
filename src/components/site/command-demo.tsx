@@ -14,16 +14,16 @@ export type Demo = {
 
 export const VISIT_DEMO: Demo = {
   title: "Responder consultas de visitas",
-  ask: "Cuando un cliente pida ver un departamento, mira mi agenda y prepárale una respuesta con un horario libre.",
+  ask: "Cuando llegue una consulta para visitar una propiedad, consulta la agenda y prepara una respuesta con un horario disponible.",
   steps: [
     { title: "Lee el correo de Laura Gómez", detail: "Quiere ver el departamento de Palermo esta semana", app: "Correo" },
-    { title: "Mira tu agenda", detail: "Jueves libre de 10:00 a 12:00", app: "Calendar" },
-    { title: "Busca la ficha del departamento", detail: "3 habitaciones, disponible", app: "CRM" },
+    { title: "Consulta el calendario", detail: "Jueves disponible de 10:00 a 12:00", app: "Calendar" },
+    { title: "Consulta la ficha de la propiedad", detail: "3 habitaciones, disponible", app: "CRM" },
     { title: "Redacta la respuesta", detail: "Propone el jueves a las 10:00", app: "Borrador" },
   ],
   approval: {
-    title: "Enviar la respuesta a Laura Gómez",
-    text: "«Hola, Laura: el jueves a las 10:00 puedo mostrarte el departamento de Palermo. ¿Te viene bien?»",
+    title: "Revisar el envío de la respuesta a Laura Gómez",
+    text: "«Hola, Laura: hay disponibilidad el jueves a las 10:00 para visitar la propiedad de Palermo. ¿Ese horario resulta conveniente?»",
   },
 }
 
@@ -43,9 +43,9 @@ export function CommandDemo({ demo = VISIT_DEMO, animate = true, compact = false
       </div>
       <div className="console-body">
         <div className="console-ask" style={at(0)}>
-          <span className="console-ask-who" aria-hidden="true">Tú</span>
+          <span className="console-ask-who" aria-hidden="true">Solicitud</span>
           <p>
-            <span className="sr-only">Tú pides: </span>
+            <span className="sr-only">Solicitud: </span>
             {demo.ask}
           </p>
         </div>
@@ -66,11 +66,11 @@ export function CommandDemo({ demo = VISIT_DEMO, animate = true, compact = false
           ))}
         </ol>
         <div className="demo-approval" style={at(steps.length + 1)}>
-          <div className="demo-approval-head">Espera tu aprobación</div>
+          <div className="demo-approval-head">Pendiente de revisión</div>
           <p className="demo-approval-title">{demo.approval.title}</p>
           <p className="demo-approval-text">{demo.approval.text}</p>
           <div className="demo-approval-actions" aria-hidden="true">
-            <span className="is-yes">Aprobar y enviar</span>
+            <span className="is-yes">Autorizar envío</span>
             <span className="is-edit">Editar</span>
           </div>
         </div>
