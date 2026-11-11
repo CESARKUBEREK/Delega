@@ -5,7 +5,7 @@ import { publicPageMetadata } from "@/lib/seo"
 
 export const metadata = publicPageMetadata({
   title: "Cómo funciona",
-  description: "Cuatro pasos para pasar de una tarea a un proceso organizado. MarchaSolo prepara el trabajo y permite revisar las acciones que requieren autorización.",
+  description: "Describe un objetivo y MarchaSolo lo organiza en pasos, conecta las aplicaciones necesarias y coordina el proceso. Tú conservas el control de las acciones que requieren autorización.",
   path: "/como-funciona",
 })
 
@@ -65,7 +65,7 @@ export default function HowItWorksPage() {
           <div className="site-container">
             <h1 className="site-h1">Cómo funciona</h1>
             <p className="site-lead">
-              Cuatro pasos para organizar el trabajo. MarchaSolo prepara las tareas y facilita la revisión de las acciones que requieren autorización.
+              De una instrucción a un proceso coordinado: MarchaSolo organiza los pasos, trabaja con tus aplicaciones conectadas y te permite supervisar el resultado.
             </p>
           </div>
         </section>
@@ -79,19 +79,19 @@ export default function HowItWorksPage() {
               <li>
                 <h3 className="site-h3">Describe la tarea</h3>
                 <p>
-                  La tarea se puede escribir o dictar en lenguaje cotidiano, o comenzar a partir de una plantilla.
+                  Escribe o dicta lo que necesitas en lenguaje cotidiano, o comienza con una plantilla.
                 </p>
               </li>
               <li>
                 <h3 className="site-h3">MarchaSolo organiza el trabajo</h3>
                 <p>
-                  Interpreta la petición, la convierte en pasos e identifica las aplicaciones necesarias. El proceso se puede ajustar antes de continuar.
+                  Interpreta el objetivo, lo divide en pasos e identifica qué aplicaciones necesita. Puedes revisar y ajustar el plan antes de continuar.
                 </p>
               </li>
               <li>
                 <h3 className="site-h3">MarchaSolo prepara el trabajo</h3>
                 <p>
-                  Lee, consulta y redacta con las aplicaciones conectadas, bajo demanda o en el horario configurado. Deja preparado el borrador o el cambio y muestra el progreso.
+                  Coordina consultas y tareas con las aplicaciones conectadas, bajo demanda o según el horario configurado. Prepara resultados y acciones, y muestra el progreso de cada paso.
                 </p>
               </li>
               <li>
@@ -108,10 +108,10 @@ export default function HowItWorksPage() {
           <div className="site-container grid items-start gap-12 lg:grid-cols-2">
             <div>
               <h2 id="ejemplo" className="site-h2">
-                Un ejemplo de principio a fin
+                Un proceso real, de principio a fin
               </h2>
               <p className="site-lead">
-                Una inmobiliaria recibe cada semana consultas para visitar propiedades. Así se organiza la tarea con MarchaSolo:
+                Una inmobiliaria recibe consultas sobre propiedades y necesita responder, comprobar disponibilidad y registrar el seguimiento. Así coordina ese proceso con MarchaSolo:
               </p>
               <ol className="mt-8 grid gap-6 pl-5 text-[var(--ms-muted)] [&>li]:pl-1">
                 <li>
@@ -223,7 +223,7 @@ export default function HowItWorksPage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Prueba MarchaSolo con una tarea real</h2>
+                <h2 className="site-h2">Prueba MarchaSolo con un proceso real</h2>
                 <p>
                   MarchaSolo prepara una propuesta antes de conectar las aplicaciones y permite probarla sin costo inicial.
                 </p>
