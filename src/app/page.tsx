@@ -6,10 +6,10 @@ import { publicPageMetadata } from "@/lib/seo"
 import { USE_CASES } from "@/lib/site-content"
 
 export const metadata = publicPageMetadata({
-  title: "Tu trabajo, en marcha",
-  absoluteTitle: "MarchaSolo · Tu trabajo, en marcha, sin hacerlo todo tú",
+  title: "Tu negocio, en automático",
+  absoluteTitle: "MarchaSolo · Tu negocio, en automático",
   description:
-    "Un compañero de trabajo con IA: ordena tu correo, prepara las respuestas a tus clientes y se detiene antes de enviar o cambiar nada. Pruébalo gratis con nuestra IA, sin tarjeta.",
+    "Un asistente de IA que conecta aplicaciones, organiza tareas y prepara respuestas y seguimientos para el negocio. Prueba gratuita, sin tarjeta.",
   path: "/",
 })
 
@@ -27,14 +27,13 @@ export default function HomePage() {
         <section className="site-hero">
           <div className="site-container site-hero-grid">
             <div className="site-hero-copy">
-              <p className="site-kicker site-hero-kicker">TU COMPAÑERO DE TRABAJO CON IA</p>
+              <p className="site-kicker site-hero-kicker">ASISTENTE DE IA PARA EL NEGOCIO</p>
               <h1 className="site-display">
-                Tu trabajo. En marcha.
-                <span>Sin hacerlo todo tú.</span>
+                El trabajo del negocio, en marcha.
+                <span>Menos tareas manuales. Más tiempo para avanzar.</span>
               </h1>
               <p className="site-lead site-hero-lead">
-                Ordena tu correo, deja listas las respuestas a tus clientes y te avisa de lo importante. Tú revisas y
-                apruebas antes de que salga nada.
+                Conecta las aplicaciones, organiza tareas y prepara respuestas y seguimientos. Las acciones que requieren autorización quedan pendientes de revisión.
               </p>
               <div className="site-actions">
                 <Link href="/crear-cuenta" className="btn btn-primary">
@@ -46,15 +45,15 @@ export default function HomePage() {
               </div>
               <ul className="site-hero-note">
                 <li>Sin tarjeta</li>
-                <li>Listo en minutos, sin conectar tu IA</li>
-                <li>Tú apruebas antes de enviar</li>
+                <li>Primeros pasos sin conectar una IA propia</li>
+                <li>Control sobre las acciones externas</li>
               </ul>
             </div>
             <div className="site-hero-preview">
               <AppPreview />
               <p className="site-preview-caption">
                 <span aria-hidden="true">✓</span>
-                La respuesta queda lista. Tú decides si se envía.
+                La respuesta queda lista para revisión.
               </p>
             </div>
           </div>
@@ -71,12 +70,12 @@ export default function HomePage() {
                 Así de simple
               </h2>
               <p className="site-lead">
-                Se lo pides como a alguien de tu equipo. Él prepara el trabajo; la decisión final es siempre tuya.
+                La tarea se describe en lenguaje cotidiano. MarchaSolo organiza el proceso y prepara el trabajo para su revisión.
               </p>
             </div>
             <ol className="steps">
               <li>
-                <h3 className="site-h3">Dile qué quieres quitarte de encima</h3>
+                <h3 className="site-h3">Describe la tarea</h3>
                 <p>Elige un ejemplo o escríbelo con tus palabras. En unos segundos tienes la propuesta.</p>
               </li>
               <li>
@@ -84,8 +83,8 @@ export default function HomePage() {
                 <p>Con nuestra IA, gratis: ordena tu bandeja y deja las respuestas preparadas desde el primer día.</p>
               </li>
               <li>
-                <h3 className="site-h3">Tú decides</h3>
-                <p>Apruebas, editas o descartas. Hasta que no lo hagas, no se envía ni se modifica nada.</p>
+                <h3 className="site-h3">Revisa el resultado</h3>
+                <p>Las acciones que requieren autorización se pueden revisar, editar o descartar antes de ejecutarse.</p>
               </li>
             </ol>
             <p className="mt-10">
@@ -104,7 +103,7 @@ export default function HomePage() {
                 Tareas que puedes dejar de hacer a mano
               </h2>
               <p className="site-lead">
-                MarchaSolo las prepara con tus aplicaciones. Tú revisas y apruebas antes de que salgan.
+                MarchaSolo prepara estas tareas con las aplicaciones conectadas. Las acciones sujetas a aprobación esperan revisión.
               </p>
             </div>
             <div className="grid gap-8 md:grid-cols-3">
@@ -129,21 +128,17 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="control" className="site-h2">
-                No es un agente que actúa solo.
-                <br />
-                Es un compañero que espera tu visto bueno.
+                IA que trabaja con supervisión y control.
               </h2>
               <p className="site-lead">
-                La automatización solo sirve si te fías de ella. Por eso, en MarchaSolo estas reglas no se pueden
-                desactivar.
+                La automatización debe ser útil y transparente. MarchaSolo permite revisar las acciones que requieren autorización.
               </p>
             </div>
             <div className="trust">
               <div>
-                <h3 className="site-h3">Nada sale sin tu aprobación</h3>
+                <h3 className="site-h3">Control sobre las acciones</h3>
                 <p>
-                  Correos, mensajes, planillas, documentos, CRM y agenda esperan tu visto bueno. Solo los avisos para ti
-                  van directos.
+                  Las acciones externas sujetas a aprobación —como enviar mensajes o modificar registros— quedan pendientes de revisión. Los avisos internos pueden entregarse directamente.
                 </p>
               </div>
               <div>
@@ -176,12 +171,12 @@ export default function HomePage() {
               <li>
                 <h3 className="site-h3">Profesionales independientes</h3>
                 <p>
-                  Atiendes clientes y haces el trabajo. MarchaSolo prepara lo repetitivo; tú decides qué se envía.
+                  La atención al cliente y el trabajo diario ocupan la jornada. MarchaSolo prepara las tareas repetitivas y facilita su revisión.
                 </p>
               </li>
               <li>
                 <h3 className="site-h3">Pequeños equipos y agencias</h3>
-                <p>Espacios compartidos con funciones: cada persona revisa y aprueba lo que le toca.</p>
+                <p>Espacios compartidos y funciones para que cada integrante revise las tareas que le corresponden.</p>
               </li>
               <li>
                 <h3 className="site-h3">Inmobiliarias y despachos</h3>
@@ -201,13 +196,12 @@ export default function HomePage() {
               <div>
                 <h2 className="site-h2">Cuéntanos qué te gustaría mejorar</h2>
                 <p>
-                  Empieza con una tarea concreta o pide ayuda para descubrirla. MarchaSolo te prepara la propuesta y la
-                  pruebas gratis con nuestra IA. Tú decides si la pones en marcha.
+                  Empieza con una tarea concreta o identifica oportunidades de mejora. MarchaSolo prepara una propuesta para probarla gratis con su IA.
                 </p>
                 <ul className="site-hero-note" style={{ marginTop: "0.75rem" }}>
                   <li>Sin tarjeta</li>
                   <li>Prueba gratis con nuestra IA</li>
-                  <li>Nada se envía sin tu aprobación</li>
+                  <li>Revisión de acciones que requieren autorización</li>
                 </ul>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
