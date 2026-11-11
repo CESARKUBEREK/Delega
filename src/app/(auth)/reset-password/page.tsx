@@ -21,7 +21,7 @@ export default function ResetPasswordPage() {
           required
           hint="Mínimo 10 caracteres."
         />
-        <Field id="confirm" name="confirm" type="password" label="Confirmar contraseña" autoComplete="new-password" required />
+        <Field id="confirm" name="confirm" type="password" label="Repetir contraseña" autoComplete="new-password" required />
         <FormMessage error={state.error} />
         <SubmitButton pendingLabel="Guardando…">Guardar contraseña</SubmitButton>
       </form>
