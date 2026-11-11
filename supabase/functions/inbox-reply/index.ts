@@ -7,7 +7,7 @@ import { recordMessage } from "../_shared/inbox.ts"
 import { generateText, LlmError } from "../_shared/llm.ts"
 import { callRouted, isRouteError, routeAi } from "../_shared/router/index.ts"
 import { parseTelegramSecret, sendTelegram, TelegramError } from "../_shared/telegram.ts"
-import { insideWindow, PHONE_RE, sendWhatsApp, WhatsAppError, whatsappSecret } from "../_shared/whatsapp.ts"
+import { insideWindow, PHONE_RE, sendWhatsApp, WhatsAppError, whatsappConnection } from "../_shared/whatsapp.ts"
 import { MailError, replyHeaders, sendAndRecord } from "../_shared/imap.ts"
 import { PrepareError, prepareThread } from "../_shared/inbox-prepare.ts"
 import { senderProfile } from "../_shared/inbox-profile.ts"
@@ -123,14 +123,14 @@ Deno.serve(async (req) => {
       // Conversaciones antiguas de la integración de Gmail, ya retirada.
       return fail(409, "gmail_removed", "Esta conversación llegó por Gmail, que ya no se integra así. Conecta Gmail como correo IMAP para responder.")
     } else if (thread.channel === "whatsapp") {
-      const wa = await whatsappSecret(admin, workspaceId)
+      const wa = await whatsappConnection(admin, workspaceId)
       if (!wa) return fail(409, "no_whatsapp", "WhatsApp no está conectado.")
       if (!PHONE_RE.test(thread.external_id)) return fail(400, "no_address", "Esta conversación no tiene un número válido.")
       if (!(await insideWindow(admin, workspaceId, thread.external_id))) {
         return fail(409, "outside_window", "Han pasado más de 24 horas desde su último mensaje: WhatsApp no deja escribirle con texto libre.")
       }
       try {
-        const sid = await sendWhatsApp(wa.secret, thread.external_id, text)
+        const sid = await sendWhatsApp(wa, thread.external_id, text)
         await recordMessage(admin, {
           workspaceId,
           integrationId: wa.integrationId,
