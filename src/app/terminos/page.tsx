@@ -5,7 +5,7 @@ import { publicPageMetadata } from "@/lib/seo"
 
 export const metadata = publicPageMetadata({
   title: "Términos y condiciones",
-  description: `Condiciones de contratación y uso de MarchaSolo, servicio ofrecido por ${LEGAL.owner}.`,
+  description: `Condiciones de contratación y uso de MarchaSolo en España, Argentina y México, ofrecido por ${LEGAL.owner}.`,
   path: "/terminos",
 })
 
@@ -70,10 +70,11 @@ export default function TermsPage() {
           El correo de contacto es <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>.
         </p>
         <p>
-          MarchaSolo se dirige a usuarios de España y otros países de la Unión Europea, Argentina y México, sin perjuicio de que
-          la disponibilidad de determinadas funciones o planes pueda variar por país. La contratación puede realizarse por
-          consumidores, profesionales y empresas. La condición de consumidor se determinará conforme a la legislación aplicable
-          y no únicamente por la opción seleccionada en el registro.
+          MarchaSolo ofrece sus servicios comercialmente en España, Argentina y México. La contratación puede realizarse por consumidores,
+          profesionales y empresas establecidos o residentes en esos territorios, según la disponibilidad indicada en el sitio web.
+          La condición de consumidor se determinará conforme a la legislación aplicable y no únicamente por la opción seleccionada
+          durante el registro. La sociedad proveedora está constituida en Francia; ello no supone que Francia sea un mercado de
+          comercialización de MarchaSolo ni excluye las normas imperativas que protejan a los usuarios de los territorios atendidos.
         </p>
 
         <h2 id="alcance">2. Ámbito de aplicación y aceptación</h2>
@@ -144,14 +145,16 @@ export default function TermsPage() {
 
         <h2 id="pagos">7. Pagos y facturación</h2>
         <p>
-          Los planes de pago se abonan mediante los medios de tarjeta que se habiliten en el proceso de contratación. El pago se
-          procesa a través de un proveedor externo. MarchaSolo no solicita ni almacena el número completo de la tarjeta ni su código
-          de seguridad; esos datos se introducen directamente en los componentes seguros del proveedor de pagos.
+          Cuando la contratación de pago esté habilitada, el único medio de pago aceptado por MarchaSolo será la tarjeta bancaria,
+          procesada por un proveedor externo. Los datos completos de la tarjeta y su código de seguridad serán introducidos y
+          tratados por los componentes seguros de dicho proveedor; MarchaSolo no los solicitará ni almacenará. Mientras el checkout
+          y el proveedor de pagos no estén habilitados, no será posible contratar ni efectuar cobros a través del sitio.
         </p>
         <p>
-          Al contratar una suscripción recurrente, autorizas los cargos correspondientes al precio, la periodicidad y los impuestos
-          informados en el pedido, hasta que la suscripción termine o la autorización sea revocada conforme a estos términos y la ley.
-          El proveedor de pagos puede aplicar mecanismos de autenticación reforzada o verificación de operaciones.
+          El consentimiento para los cobros recurrentes deberá ser expreso, informado y separado de cualquier aceptación genérica de
+          estos términos. Antes de confirmar el pedido se mostrarán de forma clara y destacada el importe total, la moneda,
+          la periodicidad, la fecha del primer cobro y la existencia de renovaciones automáticas. El proveedor de pagos podrá
+          aplicar mecanismos de autenticación o verificación de operaciones. No se iniciarán cargos recurrentes sin ese consentimiento.
         </p>
         <p>
           CYRANO SAS es el proveedor contractual y emitirá los documentos de facturación que correspondan, directamente o mediante
@@ -166,15 +169,17 @@ export default function TermsPage() {
 
         <h2 id="renovacion">8. Renovación automática</h2>
         <p>
-          Salvo que el pedido indique otra cosa, las suscripciones de pago se renuevan automáticamente por periodos sucesivos de
-          igual duración al periodo inicial. Antes de confirmar la contratación se informarán el importe, la periodicidad y, cuando
-          corresponda, la fecha del primer cargo y las condiciones de renovación.
+          Salvo que el pedido indique otra cosa, las suscripciones de pago se renovarán automáticamente por periodos sucesivos de igual
+          duración. Antes de contratar se informarán el importe, la moneda, la periodicidad, la fecha del primer cargo y las condiciones
+          de renovación. El consentimiento expreso para los cargos recurrentes quedará registrado y podrá consultarse.
         </p>
         <p>
-          La renovación se cobrará al método de pago registrado. La autorización de pago se mantiene hasta la cancelación efectiva
-          de la suscripción. Cuando la legislación aplicable exija un aviso previo de renovación, de vencimiento o de cambio, se
-          facilitará dentro del plazo y por el medio exigidos. Los avisos informativos que podamos enviar adicionalmente no sustituyen
-          los avisos legalmente obligatorios.
+          Para consumidores en México, MarchaSolo enviará un aviso de renovación con al menos cinco días naturales de anticipación,
+          indicando el importe y la fecha del próximo cargo, y permitirá cancelar sin penalización antes de la renovación. Para
+          consumidores en España, se facilitará cualquier aviso previo que exija la normativa aplicable o que se haya ofrecido
+          expresamente como condición de contratación. En Argentina, se respetarán las reglas de información, consentimiento y
+          cancelación aplicables a los cargos recurrentes. Estos avisos se enviarán por un medio de contacto electrónico asociado
+          a la cuenta o por otro medio duradero acordado.
         </p>
         <p>
           Si proponemos modificar el precio o una condición esencial de la suscripción, comunicaremos el cambio con la antelación
@@ -184,9 +189,11 @@ export default function TermsPage() {
 
         <h2 id="cancelacion">9. Cancelación de la suscripción</h2>
         <p>
-          Puedes solicitar la cancelación de la renovación desde los controles de tu cuenta cuando estén disponibles o mediante
-          una solicitud a <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>. La cancelación ordinaria impide futuras renovaciones
-          desde la fecha efectiva que se indique; no implica necesariamente el reembolso de importes ya cobrados.
+          Puedes cancelar la suscripción desde un mecanismo sencillo, visible y accesible en tu cuenta, cuando la contratación se haya
+          realizado en línea, o mediante el canal legalmente exigido en tu país. La cancelación deberá poder completarse sin
+          llamadas, negociaciones ni obstáculos desproporcionados. También puedes solicitarla a
+          <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>. La cancelación ordinaria impedirá nuevos cargos desde la fecha
+          efectiva que se indique, sin perjuicio de los derechos de reembolso o desistimiento que correspondan.
         </p>
         <p>
           Si cancelas durante un periodo ya pagado, podrás seguir utilizando las funciones contratadas hasta el final de ese periodo,
@@ -194,27 +201,46 @@ export default function TermsPage() {
           inmediata o al final del periodo, la fecha efectiva y el efecto sobre el acceso.
         </p>
         <p>
-          La cancelación de una suscripción no equivale por sí sola al cierre de la cuenta, al borrado de datos ni al ejercicio de
-          un derecho de desistimiento o revocación. Esas solicitudes se tramitan por separado.
+          La cancelación de una suscripción no equivale por sí sola al cierre de la cuenta ni al borrado de datos. Sin embargo, cuando
+          la legislación aplicable reconozca un derecho de baja o revocación mediante un mecanismo específico, la solicitud se
+          tramitará por ese mecanismo y no se condicionará a cerrar la cuenta.
         </p>
 
         <h2 id="desistimiento">10. Desistimiento, revocación y reembolsos</h2>
         <p>
-          Si contratas como consumidor, conservas los derechos de desistimiento, revocación, arrepentimiento, resolución y reembolso
-          que te reconozca la legislación imperativa de tu país. Las condiciones y plazos pueden variar según el país, el tipo de
-          contrato y si el servicio digital ha comenzado o se ha ejecutado.
+          Si contratas como consumidor, conservas todos los derechos de desistimiento, arrepentimiento, revocación, resolución y reembolso
+          reconocidos por las normas imperativas de tu país. Los procedimientos que siguen resumen los derechos generales y no
+          sustituyen ni reducen una protección más favorable que resulte aplicable.
         </p>
         <p>
-          Para los consumidores de la Unión Europea, cuando resulte aplicable el derecho de desistimiento en contratos a distancia,
-          el plazo general legal es de catorce días desde la celebración del contrato de servicios, sujeto a las reglas y excepciones
-          legales. En servicios digitales o contenido digital, la pérdida o limitación de ese derecho solo podrá producirse cuando
-          se cumplan los requisitos legales de información, solicitud expresa, consentimiento y reconocimiento que correspondan.
-          No consideraremos que has renunciado a un derecho por el mero hecho de utilizar la plataforma.
+          Para consumidores en España, en los contratos a distancia el plazo general de desistimiento es de catorce días naturales desde
+          la celebración del contrato de servicios. Si solicitas que el servicio comience durante ese plazo, podremos pedirte una
+          solicitud expresa. Cuando la ley permita que el derecho se extinga por la ejecución completa del servicio o por el suministro
+          de contenido digital no prestado en soporte material, recabaremos previamente el consentimiento expreso y el reconocimiento
+          de que puedes perder ese derecho en las condiciones legales. Si desistes después de haber solicitado expresamente el inicio,
+          pero antes de la ejecución completa, solo podrá exigirse el importe proporcional permitido por la ley y debidamente informado.
+          No utilizaremos casillas premarcadas ni presumiremos una renuncia por el mero uso del servicio.
         </p>
         <p>
-          Puedes comunicar el desistimiento o una solicitud de revocación a <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>,
-          indicando los datos necesarios para identificar la contratación. También puedes utilizar cualquier formulario o mecanismo
-          que la ley exija o que pongamos a disposición. Te confirmaremos la recepción por un medio duradero cuando corresponda.
+          En Argentina, los consumidores podrán ejercer el derecho de arrepentimiento dentro del plazo legal de diez días corridos desde
+          la contratación del servicio, cuando resulte aplicable conforme al artículo 34 de la Ley 24.240 y al artículo 1.110 del
+          Código Civil y Comercial. MarchaSolo pondrá a simple vista, en lugar destacado y desde el primer acceso, un enlace denominado
+          “Botón de arrepentimiento” que permita solicitar la revocación. No se exigirá registración previa ni trámites adicionales
+          para iniciar la solicitud. Podrán aplicarse únicamente verificaciones razonables de identidad y seguridad, por medios
+          habituales y sin convertirlas en obstáculos. Dentro de las veinticuatro horas siguientes se informará el código de
+          identificación de la solicitud y se adoptarán las medidas necesarias para tramitarla. Se respetarán las excepciones legales,
+          incluidas las relativas a servicios efectivamente utilizados o consumidos cuando procedan.
+        </p>
+        <p>
+          En Argentina, MarchaSolo también pondrá a simple vista, en lugar destacado y desde el primer acceso, un enlace denominado
+          “Botón de baja de servicio” para solicitar la cancelación de servicios contratados a distancia. No se exigirá registración
+          previa ni trámites adicionales para iniciar la baja. Se comunicará el código de solicitud dentro de las veinticuatro horas
+          siguientes y se tramitará la baja conforme a la normativa aplicable.
+        </p>
+        <p>
+          En México, los consumidores podrán cancelar de manera inmediata y sencilla las suscripciones o membresías con cobro
+          recurrente, sin penalización por ejercer ese derecho. Se respetará el consentimiento expreso e informado para los cargos
+          automáticos y el aviso de renovación con al menos cinco días naturales de anticipación previsto en el apartado 8.
         </p>
         <p>
           Los reembolsos se efectuarán dentro del plazo legal aplicable, utilizando en principio el mismo medio de pago, salvo acuerdo
@@ -222,9 +248,9 @@ export default function TermsPage() {
           consumidor, se calculará y explicará de forma transparente. No se limitarán derechos de reembolso por esta cláusula.
         </p>
         <p>
-          Para Argentina, México y otros países, se aplicarán los mecanismos, plazos y efectos de revocación o cancelación que establezca
-          la legislación local. Cuando una solicitud requiera valoración individual, podremos pedir información razonablemente necesaria,
-          sin retrasar indebidamente el ejercicio del derecho.
+          En todos los territorios, los reembolsos se efectuarán dentro del plazo legal aplicable y, en principio, mediante el mismo medio
+          de pago, salvo acuerdo válido en contrario. No se limitarán derechos de reembolso por esta cláusula. En caso de duda,
+          prevalecerá la norma de protección al consumidor más favorable que resulte imperativamente aplicable.
         </p>
 
         <h2 id="impago">11. Pagos rechazados y suspensión por impago</h2>
@@ -449,14 +475,16 @@ export default function TermsPage() {
 
         <h2 id="ley">25. Ley aplicable y resolución de controversias</h2>
         <p>
-          Para clientes profesionales y empresariales, estos términos se regirán, en principio, por el derecho francés, sin perjuicio
-          de las normas imperativas que resulten aplicables. Las controversias se someterán a los tribunales competentes conforme
-          a las reglas legales aplicables.
+          Para las relaciones con clientes que actúen exclusivamente en el marco de su actividad profesional o empresarial, estos términos
+          se regirán por el derecho francés, en la medida permitida por las normas imperativas aplicables. Las controversias se
+          someterán a los tribunales que resulten competentes conforme a las reglas legales de jurisdicción y competencia. Esta
+          elección no pretende atribuir competencia exclusiva a un tribunal cuando la ley disponga otra cosa.
         </p>
         <p>
-          Si eres consumidor, la elección del derecho francés no te priva de la protección que te otorguen las disposiciones
-          imperativas de la legislación de tu país de residencia habitual cuando esas normas resulten aplicables. Tampoco limita
-          las reglas de competencia judicial que protegen a los consumidores.
+          Si resides habitualmente en España, Argentina o México y contratas como consumidor, la elección del derecho francés no te privará
+          de la protección que te otorguen las disposiciones imperativas de la legislación que resulte aplicable a tu contrato.
+          Tampoco limita las reglas imperativas sobre jurisdicción, competencia judicial, reclamaciones administrativas ni acceso
+          a mecanismos de resolución de controversias de tu país.
         </p>
         <p>
           Antes de iniciar una acción, puedes escribirnos para intentar resolver la controversia. También puedes acudir a los
