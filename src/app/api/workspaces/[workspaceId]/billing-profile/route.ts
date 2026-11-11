@@ -6,6 +6,7 @@ type RouteContext = { params: Promise<{ workspaceId: string }> }
 
 const CUSTOMER_TYPES = new Set(["consumer", "professional", "business"])
 const COUNTRY_CODE = /^[A-Z]{2}$/
+const SUPPORTED_COUNTRIES = new Set(["ES", "AR", "MX", "DE", "IT", "PT", "NL", "BE", "IE", "AT", "PL", "SE", "DK", "FI", "GR", "CZ", "RO", "HU", "HR", "SK", "SI", "BG", "CY", "EE", "LV", "LT", "LU", "MT"])
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 async function authorizeBillingAdmin(workspaceId: string) {
@@ -80,7 +81,7 @@ export async function PUT(request: Request, context: RouteContext) {
   if (typeof customerType !== "string" || !CUSTOMER_TYPES.has(customerType)) {
     return NextResponse.json({ error: "invalid_customer_type" }, { status: 400 })
   }
-  if (typeof countryCode !== "string" || !COUNTRY_CODE.test(countryCode)) {
+  if (typeof countryCode !== "string" || !COUNTRY_CODE.test(countryCode) || !SUPPORTED_COUNTRIES.has(countryCode)) {
     return NextResponse.json({ error: "invalid_country_code" }, { status: 400 })
   }
   if (billingEmail !== null && billingEmail !== undefined &&
