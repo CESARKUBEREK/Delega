@@ -18,7 +18,7 @@ create table public.plan_prices (
   plan_id uuid not null references public.billing_plans(id) on delete restrict,
   market_code text not null default 'GLOBAL' check (market_code ~ '^[A-Z]{2,8}$'),
   currency char(3) not null check (currency ~ '^[A-Z]{3}$'),
-  amount_minor bigint not null check (amount_minor > 0),
+  amount_minor bigint not null check (amount_minor between 1 and 9007199254740991),
   interval_unit text not null check (interval_unit in ('month', 'year')),
   interval_count smallint not null default 1 check (interval_count between 1 and 12),
   valid_from timestamptz not null default now(),
@@ -50,7 +50,8 @@ create table public.billing_customers (
   tax_id_verified_at timestamptz,
   preferred_language text not null default 'es' check (preferred_language ~ '^[a-z]{2}(-[A-Z]{2})?$'),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  unique (id, workspace_id)
 );
 
 create table public.legal_documents (
@@ -73,7 +74,7 @@ create table public.legal_documents (
 create table public.checkout_sessions (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null references public.workspaces(id) on delete restrict,
-  billing_customer_id uuid not null references public.billing_customers(id) on delete restrict,
+  billing_customer_id uuid not null,
   plan_price_id uuid not null references public.plan_prices(id) on delete restrict,
   status text not null default 'created' check (status in ('created', 'requires_action', 'processing', 'completed', 'expired', 'canceled', 'failed')),
   amount_minor bigint not null check (amount_minor > 0),
@@ -84,6 +85,7 @@ create table public.checkout_sessions (
   completed_at timestamptz,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
+  foreign key (billing_customer_id, workspace_id) references public.billing_customers(id, workspace_id) on delete restrict,
   unique (workspace_id, idempotency_key),
   unique (id, workspace_id)
 );
@@ -94,7 +96,7 @@ create index checkout_sessions_workspace_created_idx
 create table public.subscriptions (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null references public.workspaces(id) on delete restrict,
-  billing_customer_id uuid not null references public.billing_customers(id) on delete restrict,
+  billing_customer_id uuid not null,
   plan_id uuid not null references public.billing_plans(id) on delete restrict,
   plan_price_id uuid not null references public.plan_prices(id) on delete restrict,
   provider text,
@@ -115,6 +117,7 @@ create table public.subscriptions (
   updated_at timestamptz not null default now(),
   check (current_period_end is null or current_period_start is null or current_period_end > current_period_start),
   check (trial_end is null or trial_start is null or trial_end > trial_start),
+  foreign key (billing_customer_id, workspace_id) references public.billing_customers(id, workspace_id) on delete restrict,
   unique (id, workspace_id)
 );
 
