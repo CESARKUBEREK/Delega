@@ -1113,6 +1113,8 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       cache_write_tokens: result.usage.cacheWrite ?? 0,
       reasoning_tokens: result.usage.reasoning ?? 0,
       cost_usd: cost,
+      real_cost_usd: actualCost,
+      funded_by: ai.trial ? "marchasolo" : "workspace",
       latency_ms: Date.now() - started,
       task: routing?.task ?? "agent",
       run_id: run.id,

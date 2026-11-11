@@ -1998,6 +1998,7 @@ export type Database = {
           cost_usd: number
           created_at: string
           created_by: string | null
+          funded_by: string
           id: number
           input_tokens: number
           kind: string
@@ -2005,6 +2006,7 @@ export type Database = {
           model: string
           output_tokens: number
           provider: string
+          real_cost_usd: number
           reasoning_tokens: number
           run_id: string | null
           step_type: string
@@ -2019,6 +2021,7 @@ export type Database = {
           cost_usd?: number
           created_at?: string
           created_by?: string | null
+          funded_by?: string
           id?: never
           input_tokens?: number
           kind?: string
@@ -2026,6 +2029,7 @@ export type Database = {
           model: string
           output_tokens?: number
           provider: string
+          real_cost_usd?: number
           reasoning_tokens?: number
           run_id?: string | null
           step_type?: string
@@ -2040,6 +2044,7 @@ export type Database = {
           cost_usd?: number
           created_at?: string
           created_by?: string | null
+          funded_by?: string
           id?: never
           input_tokens?: number
           kind?: string
@@ -2047,6 +2052,7 @@ export type Database = {
           model?: string
           output_tokens?: number
           provider?: string
+          real_cost_usd?: number
           reasoning_tokens?: number
           run_id?: string | null
           step_type?: string
