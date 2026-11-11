@@ -32,8 +32,6 @@ create table public.plan_prices (
 create index plan_prices_lookup_idx
   on public.plan_prices (market_code, currency, active, valid_from desc);
 
-create index billing_customers_country_idx on public.billing_customers (country_code, created_at desc);
-
 create table public.billing_customers (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null unique references public.workspaces(id) on delete restrict,
@@ -55,6 +53,8 @@ create table public.billing_customers (
   updated_at timestamptz not null default now(),
   unique (id, workspace_id)
 );
+
+create index billing_customers_country_idx on public.billing_customers (country_code, created_at desc);
 
 create table public.legal_documents (
   id uuid primary key default gen_random_uuid(),
