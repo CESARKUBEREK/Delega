@@ -2,7 +2,7 @@ import { LogoMark } from "@/components/logo"
 import { CommandDemo } from "./command-demo"
 
 // La app en pequeño, flotando e inclinada en la portada: la barra marino de
-// MarchaSolo, el menú lateral y, dentro, la tarea que acaba en tu aprobación.
+// MarchaSolo, el menú lateral y, dentro, una tarea pendiente de aprobación.
 // Es una ilustración: nada es clicable.
 const NAV = [
   { label: "Hoy", icon: "M4 11.5 12 5l8 6.5V20h-5v-5H9v5H4z" },
