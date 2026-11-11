@@ -5,7 +5,7 @@ import { publicPageMetadata } from "@/lib/seo"
 export const metadata = publicPageMetadata({
   title: "Integraciones",
   description:
-    "Conecta Gmail, Google Calendar, WhatsApp, Google Drive y más. MarchaSolo dispara flujos, agenda seguimientos y prepara confirmaciones; tú apruebas antes de enviar.",
+    "Conecta Gmail, Google Calendar, WhatsApp, Google Drive y más. MarchaSolo organiza tareas, prepara seguimientos y facilita la revisión de acciones.",
   path: "/integraciones",
 })
 
@@ -40,19 +40,19 @@ const APPS: AppIcon[] = [
 const CAPABILITIES = [
   {
     title: "Dispara flujos en el momento",
-    body: "Cuando llega un correo, un WhatsApp o una cita, MarchaSolo prepara la respuesta, el seguimiento o la confirmación. Tú das el visto bueno antes de que salga.",
+    body: "Cuando llega un correo, un mensaje o una cita, MarchaSolo prepara la respuesta, el seguimiento o la confirmación para su revisión.",
   },
   {
     title: "Agenda seguimientos y recordatorios",
-    body: "Programa toques a clientes, resúmenes y tareas repetidas. Usa tu calendario real: propone horarios libres y deja listo el mensaje.",
+    body: "Programa seguimientos, resúmenes y tareas recurrentes. Consulta el calendario conectado, identifica horarios disponibles y prepara el mensaje.",
   },
   {
     title: "Confirma sin soltar el control",
-    body: "Envíos, cambios en planillas, CRM o agenda esperan tu aprobación. Si hace falta una persona, MarchaSolo te lo pasa.",
+    body: "Los envíos y cambios sujetos a autorización en hojas de cálculo, CRM o agenda quedan pendientes de revisión. Si hace falta intervención humana, MarchaSolo deriva el caso.",
   },
   {
     title: "Conecta tus sistemas internos",
-    body: "APIs REST y bases propias para enlazar CRM, inventarios o herramientas a medida. Las escrituras también pasan por tu aprobación.",
+    body: "APIs REST y bases de datos propias permiten enlazar CRM, inventarios y herramientas a medida. Las operaciones de escritura requieren la autorización configurada.",
   },
 ]
 
@@ -64,9 +64,7 @@ export default function IntegrationsMarketingPage() {
           <div className="site-container">
             <h1 className="site-h1">Integraciones</h1>
             <p className="site-lead">
-              Conecta tus aplicaciones: Gmail, Google Calendar, Outlook, WhatsApp, Google Drive y más. MarchaSolo
-              dispara flujos, agenda seguimientos y prepara confirmaciones al momento — siempre con tu aprobación antes
-              de enviar.
+              Conecta las aplicaciones disponibles, como Gmail, Google Calendar, WhatsApp y Google Drive. Outlook se incorporará próximamente. MarchaSolo organiza tareas, prepara seguimientos y deja las acciones sujetas a autorización pendientes de revisión.
             </p>
           </div>
         </section>
@@ -75,11 +73,10 @@ export default function IntegrationsMarketingPage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="apps" className="site-h2">
-                Las apps de tu día a día
+                Aplicaciones para el trabajo diario
               </h2>
               <p className="site-lead">
-                Conectas solo lo que pide cada tarea. MarchaSolo usa tu cuenta en cada servicio; las claves se guardan
-                cifradas.
+                Solo se conectan las aplicaciones necesarias para cada tarea. MarchaSolo utiliza las cuentas autorizadas y almacena las credenciales cifradas.
               </p>
             </div>
 
@@ -157,27 +154,24 @@ export default function IntegrationsMarketingPage() {
                 Sistemas internos y APIs
               </h2>
               <p className="site-lead">
-                Integra herramientas propias, bases de datos, CRM internos o flujos a medida. Conecta tus APIs: cuando
-                una acción necesita a una persona, MarchaSolo te la entrega para que decidas.
+                Integra herramientas propias, bases de datos, CRM internos y flujos a medida. Cuando una acción requiere intervención humana, MarchaSolo deriva el caso para su revisión.
               </p>
             </div>
             <ul className="audience">
               <li>
                 <h3 className="site-h3">APIs REST a medida</h3>
                 <p>
-                  Dos conectores personalizados por espacio, con tus credenciales. Lecturas libres; escrituras con
-                  aprobación.
+                  Dos conectores personalizados por espacio, con credenciales propias. Las lecturas están disponibles; las escrituras requieren aprobación.
                 </p>
               </li>
               <li>
                 <h3 className="site-h3">Bases de datos</h3>
-                <p>Consulta tablas propias (por ejemplo Supabase) para enriquecer respuestas y automatizaciones.</p>
+                <p>Consulta tablas propias (por ejemplo, Supabase) para aportar contexto a respuestas y automatizaciones.</p>
               </li>
               <li>
                 <h3 className="site-h3">Traspaso a una persona</h3>
                 <p>
-                  Si el caso se sale del guion, MarchaSolo prepara el contexto y te lo deja en la bandeja o en una
-                  aprobación: no improvisa en tu nombre.
+                  Si el caso requiere atención humana, MarchaSolo prepara el contexto y lo deriva a la bandeja o al flujo de aprobación.
                 </p>
               </li>
             </ul>
@@ -190,8 +184,7 @@ export default function IntegrationsMarketingPage() {
               <div>
                 <h2 className="site-h2">Empieza por una sola conexión</h2>
                 <p>
-                  Cuéntale una tarea. MarchaSolo te dice qué aplicaciones hacen falta y te guía para conectarlas. Nada se
-                  envía sin tu aprobación.
+                  Describe una tarea. MarchaSolo identifica las aplicaciones necesarias y guía el proceso de conexión. Las acciones sujetas a aprobación quedan pendientes hasta su revisión.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
