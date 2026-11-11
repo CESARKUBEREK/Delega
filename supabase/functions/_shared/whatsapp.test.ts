@@ -1,7 +1,9 @@
 // deno test -A _shared/whatsapp.test.ts
 import { deepStrictEqual as assertEquals, ok as assert } from "node:assert"
 import { createHmac } from "node:crypto"
-import { parseWhatsAppSecret, phoneOf, twilioSignature, validTwilioSignature } from "./whatsapp.ts"
+import { phoneOf } from "./whatsapp.ts"
+import { contextFromSecret } from "./whatsapp/registry.ts"
+import { twilioSignature, validTwilioSignature } from "./whatsapp/providers/twilio.ts"
 
 // Implementación de referencia, independiente (la de los SDK de Twilio):
 // URL + claves ordenadas con su valor, HMAC-SHA1 con el Auth Token, base64.
@@ -51,7 +53,11 @@ Deno.test("números de WhatsApp", () => {
 })
 
 Deno.test("secreto guardado", () => {
-  assert(parseWhatsAppSecret(JSON.stringify({ provider: "twilio", account_sid: "AC1", auth_token: "t", from: "+14155238886" })))
-  assertEquals(parseWhatsAppSecret(JSON.stringify({ provider: "meta", token: "x" })), null)
-  assertEquals(parseWhatsAppSecret("no json"), null)
+  const ids = { integrationId: "i", workspaceId: "w" }
+  const ctx = contextFromSecret(JSON.stringify({ provider: "twilio", account_sid: "AC1", auth_token: "t", from: "+14155238886" }), ids)
+  assertEquals(ctx?.provider, "twilio")
+  assertEquals(ctx?.phone, "+14155238886")
+  // Meta aún no está registrado (W2).
+  assertEquals(contextFromSecret(JSON.stringify({ provider: "meta", token: "x" }), ids), null)
+  assertEquals(contextFromSecret("no json", ids), null)
 })

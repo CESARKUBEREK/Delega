@@ -37,7 +37,7 @@ import { createLead, TokkoError, tokkoKey } from "./tokko.ts"
 import { BufferError, bufferKey, createPost, listChannels, MAX_POST_CHARS } from "./buffer.ts"
 import { type XubioCredentials, xubioCredentials } from "./xubio.ts"
 import { parseTelegramSecret, sendTelegram, TelegramError } from "./telegram.ts"
-import { insideWindow, MAX_WHATSAPP_CHARS, PHONE_RE, sendWhatsApp, WhatsAppError, type WhatsAppSecret, whatsappSecret } from "./whatsapp.ts"
+import { insideWindow, MAX_WHATSAPP_CHARS, PHONE_RE, sendWhatsApp, type WhatsAppConnection, WhatsAppError, whatsappConnection } from "./whatsapp.ts"
 import { calendarToken, createEvent, DATE_RE, type EventInput, getEvent, listEvents, updateEvent } from "./calendar.ts"
 import {
   createNote,
@@ -192,7 +192,7 @@ type Resources = {
   contacts: Contact[]
   recipients: Recipient[]
   telegram: { token: string; integrationId: string } | null
-  whatsapp: { secret: WhatsAppSecret; integrationId: string } | null
+  whatsapp: WhatsAppConnection | null
   hubspot: { token: string; portalId: number | null } | null
   // Google Contacts, para quien no usa un CRM.
   contactsActive: boolean
@@ -276,7 +276,7 @@ async function loadResources(admin: Admin, run: RunRow): Promise<Resources> {
   if (telegram && run.trigger.type === "telegram_message") {
     recipients.push({ alias: "remitente", label: run.trigger.name || "el remitente", channel: "telegram", address: run.trigger.chat_id })
   }
-  const whatsapp = find("whatsapp")?.status === "active" ? await whatsappSecret(admin, run.workspace_id) : null
+  const whatsapp = find("whatsapp")?.status === "active" ? await whatsappConnection(admin, run.workspace_id) : null
   if (whatsapp && run.trigger.type === "whatsapp_message") {
     recipients.push({ alias: "remitente", label: run.trigger.name || run.trigger.phone, channel: "whatsapp", address: run.trigger.phone })
   }
@@ -1693,7 +1693,7 @@ export async function executePending(admin: Admin, run: RunRow, pending: Pending
       if (!(await insideWindow(admin, run.workspace_id, pending.phone))) {
         throw new RunError("Han pasado más de 24 horas desde su último mensaje: WhatsApp ya no deja enviarle texto libre.")
       }
-      const sid = await sendWhatsApp(res.whatsapp.secret, pending.phone, pending.text)
+      const sid = await sendWhatsApp(res.whatsapp, pending.phone, pending.text)
       await recordMessage(admin, {
         workspaceId: run.workspace_id,
         integrationId: res.whatsapp.integrationId,
