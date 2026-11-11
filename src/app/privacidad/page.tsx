@@ -5,7 +5,7 @@ import { publicPageMetadata } from "@/lib/seo"
 
 export const metadata = publicPageMetadata({
   title: "Política de privacidad",
-  description: "Qué datos trata MarchaSolo, para qué, con quién se comparten y cómo ejercer tus derechos.",
+  description: "Qué datos trata MarchaSolo, para qué, con quién se comparten y cómo ejercer los derechos de protección de datos.",
   path: "/privacidad",
 })
 
@@ -20,9 +20,7 @@ export default function PrivacyPage() {
         <p className="legal-updated">Última actualización: {LEGAL.updated}</p>
 
         <p>
-          MarchaSolo es una aplicación que te ayuda a automatizar tareas de tu negocio: lee lo que tú le conectas, te propone planes y
-          prepara acciones que <strong>siempre esperan tu aprobación</strong> antes de escribir o enviar nada. Esta política explica qué
-          datos trata, para qué y cómo puedes controlarlos.
+          MarchaSolo es una aplicación de inteligencia artificial que conecta aplicaciones, coordina tareas y automatiza procesos cotidianos. Las operaciones externas requieren aprobación, salvo las excepciones expresamente configuradas. Esta política explica qué datos se tratan, para qué y cómo ejercer los derechos correspondientes.
         </p>
 
         <h2>1. Responsable</h2>

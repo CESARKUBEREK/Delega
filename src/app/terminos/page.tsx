@@ -18,14 +18,12 @@ export default function TermsPage() {
         <p className="legal-updated">Última actualización: {LEGAL.updated}</p>
 
         <p>
-          Estos términos regulan el uso de MarchaSolo, que ofrece {LEGAL.owner} (SIREN {LEGAL.siren}, {LEGAL.address}, {LEGAL.country}). Al crear una cuenta los aceptas. Cómo
-          tratamos tus datos se explica en la <Link href="/privacidad">política de privacidad</Link>.
+          Estos términos establecen las condiciones de acceso y utilización de MarchaSolo, servicio ofrecido por {LEGAL.owner} (SIREN {LEGAL.siren}, {LEGAL.address}, {LEGAL.country}). La política de tratamiento de datos se detalla en la <Link href="/privacidad">política de privacidad</Link>.
         </p>
 
         <h2>1. Qué es MarchaSolo</h2>
         <p>
-          Una aplicación que usa la inteligencia artificial para leer lo que conectas, proponerte planes y preparar acciones. Todo lo que
-          escribe o envía en tu nombre espera tu aprobación.
+          Una aplicación de inteligencia artificial que conecta aplicaciones, coordina tareas y automatiza procesos. Las operaciones externas requieren aprobación, salvo las excepciones expresamente configuradas.
         </p>
 
         <h2>2. Tu cuenta y tus conexiones</h2>

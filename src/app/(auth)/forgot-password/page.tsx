@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
         </Link>
       }
     >
-      <p className="mb-5 text-graphite">Se enviará un enlace para crear una contraseña nueva. Caduca en una hora.</p>
+      <p className="mb-5 text-graphite">Introducir el correo electrónico asociado a la cuenta. Se enviará un enlace para establecer una contraseña nueva. El enlace caduca en una hora.</p>
       <form action={action} className="flex flex-col gap-4" noValidate>
         <Field id="email" name="email" type="email" label="Correo electrónico" autoComplete="email" required defaultValue={state.email} />
         <Captcha resetKey={state} />

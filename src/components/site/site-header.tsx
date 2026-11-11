@@ -66,10 +66,10 @@ export function SiteHeader() {
           ) : (
             <>
               <Link href="/entrar" className="site-login" aria-current={current("/entrar")}>
-                Entrar
+                Iniciar sesión
               </Link>
               <Link href="/crear-cuenta" className="btn btn-primary btn-sm">
-                Probar gratis
+                Crear cuenta gratis
               </Link>
             </>
           )}
@@ -111,10 +111,10 @@ export function SiteHeader() {
             ) : (
               <>
                 <Link href="/crear-cuenta" className="btn btn-primary">
-                  Probar gratis
+                  Crear cuenta gratis
                 </Link>
                 <Link href="/entrar" className="btn btn-secondary">
-                  Entrar
+                  Iniciar sesión
                 </Link>
               </>
             )}

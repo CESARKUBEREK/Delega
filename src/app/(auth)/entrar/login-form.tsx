@@ -16,7 +16,7 @@ export function LoginForm() {
   return (
     <>
       <GoogleButton next={next} />
-      <Divider>o con tu correo</Divider>
+      <Divider>o mediante correo electrónico</Divider>
       <form action={action} className="flex flex-col gap-4" noValidate>
         <input type="hidden" name="next" value={next} />
         <Field id="email" name="email" type="email" label="Correo electrónico" autoComplete="email" required defaultValue={state.email} />
@@ -27,7 +27,7 @@ export function LoginForm() {
       </form>
       <p className="mt-4 text-sm">
         <Link href="/forgot-password" className="text-link underline underline-offset-4">
-          ¿Olvidaste la contraseña?
+          ¿No recuerda la contraseña?
         </Link>
       </p>
     </>

@@ -18,7 +18,7 @@ export function SignupForm({ initialPlan }: { initialPlan?: string }) {
   return (
     <>
       <GoogleButton next={next} />
-      <Divider>o con tu correo</Divider>
+      <Divider>o mediante correo electrónico</Divider>
       <form action={action} className="flex flex-col gap-4" noValidate>
         <input type="hidden" name="next" value={next} />
         {plan ? <input type="hidden" name="plan" value={plan} /> : null}
