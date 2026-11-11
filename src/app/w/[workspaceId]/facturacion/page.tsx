@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { PageHeader, PanelCard, StatusBadge, InfoBanner } from "@/components/ui"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspace } from "@/lib/workspace"
@@ -5,7 +6,15 @@ import { BillingProfileForm } from "./billing-profile-form"
 
 export const metadata = { title: "Facturación" }
 
-export default async function BillingPage({ params }: PageProps<"/w/[workspaceId]/facturacion">) {
+export default function BillingPage({ params }: PageProps<"/w/[workspaceId]/facturacion">) {
+  return (
+    <Suspense fallback={<div className="h-96 rounded-2xl border border-rule bg-sheet" aria-busy="true" />}>
+      <BillingContent params={params} />
+    </Suspense>
+  )
+}
+
+async function BillingContent({ params }: { params: PageProps<"/w/[workspaceId]/facturacion">["params"] }) {
   const { workspaceId } = await params
   const { isAdmin } = await getWorkspace(workspaceId, "/w/" + workspaceId + "/facturacion")
   const supabase = await createClient()
