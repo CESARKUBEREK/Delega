@@ -2281,6 +2281,63 @@ export type Database = {
           },
         ]
       }
+      workspace_usage_periods: {
+        Row: {
+          created_at: string
+          extra_tasks: number
+          id: string
+          paused_at: string | null
+          period_end: string
+          period_start: string
+          plan_code: string | null
+          source: string
+          subscription_id: string | null
+          tasks_allowance: number
+          tasks_used: number
+          updated_at: string
+          usd_cap: number
+          usd_used: number
+          warned_80_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          extra_tasks?: number
+          id?: string
+          paused_at?: string | null
+          period_end: string
+          period_start: string
+          plan_code?: string | null
+          source?: string
+          subscription_id?: string | null
+          tasks_allowance: number
+          tasks_used?: number
+          updated_at?: string
+          usd_cap: number
+          usd_used?: number
+          warned_80_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          extra_tasks?: number
+          id?: string
+          paused_at?: string | null
+          period_end?: string
+          period_start?: string
+          plan_code?: string | null
+          source?: string
+          subscription_id?: string | null
+          tasks_allowance?: number
+          tasks_used?: number
+          updated_at?: string
+          usd_cap?: number
+          usd_used?: number
+          warned_80_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       workspaces: {
         Row: {
           ai_routing: Json

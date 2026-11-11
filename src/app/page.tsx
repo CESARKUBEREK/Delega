@@ -148,9 +148,9 @@ export default function HomePage() {
                 </p>
               </div>
               <div>
-                <h3 className="site-h3">Tus cuentas, tu factura</h3>
+                <h3 className="site-h3">La IA ya va incluida</h3>
                 <p>
-                  La prueba inicial utiliza la IA de MarchaSolo. Después se conecta una cuenta propia de IA; el panel muestra el costo estimado de cada tarea y permite fijar un presupuesto.
+                  Cada plan trae la IA de MarchaSolo con un número de tareas al mes. Si prefieres tu propia cuenta de IA, la conectas y no hay límite de tareas.
                 </p>
               </div>
             </div>

@@ -103,7 +103,7 @@ export function AiStep({
         <p className="text-sm font-semibold text-graphite">{stepLabel}</p>
         <h2 className="rotulo text-xl mt-1">{fromTrial || trialAvailable ? "Tu IA para la prueba" : "Tu prueba gratuita ha terminado: conecta tu IA"}</h2>
         <p className="text-graphite mt-1">
-          Puedes continuar con la IA de prueba de MarchaSolo si tienes créditos disponibles, o conectar tu propia cuenta de IA como alternativa. Para ejecutar automatizaciones fuera de la prueba necesitarás tu propia IA y las aplicaciones que utilice el plan.
+          Puedes continuar con la IA de prueba de MarchaSolo si tienes créditos disponibles, o conectar tu propia cuenta de IA como alternativa. Al terminar la prueba, los planes incluyen la IA de MarchaSolo; tu propia IA es opcional y no tiene límite de tareas.
         </p>
       </div>
 
@@ -217,7 +217,7 @@ export function AiStep({
           </button>
         ) : null}
         <p className="text-xs text-graphite">
-          El saldo de la prueba gratuita se comprueba en cada ejecución. Si se termina, conectas tu propia IA; la automatización no se pierde.
+          El saldo de la prueba gratuita se comprueba en cada ejecución. Si se termina, eliges un plan (con la IA incluida) o conectas tu propia IA; la automatización no se pierde.
         </p>
         <button type="button" onClick={onBack} className="text-sm text-graphite">
           ← Volver a la propuesta

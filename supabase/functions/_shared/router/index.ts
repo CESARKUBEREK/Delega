@@ -367,7 +367,7 @@ export function stepCount(definition: unknown): number {
 // en ejecuciones; como mucho TRIAL_RUN_CAP_USD por ejecución.
 export const TRIAL_RUN_CAP_USD = 0.25
 export const TRIAL_ENDED_MESSAGE =
-  "Tu prueba gratuita ha terminado. Pasa al plan Solo y conecta tu IA para seguir usando tus automatizaciones."
+  "Tu prueba gratuita ha terminado. Elige un plan (la IA va incluida) o conecta tu propia IA para seguir usando tus automatizaciones."
 
 export async function trialRemainingUsd(admin: SupabaseClient, workspaceId: string): Promise<number> {
   const { data } = await admin

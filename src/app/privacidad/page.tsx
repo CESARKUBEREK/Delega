@@ -174,10 +174,11 @@ export default function PrivacyPage() {
             transcribe con OpenAI.
           </li>
           <li>
-            <strong>La prueba gratuita del onboarding:</strong> mientras no conectes tu IA, usamos OpenAI con una clave de MarchaSolo, con
-            las mismas condiciones que arriba. Le enviamos la tarea que nos cuentas y, si nos das tu web, el texto de sus páginas públicas
+            <strong>La IA de MarchaSolo (prueba gratuita e IA incluida en los planes):</strong> mientras no conectes tu IA, usamos OpenAI
+            con una clave de MarchaSolo, con las mismas condiciones que arriba. Le enviamos la tarea que nos cuentas y, si nos das tu web, el texto de sus páginas públicas
             (como mucho dos propuestas). Si ejecutas tus automatizaciones con la prueba gratuita, recibe además lo que cada ejecución necesite leer
-            (por ejemplo, los correos de tu bandeja), solo durante esa ejecución.
+            (por ejemplo, los correos de tu bandeja), solo durante esa ejecución. Lo mismo ocurre con la IA incluida en tu plan: OpenAI
+            recibe lo que cada tarea necesita, solo para esa tarea. Si prefieres que tus datos vayan a otro proveedor, conecta tu propia IA.
           </li>
           <li>
             <strong>Análisis de tu web:</strong> si nos das la dirección, descargamos sus páginas públicas. Cuando una página necesita un

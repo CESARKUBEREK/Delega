@@ -4,7 +4,7 @@
 // estar activa, lo dice para que se pueda reintentar. Sin dependencias: se
 // prueba con tsx.
 
-export type DiagnosisKind = "trial_ended" | "trial_run_cap" | "ai_key" | "ai_balance" | "ai_missing" | "ai_temporary" | "connection" | "too_long" | "too_much_data" | "refused" | "unknown"
+export type DiagnosisKind = "trial_ended" | "trial_run_cap" | "plan_limit" | "plan_run_cap" | "ai_key" | "ai_balance" | "ai_missing" | "ai_temporary" | "connection" | "too_long" | "too_much_data" | "refused" | "unknown"
 
 export type Diagnosis = {
   kind: DiagnosisKind
@@ -51,10 +51,17 @@ export function diagnoseRun(error: string | null | undefined, live: LiveStatus =
     const anyAi = ["openai", "anthropic", "deepseek", "xai"].some((g) => live[g])
     return anyAi
       ? { kind: "trial_ended", cause: "Se terminó la prueba gratuita de MarchaSolo.", fix: "Ya tienes tu IA conectada: puedes ejecutarla otra vez.", guide: null, retry: true, editable: false }
-      : { kind: "trial_ended", cause: "Se terminó la prueba gratuita de MarchaSolo.", fix: "Pasa al plan Solo y conecta tu IA en Integraciones para que tus automatizaciones sigan funcionando.", guide: "openai", retry: false, editable: false }
+      : { kind: "trial_ended", cause: "Se terminó la prueba gratuita de MarchaSolo.", fix: "Elige un plan para que tus automatizaciones sigan funcionando con la IA incluida, o conecta tu propia IA en Integraciones.", guide: "openai", retry: false, editable: false }
   }
   if (/m[aá]ximo de la prueba gratuita por ejecuci[oó]n/i.test(e)) {
     return { kind: "trial_run_cap", cause: "La ejecución llegó al máximo de gasto de la prueba gratuita por ejecución.", fix: "Vuelve a lanzarla o haz la tarea más concreta. Con tu IA conectada no hay este límite.", guide: null, retry: true, editable: true }
+  }
+  // IA incluida en el plan (decisión del 11 nov): cupo del mes o máximo por ejecución.
+  if (/l[ií]mite de tareas de tu plan/i.test(e)) {
+    return { kind: "plan_limit", cause: "Se terminaron las tareas de tu plan este mes.", fix: "Se renuevan con el próximo periodo. Si no quieres esperar, conecta tu propia IA en Integraciones y sigue sin límite.", guide: "openai", retry: false, editable: false }
+  }
+  if (/m[aá]ximo por ejecuci[oó]n de la IA incluida/i.test(e)) {
+    return { kind: "plan_run_cap", cause: "La ejecución llegó al máximo de gasto por ejecución de la IA incluida.", fix: "Vuelve a lanzarla o haz la tarea más concreta. Con tu propia IA no hay este límite.", guide: null, retry: true, editable: true }
   }
   if (/rechazado la clave/i.test(e)) {
     const g = aiGuide(e)

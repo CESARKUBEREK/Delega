@@ -5,6 +5,7 @@ import { asPending, pendingKind, pendingTitle } from "@/lib/pending"
 import { createClient } from "@/lib/supabase/server"
 import { setupStatus } from "@/lib/setup"
 import { getTrialStatus } from "@/lib/trial"
+import { getIncludedUsage } from "@/lib/usage"
 import { SOLO_PLAN, SOLO_UPGRADE_IS_EXTERNAL, SOLO_UPGRADE_URL } from "@/lib/upgrade"
 import { getWorkspace } from "@/lib/workspace"
 import { formatToday, formatWhen, greeting } from "./format"
@@ -66,10 +67,19 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
   const firstName = (profile?.display_name ?? "").trim().split(/\s+/)[0]
   const aiActive = (connections ?? []).some((c) => c.status === "active")
   const onboarded = Boolean(ws?.onboarding_completed_at)
-  const [setup, trial] = await Promise.all([setupStatus(workspaceId), getTrialStatus(workspaceId)])
-  // Sin IA propia: la prueba gratuita (1 $) sigue o se ha terminado.
-  const trialActive = !aiActive && onboarded && trial !== null && trial.usdRemaining > 0
-  const trialEnded = !aiActive && onboarded && trial !== null && trial.usdRemaining <= 0
+  const [setup, trial, included] = await Promise.all([
+    setupStatus(workspaceId),
+    getTrialStatus(workspaceId),
+    aiActive ? Promise.resolve(null) : getIncludedUsage(workspaceId),
+  ])
+  // Sin IA propia: la IA incluida en el plan (decisión del 11 nov) o, si no hay
+  // plan, la prueba gratuita (14 días o 1 USD), que sigue o se ha terminado.
+  const trialActive = !aiActive && !included && onboarded && trial !== null && trial.usdRemaining > 0
+  const trialEnded = !aiActive && !included && onboarded && trial !== null && trial.usdRemaining <= 0
+  const aiReady = aiActive || (included !== null && !included.exhausted)
+  const periodEnd = included
+    ? new Intl.DateTimeFormat("es", { day: "numeric", month: "long", timeZone: timezone }).format(new Date(included.periodEnd))
+    : ""
   const pendingTotal = waitingCount ?? (waiting ?? []).length
 
   return (
@@ -86,8 +96,8 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
         </div>
         <aside className="today-hero-status" aria-label="Estado del espacio">
           <span className="today-hero-status-label">ESTADO DEL ASISTENTE</span>
-          <span className={`today-hero-state ${aiActive ? "is-ready" : "is-setup"}`}>
-            <i aria-hidden="true" /> {aiActive ? "IA conectada" : "IA por conectar"}
+          <span className={`today-hero-state ${aiReady ? "is-ready" : "is-setup"}`}>
+            <i aria-hidden="true" /> {aiActive ? "IA conectada" : included ? (included.exhausted ? "Tareas agotadas" : "IA incluida") : "IA por conectar"}
           </span>
           <span className="today-hero-pending"><strong>{pendingTotal}</strong><span>{pendingTotal === 1 ? "aprobación pendiente" : "aprobaciones pendientes"}</span></span>
         </aside>
@@ -109,14 +119,44 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
         </form>
       </section>
 
-      {isAdmin && trialEnded ? (
+      {included && isAdmin ? (
+        // IA incluida en el plan: tareas del mes, aviso del 80 % y pausa del 100 %.
+        <section
+          className="setup-banner flex-wrap"
+          aria-labelledby="tareas-del-mes"
+          {...(included.exhausted || included.nearLimit ? { role: "status" } : {})}
+        >
+          <span className="setup-banner-ring" aria-hidden="true" style={{ ["--pct" as string]: `${Math.min(100, Math.round((included.tasksUsed / Math.max(1, included.tasksAllowance)) * 100))}%` }}>
+            {Math.min(100, Math.round((included.tasksUsed / Math.max(1, included.tasksAllowance)) * 100))}%
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span id="tareas-del-mes" className="font-semibold text-ink">
+              {included.exhausted
+                ? "Llegaste al límite de tareas de este mes"
+                : `Tareas este mes: ${included.tasksUsed} de ${included.tasksAllowance}`}
+            </span>
+            <span className="text-sm text-graphite">
+              {included.exhausted
+                ? `Lo que usa IA está en pausa hasta el ${periodEnd}. Las aprobaciones siguen funcionando. Si no quieres esperar, conecta tu propia IA y sigue sin límite.`
+                : included.nearLimit
+                ? `Te quedan ${included.tasksLeft} tareas hasta el ${periodEnd}. Al llegar al límite, lo que usa IA se pausa; nunca te cobramos de más.`
+                : `La IA va incluida en tu plan. El cupo se renueva el ${periodEnd}.`}
+            </span>
+          </span>
+          {included.exhausted || included.nearLimit ? (
+            <Link href={`${base}/integraciones#llms`} className="setup-banner-cta">
+              Conectar mi propia IA →
+            </Link>
+          ) : null}
+        </section>
+      ) : isAdmin && trialEnded ? (
         // Al acabar la prueba: invitación al plan Solo (decisión del 7 nov).
         <section className="setup-banner flex-wrap" aria-labelledby="prueba-terminada">
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span id="prueba-terminada" className="font-semibold text-ink">Tu prueba gratuita ha terminado</span>
             <span className="text-sm text-graphite">
-              Has usado toda la prueba. Pasa al plan Solo ({SOLO_PLAN.price}
-              {SOLO_PLAN.period}) y conecta tu IA para que tus automatizaciones sigan funcionando.
+              Con Solo, MarchaSolo sigue trabajando por ti: {SOLO_PLAN.monthlyTasks} tareas al mes por {SOLO_PLAN.price}. O conecta tu
+              propia IA y sigue sin límite de tareas.
             </span>
           </span>
           <span className="flex flex-wrap items-center gap-3">
@@ -128,7 +168,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
               Pasar al plan Solo →
             </a>
             <Link href={`${base}/integraciones#llms`} className="text-sm font-semibold text-link underline underline-offset-4">
-              Conectar mi IA
+              Conectar mi propia IA
             </Link>
           </span>
         </section>
@@ -170,7 +210,7 @@ async function Today({ params }: { params: PageProps<"/w/[workspaceId]">["params
           </span>
           <span className="setup-banner-cta">Continuar →</span>
         </Link>
-      ) : !aiActive && !isAdmin ? (
+      ) : !aiActive && !included && !isAdmin ? (
         <p className="today-callout rounded-2xl border border-rule bg-sheet px-5 py-4 text-sm text-graphite">
           Un administrador tiene que conectar la clave de una IA para que MarchaSolo pueda trabajar.
         </p>
