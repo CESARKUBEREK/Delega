@@ -19,6 +19,35 @@ export default function PrivacyPage() {
         <h1 className="rotulo">Política de privacidad</h1>
         <p className="legal-updated">Última actualización: {LEGAL.updated}</p>
 
+        <div className="mt-6 rounded-2xl border border-[var(--ms-line)] bg-[var(--ms-white)] p-5">
+          <h2 className="m-0 text-lg font-semibold">En pocas palabras</h2>
+          <p className="mb-0 mt-2">
+            Esta política explica qué información utiliza MarchaSolo para prestar el servicio,
+            qué ocurre cuando conectas otras aplicaciones, con qué proveedores se comparte y
+            cómo puedes ejercer tus derechos.
+          </p>
+          <p className="mb-0 mt-3 text-sm">
+            Para consultas o solicitudes relacionadas con tus datos:{" "}
+            <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>.
+          </p>
+        </div>
+        <nav aria-label="Contenido de la política de privacidad" className="mt-8 rounded-2xl border border-[var(--ms-line)] p-5">
+          <h2 className="m-0 text-lg font-semibold">Contenido de esta política</h2>
+          <ol className="mb-0 mt-3 grid gap-x-8 gap-y-2 sm:grid-cols-2">
+            <li><a href="#responsable">Responsable</a></li>
+            <li><a href="#datos-tratados">Qué datos tratamos</a></li>
+            <li><a href="#finalidades">Para qué los usamos</a></li>
+            <li><a href="#datos-google">Datos de las API de Google</a></li>
+            <li><a href="#compartir">Con quién se comparten</a></li>
+            <li><a href="#conservacion">Cuánto tiempo los conservamos</a></li>
+            <li><a href="#seguridad">Seguridad</a></li>
+            <li><a href="#cookies">Cookies</a></li>
+            <li><a href="#derechos">Tus derechos</a></li>
+            <li><a href="#menores">Menores</a></li>
+            <li><a href="#cambios">Cambios</a></li>
+          </ol>
+        </nav>
+
         <p>
           MarchaSolo es una aplicación de inteligencia artificial que conecta aplicaciones, coordina tareas y automatiza procesos cotidianos. Las operaciones externas requieren aprobación, salvo las excepciones expresamente configuradas. Esta política explica qué datos se tratan, para qué y cómo ejercer los derechos correspondientes.
         </p>
