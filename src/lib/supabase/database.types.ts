@@ -2588,7 +2588,7 @@ export type Database = {
         Returns: boolean
       }
       workspace_set_timezone: {
-        Args: { p_timezone: string; p_workspace_id: string }
+        Args: { p_timezone: string | null; p_workspace_id: string }
         Returns: string
       }
     }
