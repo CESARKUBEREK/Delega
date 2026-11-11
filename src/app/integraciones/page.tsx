@@ -5,7 +5,7 @@ import { publicPageMetadata } from "@/lib/seo"
 export const metadata = publicPageMetadata({
   title: "Integraciones",
   description:
-    "Conecta tus aplicaciones para que MarchaSolo coordine procesos entre ellas: consulta información, organiza tareas y prepara o ejecuta acciones según los permisos configurados.",
+    "Conectar aplicaciones para coordinar procesos: consultar información, organizar tareas y preparar o ejecutar acciones según los permisos configurados.",
   path: "/integraciones",
 })
 
@@ -64,7 +64,7 @@ export default function IntegrationsMarketingPage() {
           <div className="site-container">
             <h1 className="site-h1">Integraciones</h1>
             <p className="site-lead">
-              Conecta las herramientas que ya utilizas —correo, calendario, mensajería, documentos y CRM—. MarchaSolo las utiliza en conjunto para coordinar procesos del negocio. Outlook se incorporará próximamente; las acciones sujetas a autorización quedan pendientes de revisión.
+              MarchaSolo conecta correo electrónico, calendario, mensajería, documentos y CRM para coordinar procesos del negocio. Outlook figura como próximamente. Las operaciones externas requieren aprobación, salvo las excepciones expresamente configuradas.
             </p>
           </div>
         </section>
@@ -73,10 +73,10 @@ export default function IntegrationsMarketingPage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="apps" className="site-h2">
-                Las herramientas de tu equipo digital
+                Aplicaciones y servicios
               </h2>
               <p className="site-lead">
-                Solo se conectan las aplicaciones necesarias para cada tarea. MarchaSolo utiliza las cuentas autorizadas y almacena las credenciales cifradas.
+                Cada proceso utiliza únicamente las aplicaciones necesarias. Las credenciales de las cuentas autorizadas se almacenan cifradas.
               </p>
             </div>
 
@@ -133,7 +133,7 @@ export default function IntegrationsMarketingPage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="cap" className="site-h2">
-                Cómo trabaja MarchaSolo entre tus aplicaciones
+                Cómo trabaja MarchaSolo entre las aplicaciones
               </h2>
             </div>
             <div className="facts">
@@ -182,13 +182,13 @@ export default function IntegrationsMarketingPage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Empieza por el proceso que más tiempo consume</h2>
+                <h2 className="site-h2">Conectar solo las aplicaciones necesarias</h2>
                 <p>
-                  Describe el proceso que quieres mejorar. MarchaSolo identifica las aplicaciones necesarias y guía las conexiones. Puedes comenzar con pocas herramientas y sumar otras cuando el proceso lo requiera.
+                  Indicar el proceso que necesita mejorar. MarchaSolo identifica las aplicaciones necesarias y guía las conexiones. Es posible comenzar con pocas herramientas y sumar otras cuando el proceso lo requiera.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
-                Probar gratis
+                Crear cuenta gratis
               </Link>
             </div>
           </div>
