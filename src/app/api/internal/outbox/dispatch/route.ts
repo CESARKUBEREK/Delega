@@ -106,7 +106,7 @@ async function sendEmail(event: OutboxEvent) {
 }
 
 export async function GET(request: Request) {
-  const secret = process.env.OUTBOX_CRON_SECRET
+  const secret = process.env.CRON_SECRET
   const authorization = request.headers.get("authorization") ?? ""
   if (!secret || !safeEqual(authorization, `Bearer ${secret}`)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
