@@ -9,7 +9,7 @@ export const metadata = publicPageMetadata({
   title: "Tu negocio, en automático",
   absoluteTitle: "MarchaSolo · Tu negocio, en automático",
   description:
-    "Un equipo digital con IA que conecta tus aplicaciones, coordina procesos y realiza tareas para tu negocio. Empieza gratis, sin tarjeta.",
+    "Un asistente de IA que conecta aplicaciones, coordina tareas y automatiza el trabajo cotidiano. Menos tareas manuales y más tiempo para el negocio.",
   path: "/",
 })
 
@@ -27,17 +27,17 @@ export default function HomePage() {
         <section className="site-hero">
           <div className="site-container site-hero-grid">
             <div className="site-hero-copy">
-              <p className="site-kicker site-hero-kicker">UN EQUIPO DIGITAL PARA TU NEGOCIO</p>
+              <p className="site-kicker site-hero-kicker">MARCHASOLO · AUTOMATIZACIÓN CON IA</p>
               <h1 className="site-display">
-                Un equipo digital para que tu negocio avance.
-                <span>Menos trabajo manual. Más tiempo para hacer crecer tu negocio.</span>
+                El negocio sigue en marcha. El trabajo también.
+                <span>Menos tareas manuales. Más tiempo para hacer crecer el negocio.</span>
               </h1>
               <p className="site-lead site-hero-lead">
-                MarchaSolo conecta tus aplicaciones, organiza procesos y coordina tareas de principio a fin. Consulta información, prepara respuestas y ejecuta los pasos autorizados. Tú mantienes el control de las acciones que requieren revisión.
+                Un asistente de IA que conecta aplicaciones, coordina tareas y automatiza el trabajo cotidiano. MarchaSolo organiza procesos de principio a fin, consulta información, prepara respuestas y ejecuta las acciones permitidas. Las operaciones que requieren autorización quedan pendientes de aprobación.
               </p>
               <div className="site-actions">
                 <Link href="/crear-cuenta" className="btn btn-primary">
-                  Probar gratis
+                  Crear cuenta gratis
                 </Link>
                 <Link href="/como-funciona" className="btn btn-secondary">
                   Ver cómo funciona
@@ -53,7 +53,7 @@ export default function HomePage() {
               <AppPreview />
               <p className="site-preview-caption">
                 <span aria-hidden="true">✓</span>
-                Cada paso, visible. Tú mantienes el control.
+                Cada paso, visible. Control y aprobación en manos del usuario.
               </p>
             </div>
           </div>
@@ -67,24 +67,24 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="pasos" className="site-h2">
-                Así de simple
+                Un solo lugar para coordinar el trabajo
               </h2>
               <p className="site-lead">
-                Describe el resultado que necesitas. MarchaSolo organiza los pasos, utiliza las aplicaciones conectadas y te muestra qué está haciendo.
+                Indicar el resultado esperado. MarchaSolo organiza los pasos, utiliza las aplicaciones conectadas y muestra el avance del proceso.
               </p>
             </div>
             <ol className="steps">
               <li>
-                <h3 className="site-h3">Explica qué necesitas</h3>
-                <p>Describe el resultado que buscas o elige un ejemplo. MarchaSolo interpreta la solicitud y propone cómo organizar el trabajo.</p>
+                <h3 className="site-h3">Describir la tarea</h3>
+                <p>Indicar el resultado esperado o seleccionar un ejemplo. MarchaSolo interpreta la solicitud y propone cómo organizar el trabajo.</p>
               </li>
               <li>
-                <h3 className="site-h3">Conecta las aplicaciones necesarias</h3>
-                <p>Conecta solo las herramientas que necesita el proceso: correo, calendario, archivos, mensajería o CRM, según la tarea.</p>
+                <h3 className="site-h3">Conectar las aplicaciones necesarias</h3>
+                <p>Conectar únicamente las herramientas necesarias para cada proceso: correo electrónico, calendario, archivos, mensajería o CRM.</p>
               </li>
               <li>
-                <h3 className="site-h3">Supervisa y decide</h3>
-                <p>Sigue el avance y revisa los resultados. Las acciones que requieren autorización se pueden editar, aprobar o descartar antes de ejecutarse.</p>
+                <h3 className="site-h3">Supervisión y aprobación</h3>
+                <p>El avance y los resultados quedan visibles. Las acciones que requieren autorización pueden editarse, aprobarse o descartarse antes de ejecutarse.</p>
               </li>
             </ol>
             <p className="mt-10">
@@ -100,10 +100,10 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="casos" className="site-h2">
-                Procesos que MarchaSolo puede coordinar
+                Todo el trabajo que puede automatizarse
               </h2>
               <p className="site-lead">
-                Desde una consulta inicial hasta el seguimiento: MarchaSolo conecta los pasos y las aplicaciones necesarias. Las acciones sujetas a aprobación esperan tu revisión.
+                Desde una consulta inicial hasta el seguimiento: MarchaSolo conecta los pasos y las aplicaciones necesarias. Las acciones sujetas a aprobación quedan pendientes de revisión.
               </p>
             </div>
             <div className="grid gap-8 md:grid-cols-3">
@@ -128,7 +128,7 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="control" className="site-h2">
-                Un equipo digital, con tu control.
+                La inteligencia artificial trabaja. El usuario mantiene el control.
               </h2>
               <p className="site-lead">
                 La automatización debe ser útil y transparente. MarchaSolo permite revisar las acciones que requieren autorización.
@@ -142,15 +142,15 @@ export default function HomePage() {
                 </p>
               </div>
               <div>
-                <h3 className="site-h3">Tus claves, cifradas</h3>
+                <h3 className="site-h3">Credenciales cifradas</h3>
                 <p>
-                  Las contraseñas y claves de tus servicios se guardan cifradas. Las credenciales se almacenan cifradas y no se muestran nuevamente.
+                  Las contraseñas y claves de los servicios conectados se almacenan cifradas y no se muestran nuevamente.
                 </p>
               </div>
               <div>
-                <h3 className="site-h3">Tus cuentas, tu factura</h3>
+                <h3 className="site-h3">Consumo de IA transparente</h3>
                 <p>
-                  La prueba inicial utiliza la IA de MarchaSolo. Después se conecta una cuenta propia de IA; el panel muestra el costo estimado de cada tarea y permite fijar un presupuesto.
+                  La prueba inicial utiliza la IA de MarchaSolo. Después es posible conectar una cuenta propia de IA; el panel muestra el costo estimado de cada tarea y permite establecer un presupuesto.
                 </p>
               </div>
             </div>
@@ -162,7 +162,7 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="para-quien" className="site-h2">
-                Más capacidad para trabajar. Sin perder el control.
+                Más capacidad operativa para profesionales y pequeños negocios.
               </h2>
             </div>
             <ul className="audience">
@@ -191,9 +191,9 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Empieza por un proceso de tu negocio</h2>
+                <h2 className="site-h2">El próximo paso: automatizar el trabajo cotidiano</h2>
                 <p>
-                  Elige un proceso que hoy te quite tiempo. MarchaSolo te ayuda a organizarlo y probar cómo puede funcionar con tus aplicaciones.
+                  Seleccionar un proceso que consume tiempo. MarchaSolo ayuda a organizarlo y probar su funcionamiento con las aplicaciones disponibles.
                 </p>
                 <ul className="site-hero-note" style={{ marginTop: "0.75rem" }}>
                   <li>Sin tarjeta</li>
@@ -202,7 +202,7 @@ export default function HomePage() {
                 </ul>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
-                Probar gratis
+                Crear cuenta gratis
               </Link>
             </div>
           </div>
