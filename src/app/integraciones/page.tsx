@@ -24,7 +24,7 @@ const GROUPS: { id: string; title: string; description: string; apps: AppIcon[] 
     description: "Reúne consultas y prepara el siguiente paso sin saltar de una herramienta a otra.",
     apps: [
       { id: "imap", name: "Correo IMAP / SMTP", note: "Tu cuenta de correo" },
-      { id: "whatsapp", name: "WhatsApp Business", note: "Mensajes y respuestas" },
+      { id: "whatsapp", name: "WhatsApp Business", logo: "/brand/whatsapp.svg", note: "Mensajes y respuestas" },
       { id: "telegram", name: "Telegram", logo: "/brand/telegram.svg", note: "Bot de Telegram" },
       { id: "voz", name: "Asistente de voz", note: "Web y teléfono" },
       { id: "outlook", name: "Outlook y Microsoft 365", note: "Próximamente", status: "soon" },
@@ -59,6 +59,14 @@ const GROUPS: { id: string; title: string; description: string; apps: AppIcon[] 
       { id: "tokko", name: "Tokko Broker", note: "Gestión inmobiliaria" },
       { id: "xubio", name: "Xubio", note: "Contabilidad · solo lectura" },
       { id: "buffer", name: "Buffer", note: "Publicaciones en redes sociales" },
+    ],
+  },
+  {
+    id: "datos",
+    title: "Datos y bases de datos",
+    description: "Conecta los datos de tu negocio para consultarlos y utilizarlos dentro de tus procesos.",
+    apps: [
+      { id: "supabase", name: "Supabase", note: "Base de datos y servicios de backend" },
     ],
   },
   {
@@ -267,10 +275,6 @@ export default function IntegrationsMarketingPage() {
               </p>
             </div>
             <ul className="audience">
-              <li>
-                <h3 className="site-h3">Bases de datos</h3>
-                <p>Conexión con Supabase para consultar tablas de tu negocio.</p>
-              </li>
               <li>
                 <h3 className="site-h3">APIs REST</h3>
                 <p>Conecta hasta dos servicios personalizados con sus propias credenciales.</p>
