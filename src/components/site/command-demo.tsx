@@ -1,9 +1,8 @@
 import type { CSSProperties } from "react"
 
-// La pieza central del sitio: una petición en lenguaje natural se convierte en
-// pasos que MarchaSolo coordina (leer, consultar, redactar) y termina en lo
-// que queda pendiente de aprobación. Una sola animación al cargar; sin ella si se
-// prefiere menos movimiento. Es una ilustración: los botones no hacen nada.
+// La pieza central del sitio: una instrucción cotidiana se convierte en un
+// proceso con varios pasos y aplicaciones conectadas. Es una ilustración;
+// los botones no realizan acciones.
 export type DemoStep = { title: string; detail: string; app: string }
 export type Demo = {
   title: string
@@ -13,17 +12,17 @@ export type Demo = {
 }
 
 export const VISIT_DEMO: Demo = {
-  title: "Responder consultas de visitas",
-  ask: "Al recibir una consulta para visitar una propiedad, consultar la agenda y preparar una respuesta con un horario disponible.",
+  title: "Seguimiento de nuevos clientes",
+  ask: "Cada mañana revisa los nuevos contactos, consulta la información comercial y prepara el seguimiento.",
   steps: [
-    { title: "Lectura del correo de Laura Gómez", detail: "Consulta por un inmueble en Palermo esta semana", app: "Correo" },
-    { title: "Consulta el calendario", detail: "Jueves disponible de 10:00 a 12:00", app: "Calendar" },
-    { title: "Consulta la ficha de la propiedad", detail: "3 habitaciones, disponible", app: "CRM" },
-    { title: "Redacta la respuesta", detail: "Propone el jueves a las 10:00", app: "Borrador" },
+    { title: "Identifica nuevos contactos", detail: "Reúne las consultas recibidas en los canales conectados", app: "WhatsApp" },
+    { title: "Consulta la información del cliente", detail: "Revisa antecedentes y oportunidades registradas", app: "CRM" },
+    { title: "Busca información relevante", detail: "Recupera datos de productos o servicios", app: "Drive" },
+    { title: "Prepara el seguimiento", detail: "Redacta un mensaje según el contexto", app: "Borrador" },
   ],
   approval: {
-    title: "Revisar el envío de la respuesta a Laura Gómez",
-    text: "«Hola, Laura: hay disponibilidad el jueves a las 10:00 para visitar la propiedad de Palermo. ¿Ese horario resulta conveniente?»",
+    title: "Revisar el mensaje de seguimiento",
+    text: "El borrador queda listo para editar y autorizar antes del envío.",
   },
 }
 
@@ -70,7 +69,7 @@ export function CommandDemo({ demo = VISIT_DEMO, animate = true, compact = false
           <p className="demo-approval-title">{demo.approval.title}</p>
           <p className="demo-approval-text">{demo.approval.text}</p>
           <div className="demo-approval-actions" aria-hidden="true">
-            <span className="is-yes">Aprobar envío</span>
+            <span className="is-yes">Autorizar envío</span>
             <span className="is-edit">Editar</span>
           </div>
         </div>
