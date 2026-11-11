@@ -410,6 +410,8 @@ export async function recordUsage(
     cache_write_tokens: usage.cacheWrite ?? 0,
     reasoning_tokens: usage.reasoning ?? 0,
     cost_usd: cost,
+    real_cost_usd: realCost,
+    funded_by: ai.trial ? "marchasolo" : "workspace",
     latency_ms: extra.latencyMs ?? null,
     task: extra.task ?? null,
     run_id: extra.runId ?? null,
