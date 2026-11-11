@@ -22,12 +22,12 @@ const COUNTRIES = [
   ["RO", "Rumanía"], ["HU", "Hungría"], ["HR", "Croacia"], ["SK", "Eslovaquia"],
   ["SI", "Eslovenia"], ["BG", "Bulgaria"], ["CY", "Chipre"], ["EE", "Estonia"],
   ["LV", "Letonia"], ["LT", "Lituania"], ["LU", "Luxemburgo"], ["MT", "Malta"],
-  ["FR", "Francia"],
+  
 ] as const
 
 export function BillingProfileForm({ workspaceId, initialProfile }: {
   workspaceId: string
-  initialProfile: Partial<Profile> | null
+  initialProfile: Partial<Record<keyof Profile, string | null>> | null
 }) {
   const [profile, setProfile] = useState<Profile>({
     customer_type: initialProfile?.customer_type ?? "consumer",
