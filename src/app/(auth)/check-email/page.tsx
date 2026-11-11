@@ -6,7 +6,7 @@ export const metadata = { title: "Confirma tu correo" }
 export default function CheckEmailPage() {
   return (
     <Sheet
-      title="Revisa tu correo"
+      title="Confirmar correo electrónico"
       sheetName="Alta"
       footer={
         <Link href="/entrar" className="text-link underline underline-offset-4">
@@ -14,10 +14,9 @@ export default function CheckEmailPage() {
         </Link>
       }
     >
-      <p className="text-ink">Te hemos enviado un enlace para confirmar tu dirección. Ábrelo para activar la cuenta.</p>
+      <p className="text-ink">Se ha enviado un enlace para confirmar la dirección de correo electrónico. Ábrelo para activar la cuenta.</p>
       <p className="mt-3 text-graphite">
-        Si no lo ves en unos minutos, mira en la carpeta de correo no deseado. Si ya tenías cuenta con ese correo, entra
-        directamente.
+        Si no aparece en unos minutos, revisa la carpeta de correo no deseado. Si ya existe una cuenta con esa dirección, inicia sesión.
       </p>
     </Sheet>
   )
