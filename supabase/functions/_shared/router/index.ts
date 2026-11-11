@@ -131,6 +131,8 @@ export type Routed = {
   plan: RoutePlan
   ai: Ai
   trial: boolean
+  // IA incluida en el plan (clave de MarchaSolo, cupo de tareas).
+  included?: boolean
   // Siguiente modelo del respaldo (con su clave), o null.
   next: (failedProvider: Provider, code: string) => Promise<Ai | null>
 }
@@ -194,8 +196,13 @@ export async function routeAi(
     // La fila de créditos es la concesión explícita del cupo; no limitar por
     // tipo de espacio. Esto permite pruebas financiadas también en organizaciones
     // cuando MarchaSolo les haya asignado créditos.
-    // Solo si el espacio no tiene IA propia: con la suya, nunca gastamos la prueba.
+    // Solo si el espacio no tiene IA propia: con la suya, nunca gastamos la
+    // prueba ni el cupo del plan (decisión del 11 nov: la IA propia no tiene límite).
     const own = await connections(admin, workspaceId)
+    if (!own.length) {
+      const included = await routeIncluded(admin, workspaceId, task)
+      if (included) return included
+    }
     const remaining = own.length ? 0 : await trialRemainingUsd(admin, workspaceId)
     if (remaining > 0) {
       if (!trialKey) {
@@ -347,6 +354,7 @@ export type RunRouting = {
   estimated_usd: number
   switches?: { from: string; to: string; code: string; at: string }[]
   trial?: boolean
+  included?: boolean
 }
 
 // Número de pasos del plan de una automatización (para la complejidad).
@@ -364,11 +372,79 @@ export const TRIAL_ENDED_MESSAGE =
 export async function trialRemainingUsd(admin: SupabaseClient, workspaceId: string): Promise<number> {
   const { data } = await admin
     .from("workspace_trial_credits")
-    .select("allowance_usd, used_usd")
+    .select("allowance_usd, used_usd, expires_at")
     .eq("workspace_id", workspaceId)
     .maybeSingle()
   if (!data) return 0
+  // La prueba dura 14 días o 1 USD, lo que llegue antes (decisión del 11 nov).
+  if (data.expires_at && new Date(data.expires_at as string).getTime() <= Date.now()) return 0
   return Math.max(0, Number(data.allowance_usd) - Number(data.used_usd))
+}
+
+// ---------------------------------------------------------------------------
+// IA incluida en el plan (decisión del 11 nov; fase P1, detrás de
+// INCLUDED_AI_ENABLED). Clave de MarchaSolo y un cupo de tareas al mes con un
+// tope en USD por periodo (workspace_usage_periods). La IA propia, si existe,
+// tiene prioridad y no tiene límite de tareas.
+// ---------------------------------------------------------------------------
+export const INCLUDED_MODEL = "gpt-6-luna"
+export const INCLUDED_RUN_CAP_USD = 0.25
+export const INCLUDED_ENDED_MESSAGE =
+  "Llegaste al límite de tareas de tu plan este mes. Se renueva con el próximo periodo; si no quieres esperar, conecta tu propia IA en Integraciones y sigue sin límite."
+
+export function includedAiKey(): string | null {
+  if (Deno.env.get("INCLUDED_AI_ENABLED")?.trim() !== "true") return null
+  const key = (Deno.env.get("INCLUDED_OPENAI_API_KEY") ?? Deno.env.get("TRIAL_OPENAI_API_KEY"))?.trim()
+  return key || null
+}
+
+export type IncludedUsage = { periodId: string; tasksLeft: number; usdLeft: number }
+
+// Periodo vigente con lo que queda, o null si el espacio no tiene IA incluida.
+export async function includedRemaining(admin: SupabaseClient, workspaceId: string): Promise<IncludedUsage | null> {
+  const { data, error } = await admin.rpc("usage_current", { p_workspace_id: workspaceId })
+  if (error) {
+    console.error("usage_current", error.code)
+    return null
+  }
+  const row = (data as { period_id: string; tasks_left: number | string; usd_left: number | string }[] | null)?.[0]
+  if (!row) return null
+  return { periodId: row.period_id, tasksLeft: Number(row.tasks_left), usdLeft: Number(row.usd_left) }
+}
+
+// Tareas que cuentan para el cupo: la ejecución de una automatización y la
+// respuesta preparada. Clasificar la bandeja no cuenta (solo suma USD).
+function countsAsTask(task: Task): boolean {
+  return task === "agent" || task === "draft_reply"
+}
+
+async function routeIncluded(admin: SupabaseClient, workspaceId: string, task: Task): Promise<Routed | RouteError | null> {
+  const key = includedAiKey()
+  if (!key) return null
+  const usage = await includedRemaining(admin, workspaceId)
+  if (!usage) return null
+  if (usage.usdLeft <= 0 || (countsAsTask(task) && usage.tasksLeft <= 0)) {
+    return { error: INCLUDED_ENDED_MESSAGE, code: "budget" }
+  }
+  const plan: RoutePlan = {
+    task,
+    mode: "eco",
+    fixed: true,
+    primary: INCLUDED_MODEL,
+    fallbacks: [],
+    estimatedCostUsd: 0,
+    reason: "IA incluida en tu plan de MarchaSolo.",
+    scores: [],
+  }
+  return {
+    workspaceId,
+    task,
+    plan,
+    ai: { provider: "openai", model: INCLUDED_MODEL, apiKey: key, included: true },
+    trial: false,
+    included: true,
+    next: () => Promise.resolve(null),
+  }
 }
 
 export type PlannedRun = { model: string; routing: RunRouting; routingMode: Mode | "fixed"; budgetUsd: number }
@@ -392,6 +468,8 @@ export async function planRun(
   const settings = await readSettings(admin, workspaceId)
   let budgetUsd = routed.trial
     ? Math.min(TRIAL_RUN_CAP_USD, await trialRemainingUsd(admin, workspaceId))
+    : routed.included
+    ? Math.min(INCLUDED_RUN_CAP_USD, (await includedRemaining(admin, workspaceId))?.usdLeft ?? 0)
     : flow.runUsd ?? settings.run_usd
   if (!budgetUsd) {
     let recent: number[] = []
@@ -421,6 +499,7 @@ export async function planRun(
       reason: routed.plan.reason,
       estimated_usd: routed.plan.estimatedCostUsd,
       ...(routed.trial ? { trial: true } : {}),
+      ...(routed.included ? { included: true } : {}),
     },
   }
 }
@@ -441,6 +520,14 @@ export async function aiForRun(
     // Así una ejecución gratuita no puede seguir generando llamadas sin saldo.
     if ((await trialRemainingUsd(admin, workspaceId)) <= 0) return null
     return { provider: "openai", model: "gpt-6-luna", apiKey: key, trial: true }
+  }
+  if (routing?.included) {
+    const key = includedAiKey()
+    if (!key) return null
+    // Cada tramo vuelve a comprobar el tope en USD del periodo. Las tareas ya se
+    // comprobaron al empezar: una ejecución empezada puede terminar.
+    if (((await includedRemaining(admin, workspaceId))?.usdLeft ?? 0) <= 0) return null
+    return { provider: "openai", model: INCLUDED_MODEL, apiKey: key, included: true }
   }
   const catalog = await loadCatalog(admin)
   const keyFor = keyring(admin, workspaceId)
@@ -477,6 +564,7 @@ export function parseRunRouting(value: unknown): RunRouting | null {
     estimated_usd: Number(v.estimated_usd) || 0,
     switches: Array.isArray(v.switches) ? (v.switches as RunRouting["switches"])!.slice(-5) : [],
     trial: v.trial === true,
+    included: v.included === true,
   }
 }
 

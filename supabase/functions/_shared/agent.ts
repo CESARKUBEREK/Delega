@@ -59,10 +59,10 @@ import { notifyApproval, sendPush } from "./push.ts"
 import { busyTimes, freeSlots, readVoiceConfig, type VoiceConfig } from "./voice.ts"
 import { telegramApproval, telegramRunResult } from "./telegram-notice.ts"
 import { downloadXlsx, XLSX_MIME, xlsxInfo, xlsxRead, xlsxWrite } from "./excel.ts"
-import { type Ai, complete, fromResponsesItems, LlmError, type Msg, NO_AI_MESSAGE, providerOf, type ToolDef } from "./llm.ts"
+import { type Ai, complete, fromResponsesItems, fundedByMarchaSolo, LlmError, type Msg, NO_AI_MESSAGE, providerOf, type ToolDef } from "./llm.ts"
 import { modelInfo } from "./router/catalog.ts"
 import { costUsd, formatUsd } from "./router/core.ts"
-import { aiForRun, parseRunRouting, TRIAL_ENDED_MESSAGE, trialRemainingUsd, type PlannedRun, type RunRouting } from "./router/index.ts"
+import { aiForRun, INCLUDED_ENDED_MESSAGE, includedRemaining, parseRunRouting, TRIAL_ENDED_MESSAGE, trialRemainingUsd, type PlannedRun, type RunRouting } from "./router/index.ts"
 
 export const SLICE_MS = 90_000
 const LEASE_SECONDS = 140
@@ -171,6 +171,17 @@ export type PendingAction =
 async function trialStopMessage(admin: SupabaseClient, workspaceId: string): Promise<string> {
   if ((await trialRemainingUsd(admin, workspaceId)) <= 0) return TRIAL_ENDED_MESSAGE
   return "Esta ejecución llegó al máximo de la prueba gratuita por ejecución. Puedes volver a lanzarla o conectar tu IA para tareas más largas."
+}
+
+// Lo mismo con la IA incluida en el plan: se acabó el cupo del periodo, o esta
+// ejecución llegó a su máximo por ejecución.
+async function includedStopMessage(admin: SupabaseClient, workspaceId: string): Promise<string> {
+  if (((await includedRemaining(admin, workspaceId))?.usdLeft ?? 0) <= 0) return INCLUDED_ENDED_MESSAGE
+  return "Esta ejecución llegó al máximo por ejecución de la IA incluida en tu plan. Puedes volver a lanzarla o conectar tu propia IA para tareas más largas."
+}
+
+function fundedStopMessage(admin: SupabaseClient, workspaceId: string, routing: RunRouting | null): Promise<string> {
+  return routing?.included ? includedStopMessage(admin, workspaceId) : trialStopMessage(admin, workspaceId)
 }
 
 export type BudgetPending = { call_id: string; tool: "budget_extend"; spent_usd: number; budget_usd: number; extra_usd: number }
@@ -1047,20 +1058,20 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
     const spent = Number(run.cost_usd) || 0
     const cap = Number(run.budget_usd) || 0
     if (cap > 0 && spent >= cap) {
-      if (routing?.trial) return finishRun(admin, run, "failed", await trialStopMessage(admin, run.workspace_id))
+      if (routing?.trial || routing?.included) return finishRun(admin, run, "failed", await fundedStopMessage(admin, run.workspace_id, routing))
       return pauseForBudget(admin, run, spent, cap)
     }
 
     let result
     const started = Date.now()
     try {
-      if (ai.trial) {
+      if (fundedByMarchaSolo(ai)) {
         // Estimación deliberadamente conservadora para no iniciar una llamada
         // cuyo costo máximo probable ya consuma el presupuesto restante.
         const estimatedInput = Math.ceil((INSTRUCTIONS.length + JSON.stringify(messages).length + JSON.stringify(tools).length) / 2)
         const estimated = costUsd(await modelInfo(admin, ai.model), { input: estimatedInput, output: 512 })
         if (spent + estimated > cap) {
-          return finishRun(admin, run, "failed", await trialStopMessage(admin, run.workspace_id))
+          return finishRun(admin, run, "failed", await fundedStopMessage(admin, run.workspace_id, routing))
         }
       }
       result = await complete(ai, {
@@ -1075,7 +1086,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
         await save(admin, run, { lease_until: null })
         return "running"
       }
-      if (!ai.trial && e instanceof LlmError && e.code === "invalid_key") {
+      if (!fundedByMarchaSolo(ai) && e instanceof LlmError && e.code === "invalid_key") {
         await admin.rpc("ai_connection_mark_invalid", { p_workspace_id: run.workspace_id, p_provider: ai.provider })
       }
       // Saldo, límite, clave rechazada o caída del proveedor: el respaldo.
@@ -1101,7 +1112,8 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
     const actualCost = costUsd(await modelInfo(admin, ai.model), result.usage)
     // El costo de MarchaSolo no se imputa al gasto del cliente, pero sí al
     // presupuesto interno de esta ejecución.
-    const cost = ai.trial ? 0 : actualCost
+    const funded = fundedByMarchaSolo(ai)
+    const cost = funded ? 0 : actualCost
     run.cost_usd = spent + actualCost
     await admin.from("usage_events").insert({
       workspace_id: run.workspace_id,
@@ -1114,7 +1126,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       reasoning_tokens: result.usage.reasoning ?? 0,
       cost_usd: cost,
       real_cost_usd: actualCost,
-      funded_by: ai.trial ? "marchasolo" : "workspace",
+      funded_by: funded ? "marchasolo" : "workspace",
       latency_ms: Date.now() - started,
       task: routing?.task ?? "agent",
       run_id: run.id,
@@ -1126,6 +1138,7 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
       if (costError) {
         console.error("flow_run_add_cost", costError.code)
         if (ai.trial) return finishRun(admin, run, "failed", "No se pudo verificar el costo de la prueba gratuita. Conecta tu propia IA para continuar.")
+        if (ai.included) return finishRun(admin, run, "failed", "No se pudo verificar el costo de la IA incluida. Inténtalo de nuevo en unos minutos.")
       }
     }
     if (ai.trial && actualCost > 0) {
@@ -1142,8 +1155,24 @@ export async function advance(admin: Admin, run: RunRow, sliceMs = SLICE_MS): Pr
         return finishRun(admin, run, "failed", "No se pudo confirmar el consumo de la prueba gratuita. Conecta tu propia IA para continuar.")
       }
     }
-    if (ai.trial && spent + actualCost >= cap) {
-      return finishRun(admin, run, "failed", await trialStopMessage(admin, run.workspace_id))
+    if (ai.included) {
+      // Cupo del plan: la ejecución cuenta 1 tarea en su primera llamada a la IA
+      // (una respuesta preparada, también 1); cada llamada suma su costo al tope en USD.
+      const firstCall = run.input_tokens + run.output_tokens === result.usage.input + result.usage.output
+      const kind = routing?.task === "draft_reply" ? "reply" : "run"
+      const { error: usageError } = await admin.rpc("usage_consume", {
+        p_workspace_id: run.workspace_id,
+        p_kind: kind,
+        p_units: firstCall ? 1 : 0,
+        p_cost_usd: actualCost,
+      })
+      if (usageError) {
+        console.error("usage_consume", usageError.code)
+        return finishRun(admin, run, "failed", "No se pudo verificar el costo de la IA incluida. Inténtalo de nuevo en unos minutos.")
+      }
+    }
+    if (funded && spent + actualCost >= cap) {
+      return finishRun(admin, run, "failed", await fundedStopMessage(admin, run.workspace_id, routing))
     }
 
     messages.push(result.message)

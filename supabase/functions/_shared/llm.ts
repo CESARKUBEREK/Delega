@@ -38,8 +38,15 @@ export function providerOf(model: string | null | undefined): Provider | null {
   return null
 }
 
-// trial = clave de MarchaSolo (planes de prueba del onboarding), no la del espacio.
-export type Ai = { provider: Provider; model: string; apiKey: string; trial?: boolean }
+// trial = clave de MarchaSolo con el saldo de la prueba gratuita.
+// included = clave de MarchaSolo con el cupo de tareas del plan (IA incluida).
+// En los dos casos la llamada no es gasto del cliente (cost_usd = 0).
+export type Ai = { provider: Provider; model: string; apiKey: string; trial?: boolean; included?: boolean }
+
+// La paga MarchaSolo (prueba o IA incluida), no el espacio con su clave.
+export function fundedByMarchaSolo(ai: Ai): boolean {
+  return ai.trial === true || ai.included === true
+}
 
 export class LlmError extends Error {
   constructor(public code: "no_connection" | "invalid_key" | "limit" | "timeout" | "provider" | "refusal" | "bad_output" | "incomplete", message: string) {
@@ -396,10 +403,11 @@ export async function recordUsage(
     latencyMs?: number | null
   },
 ): Promise<number> {
-  // Lo gastado con la prueba no cuenta en el gasto del cliente, pero sí en el
-  // saldo de la prueba.
+  // Lo que paga MarchaSolo (prueba o IA incluida) no cuenta en el gasto del
+  // cliente, pero sí en el saldo de la prueba o en el cupo del plan.
   const realCost = costUsd(await modelInfo(admin, ai.model), usage)
-  const cost = ai.trial ? 0 : realCost
+  const funded = fundedByMarchaSolo(ai)
+  const cost = funded ? 0 : realCost
   await admin.from("usage_events").insert({
     workspace_id: extra.workspaceId,
     provider: ai.provider,
@@ -411,7 +419,7 @@ export async function recordUsage(
     reasoning_tokens: usage.reasoning ?? 0,
     cost_usd: cost,
     real_cost_usd: realCost,
-    funded_by: ai.trial ? "marchasolo" : "workspace",
+    funded_by: funded ? "marchasolo" : "workspace",
     latency_ms: extra.latencyMs ?? null,
     task: extra.task ?? null,
     run_id: extra.runId ?? null,
@@ -419,7 +427,18 @@ export async function recordUsage(
     conversation_id: extra.conversationId ?? null,
     created_by: extra.userId,
   })
-  if (ai.trial) {
+  if (ai.included) {
+    // Cupo del plan: una respuesta preparada es 1 tarea; clasificar la bandeja
+    // no cuenta como tarea, solo suma al tope en USD (decisión del 11 nov).
+    const kind = extra.task === "draft_reply" ? "reply" : extra.task === "classify" ? "inbox_classify" : "other"
+    const { error } = await admin.rpc("usage_consume", {
+      p_workspace_id: extra.workspaceId,
+      p_kind: kind,
+      p_units: kind === "reply" ? 1 : 0,
+      p_cost_usd: realCost,
+    })
+    if (error) console.error("usage_consume", error.code)
+  } else if (ai.trial) {
     if (extra.task === "plan" || extra.task === "review") {
       // Propuestas del onboarding y análisis de la web: cupo de propuestas (máx. 2).
       const { error } = await admin.rpc("trial_consume", { p_workspace_id: extra.workspaceId, p_tokens: usage.input + usage.output })
@@ -434,8 +453,8 @@ export async function recordUsage(
 }
 
 export async function markInvalidIfNeeded(admin: SupabaseClient, workspaceId: string, ai: Ai, e: unknown) {
-  // Un fallo de la clave de prueba no es culpa de la conexión del espacio.
-  if (ai.trial) return
+  // Un fallo de la clave de MarchaSolo no es culpa de la conexión del espacio.
+  if (fundedByMarchaSolo(ai)) return
   if (e instanceof LlmError && e.code === "invalid_key") {
     await admin.rpc("ai_connection_mark_invalid", { p_workspace_id: workspaceId, p_provider: ai.provider })
   }

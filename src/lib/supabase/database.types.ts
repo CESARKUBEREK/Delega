@@ -2225,6 +2225,7 @@ export type Database = {
           allowance_tokens: number
           allowance_usd: number
           created_at: string
+          expires_at: string
           reserved_run_id: string | null
           updated_at: string
           used_plans: number
@@ -2239,6 +2240,7 @@ export type Database = {
           allowance_tokens?: number
           allowance_usd?: number
           created_at?: string
+          expires_at?: string
           reserved_run_id?: string | null
           updated_at?: string
           used_plans?: number
@@ -2253,6 +2255,7 @@ export type Database = {
           allowance_tokens?: number
           allowance_usd?: number
           created_at?: string
+          expires_at?: string
           reserved_run_id?: string | null
           updated_at?: string
           used_plans?: number
