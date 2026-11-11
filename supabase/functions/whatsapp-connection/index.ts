@@ -6,7 +6,9 @@
 //   disconnect  borra la conexión (los mensajes ya recibidos se quedan en la bandeja).
 import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
 import { DEFAULT_CATEGORIES } from "../_shared/inbox.ts"
-import { ACCOUNT_SID_RE, AUTH_TOKEN_RE, PHONE_RE, SANDBOX_NUMBER, verifyTwilio, WhatsAppError } from "../_shared/whatsapp.ts"
+import { PHONE_RE, WhatsAppError } from "../_shared/whatsapp.ts"
+// Alta específica de Twilio: cada proveedor tiene la suya.
+import { ACCOUNT_SID_RE, AUTH_TOKEN_RE, SANDBOX_NUMBER, verifyTwilio } from "../_shared/whatsapp/providers/twilio.ts"
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
 
