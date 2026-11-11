@@ -7,7 +7,7 @@ import { publicPageMetadata } from "@/lib/seo"
 export const metadata = publicPageMetadata({
   title: "Casos de uso",
   description:
-    "WhatsApp del negocio, atención por voz, reservas, ventas, atención al cliente e inmobiliarias. MarchaSolo organiza tareas y prepara acciones para su revisión cuando corresponde.",
+    "Ejemplos de automatización para comunicaciones, ventas, atención al cliente, reservas y operaciones profesionales. MarchaSolo conecta aplicaciones y coordina procesos completos.",
   path: "/casos-de-uso",
 })
 
@@ -19,7 +19,7 @@ const GROUPS: { id: string; title: string; ids: string[] }[] = [
   },
   {
     id: "ventas",
-    title: "Ventas",
+    title: "Ventas y oportunidades",
     ids: ["leads", "seguimiento-ventas", "propuestas"],
   },
   {
@@ -29,7 +29,7 @@ const GROUPS: { id: string; title: string; ids: string[] }[] = [
   },
   {
     id: "sectores",
-    title: "Inmobiliarias y despachos",
+    title: "Sectores profesionales",
     ids: ["inmobiliaria-tokko", "vencimientos", "documentos-modelo"],
   },
 ]
@@ -46,9 +46,9 @@ export default function UseCasesPage() {
       <main>
         <section className="page-intro">
           <div className="site-container">
-            <h1 className="site-h1">Casos de uso</h1>
+            <h1 className="site-h1">Menos tareas repetitivas. Más trabajo resuelto.</h1>
             <p className="site-lead">
-              Ventas, atención al cliente, reservas e inmobiliarias: MarchaSolo conecta los pasos de cada proceso y coordina el trabajo entre las aplicaciones disponibles. Describe el resultado que necesitas y revisa las acciones que requieren autorización.
+              Ventas, atención al cliente, reservas e inmobiliarias: MarchaSolo conecta los pasos de cada proceso y coordina el trabajo entre las aplicaciones disponibles. Cada ejemplo muestra la instrucción, las tareas coordinadas y el resultado.
             </p>
             <nav aria-label="Áreas" className="mt-8 flex flex-wrap gap-2">
               {GROUPS.map((g) => (
@@ -78,7 +78,7 @@ export default function UseCasesPage() {
                         </h3>
                         <dl className="mt-6 grid gap-5">
                           <div>
-                            <dt className="font-semibold">Antes</dt>
+                            <dt className="font-semibold">El problema</dt>
                             <dd className="m-0 mt-1 text-[var(--ms-muted)]">{c.before}</dd>
                           </div>
                           <div>
@@ -105,13 +105,13 @@ export default function UseCasesPage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">¿El proceso que necesitas no aparece aquí?</h2>
+                <h2 className="site-h2">¿Falta algún proceso?</h2>
                 <p>
-                  Describe qué necesitas resolver. MarchaSolo te ayuda a convertirlo en un proceso organizado que puedes probar.
+                  Indicar qué necesita resolverse. MarchaSolo ayuda a convertirlo en un proceso organizado que puede ponerse a prueba.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
-                Probar gratis
+                Crear cuenta gratis
               </Link>
             </div>
           </div>
