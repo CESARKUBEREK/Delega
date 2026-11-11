@@ -30,7 +30,7 @@ export function BillingProfileForm({ workspaceId, initialProfile }: {
   initialProfile: Partial<Record<keyof Profile, string | null>> | null
 }) {
   const [profile, setProfile] = useState<Profile>({
-    customer_type: initialProfile?.customer_type ?? "consumer",
+    customer_type: initialProfile?.customer_type === "professional" || initialProfile?.customer_type === "business" ? initialProfile.customer_type : "consumer",
     legal_name: initialProfile?.legal_name ?? "",
     billing_email: initialProfile?.billing_email ?? "",
     country_code: initialProfile?.country_code ?? "ES",
