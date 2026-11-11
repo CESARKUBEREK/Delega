@@ -5,7 +5,7 @@ export function CaseTrail({ item, short = false }: { item: UseCase; short?: bool
   return (
     <dl className="trail">
       <div className="is-ask">
-        <dt>La tarea</dt>
+        <dt>Instrucción</dt>
         <dd>{item.ask}</dd>
       </div>
       <div>
@@ -15,7 +15,7 @@ export function CaseTrail({ item, short = false }: { item: UseCase; short?: bool
       {!short ? (
         <div className={item.waits ? "is-wait" : undefined}>
           <dt>{item.waits ? "Pendiente de revisión" : "Aviso interno"}</dt>
-          <dd>{item.waits ?? "Envía un aviso interno."}</dd>
+          <dd>{item.waits ?? "Se genera un aviso interno."}</dd>
         </div>
       ) : null}
     </dl>
