@@ -2,7 +2,7 @@ import type { CSSProperties } from "react"
 
 // La pieza central del sitio: una petición en lenguaje natural se convierte en
 // pasos que MarchaSolo coordina (leer, consultar, redactar) y termina en lo
-// que espera tu aprobación. Una sola animación al cargar; sin ella si se
+// que queda pendiente de aprobación. Una sola animación al cargar; sin ella si se
 // prefiere menos movimiento. Es una ilustración: los botones no hacen nada.
 export type DemoStep = { title: string; detail: string; app: string }
 export type Demo = {
@@ -16,7 +16,7 @@ export const VISIT_DEMO: Demo = {
   title: "Responder consultas de visitas",
   ask: "Al recibir una consulta para visitar una propiedad, consultar la agenda y preparar una respuesta con un horario disponible.",
   steps: [
-    { title: "Lee el correo de Laura Gómez", detail: "Quiere ver el departamento de Palermo esta semana", app: "Correo" },
+    { title: "Lectura del correo de Laura Gómez", detail: "Consulta por un inmueble en Palermo esta semana", app: "Correo" },
     { title: "Consulta el calendario", detail: "Jueves disponible de 10:00 a 12:00", app: "Calendar" },
     { title: "Consulta la ficha de la propiedad", detail: "3 habitaciones, disponible", app: "CRM" },
     { title: "Redacta la respuesta", detail: "Propone el jueves a las 10:00", app: "Borrador" },
