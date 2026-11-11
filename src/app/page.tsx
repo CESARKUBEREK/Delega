@@ -76,10 +76,10 @@ export default function HomePage() {
             <ol className="steps">
               <li>
                 <h3 className="site-h3">Describe la tarea</h3>
-                <p>Elige un ejemplo o escríbelo con tus palabras. En unos segundos tienes la propuesta.</p>
+                <p>Selecciona un ejemplo o describe la tarea en lenguaje cotidiano. La propuesta estará lista en unos segundos.</p>
               </li>
               <li>
-                <h3 className="site-h3">Pruébalo con tu correo</h3>
+                <h3 className="site-h3">Prueba gratuita con correo</h3>
                 <p>Con nuestra IA, gratis: ordena tu bandeja y deja las respuestas preparadas desde el primer día.</p>
               </li>
               <li>
@@ -100,7 +100,7 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-section-head">
               <h2 id="casos" className="site-h2">
-                Tareas que puedes dejar de hacer a mano
+                Tareas que MarchaSolo puede automatizar
               </h2>
               <p className="site-lead">
                 MarchaSolo prepara estas tareas con las aplicaciones conectadas. Las acciones sujetas a aprobación esperan revisión.
@@ -144,15 +144,13 @@ export default function HomePage() {
               <div>
                 <h3 className="site-h3">Tus claves, cifradas</h3>
                 <p>
-                  Las contraseñas y claves de tus servicios se guardan cifradas. Nadie puede volver a verlas, ni siquiera
-                  tú.
+                  Las contraseñas y claves de tus servicios se guardan cifradas. Las credenciales se almacenan cifradas y no se muestran nuevamente.
                 </p>
               </div>
               <div>
                 <h3 className="site-h3">Tus cuentas, tu factura</h3>
                 <p>
-                  Empiezas gratis con nuestra IA. Después usas tu propia IA: ves el costo estimado de cada tarea y puedes
-                  poner un presupuesto.
+                  La prueba inicial utiliza la IA de MarchaSolo. Después se conecta una cuenta propia de IA; el panel muestra el costo estimado de cada tarea y permite fijar un presupuesto.
                 </p>
               </div>
             </div>
@@ -181,8 +179,7 @@ export default function HomePage() {
               <li>
                 <h3 className="site-h3">Inmobiliarias y despachos</h3>
                 <p>
-                  Consultas por propiedades con la ficha de Tokko, vencimientos y documentos a partir de tus modelos. Con
-                  Xubio, consulta si alguien ya es cliente.
+                  Consultas sobre propiedades con la ficha de Tokko, avisos de vencimientos y documentos preparados a partir de modelos. Xubio permite consultar si un contacto ya es cliente.
                 </p>
               </li>
             </ul>
@@ -194,7 +191,7 @@ export default function HomePage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Cuéntanos qué te gustaría mejorar</h2>
+                <h2 className="site-h2">Identifica qué conviene mejorar</h2>
                 <p>
                   Empieza con una tarea concreta o identifica oportunidades de mejora. MarchaSolo prepara una propuesta para probarla gratis con su IA.
                 </p>
