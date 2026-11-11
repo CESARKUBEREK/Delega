@@ -247,11 +247,6 @@ export default function TermsPage() {
           válido en contrario. Si la ley permite descontar el valor proporcional de un servicio iniciado a petición expresa del
           consumidor, se calculará y explicará de forma transparente. No se limitarán derechos de reembolso por esta cláusula.
         </p>
-        <p>
-          En todos los territorios, los reembolsos se efectuarán dentro del plazo legal aplicable y, en principio, mediante el mismo medio
-          de pago, salvo acuerdo válido en contrario. No se limitarán derechos de reembolso por esta cláusula. En caso de duda,
-          prevalecerá la norma de protección al consumidor más favorable que resulte imperativamente aplicable.
-        </p>
 
         <h2 id="impago">11. Pagos rechazados y suspensión por impago</h2>
         <p>
