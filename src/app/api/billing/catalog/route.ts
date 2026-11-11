@@ -22,7 +22,7 @@ export async function GET() {
       .select("id, plan_id, market_code, currency, amount_minor, interval_unit, interval_count, valid_from, valid_until")
       .eq("active", true)
       .lte("valid_from", now)
-      .or(\`valid_until.is.null,valid_until.gt.\${now}\`)
+      .or("valid_until.is.null,valid_until.gt." + now)
       .order("amount_minor"),
   ])
 
