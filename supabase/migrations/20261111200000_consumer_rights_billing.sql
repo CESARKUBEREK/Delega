@@ -57,7 +57,9 @@ begin
   if p_message is not null and length(p_message) > 2000 then
     raise exception 'invalid_message' using errcode = '22023';
   end if;
-  if v_ip is not null and v_ip !~ '^[a-f0-9]{64}
+  if v_ip is not null and v_ip !~ '^[a-f0-9]{64}$' then
+    raise exception 'invalid_ip_hash' using errcode = '22023';
+  end if;
   if (select count(*) from public.consumer_rights_requests r
       where lower(r.email) = v_email and r.submitted_at > now() - interval '1 hour') >= 5 then
     raise exception 'rate_limit_exceeded' using errcode = 'P0001';
