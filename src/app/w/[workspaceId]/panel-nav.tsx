@@ -30,6 +30,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { slug: "historial", label: "Historial" },
       { slug: "configuracion", label: "Configuración" },
+      { slug: "facturacion", label: "Facturación" },
     ],
   },
 ]
@@ -105,6 +106,7 @@ const ICONS: Record<string, React.ReactNode> = {
   paginas: <><path d="M6 3h8.5L19 7.5V21H6V3Z" /><path d="M14 3v5h5M9 12h7M9 16h7" /></>,
   integraciones: <><path d="M8 7V3m8 4V3M7 7h10v4a5 5 0 0 1-10 0V7Z" /><path d="M12 16v5m-4 0h8" /></>,
   historial: <><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3.5 2" /></>,
+  facturacion: <><rect x="3.5" y="5" width="17" height="14" rx="2" /><path d="M3.5 10h17M7 15h4" /></>,
   configuracion: <><circle cx="12" cy="12" r="3" /><path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 0 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V2a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z" /></>,
   mas: <><circle cx="5.5" cy="12" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="18.5" cy="12" r="1.2" /></>,
 }
