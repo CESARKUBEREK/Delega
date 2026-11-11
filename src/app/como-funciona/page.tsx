@@ -33,7 +33,7 @@ const FAQS = [
   {
     question: "¿Qué pasa cuando termina la prueba?",
     answer:
-      "Tu cuenta, tus automatizaciones y tu bandeja siguen ahí. Para seguir, pasas al plan Solo y conectas tu propia IA (OpenAI, Anthropic, DeepSeek o Grok); MarchaSolo te guía paso a paso.",
+      "La cuenta, las automatizaciones y la bandeja siguen disponibles. Para continuar, se elige el plan Solo y se conecta una cuenta propia de IA (OpenAI, Anthropic, DeepSeek o Grok). MarchaSolo guía el proceso paso a paso.",
   },
   {
     question: "¿Cómo se conecta WhatsApp?",
@@ -43,7 +43,7 @@ const FAQS = [
   {
     question: "¿Se puede utilizar desde un teléfono móvil?",
     answer:
-      "Sí. MarchaSolo puede instalarse desde el navegador del teléfono móvil, enviar avisos cuando hay tareas pendientes y permitir dictar instrucciones.",
+      "MarchaSolo puede instalarse desde el navegador del teléfono, enviar avisos cuando hay tareas pendientes y permitir dictar instrucciones.",
   },
 ] as const
 
@@ -77,7 +77,7 @@ export default function HowItWorksPage() {
             </h2>
             <ol className="steps is-four">
               <li>
-                <h3 className="site-h3">Describe la tarea</h3>
+                <h3 className="site-h3">Describir la tarea</h3>
                 <p>
                   Describir la tarea en lenguaje cotidiano, por escrito o mediante dictado, o seleccionar una plantilla.
                 </p>
@@ -158,7 +158,7 @@ export default function HowItWorksPage() {
                 </p>
               </div>
               <div className="fact">
-                <h3 className="site-h3">Para seguir después de la prueba: tu propia IA</h3>
+                <h3 className="site-h3">Después de la prueba: una cuenta propia de IA</h3>
                 <p>
                   Después de la prueba, las automatizaciones utilizan una cuenta propia de OpenAI, Anthropic, DeepSeek o Grok. La clave se guarda cifrada y el consumo se factura directamente en esa cuenta. MarchaSolo selecciona el modelo según la tarea y respeta el presupuesto configurado.
                 </p>
@@ -206,7 +206,7 @@ export default function HowItWorksPage() {
               <details>
                 <summary>¿Se puede utilizar desde un teléfono?</summary>
                 <div>
-                  Sí. MarchaSolo puede instalarse desde el navegador del teléfono móvil, enviar avisos cuando hay tareas pendientes y permitir dictar instrucciones.
+                  MarchaSolo puede instalarse desde el navegador del teléfono, enviar avisos cuando hay tareas pendientes y permitir dictar instrucciones.
                 </div>
               </details>
             </div>
