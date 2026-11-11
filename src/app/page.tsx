@@ -197,7 +197,7 @@ export default function HomePage() {
                 </p>
                 <ul className="site-hero-note" style={{ marginTop: "0.75rem" }}>
                   <li>Sin tarjeta</li>
-                  <li>Prueba gratis con nuestra IA</li>
+                  <li>Prueba gratuita con IA incluida</li>
                   <li>Revisión de acciones que requieren autorización</li>
                 </ul>
               </div>
