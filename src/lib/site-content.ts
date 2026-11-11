@@ -45,7 +45,7 @@ export const USE_CASES: UseCase[] = [
     id: "reservas-agenda",
     title: "Organización de citas y reuniones",
     before:
-      "El cliente pide día y hora; abres el calendario, miras disponibilidad y vuelves al chat o al correo.",
+      "El cliente solicita día y hora; es necesario consultar el calendario y volver al chat o al correo.",
     ask: "Al recibir una solicitud de visita o cita, consultar la agenda y preparar una respuesta con dos horarios disponibles.",
     does: "Consulta Google Calendar, identifica horarios disponibles y redacta una propuesta.",
     waits: "La respuesta al cliente (y el evento, si lo crea al aprobar).",
@@ -58,7 +58,7 @@ export const USE_CASES: UseCase[] = [
     id: "leads",
     title: "Responder a contactos potenciales y coordinar la primera conversación",
     before:
-      "Llegan consultas por correo o WhatsApp; buscas horario libre en la agenda, miras si ya es cliente y contestas cuando puedes.",
+      "Llegan consultas por correo o WhatsApp; es necesario consultar la agenda, comprobar si el contacto ya existe y preparar una respuesta.",
     ask: "Al recibir una nueva consulta comercial, consultar la agenda, preparar una respuesta con dos horarios disponibles y registrar el contacto en el CRM.",
     does: "Lee el mensaje, busca si ya existe el contacto, consulta horarios libres en el calendario y redacta la respuesta y el alta en el CRM.",
     waits: "La respuesta al lead y el registro en el CRM.",
@@ -69,8 +69,8 @@ export const USE_CASES: UseCase[] = [
     id: "seguimiento-ventas",
     title: "Gestión y seguimiento de oportunidades",
     before:
-      "Revisas el CRM a mano para ver qué negocios llevan días sin movimiento y a quién no has vuelto a escribir.",
-    ask: "Los lunes, dime qué oportunidades llevan dos semanas sin actividad y prepárame un seguimiento para cada una.",
+      "La revisión manual del CRM permite detectar oportunidades sin actividad y seguimientos pendientes.",
+    ask: "Cada lunes, identificar las oportunidades sin actividad durante dos semanas y preparar un seguimiento para cada contacto.",
     does: "Repasa las oportunidades y sus etapas, detecta las paradas y redacta un mensaje de seguimiento por contacto.",
     waits: "Cada mensaje de seguimiento y, si lo pides, la tarea en el CRM.",
     result: "Se reduce el riesgo de olvidar oportunidades sin seguimiento. Los mensajes quedan disponibles para revisión antes del envío.",
@@ -80,7 +80,7 @@ export const USE_CASES: UseCase[] = [
     id: "propuestas",
     title: "Preparar respuestas a peticiones de presupuesto",
     before:
-      "Abres el correo de la solicitud, buscas datos del cliente y del producto, y redactas el presupuesto o la respuesta desde cero.",
+      "La solicitud llega por correo; es necesario buscar los datos del cliente y del producto, y redactar el presupuesto o la respuesta desde cero.",
     ask: "Cuando pidan presupuesto, busca al cliente en el CRM, resume qué piden y déjame un borrador de respuesta con los datos que tengamos.",
     does: "Lee la solicitud, localiza al contacto y el historial, resume el pedido y redacta un borrador listo para revisar.",
     waits: "El envío de la respuesta (y el documento, si lo genera).",
@@ -93,7 +93,7 @@ export const USE_CASES: UseCase[] = [
     id: "bandeja-clientes",
     title: "Correo y mensajería organizados",
     before:
-      "La bandeja mezcla clientes, proveedores y ruido. Buscas a mano qué espera respuesta y contestas con prisa.",
+      "La bandeja mezcla clientes, proveedores y avisos. La identificación manual de los mensajes pendientes consume tiempo y dificulta priorizar respuestas.",
     ask: "Cada mañana, identificar los mensajes de clientes pendientes de respuesta y preparar borradores para los casos urgentes.",
     does: "Ordena la bandeja: clientes y urgente arriba, el resto aparte. Lee cada hilo y redacta la respuesta en el mismo correo o chat.",
     waits: "Cada respuesta al cliente, antes de enviarse.",
@@ -141,7 +141,7 @@ export const USE_CASES: UseCase[] = [
     before:
       "Contratos, renovaciones y documentación de clientes suelen quedar registrados en hojas de cálculo que requieren revisión periódica.",
     ask: "Cada lunes, revisar la hoja de vencimientos y preparar un aviso sobre los próximos vencimientos y la documentación pendiente.",
-    does: "Lee la planilla, ordena lo que vence y lo que falta, y te manda el resumen.",
+    does: "Lee la hoja de cálculo, ordena vencimientos y documentación pendiente, y prepara un resumen.",
     waits: null,
     result: "Los vencimientos se identifican a tiempo. El resumen se entrega como aviso interno y no requiere aprobación.",
     tags: ["Google Sheets", "Excel"],
@@ -152,9 +152,9 @@ export const USE_CASES: UseCase[] = [
     before:
       "Cada propuesta, presupuesto o carta suele comenzar con la copia de un documento anterior y la actualización manual de nombres y datos.",
     ask: "Al confirmar un nuevo cliente, preparar una propuesta en Google Docs a partir de la plantilla y los datos disponibles.",
-    does: "Lee tu modelo, toma los datos del cliente del correo o del CRM y crea un documento nuevo en tu Drive con el texto completo.",
+    does: "Lee la plantilla, toma los datos del cliente del correo electrónico o del CRM y crea un documento nuevo en Google Drive con el texto completo.",
     waits: "La creación del documento.",
-    result: "Revisas un borrador ya completo en lugar de empezar de cero.",
+    result: "El resultado es un borrador completo, listo para revisión.",
     tags: ["Google Docs", "Google Drive", "HubSpot"],
   },
 ]
