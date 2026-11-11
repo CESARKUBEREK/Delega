@@ -4,18 +4,18 @@ import { Sheet } from "@/components/sheet"
 import { LoginForm } from "./login-form"
 
 export const metadata = {
-  title: "Entrar",
-  description: "Accede al espacio de MarchaSolo.",
+  title: "Iniciar sesión",
+  description: "Acceso al espacio de trabajo de MarchaSolo.",
   alternates: { canonical: "/entrar" },
 }
 
 export default function LoginPage() {
   return (
     <Sheet
-      title="Iniciar sesión en MarchaSolo"
+      title="Acceder a MarchaSolo"
       footer={
         <>
-          ¿Aún no existe una cuenta?{" "}
+          ¿Todavía no existe una cuenta?{" "}
           <Link href="/crear-cuenta" className="text-link underline underline-offset-4">
             Crear cuenta
           </Link>
