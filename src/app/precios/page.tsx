@@ -4,7 +4,7 @@ import { publicPageMetadata } from "@/lib/seo"
 import { PLANS } from "@/lib/pricing"
 
 const pricingIntro = PLANS.length
-  ? `Prueba MarchaSolo gratis. Después, planes desde ${PLANS[0].price}${PLANS[0].period}; el consumo de IA se paga directamente al proveedor elegido.`
+  ? `Prueba gratuita. Después, planes desde ${PLANS[0].price}${PLANS[0].period}; el consumo de IA se paga directamente al proveedor elegido.`
   : "Consulta las opciones disponibles para empezar con MarchaSolo y el costo del consumo de inteligencia artificial, que se paga directamente al proveedor elegido."
 
 export const metadata = publicPageMetadata({
@@ -19,7 +19,7 @@ export default function PricingPage() {
       <main>
         <section className="page-intro">
           <div className="site-container">
-            <h1 className="site-h1">Precios</h1>
+            <h1 className="site-h1">Un plan para cada etapa del negocio.</h1>
             <p className="site-lead">{pricingIntro}</p>
           </div>
         </section>
@@ -61,7 +61,7 @@ export default function PricingPage() {
         <section className="site-section" aria-labelledby="como">
           <div className="site-container">
             <h2 id="como" className="site-h2 mb-10">
-              Cómo funciona el costo
+              Una estructura de costos transparente
             </h2>
             <div className="facts">
               <div className="fact is-key">
@@ -134,13 +134,13 @@ export default function PricingPage() {
           <div className="site-container">
             <div className="site-cta">
               <div>
-                <h2 className="site-h2">Elige el plan adecuado para cada etapa</h2>
+                <h2 className="site-h2">Elegir el plan adecuado para cada etapa</h2>
                 <p>
-                  Crea una cuenta, describe una tarea y prueba la propuesta que prepara MarchaSolo, sin costo inicial.
+                  Crear una cuenta, describir una tarea y probar la propuesta que prepara MarchaSolo, sin costo inicial.
                 </p>
               </div>
               <Link href="/crear-cuenta" className="btn btn-primary">
-                Probar gratis
+                Crear cuenta gratis
               </Link>
             </div>
           </div>
