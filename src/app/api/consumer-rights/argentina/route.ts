@@ -31,8 +31,9 @@ export async function POST(request: Request) {
   }
 
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? ""
-  const ipHash = forwarded
-    ? createHash("sha256").update(process.env.CONSUMER_RIGHTS_RATE_LIMIT_SALT ?? "marchasolo-consumer-rights").update(forwarded).digest("hex")
+  const salt = process.env.CONSUMER_RIGHTS_RATE_LIMIT_SALT
+  const ipHash = forwarded && salt
+    ? createHash("sha256").update(salt).update(forwarded).digest("hex")
     : null
   const supabase = await createClient()
   const rpc = supabase.rpc as unknown as (name: string, args: Record<string, unknown>) => Promise<{ data: string | null; error: { message: string } | null }>
