@@ -15,7 +15,7 @@ export function SiteFooter({ inApp = false }: { inApp?: boolean }) {
           <Link href="/" aria-label="MarchaSolo, inicio" className="site-brand">
             <Logo size={30} />
           </Link>
-          <p className="site-footer-claim">Tu negocio, en automático. Tú mantienes el control; MarchaSolo hace el trabajo.</p>
+          <p className="site-footer-claim">Tu negocio, en automático. MarchaSolo coordina el trabajo; el control permanece en manos de cada usuario.</p>
         </div>
         <div>
           <h2>Producto</h2>
