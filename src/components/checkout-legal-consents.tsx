@@ -5,19 +5,21 @@ import { useState } from "react"
 export function CheckoutLegalConsents({
   countryCode,
   recurring,
+  serviceStartsImmediately,
   priceDescription,
   renewalDescription,
   onValidityChange,
 }: {
   countryCode: "ES" | "AR" | "MX"
   recurring: boolean
+  serviceStartsImmediately: boolean
   priceDescription: string
   renewalDescription: string
   onValidityChange?: (value: { recurringAccepted: boolean; immediateStartAccepted: boolean; valid: boolean }) => void
 }) {
   const [recurringAccepted, setRecurringAccepted] = useState(false)
   const [immediateStartAccepted, setImmediateStartAccepted] = useState(false)
-  const needsImmediateStartConsent = countryCode === "ES"
+  const needsImmediateStartConsent = countryCode === "ES" && serviceStartsImmediately
   const valid = (!recurring || recurringAccepted) && (!needsImmediateStartConsent || immediateStartAccepted)
 
   function update(recurringValue: boolean, immediateValue: boolean) {
@@ -44,8 +46,7 @@ export function CheckoutLegalConsents({
             className="mt-1 size-4 shrink-0 accent-current"
           />
           <span>
-            Autorizo expresamente los cobros recurrentes de {priceDescription}, con periodicidad {renewalDescription,
-            } hasta que cancele la suscripción. He podido consultar el importe, la frecuencia y las condiciones de cancelación.
+            Autorizo expresamente los cobros recurrentes de {priceDescription}, con periodicidad {renewalDescription} hasta que cancele la suscripción. He podido consultar el importe, la frecuencia y las condiciones de cancelación.
           </span>
         </label>
       ) : null}
