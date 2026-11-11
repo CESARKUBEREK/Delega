@@ -6,7 +6,7 @@ import { publicPageMetadata } from "@/lib/seo"
 export const metadata = publicPageMetadata({
   title: "Funcionalidades de MarchaSolo",
   description:
-    "MarchaSolo funciona como un equipo digital: conecta canales, clientes y herramientas para coordinar procesos del negocio. Las acciones que requieren autorización quedan pendientes de revisión.",
+    "Un asistente de IA que conecta aplicaciones, coordina tareas y automatiza el trabajo cotidiano. Las acciones sujetas a autorización quedan pendientes de aprobación.",
   path: "/para-que-sirve",
 })
 
