@@ -1428,6 +1428,160 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_plans: {
+        Row: {
+          id: string
+          code: string
+          name: string
+          description: string | null
+          capabilities: Json
+          active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          name: string
+          description?: string | null
+          capabilities?: Json
+          active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          name?: string
+          description?: string | null
+          capabilities?: Json
+          active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      plan_prices: {
+        Row: {
+          id: string
+          plan_id: string
+          market_code: string
+          currency: string
+          amount_minor: number
+          interval_unit: string
+          interval_count: number
+          valid_from: string
+          valid_until: string | null
+          active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          plan_id: string
+          market_code?: string
+          currency: string
+          amount_minor: number
+          interval_unit: string
+          interval_count?: number
+          valid_from?: string
+          valid_until?: string | null
+          active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          plan_id?: string
+          market_code?: string
+          currency?: string
+          amount_minor?: number
+          interval_unit?: string
+          interval_count?: number
+          valid_from?: string
+          valid_until?: string | null
+          active?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_prices_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "billing_plans"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      billing_customers: {
+        Row: {
+          id: string
+          workspace_id: string
+          owner_user_id: string | null
+          customer_type: string
+          legal_name: string | null
+          billing_email: string | null
+          country_code: string
+          region: string | null
+          city: string | null
+          postal_code: string | null
+          address_line1: string | null
+          address_line2: string | null
+          tax_id: string | null
+          tax_id_type: string | null
+          tax_id_verified_at: string | null
+          preferred_language: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          workspace_id: string
+          owner_user_id?: string | null
+          customer_type: string
+          legal_name?: string | null
+          billing_email?: string | null
+          country_code: string
+          region?: string | null
+          city?: string | null
+          postal_code?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          tax_id?: string | null
+          tax_id_type?: string | null
+          tax_id_verified_at?: string | null
+          preferred_language?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          workspace_id?: string
+          owner_user_id?: string | null
+          customer_type?: string
+          legal_name?: string | null
+          billing_email?: string | null
+          country_code?: string
+          region?: string | null
+          city?: string | null
+          postal_code?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          tax_id?: string | null
+          tax_id_type?: string | null
+          tax_id_verified_at?: string | null
+          preferred_language?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_customers_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
