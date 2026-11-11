@@ -5,17 +5,17 @@ import { LoginForm } from "./login-form"
 
 export const metadata = {
   title: "Entrar",
-  description: "Entra en tu espacio de MarchaSolo.",
+  description: "Accede al espacio de MarchaSolo.",
   alternates: { canonical: "/entrar" },
 }
 
 export default function LoginPage() {
   return (
     <Sheet
-      title="Entra en MarchaSolo"
+      title="Iniciar sesión en MarchaSolo"
       footer={
         <>
-          ¿Aún no tienes cuenta?{" "}
+          ¿Aún no existe una cuenta?{" "}
           <Link href="/crear-cuenta" className="text-link underline underline-offset-4">
             Crear cuenta
           </Link>
