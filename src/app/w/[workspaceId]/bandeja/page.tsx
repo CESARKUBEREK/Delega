@@ -224,7 +224,7 @@ async function ActivityView({ workspaceId }: { workspaceId: string }) {
   const { data: events } = ids.length
     ? await supabase.from("run_events").select("id, run_id, kind, title, created_at").eq("workspace_id", workspaceId).in("run_id", ids).order("created_at", { ascending: false }).limit(150)
     : { data: [] }
-  const latestByRun = new Map<string, NonNullable<typeof events>>()
+  const latestByRun = new Map<string, { id: number; run_id: string; kind: string; title: string; created_at: string }[]>()
   for (const event of events ?? []) {
     if (!latestByRun.has(event.run_id)) latestByRun.set(event.run_id, [])
     latestByRun.get(event.run_id)?.push(event)
