@@ -906,8 +906,8 @@ a.flow-node-trigger:hover { border-color:var(--ink); box-shadow:0 0 0 3px rgb(0 
 .inbox-filter-chip.is-active:hover { border-color:#006b5f; background:#006b5f; color:var(--sheet); }
 
 /* Bandeja de acciones (fase 6G): pestañas, tarjetas de «Para hoy», categoría con un toque. */
-.inbox-tabs { display:flex; gap:4px; border-bottom:1px solid var(--border); }
-.inbox-tabs a { min-height:44px; display:inline-flex; align-items:center; padding:0 16px; border-bottom:3px solid transparent; color:var(--graphite); font-weight:600; text-decoration:none; }
+.inbox-tabs { display:flex; gap:4px; overflow-x:auto; border-bottom:1px solid var(--border); scrollbar-width:thin; }
+.inbox-tabs a { min-height:44px; display:inline-flex; flex:0 0 auto; align-items:center; padding:0 16px; border-bottom:3px solid transparent; color:var(--graphite); font-weight:600; text-decoration:none; white-space:nowrap; }
 .inbox-tabs a:hover { color:var(--ink); }
 .inbox-tabs a.is-active { border-bottom-color:var(--turquesa); color:var(--ink); }
 .inbox-progress { display:inline-block; width:80px; height:6px; margin-right:8px; overflow:hidden; border-radius:999px; background:#e3eaf0; vertical-align:middle; }
