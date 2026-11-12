@@ -64,7 +64,7 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
 
   const today = view === "hoy" ? await todayData(supabase, workspaceId) : null
   const todayCount = today ? today.replies.length + today.followups.length : await countToday(supabase, workspaceId)
-  const actionCount = view === "acciones" ? await countPendingActions(supabase, workspaceId) : null
+  const actionCount = await countPendingActions(supabase, workspaceId)
 
   return (
     <div className="flex flex-col gap-4">
