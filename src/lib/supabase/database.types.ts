@@ -454,6 +454,39 @@ export type Database = {
           },
         ]
       }
+      inbox_thread_contacts: {
+        Row: {
+          confirmed_at: string
+          confirmed_by: string
+          contact_id: string
+          id: string
+          revoked_at: string | null
+          revoked_by: string | null
+          thread_id: string
+          workspace_id: string
+        }
+        Insert: {
+          confirmed_at?: string
+          confirmed_by?: string
+          contact_id: string
+          id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          thread_id: string
+          workspace_id: string
+        }
+        Update: {
+          confirmed_at?: string
+          confirmed_by?: string
+          contact_id?: string
+          id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          thread_id?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
