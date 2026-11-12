@@ -51,17 +51,7 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
   const mailActive = imap?.status === "active"
   const settings = ((imap ?? integrations?.[0])?.config ?? {}) as InboxSettings
   const categories = settings.categories?.length ? settings.categories : DEFAULT_CATEGORIES
-  if (!integrations?.length) {
-    return (
-      <EmptyState
-        title="Conecta tus canales de comunicación"
-        description="Conecta tu correo, WhatsApp o un bot de Telegram para ver aquí tus conversaciones."
-        action={<Link href={`/w/${workspaceId}/integraciones`} className="text-link underline underline-offset-4">Ir a Integraciones</Link>}
-      />
-    )
-  }
-
-  const view = sp.vista === "todo" ? "todo" : "hoy"
+  const view = ["todo", "acciones", "actividad"].includes(String(sp.vista)) ? String(sp.vista) : "hoy"
   const { data: all } = await supabase
     .from("inbox_threads")
     .select("message_count, classified_count, automatic, needs_reply, last_direction")
@@ -74,6 +64,7 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
 
   const today = view === "hoy" ? await todayData(supabase, workspaceId) : null
   const todayCount = today ? today.replies.length + today.followups.length : await countToday(supabase, workspaceId)
+  const actionCount = view === "acciones" ? await countPendingActions(supabase, workspaceId) : null
 
   return (
     <div className="flex flex-col gap-4">
@@ -115,19 +106,37 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
         </InfoBanner>
       ) : null}
 
+
       <nav className="inbox-tabs" aria-label="Vistas de la bandeja">
         <Link href={base} className={view === "hoy" ? "is-active" : ""} aria-current={view === "hoy" ? "page" : undefined}>
-          Prioridades{todayCount ? ` · ${todayCount}` : ""}
+          Prioridades{todayCount ? " · " + todayCount : ""}
         </Link>
-        <Link href={`${base}?vista=todo`} className={view === "todo" ? "is-active" : ""} aria-current={view === "todo" ? "page" : undefined}>
+        <Link href={base + "?vista=todo"} className={view === "todo" ? "is-active" : ""} aria-current={view === "todo" ? "page" : undefined}>
           Conversaciones
+        </Link>
+        <Link href={base + "?vista=acciones"} className={view === "acciones" ? "is-active" : ""} aria-current={view === "acciones" ? "page" : undefined}>
+          Acciones{actionCount ? " · " + actionCount : ""}
+        </Link>
+        <Link href={base + "?vista=actividad"} className={view === "actividad" ? "is-active" : ""} aria-current={view === "actividad" ? "page" : undefined}>
+          Actividad
         </Link>
       </nav>
 
-      {today ? (
+      {!integrations?.length ? (
+        <InfoBanner tone="info">
+          Conecta tu correo, WhatsApp o Telegram para recibir conversaciones. Las acciones y la actividad de tus automatizaciones siguen disponibles.
+          {" "}<Link href={"/w/" + workspaceId + "/integraciones"} className="font-medium underline underline-offset-4">Ir a Integraciones</Link>
+        </InfoBanner>
+      ) : null}
+
+      {view === "hoy" && today ? (
         <TodayView workspaceId={workspaceId} base={base} data={today} mailActive={mailActive} draftsPerDay={settings.drafts_per_day ?? DEFAULT_DRAFTS_PER_DAY} />
-      ) : (
+      ) : view === "todo" ? (
         <AllView workspaceId={workspaceId} base={base} sp={sp} categories={categories} mailActive={mailActive} total={total} />
+      ) : view === "acciones" ? (
+        <ActionsView workspaceId={workspaceId} />
+      ) : (
+        <ActivityView workspaceId={workspaceId} />
       )}
 
       <details className="border border-rule bg-sheet px-4 py-3 text-sm">
@@ -171,7 +180,109 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
   )
 }
 
+
 type Supabase = Awaited<ReturnType<typeof createClient>>
+
+async function countPendingActions(supabase: Supabase, workspaceId: string): Promise<number> {
+  const { count } = await supabase.from("flow_runs").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId).eq("status", "awaiting_approval")
+  return count ?? 0
+}
+
+async function ActionsView({ workspaceId }: { workspaceId: string }) {
+  const supabase = await createClient()
+  const { data: runs } = await supabase.from("flow_runs").select("id, flow_name, status, pending_action, summary, started_at, trigger").eq("workspace_id", workspaceId).eq("status", "awaiting_approval").order("started_at", { ascending: false }).limit(50)
+  return (
+    <section className="flex flex-col gap-3" aria-labelledby="inbox-actions-title">
+      <div>
+        <h2 id="inbox-actions-title" className="text-lg font-semibold text-ink">Esperan tu decisión</h2>
+        <p className="mt-1 text-sm text-graphite">Estas propuestas todavía no se ejecutan. Revísalas y aprueba o rechaza cada una.</p>
+      </div>
+      {runs?.length ? runs.map((run) => {
+        const pending = asPending(run.pending_action)
+        return (
+          <article key={run.id} className="flex flex-col gap-3 rounded-xl border border-rule bg-sheet p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="font-semibold text-ink">{run.flow_name}</p>
+                <p className="text-xs text-graphite">{formatDateTime(run.started_at)} · {String((run.trigger as { type?: string } | null)?.type ?? "Automatización")}</p>
+              </div>
+              <Link href={"/w/" + workspaceId + "/ejecuciones/" + run.id} className="text-sm text-link underline underline-offset-4">Ver detalle</Link>
+            </div>
+            {pending ? <ApprovalCard runId={run.id} pending={pending} /> : <InfoBanner tone="warning">La ejecución figura pendiente de aprobación, pero la propuesta no se puede interpretar. Abre el detalle para revisarla.</InfoBanner>}
+          </article>
+        )
+      }) : <EmptyState title="No hay acciones pendientes" description="Cuando una automatización necesite tu autorización, aparecerá aquí antes de ejecutarse." />}
+      {(runs?.length ?? 0) >= 50 ? <p className="text-xs text-graphite">Se muestran las 50 acciones pendientes más recientes.</p> : null}
+    </section>
+  )
+}
+
+async function ActivityView({ workspaceId }: { workspaceId: string }) {
+  const supabase = await createClient()
+  const { data: runs } = await supabase.from("flow_runs").select("id, flow_name, status, summary, error, started_at, finished_at, trigger").eq("workspace_id", workspaceId).order("started_at", { ascending: false }).limit(50)
+  const ids = (runs ?? []).map((run) => run.id)
+  const { data: events } = ids.length
+    ? await supabase.from("run_events").select("id, run_id, kind, title, created_at").eq("workspace_id", workspaceId).in("run_id", ids).order("created_at", { ascending: false }).limit(150)
+    : { data: [] }
+  const latestByRun = new Map<string, NonNullable<typeof events>>()
+  for (const event of events ?? []) {
+    if (!latestByRun.has(event.run_id)) latestByRun.set(event.run_id, [])
+    latestByRun.get(event.run_id)?.push(event)
+  }
+  const statusLabel: Record<string, string> = {
+    running: "En curso",
+    awaiting_approval: "Espera tu aprobación",
+    succeeded: "Completada",
+    failed: "Fallida",
+    cancelled: "Cancelada",
+    rejected: "Rechazada",
+  }
+  const eventLabel: Record<string, string> = {
+    started: "Iniciada",
+    tool: "Acción",
+    approval_requested: "Solicita aprobación",
+    approved: "Aprobada",
+    rejected: "Rechazada",
+    message: "Actualización",
+    error: "Error",
+    finished: "Finalizada",
+  }
+  return (
+    <section className="flex flex-col gap-3" aria-labelledby="inbox-activity-title">
+      <div>
+        <h2 id="inbox-activity-title" className="text-lg font-semibold text-ink">Actividad reciente</h2>
+        <p className="mt-1 text-sm text-graphite">Historial real de tus automatizaciones, propuestas y resultados.</p>
+      </div>
+      {runs?.length ? (
+        <ol className="divide-y divide-rule overflow-hidden rounded-xl border border-rule bg-sheet">
+          {runs.map((run) => (
+            <li key={run.id} className="px-4 py-4">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-semibold text-ink">{run.flow_name}</p>
+                  <p className="mt-0.5 text-xs text-graphite">{formatDateTime(run.started_at)} · {statusLabel[run.status] ?? run.status}</p>
+                </div>
+                <Link href={"/w/" + workspaceId + "/ejecuciones/" + run.id} className="shrink-0 text-sm text-link underline underline-offset-4">Abrir</Link>
+              </div>
+              {run.summary ? <p className="mt-2 whitespace-pre-wrap text-sm text-graphite">{run.summary.slice(0, 360)}</p> : null}
+              {run.status === "failed" && run.error ? <p className="mt-2 border-l-2 border-alert pl-3 text-sm text-alert">{run.error.slice(0, 240)}</p> : null}
+              {latestByRun.get(run.id)?.slice(0, 3).map((event) => (
+                <p key={event.id} className="mt-2 flex flex-wrap gap-x-2 text-xs text-graphite">
+                  <span className="font-medium text-ink">{eventLabel[event.kind] ?? event.kind}</span>
+                  <span>{event.title}</span>
+                  <span>{formatDateTime(event.created_at)}</span>
+                </p>
+              ))}
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <EmptyState title="Todavía no hay actividad" description="Cuando una automatización empiece a trabajar, sus avances y resultados aparecerán aquí." />
+      )}
+      {(runs?.length ?? 0) >= 50 ? <p className="text-xs text-graphite">Se muestran las 50 ejecuciones más recientes.</p> : null}
+    </section>
+  )
+}
 
 type CardThread = {
   id: string
