@@ -50,17 +50,33 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
     supabase.from("integrations").select("provider, status, config").eq("workspace_id", workspaceId).in("provider", ["imap", "telegram", "whatsapp"]),
   ])
   if (!thread) notFound()
-  // Últimos intercambios con la misma persona (otras conversaciones).
-  const { data: recentRows } = thread.contact_address
-    ? await supabase
-        .from("inbox_threads")
-        .select("id, subject, last_message_at")
-        .eq("workspace_id", workspaceId)
-        .eq("contact_address", thread.contact_address)
-        .neq("id", thread.id)
-        .order("last_message_at", { ascending: false, nullsFirst: false })
-        .limit(3)
-    : { data: [] }
+  // Contexto local: solo se vincula un contacto si el email coincide exactamente.
+  // Las conversaciones con el mismo identificador se muestran como coincidencias,
+  // nunca como identidad consolidada o asociación confirmada.
+  const normalizedAddress = thread.contact_address?.trim().toLowerCase() ?? ""
+  const [{ data: contactRows }, { data: recentRows }] = await Promise.all([
+    normalizedAddress.includes("@")
+      ? supabase
+          .from("contacts")
+          .select("id, name, email")
+          .eq("workspace_id", workspaceId)
+          .eq("email", normalizedAddress)
+          .limit(2)
+      : Promise.resolve({ data: [] as { id: string; name: string; email: string }[] }),
+    thread.contact_address
+      ? supabase
+          .from("inbox_threads")
+          .select("id, channel, subject, last_message_at")
+          .eq("workspace_id", workspaceId)
+          .eq("contact_address", thread.contact_address)
+          .neq("id", thread.id)
+          .order("last_message_at", { ascending: false, nullsFirst: false })
+          .limit(5)
+      : Promise.resolve({ data: [] as { id: string; channel: string; subject: string | null; last_message_at: string | null }[] }),
+  ])
+  const matchingContacts = contactRows ?? []
+  const workspaceContact = matchingContacts.length === 1 ? matchingContacts[0] : null
+  const ambiguousContactMatch = matchingContacts.length > 1
   const recent = recentRows ?? []
   const integrations = integration ?? []
   const settings = (integrations.find((i) => i.provider === "imap") ?? integrations[0])
@@ -126,22 +142,43 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
       </section>
 
       <aside className="flex h-fit flex-col gap-4">
-        {thread.contact_address && thread.channel === "email" ? (
-          <PanelCard title={who} className="thread-sidebar-card">
-            <SenderProfileCard workspaceId={workspaceId} threadId={thread.id} />
+        {thread.contact_address ? (
+          <PanelCard title="Contacto y contexto" className="thread-sidebar-card">
+            <div className="flex flex-col gap-1 text-sm">
+              <p className="font-semibold text-ink">{workspaceContact?.name ?? who}</p>
+              <p className="text-graphite">{thread.contact_address}</p>
+              {workspaceContact ? (
+                <p className="text-xs text-graphite">Contacto guardado en este espacio · coincidencia exacta de email</p>
+              ) : ambiguousContactMatch ? (
+                <p className="text-xs text-graphite">Hay varios contactos con este email. No se ha elegido ninguno.</p>
+              ) : normalizedAddress.includes("@") ? (
+                <p className="text-xs text-graphite">No figura como contacto guardado en este espacio.</p>
+              ) : (
+                <p className="text-xs text-graphite">La ficha de contactos actual guarda emails; este identificador no se ha asociado a un contacto.</p>
+              )}
+            </div>
             {recent.length ? (
               <div className="mt-4 border-t border-rule pt-3">
-                <h3 className="mb-2 text-sm font-semibold text-ink">Otras conversaciones</h3>
-                <ul className="flex flex-col gap-1 text-sm">
+                <h3 className="mb-2 text-sm font-semibold text-ink">Conversaciones con el mismo identificador</h3>
+                <ul className="flex flex-col gap-2 text-sm">
                   {recent.map((r) => (
                     <li key={r.id}>
                       <Link href={`${base}/${r.id}`} className="text-link underline underline-offset-4">
                         {r.subject || "(sin asunto)"}
                       </Link>
-                      <span className="text-xs text-graphite"> · {r.last_message_at ? formatDateTime(r.last_message_at) : ""}</span>
+                      <p className="text-xs text-graphite">{CHANNEL_LABEL[r.channel] ?? r.channel}{r.last_message_at ? ` · ${formatDateTime(r.last_message_at)}` : ""}</p>
                     </li>
                   ))}
                 </ul>
+                <p className="mt-2 text-xs text-graphite">Coincidir en el identificador no confirma por sí solo que sea la misma persona.</p>
+              </div>
+            ) : (
+              <p className="mt-3 text-xs text-graphite">No hay otras conversaciones con este identificador.</p>
+            )}
+            {thread.channel === "email" ? (
+              <div className="mt-4 border-t border-rule pt-3">
+                <h3 className="mb-2 text-sm font-semibold text-ink">Información de aplicaciones conectadas</h3>
+                <SenderProfileCard workspaceId={workspaceId} threadId={thread.id} />
               </div>
             ) : null}
           </PanelCard>
