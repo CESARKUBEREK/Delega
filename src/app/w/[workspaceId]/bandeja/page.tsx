@@ -117,10 +117,10 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
 
       <nav className="inbox-tabs" aria-label="Vistas de la bandeja">
         <Link href={base} className={view === "hoy" ? "is-active" : ""} aria-current={view === "hoy" ? "page" : undefined}>
-          Para hoy{todayCount ? ` · ${todayCount}` : ""}
+          Prioridades{todayCount ? ` · ${todayCount}` : ""}
         </Link>
         <Link href={`${base}?vista=todo`} className={view === "todo" ? "is-active" : ""} aria-current={view === "todo" ? "page" : undefined}>
-          Todo
+          Conversaciones
         </Link>
       </nav>
 
@@ -428,6 +428,8 @@ async function AllList({
   const archived = one("arch") === "1"
   const auto = one("auto") === "1"
   const q = one("q").trim().slice(0, 80)
+  const page = Math.max(1, Math.min(10000, Number.parseInt(one("page") || "1", 10) || 1))
+  const pageSize = 50
 
   let query = supabase
     .from("inbox_threads")
@@ -437,7 +439,6 @@ async function AllList({
     .eq("workspace_id", workspaceId)
     .eq("archived", archived)
     .order("last_message_at", { ascending: false, nullsFirst: false })
-    .limit(200)
   // Los boletines y avisos van aparte, salvo al buscar o filtrar por categoría.
   if (!q && !cat) query = query.eq("automatic", auto)
   if (cat) query = query.eq("category", cat)
@@ -448,10 +449,14 @@ async function AllList({
     const safe = q.replace(/[%_,()*]/g, " ")
     query = query.or(`contact_name.ilike.%${safe}%,contact_address.ilike.%${safe}%,subject.ilike.%${safe}%,client.ilike.%${safe}%,project.ilike.%${safe}%`)
   }
-  const [{ data: threads }, { count: autoCount }] = await Promise.all([
-    query,
+  const [{ data: threads, count: filteredCount }, { count: autoCount }] = await Promise.all([
+    query.select(
+      "id, channel, subject, contact_name, contact_address, category, category_source, client, project, urgency, needs_reply, summary, last_message_at, message_count, classified_count",
+      { count: "exact" },
+    ).range((page - 1) * pageSize, page * pageSize - 1),
     supabase.from("inbox_threads").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId).eq("archived", archived).eq("automatic", true),
   ])
+  const pageCount = Math.max(1, Math.ceil((filteredCount ?? 0) / pageSize))
 
   const filterHref = (patch: Record<string, string>) => {
     const next = new URLSearchParams({
@@ -468,6 +473,7 @@ async function AllList({
       if (v) next.set(k, v)
       else next.delete(k)
     }
+    if (!("page" in patch)) next.delete("page")
     return `${base}?${next.toString()}`
   }
   const chip = (active: boolean) => "inbox-filter-chip" + (active ? " is-active" : "")
@@ -546,7 +552,27 @@ async function AllList({
       ) : null}
 
       {rows.length > 0 ? (
-        <InboxList workspaceId={workspaceId} base={base} threads={rows} categories={categories} archived={archived} />
+        <>
+          <InboxList workspaceId={workspaceId} base={base} threads={rows} categories={categories} archived={archived} />
+          <nav className="flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4" aria-label="Paginación de conversaciones">
+            <p className="text-xs text-graphite">
+              Mostrando {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filteredCount ?? 0)} de {filteredCount ?? 0}
+            </p>
+            <div className="flex items-center gap-2">
+              {page > 1 ? (
+                <Link href={filterHref({ page: String(page - 1) })} className="rounded-lg border border-rule bg-sheet px-3 py-2 text-sm text-ink hover:border-link">
+                  Anterior
+                </Link>
+              ) : null}
+              <span className="text-xs tabular-nums text-graphite">Página {page} de {pageCount}</span>
+              {page < pageCount ? (
+                <Link href={filterHref({ page: String(page + 1) })} className="rounded-lg border border-rule bg-sheet px-3 py-2 text-sm text-ink hover:border-link">
+                  Siguiente
+                </Link>
+              ) : null}
+            </div>
+          </nav>
+        </>
       ) : (
         <EmptyState
           title={total === 0 ? "Todavía no hay conversaciones" : "No hay resultados"}
