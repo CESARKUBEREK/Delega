@@ -111,7 +111,7 @@ Archivo debe ser un filtro/estado dentro de Conversaciones, no una pestaña prin
 
 ## 5. Compromisos: nueva capacidad candidata
 
-No implementar en la primera entrega sin definir la relación con el módulo de tareas general.
+La auditoría no encontró una tabla `tasks` ni una ruta de gestión de tareas en el esquema público/repositorio inspeccionado. No asumir que existe un módulo de tareas persistente. Primero decidir si los compromisos se representan como ejecuciones/flows cuando corresponda o si requieren una entidad de tareas nueva.
 
 Modelo conceptual mínimo:
 - tipo: enviar documento, llamar, confirmar, pagar, entregar, responder, otro;
@@ -126,7 +126,7 @@ Modelo conceptual mínimo:
 Reglas:
 - La IA puede detectar y sugerir; no crear fechas ni promesas que no estén escritas.
 - Los compromisos ambiguos requieren confirmación.
-- Si ya existe un módulo de tareas que cubre el caso, crear/relacionar una tarea ahí en lugar de duplicar el objeto.
+- Si durante la implementación se identifica una entidad equivalente fuera del esquema/rutas revisados, reutilizarla; de lo contrario diseñar una entidad mínima de tareas/compromisos, sin duplicar `flow_runs`.
 - Evaluar una tabla nueva solo después de auditar el modelo actual de tareas.
 
 ## 6. Correcciones de bajo riesgo antes del rediseño
@@ -159,9 +159,9 @@ Reglas:
 - Reutilizar `contacts` y conectores; definir migración solo si el modelo no soporta el vínculo.
 
 ### Fase 3 — compromisos y tareas
-- Auditar primero el módulo de tareas actual.
-- Integrar compromisos detectados con el sistema de tareas existente.
-- Solo añadir persistencia nueva si no existe entidad equivalente.
+- Definir si compromisos y tareas son una misma entidad o dos conceptos relacionados.
+- Reutilizar `flow_runs` para trabajo automatizado y ejecución, pero no forzarlo como sustituto de una tarea humana pendiente.
+- Si no aparece una entidad equivalente en una revisión ampliada, diseñar una entidad mínima de tareas/compromisos y su relación con `thread_id` y `message_id`.
 - Añadir confirmación humana, vencimientos explícitos y trazabilidad.
 
 ### Fase 4 — búsqueda avanzada
@@ -213,4 +213,4 @@ Backend solo si se requiere:
 
 ## 11. Próximo paso técnico
 
-Comenzar por la Fase 0 y la Fase 1 en una rama de trabajo, con pruebas de regresión sobre los flujos actuales. No aplicar migraciones en producción para el rediseño de navegación. Las nuevas migraciones solo se proponen después de validar el módulo general de tareas y la necesidad real de persistencia de compromisos.
+Comenzar por la Fase 0 y la Fase 1 en una rama de trabajo, con pruebas de regresión sobre los flujos actuales. No aplicar migraciones en producción para el rediseño de navegación. Las nuevas migraciones solo se proponen después de decidir el modelo mínimo de tareas/compromisos y validar que no existe una entidad equivalente fuera del esquema revisado.
