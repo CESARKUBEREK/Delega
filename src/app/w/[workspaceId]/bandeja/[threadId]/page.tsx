@@ -9,6 +9,7 @@ import { CategoryChip } from "../category-chip"
 import { ClassifyButton } from "../classify-button"
 import { ReplyComposer } from "./reply-composer"
 import { SenderProfileCard } from "./sender-profile"
+import { ThreadContactAssociation } from "./thread-contact-association"
 import { ThreadForm } from "./thread-form"
 import { PageHeader, PanelCard } from "@/components/ui"
 
@@ -74,6 +75,16 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
           .limit(5)
       : Promise.resolve({ data: [] as { id: string; channel: string; subject: string | null; last_message_at: string | null }[] }),
   ])
+  const { data: activeAssociation } = await supabase
+    .from("inbox_thread_contacts")
+    .select("id, confirmed_at, contact_id")
+    .eq("workspace_id", workspaceId)
+    .eq("thread_id", threadId)
+    .is("revoked_at", null)
+    .maybeSingle()
+  const { data: associatedContact } = activeAssociation
+    ? await supabase.from("contacts").select("id, name, email").eq("id", activeAssociation.contact_id).eq("workspace_id", workspaceId).maybeSingle()
+    : { data: null }
   const matchingContacts = contactRows ?? []
   const workspaceContact = matchingContacts.length === 1 ? matchingContacts[0] : null
   const ambiguousContactMatch = matchingContacts.length > 1
@@ -183,6 +194,13 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
             ) : null}
           </PanelCard>
         ) : null}
+      <PanelCard title="Asociación verificada" className="thread-sidebar-card">
+        <ThreadContactAssociation
+          workspaceId={workspaceId}
+          threadId={thread.id}
+          association={activeAssociation && associatedContact ? { id: activeAssociation.id, confirmed_at: activeAssociation.confirmed_at, contact: associatedContact } : null}
+        />
+      </PanelCard>
       <PanelCard title="Clasificación" className="thread-sidebar-card">
         <p className="mt-1 mb-4 text-xs text-graphite">
           {thread.manually_edited
