@@ -16,7 +16,7 @@ Principios:
 - La IA recomienda y prepara; el estado real de una acción procede de la ejecución.
 - Las autorizaciones se aplican a cada acción según riesgo y configuración del espacio.
 - La interfaz oculta estados técnicos salvo cuando explican un bloqueo, error o aprobación necesaria.
-- Reutilizar las tablas y servicios actuales; no duplicar Inbox, tareas, CRM, aprobaciones ni ejecuciones.
+- Reutilizar las tablas y servicios actuales; no duplicar Inbox, CRM, aprobaciones ni ejecuciones, y no asumir una entidad de tareas inexistente.
 
 ## 2. Auditoría del estado actual
 
@@ -127,7 +127,7 @@ Reglas:
 - La IA puede detectar y sugerir; no crear fechas ni promesas que no estén escritas.
 - Los compromisos ambiguos requieren confirmación.
 - Si durante la implementación se identifica una entidad equivalente fuera del esquema/rutas revisados, reutilizarla; de lo contrario diseñar una entidad mínima de tareas/compromisos, sin duplicar `flow_runs`.
-- Evaluar una tabla nueva solo después de auditar el modelo actual de tareas.
+- Evaluar una tabla nueva solo después de validar el modelo mínimo de tareas/compromisos y sus permisos.
 
 ## 6. Correcciones de bajo riesgo antes del rediseño
 
