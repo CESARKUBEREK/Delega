@@ -546,6 +546,7 @@ async function AllList({
     .from("inbox_threads")
     .select(
       "id, channel, subject, contact_name, contact_address, category, category_source, client, project, urgency, needs_reply, summary, last_message_at, message_count, classified_count",
+      { count: "exact" },
     )
     .eq("workspace_id", workspaceId)
     .eq("archived", archived)
@@ -561,10 +562,7 @@ async function AllList({
     query = query.or(`contact_name.ilike.%${safe}%,contact_address.ilike.%${safe}%,subject.ilike.%${safe}%,client.ilike.%${safe}%,project.ilike.%${safe}%`)
   }
   const [{ data: threads, count: filteredCount }, { count: autoCount }] = await Promise.all([
-    query.select(
-      "id, channel, subject, contact_name, contact_address, category, category_source, client, project, urgency, needs_reply, summary, last_message_at, message_count, classified_count",
-      { count: "exact" },
-    ).range((page - 1) * pageSize, page * pageSize - 1),
+    query.range((page - 1) * pageSize, page * pageSize - 1),
     supabase.from("inbox_threads").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId).eq("archived", archived).eq("automatic", true),
   ])
   const pageCount = Math.max(1, Math.ceil((filteredCount ?? 0) / pageSize))
