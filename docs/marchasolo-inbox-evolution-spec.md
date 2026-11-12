@@ -214,3 +214,27 @@ Backend solo si se requiere:
 ## 11. Próximo paso técnico
 
 Comenzar por la Fase 0 y la Fase 1 en una rama de trabajo, con pruebas de regresión sobre los flujos actuales. No aplicar migraciones en producción para el rediseño de navegación. Las nuevas migraciones solo se proponen después de decidir el modelo mínimo de tareas/compromisos y validar que no existe una entidad equivalente fuera del esquema revisado.
+
+## 12. Fase 2 — modelo de asociaciones verificadas
+
+La revisión del esquema remoto confirma que `contacts` e `inbox_threads` tienen claves únicas compuestas por `(id, workspace_id)`, pero no existe una relación persistente entre ambos. La fase 2 propone una tabla puente `inbox_thread_contacts`, sin alterar los identificadores ni fusionar los hilos.
+
+Migración preparada en `supabase/migrations/20261112190000_inbox_thread_contacts.sql` (solo en la rama; **no aplicada en DOrkesta**).
+
+Contrato:
+- Una asociación activa como máximo por hilo; un contacto puede tener muchos hilos de distintos canales.
+- FK compuesta a hilo y contacto con el mismo `workspace_id`; la base impide asociaciones entre espacios.
+- La asociación nace confirmada por el administrador autenticado (`confirmed_by`, `confirmed_at`).
+- Desvincular no borra el historial: registra `revoked_by` y `revoked_at`.
+- No se concede DELETE ni permiso de modificar hilo/contacto tras crear la asociación.
+- RLS restringe lectura, alta y desvinculación a administradores/owners mediante `private.has_role`.
+- Índice único parcial impide dos asociaciones activas simultáneas para el mismo hilo.
+
+Interfaz prevista tras aplicar y validar la migración:
+1. En la ficha del hilo, buscar un contacto existente del mismo espacio.
+2. Mostrar el canal y el identificador del hilo que se vinculará.
+3. Exigir confirmación explícita antes de guardar.
+4. Permitir desvincular, conservando el registro histórico.
+5. Mostrar otros hilos vinculados al contacto; no cambiar ni combinar mensajes.
+
+Antes de aplicar: revisar el SQL con el usuario y comprobar la migración en un entorno no productivo. La preview de la rama no debe consultar esta tabla hasta que la migración exista en el proyecto correspondiente.
