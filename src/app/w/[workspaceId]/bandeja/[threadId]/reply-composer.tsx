@@ -21,7 +21,11 @@ export function ReplyComposer({ workspaceId, threadId, channel, to }: { workspac
         Responder
       </h2>
       <p className="mt-1 text-xs text-graphite">
-        {channel === "email" ? `Por correo a ${to}, en el mismo hilo.` : `Por Telegram, desde tu bot, a ${to}.`}
+        {channel === "email"
+          ? `Por correo a ${to}, en el mismo hilo.`
+          : channel === "whatsapp"
+            ? `Por WhatsApp, desde tu cuenta conectada, a ${to}.`
+            : `Por Telegram, desde tu bot, a ${to}.`}
       </p>
 
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -83,7 +87,13 @@ export function ReplyComposer({ workspaceId, threadId, channel, to }: { workspac
           type="button"
           disabled={sending || drafting || !text.trim()}
           onClick={() => {
-            if (!window.confirm(channel === "email" ? `¿Enviar este correo a ${to}?` : `¿Enviar este mensaje por Telegram a ${to}?`)) return
+            if (!window.confirm(
+              channel === "email"
+                ? `¿Enviar este correo a ${to}?`
+                : channel === "whatsapp"
+                  ? `¿Enviar este mensaje por WhatsApp a ${to}?`
+                  : `¿Enviar este mensaje por Telegram a ${to}?`,
+            )) return
             startSend(async () => {
               setError(null)
               const r = await sendReply(workspaceId, threadId, text)
