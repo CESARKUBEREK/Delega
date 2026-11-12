@@ -4,7 +4,7 @@ import { refresh } from "next/cache"
 import { callEdgeFunction } from "@/lib/edge-functions"
 import { domainOf, PUBLIC_DOMAINS } from "@/lib/inbox"
 import { createClient } from "@/lib/supabase/server"
-import { UUID_RE } from "@/lib/workspace"
+import { getWorkspace, UUID_RE } from "@/lib/workspace"
 
 // Acciones de la bandeja de acciones (fase 6G). La RLS deja tocar la bandeja
 // solo a owners y admins; aquí se valida la forma de la entrada.
@@ -150,4 +150,64 @@ export async function senderProfile(workspaceId: string, threadId: string): Prom
   if (!validIds(workspaceId, [threadId])) return null
   const result = await callEdgeFunction<{ profile: SenderProfile }>("inbox-reply", { action: "profile", workspace_id: workspaceId, thread_id: threadId }, 25_000)
   return result.error ? null : result.data.profile
+}
+
+
+// Asociaciones explícitas entre conversaciones y contactos guardados.
+// La búsqueda y las mutaciones se limitan al espacio y requieren rol admin/owner.
+export async function searchInboxContacts(workspaceId: string, query: string) {
+  if (!UUID_RE.test(workspaceId)) return { ok: false as const, error: "Espacio no válido.", contacts: [] }
+  const { isAdmin } = await getWorkspace(workspaceId, `/w/${workspaceId}/bandeja`)
+  if (!isAdmin) return { ok: false as const, error: NOT_ALLOWED, contacts: [] }
+  const term = query.trim().slice(0, 100)
+  if (term.length < 2) return { ok: true as const, contacts: [] }
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("contacts")
+    .select("id, name, email")
+    .eq("workspace_id", workspaceId)
+    .or(`name.ilike.%${term.replace(/[%_,]/g, "")}%,email.ilike.%${term.replace(/[%_,]/g, "")}%`)
+    .order("name")
+    .limit(20)
+  if (error) return { ok: false as const, error: "No se pudieron buscar contactos.", contacts: [] }
+  return { ok: true as const, contacts: data ?? [] }
+}
+
+export async function linkInboxThreadContact(workspaceId: string, threadId: string, contactId: string): Promise<InboxActionResult> {
+  if (!validIds(workspaceId, [threadId, contactId])) return { ok: false, error: "Datos no válidos." }
+  const { user, isAdmin } = await getWorkspace(workspaceId, `/w/${workspaceId}/bandeja/${threadId}`)
+  if (!isAdmin) return { ok: false, error: NOT_ALLOWED }
+  const supabase = await createClient()
+  const { data: existing } = await supabase
+    .from("inbox_thread_contacts")
+    .select("id")
+    .eq("workspace_id", workspaceId)
+    .eq("thread_id", threadId)
+    .is("revoked_at", null)
+    .maybeSingle()
+  if (existing) return { ok: false, error: "Esta conversación ya está asociada a un contacto. Desvincúlala antes de cambiarla." }
+  const { error } = await supabase.from("inbox_thread_contacts").insert({
+    workspace_id: workspaceId, thread_id: threadId, contact_id: contactId, confirmed_by: user.id,
+  })
+  if (error) return { ok: false, error: error.code === "23505" ? "La conversación ya tiene una asociación activa." : "No se pudo asociar el contacto." }
+  refresh()
+  return { ok: true, message: "Contacto asociado." }
+}
+
+export async function unlinkInboxThreadContact(workspaceId: string, threadId: string, associationId: string): Promise<InboxActionResult> {
+  if (!validIds(workspaceId, [threadId, associationId])) return { ok: false, error: "Datos no válidos." }
+  const { user, isAdmin } = await getWorkspace(workspaceId, `/w/${workspaceId}/bandeja/${threadId}`)
+  if (!isAdmin) return { ok: false, error: NOT_ALLOWED }
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("inbox_thread_contacts")
+    .update({ revoked_at: new Date().toISOString(), revoked_by: user.id })
+    .eq("id", associationId)
+    .eq("workspace_id", workspaceId)
+    .eq("thread_id", threadId)
+    .is("revoked_at", null)
+    .select("id")
+  if (error || !data?.length) return { ok: false, error: "No se pudo desvincular el contacto." }
+  refresh()
+  return { ok: true, message: "Contacto desvinculado. El registro histórico se conserva." }
 }
