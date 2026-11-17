@@ -2,7 +2,7 @@
 //   draft  la IA redacta una respuesta (no envía nada).
 //   send   envía el texto que la persona ha revisado: por SMTP (en el mismo
 //          hilo) o por el bot de Telegram (al mismo chat).
-import { authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
+import { type AuthContext, authenticate, fail, isUuid, json, membershipRole } from "../_shared/core.ts"
 import { recordMessage } from "../_shared/inbox.ts"
 import { generateText, LlmError } from "../_shared/llm.ts"
 import { callRouted, isRouteError, routeAi } from "../_shared/router/index.ts"
@@ -103,78 +103,143 @@ Deno.serve(async (req) => {
     if (text.length > 8000) return fail(400, "too_long", "La respuesta es demasiado larga.")
     const now = new Date().toISOString()
 
-    if (thread.channel === "email" && thread.external_id.startsWith("imap:")) {
-      if (!thread.contact_address) return fail(400, "no_address", "Esta conversación no tiene un destinatario claro.")
-      try {
-        const headers = await replyHeaders(admin, workspaceId, thread.id)
-        const subject = thread.subject ? (/^re:/i.test(thread.subject) ? thread.subject : `Re: ${thread.subject}`) : "Re:"
-        await sendAndRecord(admin, workspaceId, {
-          to: thread.contact_address,
-          subject,
-          text,
-          threadExternalId: thread.external_id,
-          inReplyTo: headers.inReplyTo,
-          references: headers.references,
-        })
-      } catch (e) {
-        return fail(502, "send_failed", e instanceof MailError ? e.message : "No se pudo enviar el correo.")
-      }
-    } else if (thread.channel === "email") {
-      // Conversaciones antiguas de la integración de Gmail, ya retirada.
-      return fail(409, "gmail_removed", "Esta conversación llegó por Gmail, que ya no se integra así. Conecta Gmail como correo IMAP para responder.")
-    } else if (thread.channel === "whatsapp") {
-      const wa = await whatsappSecret(admin, workspaceId)
-      if (!wa) return fail(409, "no_whatsapp", "WhatsApp no está conectado.")
-      if (!PHONE_RE.test(thread.external_id)) return fail(400, "no_address", "Esta conversación no tiene un número válido.")
-      if (!(await insideWindow(admin, workspaceId, thread.external_id))) {
-        return fail(409, "outside_window", "Han pasado más de 24 horas desde su último mensaje: WhatsApp no deja escribirle con texto libre.")
-      }
-      try {
-        const sid = await sendWhatsApp(wa.secret, thread.external_id, text)
-        await recordMessage(admin, {
-          workspaceId,
-          integrationId: wa.integrationId,
-          channel: "whatsapp",
-          threadExternalId: thread.external_id,
-          externalId: sid,
-          direction: "out",
-          senderName: null,
-          senderAddress: null,
-          body: text,
-          sentAt: now,
-          contactName: null,
-          contactAddress: null,
-        })
-      } catch (e) {
-        return fail(502, "send_failed", e instanceof WhatsAppError ? e.message : "No se pudo enviar el WhatsApp.")
-      }
-    } else {
-      const { data } = await admin.rpc("integration_secret", { p_workspace_id: workspaceId, p_provider: "telegram" })
-      const secret = parseTelegramSecret((data?.[0] as { refresh_token?: string } | undefined)?.refresh_token)
-      if (!secret) return fail(409, "no_telegram", "El bot de Telegram no está conectado.")
-      try {
-        const messageId = await sendTelegram(secret.bot_token, thread.external_id, text)
-        await recordMessage(admin, {
-          workspaceId,
-          integrationId: thread.integration_id,
-          channel: "telegram",
-          threadExternalId: thread.external_id,
-          externalId: `${thread.external_id}:${messageId}`,
-          direction: "out",
-          senderName: null,
-          senderAddress: null,
-          body: text,
-          sentAt: now,
-          contactName: null,
-          contactAddress: null,
-        })
-      } catch (e) {
-        return fail(502, "send_failed", e instanceof TelegramError ? e.message : "No se pudo enviar el mensaje.")
-      }
+    // Fase 6H-2: el mismo request_id solo se envía una vez. Sin request_id
+    // (versiones anteriores de la app) se envía como antes.
+    const requestId = isUuid(body.request_id) ? body.request_id : null
+    if (requestId) {
+      const reserved = await reserveSend(admin, workspaceId, requestId, thread.id, ctx.userId)
+      if (reserved !== "ok") return reserved
     }
+
+    const deliver = async (): Promise<Response | null> => {
+      if (thread.channel === "email" && thread.external_id.startsWith("imap:")) {
+        if (!thread.contact_address) return fail(400, "no_address", "Esta conversación no tiene un destinatario claro.")
+        try {
+          const headers = await replyHeaders(admin, workspaceId, thread.id)
+          const subject = thread.subject ? (/^re:/i.test(thread.subject) ? thread.subject : `Re: ${thread.subject}`) : "Re:"
+          await sendAndRecord(admin, workspaceId, {
+            to: thread.contact_address,
+            subject,
+            text,
+            threadExternalId: thread.external_id,
+            inReplyTo: headers.inReplyTo,
+            references: headers.references,
+          })
+        } catch (e) {
+          return fail(502, "send_failed", e instanceof MailError ? e.message : "No se pudo enviar el correo.")
+        }
+      } else if (thread.channel === "email") {
+        // Conversaciones antiguas de la integración de Gmail, ya retirada.
+        return fail(409, "gmail_removed", "Esta conversación llegó por Gmail, que ya no se integra así. Conecta Gmail como correo IMAP para responder.")
+      } else if (thread.channel === "whatsapp") {
+        const wa = await whatsappSecret(admin, workspaceId)
+        if (!wa) return fail(409, "no_whatsapp", "WhatsApp no está conectado.")
+        if (!PHONE_RE.test(thread.external_id)) return fail(400, "no_address", "Esta conversación no tiene un número válido.")
+        if (!(await insideWindow(admin, workspaceId, thread.external_id))) {
+          return fail(409, "outside_window", "Han pasado más de 24 horas desde su último mensaje: WhatsApp no deja escribirle con texto libre.")
+        }
+        try {
+          const sid = await sendWhatsApp(wa.secret, thread.external_id, text)
+          await recordMessage(admin, {
+            workspaceId,
+            integrationId: wa.integrationId,
+            channel: "whatsapp",
+            threadExternalId: thread.external_id,
+            externalId: sid,
+            direction: "out",
+            senderName: null,
+            senderAddress: null,
+            body: text,
+            sentAt: now,
+            contactName: null,
+            contactAddress: null,
+          })
+        } catch (e) {
+          return fail(502, "send_failed", e instanceof WhatsAppError ? e.message : "No se pudo enviar el WhatsApp.")
+        }
+      } else {
+        const { data } = await admin.rpc("integration_secret", { p_workspace_id: workspaceId, p_provider: "telegram" })
+        const secret = parseTelegramSecret((data?.[0] as { refresh_token?: string } | undefined)?.refresh_token)
+        if (!secret) return fail(409, "no_telegram", "El bot de Telegram no está conectado.")
+        try {
+          const messageId = await sendTelegram(secret.bot_token, thread.external_id, text)
+          await recordMessage(admin, {
+            workspaceId,
+            integrationId: thread.integration_id,
+            channel: "telegram",
+            threadExternalId: thread.external_id,
+            externalId: `${thread.external_id}:${messageId}`,
+            direction: "out",
+            senderName: null,
+            senderAddress: null,
+            body: text,
+            sentAt: now,
+            contactName: null,
+            contactAddress: null,
+          })
+        } catch (e) {
+          return fail(502, "send_failed", e instanceof TelegramError ? e.message : "No se pudo enviar el mensaje.")
+        }
+      }
+      return null
+    }
+
+    const failed = await deliver()
+    if (requestId) await finishSend(admin, workspaceId, requestId, failed ? "failed" : "sent")
+    if (failed) return failed
     await admin.from("inbox_threads").update({ needs_reply: false }).eq("id", thread.id)
     return json({ ok: true })
   }
 
   return fail(400, "bad_request", "Acción no válida.")
 })
+
+// ---------------------------------------------------------------------------
+// Envíos sin repetición (fase 6H-2)
+// ---------------------------------------------------------------------------
+// Un envío que lleva más de este tiempo «enviándose» se dio por perdido (la
+// función se cortó): no se reenvía solo, se pide revisar el hilo.
+const STALE_SEND_MS = 2 * 60_000
+
+type Admin = AuthContext["admin"]
+
+async function reserveSend(admin: Admin, workspaceId: string, requestId: string, threadId: string, userId: string): Promise<"ok" | Response> {
+  const { error } = await admin.from("inbox_send_requests").insert({
+    workspace_id: workspaceId, request_id: requestId, thread_id: threadId, created_by: userId,
+  })
+  if (!error) return "ok"
+  if (error.code !== "23505") return fail(503, "send_unavailable", "No se pudo preparar el envío. Inténtalo de nuevo en un momento.")
+
+  const { data: prev } = await admin
+    .from("inbox_send_requests")
+    .select("thread_id, status, created_at")
+    .eq("workspace_id", workspaceId)
+    .eq("request_id", requestId)
+    .maybeSingle()
+  if (!prev || prev.thread_id !== threadId) return fail(409, "send_conflict", "Este envío no corresponde a esta conversación.")
+  if (prev.status === "sent") return json({ ok: true, already_sent: true })
+  if (prev.status === "failed") {
+    // Falló antes: se puede intentar otra vez, pero solo una petición a la vez.
+    const { data: retried } = await admin
+      .from("inbox_send_requests")
+      .update({ status: "sending", created_at: new Date().toISOString(), finished_at: null })
+      .eq("workspace_id", workspaceId)
+      .eq("request_id", requestId)
+      .eq("status", "failed")
+      .select("request_id")
+    if (retried?.length) return "ok"
+  }
+  const stale = Date.now() - Date.parse(String(prev.created_at)) > STALE_SEND_MS
+  return stale
+    ? fail(409, "send_unknown", "No sabemos si este mensaje llegó a salir. Revisa la conversación antes de enviarlo de nuevo; si no aparece, vuelve a escribirlo.")
+    : fail(409, "send_in_progress", "Este mensaje ya se está enviando. Espera unos segundos y actualiza la página.")
+}
+
+async function finishSend(admin: Admin, workspaceId: string, requestId: string, status: "sent" | "failed") {
+  const { error } = await admin
+    .from("inbox_send_requests")
+    .update({ status, finished_at: new Date().toISOString() })
+    .eq("workspace_id", workspaceId)
+    .eq("request_id", requestId)
+  if (error) console.error("inbox-reply: no se pudo cerrar el envío", error.code)
+}

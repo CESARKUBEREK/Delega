@@ -121,8 +121,9 @@ export async function continueRun(runId: string): Promise<RunStep> {
   return runAction({ action: "continue", run_id: runId })
 }
 
-export async function decideRun(runId: string, approve: boolean): Promise<RunStep> {
-  return runAction({ action: "decide", run_id: runId, approve })
+// force (fase 6H-2): repetir una acción que se interrumpió mientras se aplicaba.
+export async function decideRun(runId: string, approve: boolean, force = false): Promise<RunStep> {
+  return runAction({ action: "decide", run_id: runId, approve, ...(force ? { force: true } : {}) })
 }
 
 export async function cancelRun(runId: string): Promise<RunStep> {
@@ -444,10 +445,13 @@ export async function draftReply(
   return { ok: true, text: result.data.text }
 }
 
-export async function sendReply(workspaceId: string, threadId: string, text: string): Promise<ActionResult> {
+// requestId (fase 6H-2): uno por borrador; repetir la llamada con el mismo no
+// vuelve a enviar el mensaje.
+export async function sendReply(workspaceId: string, threadId: string, text: string, requestId?: string): Promise<ActionResult> {
   if (!UUID_RE.test(workspaceId) || !UUID_RE.test(threadId)) return { ok: false, error: "Datos no válidos." }
+  if (requestId !== undefined && !UUID_RE.test(requestId)) return { ok: false, error: "Datos no válidos." }
   if (!text.trim()) return { ok: false, error: "Escribe la respuesta." }
-  const result = await callEdgeFunction("inbox-reply", { action: "send", workspace_id: workspaceId, thread_id: threadId, text: text.slice(0, 8000) }, 60_000)
+  const result = await callEdgeFunction("inbox-reply", { action: "send", workspace_id: workspaceId, thread_id: threadId, text: text.slice(0, 8000), request_id: requestId }, 60_000)
   if (result.error) return { ok: false, error: result.error.message }
   refresh()
   return { ok: true }

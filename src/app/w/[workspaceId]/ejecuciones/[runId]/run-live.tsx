@@ -168,14 +168,18 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
   const router = useRouter()
   const [decision, setDecision] = useState<"approve" | "reject" | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [uncertain, setUncertain] = useState(false)
   const [busy, startTransition] = useTransition()
 
-  function decide(approve: boolean) {
+  function decide(approve: boolean, force = false) {
     setDecision(approve ? "approve" : "reject")
     setError(null)
     startTransition(async () => {
-      const result = await decideRun(runId, approve)
-      if (!result.ok) setError(result.error)
+      const result = await decideRun(runId, approve, force)
+      if (!result.ok) {
+        setError(result.error)
+        setUncertain(result.code === "uncertain")
+      } else setUncertain(false)
       router.refresh()
     })
   }
@@ -208,7 +212,26 @@ export function ApprovalCard({ runId, pending }: { runId: string; pending: Pendi
             caption={pending.tool === "send_email" ? "Correo" : pending.tool === "send_telegram" || pending.tool === "send_whatsapp" ? "Mensaje" : "Texto"}
           />
         )}
-        {error ? (
+        {error && uncertain ? (
+          <InfoBanner tone="warning" role="alert">
+            <span className="block">{error}</span>
+            <span className="mt-2 flex flex-wrap gap-3">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  if (window.confirm("¿Repetir la acción? Si ya se había hecho, se hará dos veces.")) decide(true, true)
+                }}
+                className="font-semibold underline underline-offset-4 disabled:opacity-50"
+              >
+                Repetir de todos modos
+              </button>
+              <button type="button" disabled={busy} onClick={() => decide(false)} className="underline underline-offset-4 disabled:opacity-50">
+                No repetir
+              </button>
+            </span>
+          </InfoBanner>
+        ) : error ? (
           <InfoBanner tone="danger" role="alert">
             {error}
           </InfoBanner>
