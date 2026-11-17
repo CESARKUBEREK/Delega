@@ -75,6 +75,7 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
           .limit(5)
       : Promise.resolve({ data: [] as { id: string; channel: string; subject: string | null; last_message_at: string | null }[] }),
   ])
+  const { count: contactCount } = await supabase.from("contacts").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId)
   const { data: activeAssociation } = await supabase
     .from("inbox_thread_contacts")
     .select("id, confirmed_at, contact_id")
@@ -198,6 +199,7 @@ async function Thread({ params }: { params: PageProps<"/w/[workspaceId]/bandeja/
         <ThreadContactAssociation
           workspaceId={workspaceId}
           threadId={thread.id}
+          hasContacts={(contactCount ?? 0) > 0}
           association={activeAssociation && associatedContact ? { id: activeAssociation.id, confirmed_at: activeAssociation.confirmed_at, contact: associatedContact } : null}
         />
       </PanelCard>

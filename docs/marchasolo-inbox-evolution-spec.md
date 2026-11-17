@@ -219,7 +219,7 @@ Comenzar por la Fase 0 y la Fase 1 en una rama de trabajo, con pruebas de regres
 
 La revisión del esquema remoto confirma que `contacts` e `inbox_threads` tienen claves únicas compuestas por `(id, workspace_id)`, pero no existe una relación persistente entre ambos. La fase 2 propone una tabla puente `inbox_thread_contacts`, sin alterar los identificadores ni fusionar los hilos.
 
-Migración preparada en `supabase/migrations/20261112190000_inbox_thread_contacts.sql` (solo en la rama; **no aplicada en DOrkesta**).
+Migración `supabase/migrations/20261112215052_inbox_thread_contacts.sql`, **aplicada en DOrkesta** el 12 nov con la versión `20261112215052` (el archivo se renombró el 17 nov para que coincida con la base).
 
 Contrato:
 - Una asociación activa como máximo por hilo; un contacto puede tener muchos hilos de distintos canales.
@@ -237,4 +237,4 @@ Interfaz prevista tras aplicar y validar la migración:
 4. Permitir desvincular, conservando el registro histórico.
 5. Mostrar otros hilos vinculados al contacto; no cambiar ni combinar mensajes.
 
-Antes de aplicar: revisar el SQL con el usuario y comprobar la migración en un entorno no productivo. La preview de la rama no debe consultar esta tabla hasta que la migración exista en el proyecto correspondiente.
+Estado (17 nov): la tabla existe en producción, pero `contacts` (los «Contactos autorizados» de las automatizaciones) está vacía, así que no hay a quién asociar. La evolución continúa en la fase 6H (`claude/spec-fase-6h-bandeja-evolucion.md` en el proyecto ORKESTA): leer enviados, envíos idempotentes, compromisos y contactos sugeridos.

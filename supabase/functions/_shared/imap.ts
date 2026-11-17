@@ -32,6 +32,9 @@ export type ImapConfig = InboxConfig & {
   // Último UID que ya estaba en el buzón al conectarlo: hasta ahí es histórico
   // y no lanza automatizaciones, aunque se lea en varias vueltas.
   history_uid?: number
+  // Carpeta de enviados (fase 6H-1): cursor propio, como el de INBOX.
+  sent_uid_validity?: string | null
+  sent_last_uid?: number
 }
 
 export class MailError extends Error {
@@ -548,6 +551,19 @@ export async function syncImap(
       lock.release()
     }
     if (!next.sent_folder) next.sent_folder = await findSentFolder(client).catch(() => null)
+    // Fase 6H-1: lo que se responde desde otro programa (Gmail, Outlook…) también
+    // cuenta. Con el presupuesto que dejó INBOX en esta llamada; si no da, sigue
+    // en la siguiente.
+    if (next.sent_folder && Date.now() < deadline) {
+      try {
+        const sent = await syncSentFolder(admin, client, { workspaceId, integrationId, folder: next.sent_folder, myAddress: config.email, deadline, budget: MAX_PER_CALL - Math.min(MAX_PER_CALL, added) }, next)
+        added += sent.added
+        more = more || sent.more
+      } catch (e) {
+        // Un fallo en «Enviados» no debe parar la lectura de INBOX.
+        console.error("imap: no se pudo leer la carpeta de enviados", e instanceof Error ? e.message : "")
+      }
+    }
   } finally {
     await closeImap(client)
   }
@@ -559,6 +575,88 @@ export async function syncImap(
     p_config: { ...next, last_sync_at: new Date().toISOString() },
   })
   return { added, more, fresh }
+}
+
+// ---------------------------------------------------------------------------
+// Carpeta de enviados (fase 6H-1)
+// ---------------------------------------------------------------------------
+// Solo se registran los enviados que pertenecen a una conversación que ya está
+// en la bandeja: un correo nuevo escrito desde Gmail no crea conversaciones.
+// Lo enviado desde MarchaSolo ya está guardado con el mismo Message-ID, así que
+// inbox_record_message lo descarta. El trigger inbox_track_direction marca la
+// conversación como «respondida» (last_direction = out).
+async function syncSentFolder(
+  admin: SupabaseClient,
+  client: ImapFlow,
+  opts: { workspaceId: string; integrationId: string; folder: string; myAddress: string; deadline: number; budget: number },
+  next: ImapConfig,
+): Promise<{ added: number; more: boolean }> {
+  if (opts.budget <= 0) return { added: 0, more: true }
+  let added = 0
+  let more = false
+  const lock = await client.getMailboxLock(opts.folder, { readOnly: true })
+  try {
+    const box = client.mailbox as { uidValidity: bigint | number; uidNext: number }
+    const validity = String(box.uidValidity)
+    let uids: number[]
+    if (next.sent_uid_validity !== validity) {
+      const since = new Date(Date.now() - (next.sync_days ?? 30) * 86_400_000)
+      uids = ((await client.search({ since }, { uid: true })) || []) as number[]
+      uids = uids.sort((a, b) => a - b).slice(-MAX_INITIAL)
+      next.sent_uid_validity = validity
+      next.sent_last_uid = 0
+    } else {
+      const last = next.sent_last_uid ?? 0
+      uids = last + 1 < box.uidNext ? (((await client.search({ uid: `${last + 1}:*` }, { uid: true })) || []) as number[]) : []
+      uids = uids.filter((u) => u > last)
+    }
+    uids.sort((a, b) => a - b)
+
+    for (let i = 0; i < uids.length && i < opts.budget; i += BATCH) {
+      if (Date.now() > opts.deadline) break
+      const batch = uids.slice(i, Math.min(i + BATCH, opts.budget))
+      const mails = await readMails(client, batch, opts.myAddress)
+      const keys = [...new Set(mails.map((m) => m.threadKey))]
+      const { data: known } = keys.length
+        ? await admin.from("inbox_threads").select("id, external_id").eq("workspace_id", opts.workspaceId).eq("channel", "email").in("external_id", keys)
+        : { data: [] as { id: string; external_id: string }[] }
+      const threadByKey = new Map((known ?? []).map((t) => [t.external_id as string, t.id as string]))
+      const answered = new Set<string>()
+      for (const mail of mails) {
+        const threadId = threadByKey.get(mail.threadKey)
+        if (!threadId) continue
+        const recorded = await recordMessage(admin, {
+          workspaceId: opts.workspaceId,
+          integrationId: opts.integrationId,
+          channel: "email",
+          threadExternalId: mail.threadKey,
+          externalId: await messageKey(mail.messageId, `sent:${validity}:${mail.uid}`),
+          direction: "out",
+          senderName: mail.from.name,
+          senderAddress: mail.from.address,
+          recipients: mail.to,
+          subject: mail.subject,
+          body: mail.body,
+          sentAt: mail.date,
+          contactName: null,
+          contactAddress: null,
+        })
+        if (recorded) {
+          added++
+          answered.add(threadId)
+        }
+      }
+      // Solo si el enviado es lo último del hilo (lo decidió el trigger).
+      if (answered.size) {
+        await admin.from("inbox_threads").update({ needs_reply: false }).eq("workspace_id", opts.workspaceId).in("id", [...answered]).eq("last_direction", "out")
+      }
+      next.sent_last_uid = batch[batch.length - 1]
+    }
+    more = uids.length > 0 && (next.sent_last_uid ?? 0) < uids[uids.length - 1]
+  } finally {
+    lock.release()
+  }
+  return { added, more }
 }
 
 // Cabeceras para responder en el mismo hilo: In-Reply-To es el último correo

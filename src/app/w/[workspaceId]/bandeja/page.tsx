@@ -184,18 +184,23 @@ async function Inbox({ params, searchParams }: Pick<PageProps<"/w/[workspaceId]/
 type Supabase = Awaited<ReturnType<typeof createClient>>
 
 async function countPendingActions(supabase: Supabase, workspaceId: string): Promise<number> {
-  const { count } = await supabase.from("flow_runs").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId).eq("status", "awaiting_approval")
+  const { count } = await supabase.from("flow_runs").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId).eq("status", "awaiting_approval").eq("trigger->>type", "inbox_prepare")
   return count ?? 0
 }
 
 async function ActionsView({ workspaceId }: { workspaceId: string }) {
   const supabase = await createClient()
-  const { data: runs } = await supabase.from("flow_runs").select("id, flow_name, status, pending_action, summary, started_at, trigger").eq("workspace_id", workspaceId).eq("status", "awaiting_approval").order("started_at", { ascending: false }).limit(50)
+  const { data: runs } = await supabase.from("flow_runs").select("id, flow_name, status, pending_action, summary, started_at, trigger").eq("workspace_id", workspaceId).eq("status", "awaiting_approval").eq("trigger->>type", "inbox_prepare").order("started_at", { ascending: false }).limit(50)
+  // Fase 6H-0 (decisión de Cesar, 17 nov): aquí solo las propuestas de la bandeja;
+  // el resto de aprobaciones sigue en la pantalla Aprobaciones.
   return (
     <section className="flex flex-col gap-3" aria-labelledby="inbox-actions-title">
       <div>
         <h2 id="inbox-actions-title" className="text-lg font-semibold text-ink">Esperan tu decisión</h2>
-        <p className="mt-1 text-sm text-graphite">Estas propuestas todavía no se ejecutan. Revísalas y aprueba o rechaza cada una.</p>
+        <p className="mt-1 text-sm text-graphite">
+          Respuestas y recordatorios de la bandeja que todavía no se envían. Revísalos y aprueba o rechaza cada uno.{" "}
+          <Link href={"/w/" + workspaceId + "/aprobaciones"} className="text-link underline underline-offset-4">Ver todas las aprobaciones</Link>
+        </p>
       </div>
       {runs?.length ? runs.map((run) => {
         const pending = asPending(run.pending_action)
@@ -211,7 +216,7 @@ async function ActionsView({ workspaceId }: { workspaceId: string }) {
             {pending ? <ApprovalCard runId={run.id} pending={pending} /> : <InfoBanner tone="warning">La ejecución figura pendiente de aprobación, pero la propuesta no se puede interpretar. Abre el detalle para revisarla.</InfoBanner>}
           </article>
         )
-      }) : <EmptyState title="No hay acciones pendientes" description="Cuando una automatización necesite tu autorización, aparecerá aquí antes de ejecutarse." />}
+      }) : <EmptyState title="No hay respuestas por aprobar" description="Cuando la bandeja prepare una respuesta o un recordatorio, aparecerá aquí antes de enviarse." />}
       {(runs?.length ?? 0) >= 50 ? <p className="text-xs text-graphite">Se muestran las 50 acciones pendientes más recientes.</p> : null}
     </section>
   )

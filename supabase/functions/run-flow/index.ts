@@ -205,7 +205,10 @@ async function handle(req: Request): Promise<Response> {
     if (run.status !== "awaiting_approval" || !run.pending_action) {
       return fail(409, "not_pending", "Esta ejecución no está esperando tu aprobación.")
     }
-    const decision = await decideRun(ctx.admin, run.id, body?.approve === true, ctx.userId)
+    const decision = await decideRun(ctx.admin, run.id, body?.approve === true, ctx.userId, { force: body?.force === true })
+    if (!decision.ok && decision.code === "uncertain") {
+      return fail(409, "uncertain", "Esta acción se interrumpió mientras se aplicaba y puede que ya se haya hecho. Revísalo antes de repetirla.")
+    }
     if (!decision.ok) return fail(409, "busy", "La ejecución se está procesando. Recarga la página.")
     // Parar al llegar al presupuesto termina la ejecución.
     if (decision.pending.tool === "budget_extend" && body?.approve !== true) return json({ run_id: run.id, status: "failed" })

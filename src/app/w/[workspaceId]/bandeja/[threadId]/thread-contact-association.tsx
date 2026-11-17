@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useState, useTransition } from "react"
 import { InfoBanner } from "@/components/ui"
 import { linkInboxThreadContact, searchInboxContacts, unlinkInboxThreadContact } from "../inbox-actions"
@@ -7,10 +8,11 @@ import { linkInboxThreadContact, searchInboxContacts, unlinkInboxThreadContact }
 type Contact = { id: string; name: string; email: string }
 type Association = { id: string; confirmed_at: string; contact: Contact }
 
-export function ThreadContactAssociation({ workspaceId, threadId, association }: {
+export function ThreadContactAssociation({ workspaceId, threadId, association, hasContacts }: {
   workspaceId: string
   threadId: string
   association: Association | null
+  hasContacts: boolean
 }) {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<Contact[]>([])
@@ -50,6 +52,13 @@ export function ThreadContactAssociation({ workspaceId, threadId, association }:
             {busy ? "Procesando…" : "Desvincular contacto"}
           </button>
         </div>
+      ) : !hasContacts ? (
+        // Fase 6H-0: sin contactos guardados, la búsqueda no encontraría a nadie.
+        <p className="text-xs text-graphite">
+          Todavía no tienes contactos guardados. Se añaden en{" "}
+          <Link href={`/w/${workspaceId}/integraciones#comunicaciones`} className="text-link underline underline-offset-4">Integraciones → Comunicaciones</Link>
+          {" "}(«Contactos autorizados»). Ten en cuenta que las automatizaciones pueden escribir correos nuevos a esos contactos, siempre con tu aprobación.
+        </p>
       ) : (
         <>
           <p className="mb-2 text-xs text-graphite">No hay una asociación confirmada. Busca un contacto y selecciónalo expresamente; coincidir en email o teléfono no lo asocia automáticamente.</p>

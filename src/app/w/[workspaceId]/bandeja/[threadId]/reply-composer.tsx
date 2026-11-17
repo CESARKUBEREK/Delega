@@ -10,6 +10,9 @@ const field = "border border-rule bg-sheet px-3 py-2 text-sm text-ink focus:bord
 export function ReplyComposer({ workspaceId, threadId, channel, to }: { workspaceId: string; threadId: string; channel: string; to: string }) {
   const [hint, setHint] = useState("")
   const [text, setText] = useState("")
+  // Un identificador por borrador (fase 6H-2): si el envío se repite (doble
+  // clic, reintento tras un error de red), el servidor no lo manda dos veces.
+  const [requestId, setRequestId] = useState(() => crypto.randomUUID())
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
   const [drafting, startDraft] = useTransition()
@@ -48,8 +51,10 @@ export function ReplyComposer({ workspaceId, threadId, channel, to }: { workspac
               setError(null)
               setSent(false)
               const r = await draftReply(workspaceId, threadId, hint)
-              if (r.ok) setText(r.text)
-              else setError(r.error)
+              if (r.ok) {
+                setText(r.text)
+                setRequestId(crypto.randomUUID())
+              } else setError(r.error)
             })
           }
           className="h-10 border border-ink px-4 text-sm text-ink hover:bg-paper disabled:opacity-60"
@@ -67,6 +72,9 @@ export function ReplyComposer({ workspaceId, threadId, channel, to }: { workspac
         onChange={(e) => {
           setText(e.target.value)
           setSent(false)
+          // Otro texto es otro mensaje: nuevo identificador. Mientras se envía,
+          // se conserva para que un reintento no duplique.
+          if (!sending) setRequestId(crypto.randomUUID())
         }}
         rows={8}
         maxLength={8000}
@@ -96,8 +104,9 @@ export function ReplyComposer({ workspaceId, threadId, channel, to }: { workspac
             )) return
             startSend(async () => {
               setError(null)
-              const r = await sendReply(workspaceId, threadId, text)
+              const r = await sendReply(workspaceId, threadId, text, requestId)
               if (r.ok) {
+                setRequestId(crypto.randomUUID())
                 setText("")
                 setHint("")
                 setSent(true)

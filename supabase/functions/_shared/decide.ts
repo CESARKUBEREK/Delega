@@ -7,14 +7,14 @@ import { formatUsd } from "./router/core.ts"
 
 export type Decision =
   | { ok: true; run: RunRow; pending: PendingAction; output: string }
-  | { ok: false; code: "not_pending" | "busy" }
+  | { ok: false; code: "not_pending" | "busy" | "uncertain" }
 
 export async function decideRun(
   admin: SupabaseClient,
   runId: string,
   approve: boolean,
   userId: string,
-  opts: { via?: "telegram"; expectCallId?: (callId: string) => Promise<boolean> } = {},
+  opts: { via?: "telegram"; expectCallId?: (callId: string) => Promise<boolean>; force?: boolean } = {},
 ): Promise<Decision> {
   const claimed = await claim(admin, runId, "awaiting_approval")
   if (!claimed) return { ok: false, code: "busy" }
@@ -42,9 +42,29 @@ export async function decideRun(
     return { ok: true, run: claimed, pending, output: JSON.stringify({ ok: true }) }
   }
 
+  // Fase 6H-2: antes de ejecutar se marca la acción como «en curso». Si la
+  // función se corta después de enviar y antes de guardar, al vencer el lease la
+  // acción vuelve a estar pendiente con esa marca: no se repite sola. Hay que
+  // pedirlo expresamente (force) o rechazarla («no repetir»).
+  const interrupted = typeof (pending as PendingAction & { executing_at?: unknown }).executing_at === "string"
   let output: string
   if (approve) {
+    if (interrupted && !opts.force) {
+      await admin.from("flow_runs").update({ lease_until: null }).eq("id", runId)
+      return { ok: false, code: "uncertain" }
+    }
+    await admin
+      .from("flow_runs")
+      .update({ pending_action: { ...pending, executing_at: new Date().toISOString() } })
+      .eq("id", runId)
+      .eq("status", "awaiting_approval")
+    if (interrupted) {
+      await addEvent(admin, claimed, "message", "Acción repetida a petición del usuario tras una interrupción", { tool: pending.tool, decided_by: userId })
+    }
     output = await executePending(admin, claimed, pending, userId)
+  } else if (interrupted) {
+    output = JSON.stringify({ ok: false, rejected: true, message: "La acción se interrumpió y no se sabe si llegó a completarse. El usuario decidió no repetirla." })
+    await addEvent(admin, claimed, "rejected", "No se repite la acción interrumpida", { tool: pending.tool, decided_by: userId })
   } else {
     output = JSON.stringify({ ok: false, rejected: true, message: "El usuario rechazó esta acción." })
     await addEvent(admin, claimed, "rejected", opts.via === "telegram" ? "Rechazado desde Telegram" : "Rechazado por el usuario", {

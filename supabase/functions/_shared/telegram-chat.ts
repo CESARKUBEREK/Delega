@@ -396,6 +396,7 @@ async function handleDecision(
   })
   if (!result.ok) {
     if (result.code === "busy") return answer("Se está procesando; prueba en unos segundos.")
+    if (result.code === "uncertain") return answer("Se interrumpió y puede que ya se haya hecho. Revísalo en la app.")
     await answer("Ya estaba decidido.")
     return close("ℹ️ Ya se decidió (quizá desde la app).")
   }
