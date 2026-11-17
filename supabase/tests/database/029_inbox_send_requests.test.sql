@@ -1,4 +1,4 @@
--- Envíos manuales sin repetición (migración 20261117100000, fase 6H-2).
+-- Envíos manuales sin repetición (migración 20261117095107, fase 6H-2).
 begin;
 create extension if not exists pgtap with schema extensions;
 select plan(4);
